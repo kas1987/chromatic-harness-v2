@@ -1,4 +1,5 @@
 """Anthropic Claude adapter stub."""
+# ruff: noqa: E402
 
 from __future__ import annotations
 
@@ -11,7 +12,13 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from router.adapters.base import BaseAdapter, AdapterHealth  # noqa: E402
-from router.contracts import RouteRequest, RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs  # noqa: E402
+from router.contracts import (
+    RouteRequest,
+    RouteResponse,
+    OutputType,
+    RouteOutput,
+    RouteLogs,
+)  # noqa: E402
 
 
 class AnthropicAdapter(BaseAdapter):
@@ -24,18 +31,24 @@ class AnthropicAdapter(BaseAdapter):
 
     async def health(self) -> AdapterHealth:
         return AdapterHealth(
-            reachable=bool(os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))),
+            reachable=bool(
+                os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))
+            ),
             latency_ms=0,
             error="" if self.enabled else "ANTHROPIC_API_KEY not set",
         )
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append("AnthropicAdapter.complete() is a stub — wire anthropic SDK when ready.")
+        logs.warnings.append(
+            "AnthropicAdapter.complete() is a stub — wire anthropic SDK when ready."
+        )
         return RouteResponse(
             request_id=req.request_id,
             selected_provider=self.name,
             route_reason="anthropic_stub",
-            output=RouteOutput(type=OutputType.TEXT, content="[Anthropic stub — not yet wired]"),
+            output=RouteOutput(
+                type=OutputType.TEXT, content="[Anthropic stub — not yet wired]"
+            ),
             logs=logs,
         )

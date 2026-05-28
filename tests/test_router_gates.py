@@ -1,16 +1,7 @@
 """Tests for router gates: confidence, privacy, budget, fallback."""
 
-import sys
-import os
 import tempfile
 import pytest
-
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-_RUNTIME = os.path.join(_REPO, "02_RUNTIME")
-sys.path.insert(0, _REPO)
-sys.path.insert(0, _RUNTIME)
-
 import importlib
 
 import router.contracts as contracts_mod
@@ -29,7 +20,7 @@ importlib.reload(budget_mod)
 importlib.reload(observability_mod)
 importlib.reload(router_mod)
 
-from router.contracts import (
+from router.contracts import (  # noqa: E402
     RouteRequest,
     RouteConstraints,
     RouteConfidence,
@@ -39,8 +30,8 @@ from router.contracts import (
     PrivacyClass,
     ConfidenceBand,
 )
-from router.router import ChromaticRouter
-from router.confidence import ConfidenceGate
+from router.router import ChromaticRouter  # noqa: E402
+from router.confidence import ConfidenceGate  # noqa: E402
 
 
 @pytest.fixture
@@ -180,7 +171,7 @@ async def test_jsonl_log_created(router):
         obs = observability_mod.ObservabilityLogger(log_dir=pathlib.Path(td))
         r = ChromaticRouter(logger=obs)
         req = make_req(confidence_score=90.0)
-        resp = await r.route(req)
+        await r.route(req)
         log_files = list(pathlib.Path(td).glob("*.jsonl"))
         assert len(log_files) == 1
         lines = log_files[0].read_text().strip().split("\n")
@@ -211,7 +202,7 @@ async def test_agent_run_log_written_for_governed_model():
         obs._log_agent_run(req, resp, extra={"role": "architect", "tools_used": 3})
 
         assert agent_log.exists()
-        lines = [l for l in agent_log.read_text().splitlines() if l.strip()]
+        lines = [line for line in agent_log.read_text().splitlines() if line.strip()]
         assert len(lines) == 1
         record = json.loads(lines[0])
         assert record["model"] == "claude-sonnet-4-6"

@@ -1,18 +1,8 @@
 """Tests for Kimi provider registration and Orchestrator.complete_mission()."""
 
 import json
-import sys
-import os
 import pathlib
 import tempfile
-
-import pytest
-
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-_RUNTIME = os.path.join(_REPO, "02_RUNTIME")
-sys.path.insert(0, _REPO)
-sys.path.insert(0, _RUNTIME)
 
 from router.policy import PolicyLoader
 from router.router import ChromaticRouter
@@ -106,7 +96,7 @@ def test_complete_mission_writes_agent_run_log():
             observability_mod.ObservabilityLogger.__init__ = original_init
 
         assert agent_log.exists()
-        lines = [l for l in agent_log.read_text().splitlines() if l.strip()]
+        lines = [line for line in agent_log.read_text().splitlines() if line.strip()]
         assert len(lines) == 1
         record = json.loads(lines[0])
         assert record["task_id"] == "m-test-001"

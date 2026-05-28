@@ -3,26 +3,24 @@ Run with: pytest tests/test_complexity_and_routing.py -v
 """
 
 import pytest
-import sys
 from pathlib import Path
-
-_HERE = Path(__file__).resolve().parent
-_REPO = _HERE.parent
-sys.path.insert(0, str(_REPO / "02_RUNTIME"))
 
 from router.complexity_classifier import ComplexityClassifier
 from router.context_detector import ContextDetector, RuntimeContext
-from router.provider_selector import ProviderSelector, SelectionResult
+from router.provider_selector import ProviderSelector
 
 # ── Fixture ──────────────────────────────────────────────────────────────────
+
 
 @pytest.fixture
 def classifier():
     return ComplexityClassifier()
 
+
 @pytest.fixture
 def selector():
     return ProviderSelector()
+
 
 # ── Complexity: Known task descriptions ────────────────────────────────────
 
@@ -40,12 +38,15 @@ KNOWN_TASKS = [
     ("write a haiku about documentation", "", "C4"),  # no keywords → fallback
 ]
 
+
 @pytest.mark.parametrize("desc,prompt,expected", KNOWN_TASKS)
 def test_classify_known_tasks(classifier, desc, prompt, expected):
     result = classifier.classify(desc, prompt)
     assert result.level == expected, f"'{desc}' expected {expected}, got {result.level}"
 
+
 # ── Context detector sanity checks ──────────────────────────────────────────
+
 
 def test_context_detector_runs_without_crash():
     det = ContextDetector()
@@ -54,19 +55,26 @@ def test_context_detector_runs_without_crash():
     assert isinstance(ctx.ollama_local_reachable, bool)
     assert isinstance(ctx.internet_reachable, bool)
 
+
 # ── Provider selector: routing table returns choices ────────────────────────
+
 
 def test_provider_selector_balance_laptop_c1(selector, classifier):
     result = classifier.classify("json-to-table converter", "format output")
     ctx = RuntimeContext(
         device_type="laptop",
-        gpu_model=None, gpu_vram_gb=None, gpu_available=False,
+        gpu_model=None,
+        gpu_vram_gb=None,
+        gpu_available=False,
         ollama_local_reachable=True,
         ollama_local_models=["llama3.2:3b"],
         remote_ollama_endpoints=[],
-        internet_reachable=True, connectivity="full",
-        memory_pressure="medium", os_family="windows",
-        cpu_count=8, is_battery=False,
+        internet_reachable=True,
+        connectivity="full",
+        memory_pressure="medium",
+        os_family="windows",
+        cpu_count=8,
+        is_battery=False,
     )
     sel = selector.select(result, ctx, speed_mode="balance")
     assert sel.c_level == "C1"
@@ -76,16 +84,23 @@ def test_provider_selector_balance_laptop_c1(selector, classifier):
 
 
 def test_provider_selector_speed_laptop_c3(selector, classifier):
-    result = classifier.classify("debug the failing request path", "root cause the 500 error")
+    result = classifier.classify(
+        "debug the failing request path", "root cause the 500 error"
+    )
     ctx = RuntimeContext(
         device_type="laptop",
-        gpu_model=None, gpu_vram_gb=None, gpu_available=False,
+        gpu_model=None,
+        gpu_vram_gb=None,
+        gpu_available=False,
         ollama_local_reachable=True,
         ollama_local_models=["qwen2.5-coder:14b"],
         remote_ollama_endpoints=[],
-        internet_reachable=True, connectivity="full",
-        memory_pressure="medium", os_family="windows",
-        cpu_count=8, is_battery=False,
+        internet_reachable=True,
+        connectivity="full",
+        memory_pressure="medium",
+        os_family="windows",
+        cpu_count=8,
+        is_battery=False,
     )
     sel = selector.select(result, ctx, speed_mode="speed")
     assert sel.c_level == "C3"
@@ -96,19 +111,27 @@ def test_provider_selector_speed_laptop_c3(selector, classifier):
 
 
 def test_provider_selector_offline_forces_low(selector, classifier):
-    result = classifier.classify("brainstorm architecture options", "brainstorm design tradeoffs")
+    result = classifier.classify(
+        "brainstorm architecture options", "brainstorm design tradeoffs"
+    )
     ctx = RuntimeContext(
         device_type="laptop",
-        gpu_model=None, gpu_vram_gb=None, gpu_available=False,
+        gpu_model=None,
+        gpu_vram_gb=None,
+        gpu_available=False,
         ollama_local_reachable=True,
         ollama_local_models=["qwen2.5-coder:14b"],
         remote_ollama_endpoints=[],
-        internet_reachable=False, connectivity="offline",
-        memory_pressure="medium", os_family="windows",
-        cpu_count=8, is_battery=False,
+        internet_reachable=False,
+        connectivity="offline",
+        memory_pressure="medium",
+        os_family="windows",
+        cpu_count=8,
+        is_battery=False,
     )
     # Use empty prefs so auto-detect kicks in (not overridden by user pref)
     from router.provider_selector import ProviderSelector
+
     sel_no_prefs = ProviderSelector(prefs_path=Path("/tmp/empty_prefs.yaml"))
     sel = sel_no_prefs.select(result, ctx)  # no explicit speed_mode
     # Offline + no explicit mode → auto-detect forces "low"
@@ -117,16 +140,23 @@ def test_provider_selector_offline_forces_low(selector, classifier):
 
 
 def test_provider_selector_desktop_gpu_c2(selector, classifier):
-    result = classifier.classify("scaffold a new module", "scaffold the directory layout")
+    result = classifier.classify(
+        "scaffold a new module", "scaffold the directory layout"
+    )
     ctx = RuntimeContext(
         device_type="desktop",
-        gpu_model="RTX 4070", gpu_vram_gb=12.0, gpu_available=True,
+        gpu_model="RTX 4070",
+        gpu_vram_gb=12.0,
+        gpu_available=True,
         ollama_local_reachable=True,
         ollama_local_models=["llama3.1:8b", "qwen2.5-coder:14b"],
         remote_ollama_endpoints=[],
-        internet_reachable=True, connectivity="full",
-        memory_pressure="medium", os_family="windows",
-        cpu_count=12, is_battery=False,
+        internet_reachable=True,
+        connectivity="full",
+        memory_pressure="medium",
+        os_family="windows",
+        cpu_count=12,
+        is_battery=False,
     )
     sel = selector.select(result, ctx, speed_mode="balance")
     assert sel.context_key == "context_desktop"

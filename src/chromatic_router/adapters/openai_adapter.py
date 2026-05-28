@@ -1,4 +1,5 @@
 """OpenAI cloud adapter stub."""
+# ruff: noqa: E402
 
 from __future__ import annotations
 
@@ -11,7 +12,13 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from router.adapters.base import BaseAdapter, AdapterHealth  # noqa: E402
-from router.contracts import RouteRequest, RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs  # noqa: E402
+from router.contracts import (
+    RouteRequest,
+    RouteResponse,
+    OutputType,
+    RouteOutput,
+    RouteLogs,
+)  # noqa: E402
 
 
 class OpenAIAdapter(BaseAdapter):
@@ -31,11 +38,15 @@ class OpenAIAdapter(BaseAdapter):
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append("OpenAIAdapter.complete() is a stub — wire openai SDK when ready.")
+        logs.warnings.append(
+            "OpenAIAdapter.complete() is a stub — wire openai SDK when ready."
+        )
         return RouteResponse(
             request_id=req.request_id,
             selected_provider=self.name,
             route_reason="openai_stub",
-            output=RouteOutput(type=OutputType.TEXT, content="[OpenAI stub — not yet wired]"),
+            output=RouteOutput(
+                type=OutputType.TEXT, content="[OpenAI stub — not yet wired]"
+            ),
             logs=logs,
         )

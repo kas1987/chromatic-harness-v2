@@ -22,9 +22,12 @@ TIMEOUT_S = 120
 
 # Test suites (each corresponds to one former .bats file)
 SUITES = [
-    ("model-router CORE + EDGE", [
-        "test_complexity_and_routing.py",
-    ]),
+    (
+        "model-router CORE + EDGE",
+        [
+            "test_complexity_and_routing.py",
+        ],
+    ),
 ]
 
 
@@ -74,7 +77,9 @@ def main() -> int:
     # Write last-pass marker
     marker = REPO / ".." / ".claude" / ".agents" / "test" / "last-pass.json"
     marker.parent.mkdir(parents=True, exist_ok=True)
-    import json, datetime
+    import json
+    import datetime
+
     marker.write_text(
         json.dumps(
             {
