@@ -20,7 +20,10 @@ from .budget import BudgetGate
 from .observability import ObservabilityLogger
 from .adapters.base import BaseAdapter
 from .adapters.mock import MockAdapter
-from .adapters.openhuman_adapter import OpenHumanAdapter
+from .complexity_classifier import ComplexityClassifier
+from .context_detector import ContextDetector
+from .provider_selector import ProviderSelector
+from .adapters.ollama_remote import OllamaRemoteAdapter
 
 
 class ChromaticRouter:
@@ -41,6 +44,9 @@ class ChromaticRouter:
         self.privacy_gate = PrivacyGate(self.loader)
         self.budget_gate = BudgetGate(self.loader)
 
+        self.complexity_classifier = ComplexityClassifier()
+        self.context_detector = ContextDetector()
+        self.provider_selector = ProviderSelector()
         self.adapters: dict[str, BaseAdapter] = {}
         if adapters:
             self.adapters.update(adapters)
@@ -52,24 +58,64 @@ class ChromaticRouter:
         for name, cfg in providers.items():
             if name == "openhuman":
                 self.adapters[name] = OpenHumanAdapter(cfg)
+            if name.startswith("ollama_remote"):
+                self.adapters[name] = OllamaRemoteAdapter(name, cfg)
         if "mock" not in self.adapters:
             self.adapters["mock"] = MockAdapter()
 
     def _resolve_provider(self, req: RouteRequest) -> tuple[str, list[str], RouteLogs]:
         logs = RouteLogs()
-        task_route = self.loader.route_for_task(req.task_type.value)
+        preferred = req.preferred_provider
 
-        if req.preferred_provider != "auto" and req.preferred_provider:
-            primary = req.preferred_provider
+        # ── NEW: context-aware route when no explicit preference ────────────
+        if (not preferred or preferred == "auto"):
+            try:
+                context = self.context_detector.detect()
+                complexity = self.complexity_classifier.classify(
+                    description=req.objective,
+                    prompt="",   # TODO: expose full prompt on RouteRequest
+                )
+                selection = self.provider_selector.select(
+                    complexity=complexity,
+                    context=context,
+                )
+                ranked = selection.ranked_choices
+                if ranked:
+                    primary = ranked[0].provider
+                    fallback = [c.provider for c in ranked[1:]]
+                    logs.policy_checks.append(
+                        f"Context route: C={complexity.level} speed={selection.speed_mode} "
+                        f"provider={primary} ({len(fallback)} fallbacks)"
+                    )
+                    pc = req.constraints.privacy_class
+                    primary, fallback = self._apply_privacy_gate(
+                        primary, fallback, pc, logs
+                    )
+                    return primary, fallback, logs
+            except Exception as exc:
+                logs.warnings.append(f"Context routing failed ({exc}), falling back to legacy route.")
+
+        # ── LEGACY: task-type based route ────────────────────────────────────
+        task_route = self.loader.route_for_task(req.task_type.value)
+        if preferred and preferred != "auto":
+            primary = preferred
             fallback = list(req.fallback_chain)
         else:
             primary = task_route.get("default", "mock")
             fallback = list(task_route.get("fallback", []))
 
         pc = req.constraints.privacy_class
+        return self._apply_privacy_gate(primary, fallback, pc, logs)
+
+    def _apply_privacy_gate(
+        self,
+        primary: str,
+        fallback: list[str],
+        pc: PrivacyClass,
+        logs: RouteLogs,
+    ) -> tuple[str, list[str], RouteLogs]:
         privacy_cfg = self.privacy_gate.policy.get(pc.value, {})
         allowed = set(privacy_cfg.get("allowed_providers", []))
-
         candidates = [primary, *fallback]
         filtered = []
         for cand in candidates:
@@ -79,15 +125,10 @@ class ChromaticRouter:
                 filtered.append(cand)
             else:
                 logs.warnings.append(f"Provider {cand} removed by privacy policy for {pc.value}.")
-
         if not filtered:
             logs.errors.append("No candidate provider passed privacy gate.")
             return "mock", [], logs
-
-        chosen = filtered[0]
-        remaining = filtered[1:]
-        logs.policy_checks.append(f"Resolved provider={chosen} (fallbacks={remaining}).")
-        return chosen, remaining, logs
+        return filtered[0], filtered[1:], logs
 
     def _provider_is_available(self, name: str) -> bool:
         adapter = self.adapters.get(name)
