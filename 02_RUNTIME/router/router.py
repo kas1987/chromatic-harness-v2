@@ -24,6 +24,7 @@ from .complexity_classifier import ComplexityClassifier
 from .context_detector import ContextDetector
 from .provider_selector import ProviderSelector
 from .adapters.ollama_remote import OllamaRemoteAdapter
+from .adapters.openhuman_adapter import OpenHumanAdapter
 
 
 class ChromaticRouter:
@@ -58,8 +59,26 @@ class ChromaticRouter:
         for name, cfg in providers.items():
             if name == "openhuman":
                 self.adapters[name] = OpenHumanAdapter(cfg)
-            if name.startswith("ollama_remote"):
+            elif name.startswith("ollama"):
                 self.adapters[name] = OllamaRemoteAdapter(name, cfg)
+            elif name == "lmstudio":
+                from .adapters.lmstudio_adapter import LMStudioAdapter
+                self.adapters[name] = LMStudioAdapter(cfg)
+            elif name == "openai":
+                from .adapters.openai_adapter import OpenAIAdapter
+                self.adapters[name] = OpenAIAdapter(cfg)
+            elif name == "anthropic":
+                from .adapters.anthropic_adapter import AnthropicAdapter
+                self.adapters[name] = AnthropicAdapter(cfg)
+            elif name == "google":
+                from .adapters.google_adapter import GoogleAdapter
+                self.adapters[name] = GoogleAdapter(cfg)
+            elif name == "openrouter":
+                from .adapters.openrouter_adapter import OpenRouterAdapter
+                self.adapters[name] = OpenRouterAdapter(cfg)
+            elif name == "featherless":
+                from .adapters.featherless_adapter import FeatherlessAdapter
+                self.adapters[name] = FeatherlessAdapter(cfg)
         if "mock" not in self.adapters:
             self.adapters["mock"] = MockAdapter()
 
@@ -88,7 +107,7 @@ class ChromaticRouter:
                         f"provider={primary} ({len(fallback)} fallbacks)"
                     )
                     pc = req.constraints.privacy_class
-                    primary, fallback = self._apply_privacy_gate(
+                    primary, fallback, logs = self._apply_privacy_gate(
                         primary, fallback, pc, logs
                     )
                     return primary, fallback, logs

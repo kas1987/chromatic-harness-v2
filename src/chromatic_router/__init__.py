@@ -39,6 +39,13 @@ from router.observability import ObservabilityLogger  # noqa: E402
 from router.adapters.base import BaseAdapter, AdapterHealth  # noqa: E402
 from router.adapters.mock import MockAdapter  # noqa: E402
 from router.adapters.openhuman_adapter import OpenHumanAdapter  # noqa: E402
+from router.adapters.ollama_adapter import OllamaAdapter  # noqa: E402
+from router.adapters.lmstudio_adapter import LMStudioAdapter  # noqa: E402
+from router.adapters.openai_adapter import OpenAIAdapter  # noqa: E402
+from router.adapters.anthropic_adapter import AnthropicAdapter  # noqa: E402
+from router.adapters.google_adapter import GoogleAdapter  # noqa: E402
+from router.adapters.openrouter_adapter import OpenRouterAdapter  # noqa: E402
+from router.adapters.featherless_adapter import FeatherlessAdapter  # noqa: E402
 
 __all__ = [
     "ChromaticRouter",
@@ -64,4 +71,11 @@ __all__ = [
     "AdapterHealth",
     "MockAdapter",
     "OpenHumanAdapter",
+    "OllamaAdapter",
+    "LMStudioAdapter",
+    "OpenAIAdapter",
+    "AnthropicAdapter",
+    "GoogleAdapter",
+    "OpenRouterAdapter",
+    "FeatherlessAdapter",
 ]

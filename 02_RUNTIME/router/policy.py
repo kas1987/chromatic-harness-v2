@@ -16,6 +16,9 @@ def _repo_root() -> Path:
 
 def _config_dir() -> Path:
     root = _repo_root()
+    canonical = root / "config" / "routing"
+    if canonical.exists():
+        return canonical
     return root / "09_DEPLOYMENT" / "config" / "routing"
 
 
