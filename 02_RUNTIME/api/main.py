@@ -106,6 +106,13 @@ async def create_mission(
     return MissionResponse(**data)
 
 
+@app.get("/missions", response_model=list[MissionResponse])
+async def list_missions(db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute("SELECT data FROM missions ORDER BY created_at DESC") as cur:
+        rows = await cur.fetchall()
+    return [MissionResponse(**json.loads(r[0])) for r in rows]
+
+
 @app.get("/missions/{mission_id}", response_model=MissionResponse)
 async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute(

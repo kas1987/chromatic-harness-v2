@@ -1,0 +1,22 @@
+budget:
+  daily_usd_cap: 10.0
+  default_max_cost_per_request_usd: 0.25
+  warn_threshold_usd: 0.10
+
+provider_cost_estimates:
+  ollama:
+    per_1k_tokens_usd: 0.0
+  lmstudio:
+    per_1k_tokens_usd: 0.0
+  openai:
+    per_1k_tokens_usd: 0.005
+  anthropic:
+    per_1k_tokens_usd: 0.008
+  google:
+    per_1k_tokens_usd: 0.0035
+  openrouter:
+    per_1k_tokens_usd: 0.002
+  featherless:
+    per_1k_tokens_usd: 0.001
+  openhuman:
+    per_1k_tokens_usd: 0.0

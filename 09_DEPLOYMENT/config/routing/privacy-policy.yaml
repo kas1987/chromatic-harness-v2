@@ -1,0 +1,28 @@
+privacy_classes:
+  P0:
+    label: Public
+    description: public docs, public code, generic prompts
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless, openhuman]
+
+  P1:
+    label: Internal
+    description: repo plans, non-secret project state
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless]
+
+  P2:
+    label: Sensitive
+    description: personal context, private repo strategy, financial/legal docs
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google]
+
+  P3:
+    label: Secret
+    description: API keys, tokens, credentials, private auth material
+    allowed_providers: []
+    block_message: "P3 secrets must not be routed to any LLM provider. Use secret manager only."
+
+  P4:
+    label: Regulated/High-Risk
+    description: legal, medical, compliance, irreversible business decisions
+    allowed_providers: []
+    human_gate_required: true
+    block_message: "P4 regulated content requires human gate + approved provider only."

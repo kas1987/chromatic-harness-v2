@@ -112,3 +112,15 @@ def test_list_beads(client):
     r = client.get("/beads")
     assert r.status_code == 200
     assert len(r.json()) >= 1
+
+
+def test_list_missions(client):
+    client.post("/missions", json={"objective": "list-missions-test-1"})
+    client.post("/missions", json={"objective": "list-missions-test-2"})
+    r = client.get("/missions")
+    assert r.status_code == 200
+    data = r.json()
+    assert isinstance(data, list)
+    objectives = [m["objective"] for m in data]
+    assert "list-missions-test-1" in objectives
+    assert "list-missions-test-2" in objectives
