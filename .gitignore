@@ -28,3 +28,4 @@ htmlcov/
 
 # Dispatch scaffolding — runtime-only task directories
 .dispatch/
+*.tsbuildinfo
