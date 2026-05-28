@@ -107,7 +107,10 @@ def test_provider_selector_offline_forces_low(selector, classifier):
         memory_pressure="medium", os_family="windows",
         cpu_count=8, is_battery=False,
     )
-    sel = selector.select(result, ctx)  # no explicit speed_mode
+    # Use empty prefs so auto-detect kicks in (not overridden by user pref)
+    from router.provider_selector import ProviderSelector
+    sel_no_prefs = ProviderSelector(prefs_path=Path("/tmp/empty_prefs.yaml"))
+    sel = sel_no_prefs.select(result, ctx)  # no explicit speed_mode
     # Offline + no explicit mode → auto-detect forces "low"
     assert sel.speed_mode == "low"
     assert sel.ranked_choices[0].provider == "ollama_local"
