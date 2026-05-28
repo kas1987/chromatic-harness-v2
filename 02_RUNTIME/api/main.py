@@ -27,6 +27,18 @@ from models import (  # noqa: E402
     BeadResponse,
 )
 
+# Router integration — normal import because _RUNTIME is on sys.path
+from router.router import ChromaticRouter  # noqa: E402
+from router.contracts import (  # noqa: E402
+    RouteRequest,
+    TaskType,
+    PrivacyClass,
+    RouteConstraints,
+    RouteConfidence,
+    RouteAudit,
+    RouteInput,
+)
+
 import importlib.util as _ilu
 
 
@@ -60,6 +72,73 @@ app = FastAPI(title="Chromatic Harness v2 API", version="2.0.0", lifespan=lifesp
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "2.0.0"}
+
+
+@app.post("/route")
+async def route_request(payload: dict):
+    """
+    Execute a provider-neutral route through ChromaticRouter.
+    Expected JSON mirrors the RouteRequest contract.
+    """
+    router = ChromaticRouter()
+    req = RouteRequest(
+        request_id=payload.get("request_id", str(uuid.uuid4())),
+        task_id=payload.get("task_id", "api"),
+        task_type=TaskType(payload.get("task_type", "classification")),
+        objective=payload.get("objective", ""),
+        input=RouteInput(
+            messages=payload.get("input", {}).get("messages", []),
+            files=payload.get("input", {}).get("files", []),
+            metadata=payload.get("input", {}).get("metadata", {}),
+        ),
+        constraints=RouteConstraints(
+            privacy_class=PrivacyClass(payload.get("constraints", {}).get("privacy_class", "P1")),
+            max_cost_usd=payload.get("constraints", {}).get("max_cost_usd", 0.25),
+            max_latency_ms=payload.get("constraints", {}).get("max_latency_ms", 30000),
+            max_tokens=payload.get("constraints", {}).get("max_tokens", 8000),
+            allow_cloud=payload.get("constraints", {}).get("allow_cloud", True),
+            allow_broker=payload.get("constraints", {}).get("allow_broker", True),
+            allow_openhuman=payload.get("constraints", {}).get("allow_openhuman", False),
+            allow_tools=payload.get("constraints", {}).get("allow_tools", False),
+        ),
+        confidence=RouteConfidence(
+            score=payload.get("confidence", {}).get("score", 75.0),
+            band=payload.get("confidence", {}).get("band", "high"),
+        ),
+        preferred_provider=payload.get("preferred_provider", "auto"),
+        fallback_chain=payload.get("fallback_chain", []),
+        audit=RouteAudit(
+            caller=payload.get("audit", {}).get("caller", "api"),
+            repo=payload.get("audit", {}).get("repo", ""),
+            human_gate_required=payload.get("audit", {}).get("human_gate_required", False),
+        ),
+    )
+    resp = await router.route(req)
+    return {
+        "request_id": resp.request_id,
+        "selected_provider": resp.selected_provider,
+        "selected_model": resp.selected_model,
+        "route_reason": resp.route_reason,
+        "fallback_used": resp.fallback_used,
+        "confidence_score": resp.confidence_score,
+        "privacy_class": resp.privacy_class.value,
+        "cost_estimate_usd": resp.cost_estimate_usd,
+        "latency_ms": resp.latency_ms,
+        "output": {
+            "type": resp.output.type.value,
+            "content": resp.output.content,
+        },
+        "usage": {
+            "input_tokens": resp.usage.input_tokens,
+            "output_tokens": resp.usage.output_tokens,
+            "total_tokens": resp.usage.total_tokens,
+        },
+        "logs": {
+            "policy_checks": resp.logs.policy_checks,
+            "warnings": resp.logs.warnings,
+            "errors": resp.logs.errors,
+        },
+    }
 
 
 @app.post("/missions", response_model=MissionResponse)
