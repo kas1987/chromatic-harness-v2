@@ -1,18 +1,26 @@
 services:
   chromatic-api:
-    build: .
+    build:
+      context: ..
+      dockerfile: 09_DEPLOYMENT/Dockerfile
     env_file:
       - .env
     volumes:
-      - ../:/workspace
+      - ..:/workspace
+      - harness-data:/workspace/06_DATA
     ports:
-      - "8787:8787"
+      - "127.0.0.1:8787:8787"
 
   chromatic-console:
     image: node:22-alpine
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    command: sh -c "npm install && npm run dev -- --port 3030"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8787
     volumes:
       - ../05_FRONTEND_CONSOLE:/app
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3030:3030"
+
+volumes:
+  harness-data:
