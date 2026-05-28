@@ -1,50 +1,93 @@
-"""LM Studio local adapter stub.
-
-Implements the BaseAdapter contract. Will connect to LM Studio's
-OpenAI-compatible local server at http://localhost:1234/v1.
-"""
+"""LMStudio local adapter — local inference server."""
 
 from __future__ import annotations
 
-import os
-import sys
-from pathlib import Path
+import time
+
+import httpx
 
 from .base import BaseAdapter, AdapterHealth
-from ..contracts import RouteRequest, RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs
+from ..contracts import (
+    RouteRequest,
+    RouteResponse,
+    OutputType,
+    RouteOutput,
+    RouteUsage,
+    RouteLogs,
+)
 
 
 class LMStudioAdapter(BaseAdapter):
-    """Local LM Studio adapter."""
-
     def __init__(self, cfg: dict | None = None):
         cfg = cfg or {
-            "enabled": os.environ.get("LMSTUDIO_ENABLED", "true").lower() == "true",
-            "base_url": os.environ.get("LMSTUDIO_BASE_URL", "http://localhost:1234/v1"),
+            "enabled": True,
+            "host": "localhost",
+            "port": 1234,
+            "model": "local-model",
+            "timeout": 60,
         }
         super().__init__("lmstudio", cfg)
-        self.base_url = self.cfg.get("base_url", "http://localhost:1234/v1").rstrip("/")
+        self._client = None
+
+    def _url(self, path: str) -> str:
+        host = self.cfg.get("host", "localhost")
+        port = self.cfg.get("port", 1234)
+        return f"http://{host}:{port}{path}"
+
+    def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=self.cfg.get("timeout", 60))
+        return self._client
 
     async def health(self) -> AdapterHealth:
-        import httpx, time
-        t0 = time.perf_counter()
         try:
-            async with httpx.AsyncClient() as client:
-                r = await client.get(f"{self.base_url}/models", timeout=5.0)
-            latency = int((time.perf_counter() - t0) * 1000)
-            ok = r.status_code == 200
-            return AdapterHealth(reachable=ok, latency_ms=latency, error="" if ok else f"status={r.status_code}")
-        except Exception as exc:
-            latency = int((time.perf_counter() - t0) * 1000)
-            return AdapterHealth(reachable=False, latency_ms=latency, error=str(exc))
+            client = self._get_client()
+            start = time.time()
+            resp = await client.get(self._url("/v1/models"))
+            latency_ms = int((time.time() - start) * 1000)
+            return AdapterHealth(
+                reachable=resp.status_code == 200, latency_ms=latency_ms
+            )
+        except Exception as e:
+            return AdapterHealth(reachable=False, latency_ms=0, error=str(e))
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append("LMStudioAdapter.complete() is a stub — wire OpenAI-compatible client when ready.")
-        return RouteResponse(
-            request_id=req.request_id,
-            selected_provider=self.name,
-            route_reason="lmstudio_stub",
-            output=RouteOutput(type=OutputType.TEXT, content="[LM Studio stub — not yet wired]"),
-            logs=logs,
-        )
+        try:
+            client = self._get_client()
+            start = time.time()
+
+            response = await client.post(
+                self._url("/v1/chat/completions"),
+                json={
+                    "model": self.cfg.get("model", "local-model"),
+                    "messages": [{"role": "user", "content": req.prompt}],
+                    "max_tokens": req.constraints.max_tokens or 2048,
+                    "temperature": req.constraints.temperature or 0.7,
+                },
+            )
+
+            latency_ms = int((time.time() - start) * 1000)
+            if response.status_code != 200:
+                return self.normalize_error(
+                    req.request_id, f"LMStudio status {response.status_code}"
+                )
+
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+
+            return RouteResponse(
+                request_id=req.request_id,
+                selected_provider=self.name,
+                output=RouteOutput(type=OutputType.TEXT, content=content),
+                usage=RouteUsage(
+                    input_tokens=data.get("usage", {}).get("prompt_tokens", 0),
+                    output_tokens=data.get("usage", {}).get("completion_tokens", 0),
+                    total_tokens=data.get("usage", {}).get("total_tokens", 0),
+                ),
+                latency_ms=latency_ms,
+                logs=logs,
+            )
+        except Exception as e:
+            logs.errors.append(f"LMStudio error: {str(e)}")
+            return self.normalize_error(req.request_id, str(e))

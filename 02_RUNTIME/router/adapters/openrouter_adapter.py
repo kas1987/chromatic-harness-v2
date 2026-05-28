@@ -1,13 +1,21 @@
-"""OpenRouter broker adapter stub."""
+"""OpenRouter broker adapter — routes to 200+ models."""
 
 from __future__ import annotations
 
 import os
-import sys
-from pathlib import Path
+import time
+
+import httpx
 
 from .base import BaseAdapter, AdapterHealth
-from ..contracts import RouteRequest, RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs
+from ..contracts import (
+    RouteRequest,
+    RouteResponse,
+    OutputType,
+    RouteOutput,
+    RouteUsage,
+    RouteLogs,
+)
 
 
 class OpenRouterAdapter(BaseAdapter):
@@ -15,23 +23,84 @@ class OpenRouterAdapter(BaseAdapter):
         cfg = cfg or {
             "enabled": bool(os.environ.get("OPENROUTER_API_KEY")),
             "env_key": "OPENROUTER_API_KEY",
+            "model": "openrouter/auto",
+            "timeout": 60,
         }
         super().__init__("openrouter", cfg)
+        self._client = None
+
+    def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(
+                timeout=self.cfg.get("timeout", 60),
+                headers={
+                    "Authorization": f"Bearer {os.environ.get(self.cfg.get('env_key', 'OPENROUTER_API_KEY'))}",
+                    "HTTP-Referer": "https://github.com/kas1987/chromatic-harness-v2",
+                    "X-Title": "Chromatic Harness v2",
+                },
+            )
+        return self._client
 
     async def health(self) -> AdapterHealth:
-        return AdapterHealth(
-            reachable=bool(os.environ.get(self.cfg.get("env_key", "OPENROUTER_API_KEY"))),
-            latency_ms=0,
-            error="" if self.enabled else "OPENROUTER_API_KEY not set",
-        )
+        if not self.enabled:
+            return AdapterHealth(
+                reachable=False,
+                latency_ms=0,
+                error="OPENROUTER_API_KEY not set",
+            )
+        try:
+            client = self._get_client()
+            start = time.time()
+            resp = await client.get("https://openrouter.ai/api/v1/models")
+            latency_ms = int((time.time() - start) * 1000)
+            return AdapterHealth(
+                reachable=resp.status_code == 200, latency_ms=latency_ms
+            )
+        except Exception as e:
+            return AdapterHealth(reachable=False, latency_ms=0, error=str(e))
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append("OpenRouterAdapter.complete() is a stub — wire openrouter SDK when ready.")
-        return RouteResponse(
-            request_id=req.request_id,
-            selected_provider=self.name,
-            route_reason="openrouter_stub",
-            output=RouteOutput(type=OutputType.TEXT, content="[OpenRouter stub — not yet wired]"),
-            logs=logs,
-        )
+        try:
+            if not self.enabled:
+                return self.normalize_error(
+                    req.request_id, "OPENROUTER_API_KEY not configured"
+                )
+
+            client = self._get_client()
+            start = time.time()
+
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                json={
+                    "model": self.cfg.get("model", "openrouter/auto"),
+                    "messages": [{"role": "user", "content": req.prompt}],
+                    "max_tokens": req.constraints.max_tokens or 2048,
+                    "temperature": req.constraints.temperature or 0.7,
+                },
+            )
+
+            latency_ms = int((time.time() - start) * 1000)
+            if response.status_code != 200:
+                return self.normalize_error(
+                    req.request_id, f"OpenRouter status {response.status_code}"
+                )
+
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+
+            return RouteResponse(
+                request_id=req.request_id,
+                selected_provider=self.name,
+                output=RouteOutput(type=OutputType.TEXT, content=content),
+                usage=RouteUsage(
+                    input_tokens=data.get("usage", {}).get("prompt_tokens", 0),
+                    output_tokens=data.get("usage", {}).get("completion_tokens", 0),
+                    total_tokens=data.get("usage", {}).get("total_tokens", 0),
+                ),
+                latency_ms=latency_ms,
+                logs=logs,
+            )
+        except Exception as e:
+            logs.errors.append(f"OpenRouter error: {str(e)}")
+            return self.normalize_error(req.request_id, str(e))

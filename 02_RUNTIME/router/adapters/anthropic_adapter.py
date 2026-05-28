@@ -1,13 +1,20 @@
-"""Anthropic Claude adapter stub."""
+"""Anthropic Claude adapter — Claude 3.x series."""
 
 from __future__ import annotations
 
 import os
-import sys
-from pathlib import Path
+import time
+from typing import Any
 
 from .base import BaseAdapter, AdapterHealth
-from ..contracts import RouteRequest, RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs
+from ..contracts import (
+    RouteRequest,
+    RouteResponse,
+    OutputType,
+    RouteOutput,
+    RouteUsage,
+    RouteLogs,
+)
 
 
 class AnthropicAdapter(BaseAdapter):
@@ -15,23 +22,77 @@ class AnthropicAdapter(BaseAdapter):
         cfg = cfg or {
             "enabled": bool(os.environ.get("ANTHROPIC_API_KEY")),
             "env_key": "ANTHROPIC_API_KEY",
+            "model": "claude-3-5-sonnet-20241022",
+            "timeout": 30,
         }
         super().__init__("anthropic", cfg)
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            try:
+                from anthropic import AsyncAnthropic
+
+                self._client = AsyncAnthropic(
+                    api_key=os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))
+                )
+            except ImportError:
+                raise RuntimeError("anthropic SDK not installed: pip install anthropic")
+        return self._client
 
     async def health(self) -> AdapterHealth:
-        return AdapterHealth(
-            reachable=bool(os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))),
-            latency_ms=0,
-            error="" if self.enabled else "ANTHROPIC_API_KEY not set",
-        )
+        if not self.enabled:
+            return AdapterHealth(
+                reachable=False,
+                latency_ms=0,
+                error="ANTHROPIC_API_KEY not set",
+            )
+        try:
+            start = time.time()
+            client = self._get_client()
+            await client.messages.count_tokens(
+                model=self.cfg.get("model", "claude-3-5-sonnet-20241022"),
+                messages=[{"role": "user", "content": "test"}],
+            )
+            latency_ms = int((time.time() - start) * 1000)
+            return AdapterHealth(reachable=True, latency_ms=latency_ms)
+        except Exception as e:
+            return AdapterHealth(reachable=False, latency_ms=0, error=str(e))
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append("AnthropicAdapter.complete() is a stub — wire anthropic SDK when ready.")
-        return RouteResponse(
-            request_id=req.request_id,
-            selected_provider=self.name,
-            route_reason="anthropic_stub",
-            output=RouteOutput(type=OutputType.TEXT, content="[Anthropic stub — not yet wired]"),
-            logs=logs,
-        )
+        try:
+            if not self.enabled:
+                return self.normalize_error(
+                    req.request_id, "ANTHROPIC_API_KEY not configured"
+                )
+
+            client = self._get_client()
+            start = time.time()
+
+            response = await client.messages.create(
+                model=self.cfg.get("model", "claude-3-5-sonnet-20241022"),
+                max_tokens=req.constraints.max_tokens or 2048,
+                messages=[{"role": "user", "content": req.prompt}],
+                timeout=self.cfg.get("timeout", 30),
+            )
+
+            latency_ms = int((time.time() - start) * 1000)
+            content = response.content[0].text
+
+            return RouteResponse(
+                request_id=req.request_id,
+                selected_provider=self.name,
+                output=RouteOutput(type=OutputType.TEXT, content=content),
+                usage=RouteUsage(
+                    input_tokens=response.usage.input_tokens,
+                    output_tokens=response.usage.output_tokens,
+                    total_tokens=response.usage.input_tokens
+                    + response.usage.output_tokens,
+                ),
+                latency_ms=latency_ms,
+                logs=logs,
+            )
+        except Exception as e:
+            logs.errors.append(f"Anthropic error: {str(e)}")
+            return self.normalize_error(req.request_id, str(e))
