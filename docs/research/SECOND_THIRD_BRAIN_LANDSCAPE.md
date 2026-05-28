@@ -105,6 +105,26 @@ P5: Cross-agent sync (OpenFused pattern) — encrypted peer-to-peer context shar
 
 ---
 
+## 2025-2026 Trending Projects (From Community)
+
+Projects actively discussed on Reddit, Hacker News, and Discord in 2025-2026.
+
+| Repo | Stars | Language | Key Idea | Why It Matters |
+|---|---|---|---|---|
+| **[tinyhumansai/openhuman](https://github.com/tinyhumansai/openhuman)** | 29k | Rust/TS | Personal AI with local Memory Tree + Obsidian-style vault | **Highest star count.** Local-first, self-hosted. Memory Tree = temporal knowledge graph with decay. OpenHuman adapter already integrated into Chromatic Router |
+| **[Mark393295827/third-brain-v5-skills](https://github.com/Mark393295827/third-brain-v5-skills)** | ~100 | Markdown | Skills framework for Codex CLI, Claude Code, Gemini CLI, Cursor, Windsurf | **Multi-IDE third brain.** Daily review automation, agent team orchestration, persistent interlinked knowledge wiki. MIT licensed |
+| **[Per0x1de-1337/MemoryOS](https://github.com/Per0x1de-1337/MemoryOS)** | New | Python | Temporal knowledge graph + hybrid vector retrieval + Ebbinghaus decay | **Sub-100ms retrieval.** Open-source Python memory layer. Automatic memory consolidation, cross-session continuity |
+| **A-MEM** (HN "Show HN") | ~50 | Python | Zettelkasten-inspired for Claude Code; ChromaDB, self-evolving untyped graph | **Self-evolving memory.** Time-aware breadth/depth-first recall. No schema — graph grows organically from agent interactions |
+
+### Community Sentiment (Reddit / HN / Discord)
+
+- **OpenHuman**: Praised for being "actually local" (not cloud-washed). Criticized for Rust build complexity. Memory Tree feature is the #1 reason people try it.
+- **Third Brain V5**: The "skills" pattern (markdown files + YAML frontmatter that agents read as instructions) is becoming a de-facto standard across Codex CLI and Claude Code communities.
+- **MemoryOS**: HN commenters skeptical of "Ebbinghaus" marketing but impressed by sub-100ms retrieval benchmark. Temporal knowledge graphs are seen as the next evolution over simple vector DBs.
+- **A-MEM**: Loved by Claude Code users for being "zero-config" — just install and it starts building a graph from your chat history. Criticized for ChromaDB dependency (heavy, sometimes flaky).
+
+---
+
 ## Key Insight
 
 > **The value of an agent memory system is directly proportional to how automatically it is used.**
