@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "chromatic_harness_v2",
+  "project_id": "884cd65c-f798-4c96-baa8-25014696939a"
+}
