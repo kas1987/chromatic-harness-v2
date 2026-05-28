@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from typing import Any
+import uuid
 
 
 @dataclass
@@ -20,7 +21,7 @@ class MissionPacket:
 class Orchestrator:
     def create_mission(self, intent: str) -> MissionPacket:
         return MissionPacket(
-            mission_id="CHR-MISSION-0001",
+            mission_id=f"CHR-MISSION-{str(uuid.uuid4())[:8].upper()}",
             objective=intent,
             agent_role="agent_lead",
             autonomy_level="L1",

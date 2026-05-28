@@ -10,7 +10,6 @@ import uuid
 from fastapi import FastAPI, HTTPException, Depends
 import aiosqlite
 
-# Path setup — 02_RUNTIME prefix is not valid Python; inject paths manually
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _RUNTIME = os.path.dirname(_HERE)
 _REPO = os.path.dirname(_RUNTIME)
@@ -28,7 +27,6 @@ from models import (  # noqa: E402
     BeadResponse,
 )
 
-# Import existing skeletons (use importlib since dirname starts with digit)
 import importlib.util as _ilu
 
 
@@ -39,20 +37,13 @@ def _load_module(name: str, path: str):
     return mod
 
 
-_orch_mod = _load_module(
-    "orchestrator", os.path.join(_RUNTIME, "orchestrator", "orchestrator.py")
-)
+_orch_mod = _load_module("orchestrator", os.path.join(_RUNTIME, "orchestrator", "orchestrator.py"))
 Orchestrator = _orch_mod.Orchestrator
 
-_mag_mod = _load_module(
-    "base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py")
-)
+_mag_mod = _load_module("base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py"))
 MagnetEvent = _mag_mod.MagnetEvent
 
-_conf_mod = _load_module(
-    "confidence_engine",
-    os.path.join(_RUNTIME, "orchestrator", "confidence_engine.py"),
-)
+_conf_mod = _load_module("confidence_engine", os.path.join(_RUNTIME, "orchestrator", "confidence_engine.py"))
 
 NOW = lambda: datetime.now(timezone.utc).isoformat()  # noqa: E731
 
@@ -72,12 +63,9 @@ async def health():
 
 
 @app.post("/missions", response_model=MissionResponse)
-async def create_mission(
-    req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)
-):
+async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)):
     orch = Orchestrator()
     packet = orch.create_mission(req.objective)
-    # The skeleton always returns the same hardcoded mission_id; generate a unique one.
     packet.mission_id = f"CHR-{str(uuid.uuid4())[:8].upper()}"
     packet.agent_role = req.agent_role
     packet.autonomy_level = req.autonomy_level
@@ -115,9 +103,7 @@ async def list_missions(db: aiosqlite.Connection = Depends(get_db)):
 
 @app.get("/missions/{mission_id}", response_model=MissionResponse)
 async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
-    async with db.execute(
-        "SELECT data FROM missions WHERE mission_id = ?", (mission_id,)
-    ) as cur:
+    async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Mission not found")
@@ -125,11 +111,7 @@ async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db
 
 
 @app.post("/missions/{mission_id}/events", response_model=MagnetEventResponse)
-async def create_event(
-    mission_id: str,
-    req: CreateEventRequest,
-    db: aiosqlite.Connection = Depends(get_db),
-):
+async def create_event(mission_id: str, req: CreateEventRequest, db: aiosqlite.Connection = Depends(get_db)):
     event_id = str(uuid.uuid4())
     ts = NOW()
     data = {
@@ -155,17 +137,14 @@ async def create_event(
 @app.get("/missions/{mission_id}/events", response_model=list[MagnetEventResponse])
 async def list_events(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute(
-        "SELECT data FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
-        (mission_id,),
+        "SELECT data FROM magnet_events WHERE mission_id = ? ORDER BY created_at", (mission_id,)
     ) as cur:
         rows = await cur.fetchall()
     return [MagnetEventResponse(**json.loads(r[0])) for r in rows]
 
 
 @app.post("/beads", response_model=BeadResponse)
-async def create_bead(
-    req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)
-):
+async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)):
     bead_id = f"BEAD-{str(uuid.uuid4())[:8].upper()}"
     ts = NOW()
     data = {
