@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chromatic Harness Mission Packet",
+  "description": "Contract between user intent and runtime executor. All missions flow through CMP governance gates before dispatch.",
+  "type": "object",
+  "required": [
+    "mission_id",
+    "intent",
+    "agent_framework",
+    "scope",
+    "budget",
+    "required_gates"
+  ],
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "description": "Unique mission identifier (UUID or UUID-like string)",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$|^m-[a-z0-9]+$"
+    },
+    "intent": {
+      "type": "string",
+      "description": "User's stated goal or problem statement",
+      "minLength": 10,
+      "maxLength": 5000
+    },
+    "agent_framework": {
+      "type": "string",
+      "description": "Which runtime executor should handle this mission",
+      "enum": [
+        "roach-pi",
+        "langraph",
+        "openhands",
+        "openai-realtime",
+        "custom"
+      ]
+    },
+    "scope": {
+      "type": "array",
+      "description": "File paths and directories this mission is allowed to touch",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "examples": [
+        [
+          "src/components/",
+          "src/styles/",
+          "tests/"
+        ]
+      ]
+    },
+    "budget": {
+      "type": "object",
+      "description": "Resource limits for this mission",
+      "required": [
+        "tokens",
+        "tool_calls"
+      ],
+      "properties": {
+        "tokens": {
+          "type": "integer",
+          "description": "Maximum tokens the runtime can consume",
+          "minimum": 1000,
+          "maximum": 1000000,
+          "default": 100000
+        },
+        "tool_calls": {
+          "type": "integer",
+          "description": "Maximum number of tool invocations allowed",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 100
+        },
+        "wall_time_seconds": {
+          "type": "integer",
+          "description": "Maximum wall-clock time in seconds",
+          "minimum": 60,
+          "maximum": 86400
+        }
+      }
+    },
+    "required_gates": {
+      "type": "array",
+      "description": "Which governance gates must pass before execution",
+      "items": {
+        "type": "string",
+        "enum": [
+          "intent",
+          "scope",
+          "confidence"
+        ]
+      },
+      "minItems": 1,
+      "examples": [
+        [
+          "intent",
+          "scope",
+          "confidence"
+        ]
+      ]
+    },
+    "sandbox_level": {
+      "type": "integer",
+      "description": "Security level for external agents (L0-L5). Omit for trusted runtimes.",
+      "minimum": 0,
+      "maximum": 5,
+      "default": 5
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional runtime-specific or user-provided context",
+      "additionalProperties": true,
+      "examples": [
+        {
+          "user_email": "user@example.com",
+          "session_id": "session-abc123",
+          "pr_template": "standard",
+          "require_human_approval": false
+        }
+      ]
+    }
+  },
+  "examples": [
+    {
+      "mission_id": "m-dark-mode-2026-05-28",
+      "intent": "Add dark mode toggle to React dashboard, update all color tokens",
+      "agent_framework": "roach-pi",
+      "scope": [
+        "src/components/",
+        "src/styles/",
+        "tests/unit/"
+      ],
+      "budget": {
+        "tokens": 75000,
+        "tool_calls": 80,
+        "wall_time_seconds": 1800
+      },
+      "required_gates": [
+        "intent",
+        "scope",
+        "confidence"
+      ],
+      "metadata": {
+        "user_email": "kas41866@gmail.com",
+        "priority": "high"
+      }
+    },
+    {
+      "mission_id": "m-openhands-sandbox-2026-05-28",
+      "intent": "Explore refactoring recommendation for auth module",
+      "agent_framework": "openhands",
+      "scope": [
+        "src/auth/"
+      ],
+      "budget": {
+        "tokens": 30000,
+        "tool_calls": 20
+      },
+      "required_gates": [
+        "intent",
+        "scope"
+      ],
+      "sandbox_level": 1,
+      "metadata": {
+        "sandbox_promotion_target": 3,
+        "require_human_approval": true
+      }
+    }
+  ]
+}
