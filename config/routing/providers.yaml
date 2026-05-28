@@ -54,6 +54,11 @@ providers:
     privacy_max: P2
     default_mode: read_only
 
+  native_claude:
+    type: native
+    enabled: true
+    privacy_max: P2
+
   prism-orchestrator:
     type: cross_project
     enabled: true

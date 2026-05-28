@@ -91,6 +91,10 @@ class ChromaticRouter:
                 )
 
                 self.adapters[name] = PrismOrchestratorAdapter(cfg)
+            elif name == "native_claude":
+                from .adapters.native_claude_adapter import NativeClaudeAdapter
+
+                self.adapters[name] = NativeClaudeAdapter(cfg)
         if "mock" not in self.adapters:
             self.adapters["mock"] = MockAdapter()
 

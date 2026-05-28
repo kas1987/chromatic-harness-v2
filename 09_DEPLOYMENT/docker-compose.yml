@@ -10,6 +10,8 @@ services:
       - harness-data:/workspace/06_DATA
     ports:
       - "127.0.0.1:8787:8787"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   chromatic-console:
     image: node:22-alpine
