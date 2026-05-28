@@ -1,0 +1,42 @@
+# Task-to-provider routing table — canonical PDR format
+# Loaded by PolicyLoader as fallback when context-aware routing yields no match.
+
+version: "2.0"
+
+routes:
+  classification:
+    default: ollama
+    fallback: [lmstudio, featherless]
+    max_privacy: P2
+
+  planning:
+    default: anthropic
+    fallback: [openai, google]
+    max_privacy: P2
+
+  coding:
+    default: openai
+    fallback: [anthropic]
+    max_privacy: P1
+
+  review:
+    default: anthropic
+    fallback: [openai, google]
+    max_privacy: P2
+
+  research:
+    default: openai
+    fallback: [google, anthropic]
+    max_privacy: P1
+
+  personal_context:
+    default: openhuman
+    fallback: [local_vault]
+    max_privacy: P2
+    human_gate_required: false
+
+  integration_action:
+    default: openhuman
+    fallback: []
+    max_privacy: P2
+    human_gate_required: true

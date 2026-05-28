@@ -1,0 +1,14 @@
+# OpenHuman sidecar configuration — copy to openhuman.yaml and fill in.
+# Never commit secrets. Use environment variables for tokens.
+
+enabled: false
+base_url: http://127.0.0.1:8787
+env_key: OPENHUMAN_BEARER_TOKEN
+privacy_max: P2
+default_mode: read_only
+
+# Phase 2 governed tool execution (future)
+allowed_tools: []
+allowed_integrations: []
+require_human_gate: true
+dry_run: true

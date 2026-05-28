@@ -1,0 +1,19 @@
+# Budget policy for Chromatic Router
+# Daily cap and per-request cost estimates.
+
+version: "2.0"
+
+budget:
+  daily_cap_usd: 10.0
+  per_request_max_usd: 2.0
+
+provider_cost_estimates:
+  # Cost per 1M input / output tokens in USD
+  ollama: { input: 0.0, output: 0.0 }
+  lmstudio: { input: 0.0, output: 0.0 }
+  openai: { input: 2.50, output: 10.00 }
+  anthropic: { input: 3.00, output: 15.00 }
+  google: { input: 1.25, output: 10.00 }
+  openrouter: { input: 3.00, output: 15.00 }
+  featherless: { input: 0.20, output: 0.60 }
+  openhuman: { input: 0.0, output: 0.0 }

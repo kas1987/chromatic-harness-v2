@@ -1,0 +1,32 @@
+# Privacy class policy for Chromatic Router
+# P3 secrets must never reach any LLM provider.
+# P4 requires human gate + approved provider only.
+
+version: "2.0"
+
+privacy_classes:
+  P0:
+    description: "Public docs, public code, generic prompts"
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless, openhuman]
+
+  P1:
+    description: "Repo plans, non-secret project state"
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless]
+
+  P2:
+    description: "Personal context, private repo strategy, financial/legal docs"
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google]
+
+  P3:
+    description: "API keys, tokens, credentials, private auth material"
+    allowed_providers: []  # no LLM route; secret manager only
+
+  P4:
+    description: "Legal, medical, compliance, irreversible business decisions"
+    allowed_providers: [anthropic, openai]  # human gate + approved provider only
+    human_gate_required: true
+
+# OpenHuman boundary rule
+openhuman_boundary:
+  max_privacy: P2
+  forbidden_classes: [P3, P4]
