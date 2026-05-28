@@ -115,15 +115,25 @@ def main() -> None:
         provider="native_claude", model=None, tier=4, reason="no providers available"
     )
 
-    # ── Blocking logic (mirror old bash hook) ──────────────────────────
-    # Deny pure-LLM calls that are NOT tier-4 and NOT tool-use
+    # ── Blocking logic (speed-mode-aware) ──────────────────────────────
+    # Philosophy: block based on cost discipline, not capability.
+    # Speed mode = never block (advisory only). Low mode = block non-local.
     haystack = f"{description}\n{prompt}".lower()
-    should_block = (
-        BLOCK_ENABLED
-        and chosen.tier < 4
-        and sub_type == "general-purpose"
-        and not _has_tool_use(haystack)
-    )
+    speed_mode = selection.speed_mode
+
+    if speed_mode == "speed":
+        should_block = False  # Advisory only; user wants speed
+    elif speed_mode == "low":
+        # In low mode, only allow local providers (ollama, lmstudio, native_claude)
+        should_block = chosen.provider not in ("ollama_local", "ollama_remote_desktop", "lmstudio", "native_claude")
+    else:
+        # balance mode: block non-tier-4 pure-LLM calls (cost discipline)
+        should_block = (
+            BLOCK_ENABLED
+            and chosen.tier < 4
+            and sub_type == "general-purpose"
+            and not _has_tool_use(haystack)
+        )
 
     # Model overrides (mirror old bash hook)
     override_note = ""
