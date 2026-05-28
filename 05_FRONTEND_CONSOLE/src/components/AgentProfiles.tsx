@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getAgents, AgentProfile } from "@/lib/api";
+import { AgentProfile } from "@/lib/api";
 
 const PANEL: React.CSSProperties = {
   border: "1px solid #333",
@@ -40,24 +39,16 @@ function riskColor(score: number): string {
   return score > 0.7 ? "#e53" : score > 0.4 ? "#e93" : "#1a7";
 }
 
-export default function AgentProfiles() {
-  const [agents, setAgents] = useState<AgentProfile[]>([]);
-  const [selected, setSelected] = useState<AgentProfile | null>(null);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const data = await getAgents();
-        setAgents(data);
-        if (data.length > 0) setSelected(data[0]);
-      } catch {
-        setAgents([]);
-      }
-    }
-    load();
-    const t = setInterval(load, 10000);
-    return () => clearInterval(t);
-  }, []);
+export default function AgentProfiles({
+  agents,
+  selectedAgent,
+  onSelect,
+}: {
+  agents: AgentProfile[];
+  selectedAgent?: AgentProfile | null;
+  onSelect?: (agent: AgentProfile) => void;
+}) {
+  const selected = selectedAgent ?? null;
 
   return (
     <div style={PANEL}>
@@ -70,7 +61,7 @@ export default function AgentProfiles() {
           {agents.map(a => (
             <div
               key={a.agent_id}
-              onClick={() => setSelected(a)}
+              onClick={() => onSelect?.(a)}
               style={{
                 padding: "8px",
                 marginBottom: 6,

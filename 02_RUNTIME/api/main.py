@@ -25,6 +25,10 @@ from models import (  # noqa: E402
     MagnetEventResponse,
     CreateBeadRequest,
     BeadResponse,
+    RegisterAgentRequest,
+    AgentProfileResponse,
+    RecordExecutionRequest,
+    PromoteAgentRequest,
 )
 
 # Router integration — normal import because _RUNTIME is on sys.path
@@ -49,13 +53,19 @@ def _load_module(name: str, path: str):
     return mod
 
 
-_orch_mod = _load_module("orchestrator", os.path.join(_RUNTIME, "orchestrator", "orchestrator.py"))
+_orch_mod = _load_module(
+    "orchestrator", os.path.join(_RUNTIME, "orchestrator", "orchestrator.py")
+)
 Orchestrator = _orch_mod.Orchestrator
 
-_mag_mod = _load_module("base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py"))
+_mag_mod = _load_module(
+    "base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py")
+)
 MagnetEvent = _mag_mod.MagnetEvent
 
-_conf_mod = _load_module("confidence_engine", os.path.join(_RUNTIME, "orchestrator", "confidence_engine.py"))
+_conf_mod = _load_module(
+    "confidence_engine", os.path.join(_RUNTIME, "orchestrator", "confidence_engine.py")
+)
 
 NOW = lambda: datetime.now(timezone.utc).isoformat()  # noqa: E731
 
@@ -92,13 +102,17 @@ async def route_request(payload: dict):
             metadata=payload.get("input", {}).get("metadata", {}),
         ),
         constraints=RouteConstraints(
-            privacy_class=PrivacyClass(payload.get("constraints", {}).get("privacy_class", "P1")),
+            privacy_class=PrivacyClass(
+                payload.get("constraints", {}).get("privacy_class", "P1")
+            ),
             max_cost_usd=payload.get("constraints", {}).get("max_cost_usd", 0.25),
             max_latency_ms=payload.get("constraints", {}).get("max_latency_ms", 30000),
             max_tokens=payload.get("constraints", {}).get("max_tokens", 8000),
             allow_cloud=payload.get("constraints", {}).get("allow_cloud", True),
             allow_broker=payload.get("constraints", {}).get("allow_broker", True),
-            allow_openhuman=payload.get("constraints", {}).get("allow_openhuman", False),
+            allow_openhuman=payload.get("constraints", {}).get(
+                "allow_openhuman", False
+            ),
             allow_tools=payload.get("constraints", {}).get("allow_tools", False),
         ),
         confidence=RouteConfidence(
@@ -110,7 +124,9 @@ async def route_request(payload: dict):
         audit=RouteAudit(
             caller=payload.get("audit", {}).get("caller", "api"),
             repo=payload.get("audit", {}).get("repo", ""),
-            human_gate_required=payload.get("audit", {}).get("human_gate_required", False),
+            human_gate_required=payload.get("audit", {}).get(
+                "human_gate_required", False
+            ),
         ),
     )
     resp = await router.route(req)
@@ -142,7 +158,9 @@ async def route_request(payload: dict):
 
 
 @app.post("/missions", response_model=MissionResponse)
-async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def create_mission(
+    req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)
+):
     orch = Orchestrator()
     packet = orch.create_mission(req.objective)
     packet.mission_id = f"CHR-{str(uuid.uuid4())[:8].upper()}"
@@ -182,7 +200,9 @@ async def list_missions(db: aiosqlite.Connection = Depends(get_db)):
 
 @app.get("/missions/{mission_id}", response_model=MissionResponse)
 async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
-    async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
+    async with db.execute(
+        "SELECT data FROM missions WHERE mission_id = ?", (mission_id,)
+    ) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Mission not found")
@@ -190,7 +210,9 @@ async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db
 
 
 @app.post("/missions/{mission_id}/events", response_model=MagnetEventResponse)
-async def create_event(mission_id: str, req: CreateEventRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def create_event(
+    mission_id: str, req: CreateEventRequest, db: aiosqlite.Connection = Depends(get_db)
+):
     event_id = str(uuid.uuid4())
     ts = NOW()
     data = {
@@ -216,14 +238,17 @@ async def create_event(mission_id: str, req: CreateEventRequest, db: aiosqlite.C
 @app.get("/missions/{mission_id}/events", response_model=list[MagnetEventResponse])
 async def list_events(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute(
-        "SELECT data FROM magnet_events WHERE mission_id = ? ORDER BY created_at", (mission_id,)
+        "SELECT data FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
+        (mission_id,),
     ) as cur:
         rows = await cur.fetchall()
     return [MagnetEventResponse(**json.loads(r[0])) for r in rows]
 
 
 @app.post("/beads", response_model=BeadResponse)
-async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def create_bead(
+    req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)
+):
     bead_id = f"BEAD-{str(uuid.uuid4())[:8].upper()}"
     ts = NOW()
     data = {
@@ -249,3 +274,151 @@ async def list_beads(db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute("SELECT data FROM beads ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [BeadResponse(**json.loads(r[0])) for r in rows]
+
+
+# ─── Agent Profiles ───────────────────────────────────────────────────────────
+
+_LEVEL_THRESHOLDS = {
+    0: {"min_executions": 0, "min_success_rate": 0.0, "max_risk": 1.0},
+    1: {"min_executions": 5, "min_success_rate": 0.70, "max_risk": 0.6},
+    2: {"min_executions": 20, "min_success_rate": 0.80, "max_risk": 0.45},
+    3: {"min_executions": 50, "min_success_rate": 0.88, "max_risk": 0.30},
+    4: {"min_executions": 100, "min_success_rate": 0.93, "max_risk": 0.20},
+    5: {"min_executions": 200, "min_success_rate": 0.97, "max_risk": 0.10},
+}
+
+
+def _agent_data_to_response(data: dict) -> AgentProfileResponse:
+    total = data.get("total_executions", 0)
+    success = data.get("successful_executions", 0)
+    data["success_rate"] = (success / total) if total > 0 else 0.0
+    return AgentProfileResponse(**data)
+
+
+@app.post("/agents", response_model=AgentProfileResponse, status_code=201)
+async def register_agent(
+    req: RegisterAgentRequest, db: aiosqlite.Connection = Depends(get_db)
+):
+    async with db.execute(
+        "SELECT data FROM agent_profiles WHERE agent_id = ?", (req.agent_id,)
+    ) as cur:
+        existing = await cur.fetchone()
+    if existing:
+        raise HTTPException(
+            status_code=409, detail=f"Agent {req.agent_id!r} already registered"
+        )
+
+    ts = NOW()
+    data = {
+        "agent_id": req.agent_id,
+        "description": req.description,
+        "current_level": req.initial_level,
+        "total_executions": 0,
+        "successful_executions": 0,
+        "success_rate": 0.0,
+        "avg_confidence": 0.0,
+        "risk_score": 0.0,
+        "promotion_history": [
+            {"level": req.initial_level, "date": ts, "reason": "initial registration"}
+        ]
+        if req.initial_level > 0
+        else [],
+        "last_violation": None,
+        "created_at": ts,
+        "updated_at": ts,
+    }
+    await db.execute(
+        "INSERT INTO agent_profiles (agent_id, data, created_at, updated_at) VALUES (?, ?, ?, ?)",
+        (req.agent_id, json.dumps(data), ts, ts),
+    )
+    await db.commit()
+    return _agent_data_to_response(data)
+
+
+@app.get("/agents", response_model=list[AgentProfileResponse])
+async def list_agents(db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute(
+        "SELECT data FROM agent_profiles ORDER BY created_at DESC"
+    ) as cur:
+        rows = await cur.fetchall()
+    return [_agent_data_to_response(json.loads(r[0])) for r in rows]
+
+
+@app.get("/agents/{agent_id}", response_model=AgentProfileResponse)
+async def get_agent(agent_id: str, db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute(
+        "SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)
+    ) as cur:
+        row = await cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
+    return _agent_data_to_response(json.loads(row[0]))
+
+
+@app.post("/agents/{agent_id}/executions", response_model=AgentProfileResponse)
+async def record_execution(
+    agent_id: str,
+    req: RecordExecutionRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    async with db.execute(
+        "SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)
+    ) as cur:
+        row = await cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
+
+    data = json.loads(row[0])
+    data["total_executions"] += 1
+    if req.success:
+        data["successful_executions"] += 1
+    total = data["total_executions"]
+    data["success_rate"] = data["successful_executions"] / total
+    # Running average for confidence
+    prev_avg = data.get("avg_confidence", 0.0)
+    data["avg_confidence"] = prev_avg + (req.confidence_score - prev_avg) / total
+    # Risk score: exponential moving average (alpha=0.2)
+    data["risk_score"] = max(
+        0.0, min(1.0, data["risk_score"] * 0.8 + max(0.0, req.risk_delta) * 0.2)
+    )
+    ts = NOW()
+    data["updated_at"] = ts
+    await db.execute(
+        "UPDATE agent_profiles SET data = ?, updated_at = ? WHERE agent_id = ?",
+        (json.dumps(data), ts, agent_id),
+    )
+    await db.commit()
+    return _agent_data_to_response(data)
+
+
+@app.post("/agents/{agent_id}/promote", response_model=AgentProfileResponse)
+async def promote_agent(
+    agent_id: str,
+    req: PromoteAgentRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    async with db.execute(
+        "SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)
+    ) as cur:
+        row = await cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
+
+    data = json.loads(row[0])
+    ts = NOW()
+    data["promotion_history"].append(
+        {"level": req.new_level, "date": ts, "reason": req.reason}
+    )
+    data["current_level"] = req.new_level
+    data["updated_at"] = ts
+    await db.execute(
+        "UPDATE agent_profiles SET data = ?, updated_at = ? WHERE agent_id = ?",
+        (json.dumps(data), ts, agent_id),
+    )
+    await db.commit()
+    return _agent_data_to_response(data)
+
+
+@app.get("/agents/meta/level-thresholds")
+async def level_thresholds():
+    return {"data": _LEVEL_THRESHOLDS}
