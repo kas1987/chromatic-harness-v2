@@ -24,9 +24,20 @@ jobs:
       - name: Lint
         run: |
           pip install ruff
-          ruff check 02_RUNTIME/ tests/
+          ruff check src/ tests/
 
-      - name: Run tests
-        run: pytest tests/ -v --tb=short
+      - name: Format check
+        run: ruff format --check src/ tests/
+
+      - name: Run tests with coverage
+        run: pytest tests/ -v --tb=short --cov --cov-report=term
         env:
           CHROMATIC_DB_PATH: ":memory:"
+
+      - name: Upload coverage report
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+          if-no-files-found: ignore
