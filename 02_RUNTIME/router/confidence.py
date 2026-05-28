@@ -36,6 +36,10 @@ class ConfidenceGate:
         score = req.confidence.score
         band = req.confidence.band
 
+        # Handle band passed as string from API
+        if isinstance(band, str):
+            band = ConfidenceBand(band)
+
         if band == ConfidenceBand.BLOCKED or score < 60:
             logs.errors.append(f"Confidence {score}/{band.value} < 60. Halting external route.")
             return False, logs
