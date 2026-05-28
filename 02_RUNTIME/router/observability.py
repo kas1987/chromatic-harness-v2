@@ -32,7 +32,11 @@ _BAND_TO_RISK = {
 class ObservabilityLogger:
     """Append-only JSONL route log with redaction."""
 
-    def __init__(self, log_dir: Path | None = None):
+    def __init__(
+        self,
+        log_dir: Path | None = None,
+        agent_run_log: Path | None = None,
+    ):
         root = _repo_root()
         self.log_dir = log_dir or (root / "07_LOGS_AND_AUDIT" / "routing")
         self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -40,7 +44,9 @@ class ObservabilityLogger:
             self.log_dir
             / f"routes_{datetime.now(timezone.utc).strftime('%Y%m%d')}.jsonl"
         )
-        self._agent_run_log = root / "07_LOGS_AND_AUDIT" / "AGENT_RUN_LOG.jsonl"
+        self._agent_run_log = agent_run_log or (
+            root / "07_LOGS_AND_AUDIT" / "AGENT_RUN_LOG.jsonl"
+        )
 
     def _redact(self, text: str) -> str:
         import re
