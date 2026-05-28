@@ -92,7 +92,7 @@ def main() -> None:
     data = _read_stdin()
     tool_name = data.get("tool_name", "")
     if tool_name != "Agent":
-        # Not an Agent tool → noop (fail-open, same as old bash hook)
+        # Not an Agent tool - noop (fail-open, same as old bash hook)
         _emit_advisory("ROUTER: non-Agent tool, passing through")
         sys.exit(0)
 
@@ -115,13 +115,6 @@ def main() -> None:
         provider="native_claude", model=None, tier=4, reason="no providers available"
     )
 
-    # ── Format advisory ─────────────────────────────────────────────────
-    advisory = (
-        f"ROUTER C={complexity.level} speed={selection.speed_mode} "
-        f"provider={chosen.provider} model={chosen.model} — "
-        f"{chosen.reason}"
-    )
-
     # ── Blocking logic (mirror old bash hook) ──────────────────────────
     # Deny pure-LLM calls that are NOT tier-4 and NOT tool-use
     haystack = f"{description}\n{prompt}".lower()
@@ -133,16 +126,24 @@ def main() -> None:
     )
 
     # Model overrides (mirror old bash hook)
+    override_note = ""
     if model_requested.lower() == "haiku" and chosen.tier > 1:
         should_block = True
-        advisory += " | caller specified haiku → cap at tier-1"
+        override_note = " | caller specified haiku - cap at tier-1"
     if model_requested.lower() == "opus":
         chosen = ProviderChoice(
             provider="native_claude", model="opus", tier=4,
-            reason="caller specified opus → tier-4 (native)"
+            reason="caller specified opus - tier-4 (native)"
         )
         should_block = False
-        advisory += " | caller specified opus → tier-4 (native)"
+        override_note = ""
+
+    # ── Format advisory (after all overrides) ───────────────────────────
+    advisory = (
+        f"ROUTER C={complexity.level} speed={selection.speed_mode} "
+        f"provider={chosen.provider} model={chosen.model} — "
+        f"{chosen.reason}{override_note}"
+    )
 
     # ── Output to stdout ────────────────────────────────────────────────
     if should_block:
@@ -171,6 +172,7 @@ def main() -> None:
 
 
 def _emit_advisory(advisory: str) -> None:
+    sys.stdout.reconfigure(encoding="utf-8")
     sys.stdout.write(json.dumps({
         "hookSpecificOutput": {
             "additionalContext": advisory,
@@ -179,6 +181,7 @@ def _emit_advisory(advisory: str) -> None:
 
 
 def _emit_deny(advisory: str) -> None:
+    sys.stdout.reconfigure(encoding="utf-8")
     sys.stdout.write(json.dumps({
         "hookSpecificOutput": {
             "permissionDecision": "deny",
