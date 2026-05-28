@@ -121,6 +121,80 @@ providers:
     latency_ms_estimate: 3000            # cold-start possible
     authentication: env_var             # RUNPOD_API_KEY
 
+  openrouter:
+    name: "OpenRouter (Unified API)"
+    endpoint: "https://openrouter.ai/api/v1"
+    type: "cloud"
+    cost_per_1m_tokens_estimate:
+      # Passthrough pricing — same as provider direct
+      claude_sonnet:  { input: 3.00,  output: 15.00 }
+      gpt_5_4:        { input: 2.50,  output: 15.00 }
+      kimi_k2_6:      { input: 1.20,  output: 4.50 }
+      gemini_pro:     { input: 1.25,  output: 10.00 }
+    latency_ms_estimate: 500
+    authentication: env_var    # OPENROUTER_API_KEY
+    models:
+      - name: "openrouter/auto"
+        context: 1048576
+        best_for: [C2, C3, C4]
+        note: "AI-powered model selection"
+      - name: "anthropic/claude-sonnet-4-6"
+        context: 1000000
+        best_for: [C3, C4]
+      - name: "moonshotai/kimi-k2-6"
+        context: 262144
+        best_for: [C2, C3]
+      - name: "openai/gpt-5-4"
+        context: 272000
+        best_for: [C2, C3]
+      - name: "google/gemini-2-5-pro"
+        context: 1048576
+        best_for: [C3, C4]
+
+  together_ai:
+    name: "Together AI (Serverless)"
+    endpoint: "https://api.together.xyz/v1"
+    type: "cloud"
+    cost_per_1m_tokens_estimate:
+      llama33_70b:  { input: 0.88, output: 0.88 }
+      qwen3_235b:   { input: 0.20, output: 0.60 }
+      gemma4_31b:   { input: 0.20, output: 0.50 }
+      kimi_k2_6:    { input: 1.20, output: 4.50 }
+    latency_ms_estimate: 400
+    authentication: env_var    # TOGETHER_API_KEY
+    models:
+      - name: "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+        context: 131072
+        best_for: [C3, C4]
+      - name: "Qwen/Qwen3-235B-A22B-Instruct-2507"
+        context: 262144
+        best_for: [C2, C3]
+      - name: "google/gemma-4-31B-it"
+        context: 262144
+        best_for: [C2, C3]
+      - name: "moonshotai/Kimi-K2.6"
+        context: 262144
+        best_for: [C2, C3]
+
+  moonshot:
+    name: "Moonshot AI / Kimi"
+    endpoint: "https://api.moonshot.ai/v1"
+    type: "cloud"
+    cost_per_1m_tokens_estimate:
+      kimi_k2_6:    { input: 1.20, output: 4.50 }
+      kimi_k2_5:    { input: 0.50, output: 2.80 }
+    latency_ms_estimate: 800
+    authentication: env_var    # MOONSHOT_API_KEY
+    models:
+      - name: "kimi-k2-6"
+        context: 262144
+        best_for: [C2, C3]
+        note: "Thinking enabled by default"
+      - name: "kimi-k2-turbo-preview"
+        context: 262144
+        best_for: [C1, C2]
+        note: "60-100 tok/s, high speed"
+
   # ── Native / no marginal cost ─────────────────────────────────────────────
 
   native_claude:

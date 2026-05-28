@@ -12,11 +12,26 @@ provider_blocklist: []
 # Override: always prefer this provider when available (ignores routing table)
 provider_preference: null   # e.g. "gemini", "ollama_local", "native_claude"
 
+# ── API Keys (set in environment, listed here for reference) ───────────────
+# Required env vars:
+#   GEMINI_API_KEY      - Google Gemini
+#   OPENAI_API_KEY      - OpenAI GPT / Codex
+#   CLAUDE_API_KEY      - Anthropic Claude API
+#   OPENROUTER_API_KEY  - OpenRouter unified access (400+ models)
+#   TOGETHER_API_KEY    - Together AI serverless inference
+#   MOONSHOT_API_KEY    - Moonshot / Kimi K2 native API
+#   RUNPOD_API_KEY      - RunPod GPU rental
+#   ELEVENLABS_API_KEY  - TTS / voice
+#   FEATHERLESS_API_KEY - Featherless (if you add one)
+
 # Budget cap per provider per week (USD)
 budget_caps:
   gemini: 10.00
   openai: 5.00
   claude_api: 20.00
+  openrouter: 15.00
+  together_ai: 10.00
+  moonshot: 10.00
   runpod: 5.00
 
 # Remote Ollama endpoints to probe

@@ -104,6 +104,166 @@ models:
     source: "OpenAI official"
     notes: "Cheap and fast. Good for high-volume C1-C2. Outclassed by Gemini Flash."
 
+  kimi-k2-6:
+    best_at: [coding, reasoning, instruction]
+    good_at: [context, agentic]
+    weak_at: [speed, creativity]
+    observed_by: "community"
+    source: "Moonshot official + LiveCodeBench + SWE-bench"
+    notes: "1T MoE (32B active). Beats Claude Sonnet 4 on coding benchmarks. 256K context. Thinking enabled by default. Strong agentic capabilities."
+
+  kimi-k2-turbo:
+    best_at: [speed, coding]
+    good_at: [reasoning]
+    weak_at: [creativity, context]
+    observed_by: "community"
+    source: "Moonshot official"
+    notes: "60-100 tok/s. Faster K2 variant for latency-sensitive coding tasks."
+
+  llama3-3-70b:
+    best_at: [instruction, reasoning, context]
+    good_at: [coding]
+    weak_at: [speed]
+    observed_by: "community"
+    source: "Meta official + LMSYS"
+    notes: "Strong open-weight model. 131K context. Good general-purpose choice when local GPU can fit it."
+
+  qwen3-235b:
+    best_at: [reasoning, coding, instruction]
+    good_at: [context]
+    weak_at: [speed]
+    observed_by: "community"
+    source: "Alibaba official + benchmarks"
+    notes: "235B MoE (22B active). Very capable for size. 262K context. Good budget alternative to GPT-4 class models."
+
+  gemma4-31b:
+    best_at: [reasoning, instruction]
+    good_at: [coding, context]
+    weak_at: [speed]
+    observed_by: "community"
+    source: "Google official"
+    notes: "Gemma 4 series. 262K context. Good balance of capability and cost."
+
+  gpt-5-4:
+    best_at: [instruction, reasoning, coding]
+    good_at: [context, creativity]
+    weak_at: []
+    observed_by: "community"
+    source: "OpenAI official"
+    notes: "272K context. Successor to GPT-4o. General-purpose workhorse."
+
+  gpt-5-4-mini:
+    best_at: [speed, cost, instruction]
+    good_at: [coding]
+    weak_at: [reasoning, creativity]
+    observed_by: "community"
+    source: "OpenAI official"
+    notes: "Fast and cheap. Good for high-volume C1-C2 tasks."
+
+  o3-mini:
+    best_at: [reasoning, math, coding]
+    good_at: [instruction]
+    weak_at: [speed, creativity, vision]
+    observed_by: "community"
+    source: "OpenAI official"
+    notes: "Cheapest reasoning specialist. 200K context. Great for logic puzzles, math, debugging. No vision."
+
+  o3:
+    best_at: [reasoning, math, coding, creativity]
+    good_at: [instruction]
+    weak_at: [speed, cost]
+    observed_by: "community"
+    source: "OpenAI official"
+    notes: "Deep reasoning. 200K context. Succeeded by GPT-5. Expensive but powerful for hard problems."
+
+  claude-opus-4-8:
+    best_at: [creativity, coding, reasoning, agentic]
+    good_at: [context, instruction]
+    weak_at: [speed, cost]
+    observed_by: "Anthropic official"
+    source: "Anthropic docs + SWE-bench 72.5%"
+    notes: "1M context. Best coding model available. Can work autonomously for hours. Adaptive thinking. $5/$25 per 1M."
+
+  claude-sonnet-4-6:
+    best_at: [coding, reasoning, instruction, agentic]
+    good_at: [creativity, context]
+    weak_at: [speed]
+    observed_by: "Anthropic official"
+    source: "Anthropic docs + community"
+    notes: "1M context. Best speed/capability balance. Extended thinking with tool use. Default for most tasks."
+
+  gemini-2-5-pro:
+    best_at: [reasoning, context, multimodal, instruction]
+    good_at: [coding, creativity]
+    weak_at: [speed]
+    observed_by: "community"
+    source: "Google official + benchmarks"
+    notes: "1M context. Can process 3 hours of video. Grounding with Google Search. Code execution built-in."
+
+  gemini-2-5-flash:
+    best_at: [speed, context, cost, instruction]
+    good_at: [coding, reasoning]
+    weak_at: [creativity]
+    observed_by: "community"
+    source: "Google official"
+    notes: "1M context. Fastest Gemini. Best cost-per-intelligence. $0.30/$2.50 per 1M."
+
+  gemini-2-5-flash-lite:
+    best_at: [speed, cost]
+    good_at: [instruction]
+    weak_at: [reasoning, creativity, coding]
+    observed_by: "community"
+    source: "Google official"
+    notes: "Lowest cost Gemini. Thinking off by default. Great for classification, summarization at scale."
+
+  llama3-1-8b:
+    best_at: [instruction, coding, speed]
+    good_at: [reasoning]
+    weak_at: [creativity, context]
+    observed_by: "local"
+    source: "Meta official + LMSYS"
+    notes: "Best 8B model for coding. Fits easily on RTX 4070 GPU. Fast local inference."
+
+  gemma2-27b:
+    best_at: [reasoning, creativity, instruction]
+    good_at: [coding, context]
+    weak_at: [speed]
+    observed_by: "community"
+    source: "Google official + LMSYS"
+    notes: "Borderline fits 12GB VRAM (Q3). Best local model for deep reasoning if it fits."
+
+  qwen2-5-coder-14b:
+    best_at: [coding, instruction]
+    good_at: [reasoning, context]
+    weak_at: [creativity, vision]
+    observed_by: "local"
+    source: "Alibaba official + coding benchmarks"
+    notes: "Purpose-built for code. Excellent scaffold/review/debug. Good context window. Fits RTX 4070."
+
+  llama3-2-3b:
+    best_at: [instruction, speed]
+    good_at: [coding]
+    weak_at: [reasoning, creativity, context]
+    observed_by: "local"
+    source: "Meta official + community"
+    notes: "Fastest local option. Good for format/conversion tasks. Struggles with complex reasoning."
+
+  gpt-4o-mini:
+    best_at: [speed, instruction, cost]
+    good_at: [coding]
+    weak_at: [reasoning, creativity, context]
+    observed_by: "community"
+    source: "OpenAI official"
+    notes: "Cheap and fast. Good for high-volume C1-C2. Outclassed by Gemini Flash-Lite for most tasks."
+
+  inflection-pi-3:
+    best_at: [emotional_intelligence, conversation]
+    good_at: []
+    weak_at: [coding, reasoning, creativity, context, tool_calling]
+    observed_by: "none"
+    source: "Inflection official"
+    notes: "8K context, no tool calling, expensive ($2.50/$10). NOT recommended for coding/reasoning tasks. Skip for our routing."
+
 # ── Routing philosophy notes ────────────────────────────────────────────────
 philosophy:
   # Do NOT rigidly enforce "C2 = cheap model." Route based on what the task
