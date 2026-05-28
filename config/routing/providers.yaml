@@ -7,13 +7,16 @@ providers:
   ollama:
     type: local
     enabled: true
-    base_url: http://localhost:11434
+    host: host.docker.internal
+    port: 11434
+    model: llama3.2:3b
     privacy_max: P2
 
   lmstudio:
     type: local
     enabled: true
-    base_url: http://localhost:1234/v1
+    host: host.docker.internal
+    port: 1234
     privacy_max: P2
 
   openai:

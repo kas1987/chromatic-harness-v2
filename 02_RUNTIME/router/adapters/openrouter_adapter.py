@@ -20,12 +20,12 @@ from ..contracts import (
 
 class OpenRouterAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
-        cfg = cfg or {
-            "enabled": bool(os.environ.get("OPENROUTER_API_KEY")),
-            "env_key": "OPENROUTER_API_KEY",
-            "model": "openrouter/auto",
-            "timeout": 60,
-        }
+        cfg = dict(cfg) if cfg else {}
+        env_key = cfg.get("env_key", "OPENROUTER_API_KEY")
+        cfg["enabled"] = bool(os.environ.get(env_key))
+        cfg.setdefault("env_key", "OPENROUTER_API_KEY")
+        cfg.setdefault("model", "openrouter/auto")
+        cfg.setdefault("timeout", 60)
         super().__init__("openrouter", cfg)
         self._client = None
 

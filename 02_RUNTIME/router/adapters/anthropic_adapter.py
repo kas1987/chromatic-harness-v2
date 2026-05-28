@@ -19,12 +19,12 @@ from ..contracts import (
 
 class AnthropicAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
-        cfg = cfg or {
-            "enabled": bool(os.environ.get("ANTHROPIC_API_KEY")),
-            "env_key": "ANTHROPIC_API_KEY",
-            "model": "claude-3-5-sonnet-20241022",
-            "timeout": 30,
-        }
+        cfg = dict(cfg) if cfg else {}
+        env_key = cfg.get("env_key", "ANTHROPIC_API_KEY")
+        cfg["enabled"] = bool(os.environ.get(env_key))
+        cfg.setdefault("env_key", "ANTHROPIC_API_KEY")
+        cfg.setdefault("model", "claude-3-5-sonnet-20241022")
+        cfg.setdefault("timeout", 30)
         super().__init__("anthropic", cfg)
         self._client = None
 

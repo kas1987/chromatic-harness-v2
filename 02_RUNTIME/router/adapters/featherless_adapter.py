@@ -20,12 +20,12 @@ from ..contracts import (
 
 class FeatherlessAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
-        cfg = cfg or {
-            "enabled": bool(os.environ.get("FEATHERLESS_API_KEY")),
-            "env_key": "FEATHERLESS_API_KEY",
-            "model": "meta-llama/Llama-3.1-8B-Instruct",
-            "timeout": 60,
-        }
+        cfg = dict(cfg) if cfg else {}
+        env_key = cfg.get("env_key", "FEATHERLESS_API_KEY")
+        cfg["enabled"] = bool(os.environ.get(env_key))
+        cfg.setdefault("env_key", "FEATHERLESS_API_KEY")
+        cfg.setdefault("model", "meta-llama/Llama-3.1-8B-Instruct")
+        cfg.setdefault("timeout", 60)
         super().__init__("featherless", cfg)
         self._client = None
 

@@ -19,12 +19,12 @@ from ..contracts import (
 
 class OpenAIAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
-        cfg = cfg or {
-            "enabled": bool(os.environ.get("OPENAI_API_KEY")),
-            "env_key": "OPENAI_API_KEY",
-            "model": "gpt-4o-mini",
-            "timeout": 30,
-        }
+        cfg = dict(cfg) if cfg else {}
+        env_key = cfg.get("env_key", "OPENAI_API_KEY")
+        cfg["enabled"] = bool(os.environ.get(env_key))
+        cfg.setdefault("env_key", "OPENAI_API_KEY")
+        cfg.setdefault("model", "gpt-4o-mini")
+        cfg.setdefault("timeout", 30)
         super().__init__("openai", cfg)
         self._client = None
 
