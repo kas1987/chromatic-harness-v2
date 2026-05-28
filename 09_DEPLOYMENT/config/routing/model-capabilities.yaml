@@ -1,0 +1,134 @@
+# Model Capability Registry
+# Evolves based on: official docs, community benchmarks, personal observations.
+# The router uses this to fine-tune routing beyond the static routing table.
+
+version: 2
+
+# ── Capability dimensions ───────────────────────────────────────────────────
+dimensions:
+  - coding       # Code generation, review, refactoring, debugging
+  - reasoning    # Multi-step logic, math, analysis, root-cause
+  - creativity   # Novel ideas, brainstorming, design trade-offs
+  - speed        # Low latency, fast streaming
+  - context      # Long-context comprehension (128K+ tokens)
+  - instruction  # Following complex multi-part instructions
+  - vision       # Image understanding, multimodal tasks
+
+# ── Model profiles ──────────────────────────────────────────────────────────
+models:
+  llama3.2:3b:
+    best_at: [instruction, speed]
+    good_at: [coding]
+    weak_at: [reasoning, creativity, context]
+    observed_by: "local"
+    source: "Meta official + community"
+    notes: "Fastest local option. Good for format/conversion tasks. Struggles with complex reasoning."
+
+  llama3.1:8b:
+    best_at: [instruction, coding, speed]
+    good_at: [reasoning]
+    weak_at: [creativity, context]
+    observed_by: "community"
+    source: "Meta official + LMSYS leaderboard"
+    notes: "Best 8B parameter model for coding. Surprisingly capable reasoning for size."
+
+  qwen2.5-coder:14b:
+    best_at: [coding, instruction]
+    good_at: [reasoning, context]
+    weak_at: [creativity, vision]
+    observed_by: "local"
+    source: "Alibaba official + coding benchmarks"
+    notes: "Purpose-built for code. Excellent at scaffold/review/debug. Good context window."
+
+  qwen3-vl:4b:
+    best_at: [vision, instruction]
+    good_at: []
+    weak_at: [coding, reasoning, creativity, context]
+    observed_by: "local"
+    source: "Alibaba official"
+    notes: "Tiny vision model. Good for image description/OCR. Not for text reasoning."
+
+  gemma2:9b:
+    best_at: [reasoning, instruction]
+    good_at: [coding, creativity]
+    weak_at: [context, speed]
+    observed_by: "community"
+    source: "Google official + LMSYS"
+    notes: "Very strong reasoning for 9B. Good for structured analysis tasks."
+
+  gemma2:27b:
+    best_at: [reasoning, creativity, instruction]
+    good_at: [coding, context]
+    weak_at: [speed]
+    observed_by: "community"
+    source: "Google official + LMSYS"
+    notes: "Borderline fits 12GB VRAM (Q3). Best local model for deep reasoning."
+
+  gemini-2.5-flash:
+    best_at: [speed, context, instruction]
+    good_at: [coding, reasoning]
+    weak_at: [creativity]
+    observed_by: "community"
+    source: "Google official docs"
+    notes: "1M context, very fast. Good for C2-C3 tasks. Not as creative as Pro."
+
+  gemini-2.5-pro:
+    best_at: [reasoning, creativity, context, instruction]
+    good_at: [coding]
+    weak_at: [speed]
+    observed_by: "community"
+    source: "Google official docs + benchmarks"
+    notes: "1M context, strongest reasoning outside Claude. Good for C3-C4."
+
+  claude-sonnet-4-6:
+    best_at: [creativity, reasoning, instruction, coding]
+    good_at: [context]
+    weak_at: [speed]
+    observed_by: "Anthropic official + community"
+    source: "Anthropic docs + Claude.ai"
+    notes: "Best all-rounder for agentic work. Strong creative reasoning. 200K context."
+
+  claude-opus-4-6:
+    best_at: [creativity, reasoning, coding]
+    good_at: [context, instruction]
+    weak_at: [speed, cost]
+    observed_by: "Anthropic official"
+    source: "Anthropic docs"
+    notes: "Deep reasoning specialist. Expensive. Reserve for truly novel/hard problems."
+
+  gpt-4o-mini:
+    best_at: [speed, instruction, cost]
+    good_at: [coding]
+    weak_at: [reasoning, creativity, context]
+    observed_by: "community"
+    source: "OpenAI official"
+    notes: "Cheap and fast. Good for high-volume C1-C2. Outclassed by Gemini Flash."
+
+# ── Routing philosophy notes ────────────────────────────────────────────────
+philosophy:
+  # Do NOT rigidly enforce "C2 = cheap model." Route based on what the task
+  # actually needs and what each model excels at.
+  #
+  # Examples where "expected" routing is wrong:
+  # - "Summarize a 500K token log file" -> Gemini Flash (1M context) beats
+  #   Claude Sonnet (200K) despite being "cheaper tier"
+  # - "Debug this complex race condition" -> qwen2.5-coder:14b on desktop GPU
+  #   may outperform Gemini Flash because it's purpose-built for code
+  # - "Design a novel caching strategy" -> Claude Sonnet or Opus, even if
+  #   Gemini Pro could handle it, because creativity is Claude's strength
+  #
+  # The static routing table is a starting point. This registry is the
+  # evolving source of truth. Update it after every significant session.
+
+# ── Update protocol ──────────────────────────────────────────────────────────
+update_protocol:
+  # When you observe a model performing notably well or poorly on a task type,
+  # update this file and commit with a message like:
+  #   "data(router): gemma2:9b excellent at C3 reasoning tasks"
+  #
+  # Fields to update:
+  #   - best_at / good_at / weak_at: adjust based on observations
+  #   - observed_by: add your username if you've validated
+  #   - notes: add specific task examples where it shined or failed
+  #
+  # Updates should reference the task description or bd issue for provenance.

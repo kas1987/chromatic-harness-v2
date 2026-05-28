@@ -358,16 +358,15 @@ On the laptop specifically, the user can select a **speed mode** that shifts the
 | **balance** | Default — cost-aware but not penny-pinching | Ollama local | Ollama local / remote | Gemini pro | Claude sonnet / Gemini pro | Daily development |
 | **low** | Minimize external calls, maximize local | Ollama local | Ollama local / remote | Ollama local (try first) | Gemini pro (last resort) | Offline work, saving credits, plane wifi |
 
-### Speed Mode Implementation
+### Speed Mode as Cost Discipline, Not Capability Gate
 
-```python
-class SpeedMode(Enum):
-    SPEED = "speed"      # latency-first; cloud liberally
-    BALANCE = "balance"  # cost-latency tradeoff; default
-    LOW = "low"          # cost-first; local stubbornly
-```
+**Critical philosophy:** Speed mode controls *cost discipline*, not *capability limits*.
 
-The **provider_selector** receives `speed_mode` as an input and shifts the routing table boundary accordingly. Speed mode is orthogonal to C-level: the same C3 task can go to Gemini (speed), Ollama (low), or either (balance).
+- **speed** = never block. Advisory only. The user has declared "I want the best tool for this task, cost is secondary."
+- **balance** = block non-tier-4 pure-LLM calls (cost discipline: don't burn API credits on tasks local models can handle)
+- **low** = block non-local providers (force offline/local-first)
+
+The gate does **not** enforce "C2 must be cheap." It enforces "in balance mode, don't pay for cloud when local is sufficient." If a C2 task specifically needs a model strength that local lacks (e.g., 1M context for huge file analysis), the user can switch to speed mode or override.
 
 ### Speed Mode Detection (Auto)
 
@@ -384,13 +383,37 @@ If user doesn't specify, the router can infer from signals:
 Stored in `~/.claude/config/routing/user-preferences.yaml`:
 
 ```yaml
-speed_mode: balance   # user override; one of speed | balance | low
-auto_adjust: true     # allow router to shift based on budget/connectivity
+speed_mode: speed       # user override; one of speed | balance | low
+auto_adjust: true       # allow router to shift based on budget/connectivity
 ```
 
 ---
 
-## 11. Implementation Plan — Priority Order
+## 11. Model Capability Registry (Evolving)
+
+Static routing tables are a starting point. Real-world performance varies.
+
+The `model-capabilities.yaml` registry tracks:
+- **What each model is actually best at** (coding, reasoning, creativity, speed, context)
+- **Source of claim** (official docs, community benchmarks, personal observation)
+- **Observed performance** on specific task types
+
+### Routing Philosophy: Capability First, Cost Second
+
+**Do not rigidly enforce "C2 = cheap model."** Route based on what the task needs.
+
+Examples where "expected" tier routing is wrong:
+- "Summarize a 500K token log file" → Gemini Flash (1M context) beats Claude Sonnet (200K) despite being "cheaper tier"
+- "Debug this complex race condition" → qwen2.5-coder:14b on desktop GPU may outperform Gemini Flash because it's purpose-built for code
+- "Design a novel caching strategy" → Claude Sonnet or Opus, even if Gemini Pro could handle it, because creativity is Claude's strength
+
+The registry is updated after every significant session. Updates should reference the task description or bd issue for provenance.
+
+See: `09_DEPLOYMENT/config/routing/model-capabilities.yaml`
+
+---
+
+## 12. Implementation Plan — Priority Order
 
 ### Phase 1: Core Router (this session)
 1. `09_DEPLOYMENT/config/routing/providers.yaml`
