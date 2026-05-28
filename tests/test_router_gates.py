@@ -188,3 +188,53 @@ async def test_jsonl_log_created(router):
         entry = json.loads(lines[-1])
         assert entry["request_id"] == req.request_id
         assert "selected_provider" in entry
+
+
+@pytest.mark.asyncio
+async def test_agent_run_log_written_for_governed_model():
+    """_log_agent_run appends a PDR-format record when model is sonnet or kimi."""
+    import json
+    import pathlib
+
+    with tempfile.TemporaryDirectory() as td:
+        td_path = pathlib.Path(td)
+        agent_log = td_path / "AGENT_RUN_LOG.jsonl"
+        obs = observability_mod.ObservabilityLogger(
+            log_dir=td_path, agent_run_log=agent_log
+        )
+        r = ChromaticRouter(logger=obs)
+        req = make_req(confidence_score=90.0, preferred_provider="mock")
+        resp = await r.route(req)
+        # Manually invoke _log_agent_run with a governed model name so we can
+        # test the write path without depending on a live sonnet/kimi provider.
+        resp.selected_model = "claude-sonnet-4-6"
+        obs._log_agent_run(req, resp, extra={"role": "architect", "tools_used": 3})
+
+        assert agent_log.exists()
+        lines = [l for l in agent_log.read_text().splitlines() if l.strip()]
+        assert len(lines) == 1
+        record = json.loads(lines[0])
+        assert record["model"] == "claude-sonnet-4-6"
+        assert record["role"] == "architect"
+        assert record["tools_used"] == 3
+        assert record["confidence_score"] == 90.0
+        assert record["risk_level"] == "low"
+        assert "result" in record
+
+
+@pytest.mark.asyncio
+async def test_agent_run_log_not_written_for_non_governed_model():
+    """_log_agent_run must NOT fire for models that aren't sonnet or kimi."""
+    import pathlib
+
+    with tempfile.TemporaryDirectory() as td:
+        td_path = pathlib.Path(td)
+        agent_log = td_path / "AGENT_RUN_LOG.jsonl"
+        obs = observability_mod.ObservabilityLogger(
+            log_dir=td_path, agent_run_log=agent_log
+        )
+        r = ChromaticRouter(logger=obs)
+        req = make_req(confidence_score=90.0, preferred_provider="mock")
+        await r.route(req)
+        # mock provider → selected_model is empty / not sonnet or kimi
+        assert not agent_log.exists()
