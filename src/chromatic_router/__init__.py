@@ -37,8 +37,10 @@ from router.privacy import PrivacyGate  # noqa: E402
 from router.budget import BudgetGate  # noqa: E402
 from router.observability import ObservabilityLogger  # noqa: E402
 from router.adapters.base import BaseAdapter, AdapterHealth  # noqa: E402
-from router.adapters.mock import MockAdapter  # noqa: E402
-from router.adapters.openhuman_adapter import OpenHumanAdapter  # noqa: E402
+# Import scope and memory (canonical re-exports for digit-prefix workaround)
+from memory.store import SystemMemoryStore  # noqa: E402
+from scope.enforcer import ScopeEnforcer  # noqa: E402
+from scope.guard import DispatchGuard  # noqa: E402
 from router.adapters.ollama_adapter import OllamaAdapter  # noqa: E402
 from router.adapters.lmstudio_adapter import LMStudioAdapter  # noqa: E402
 from router.adapters.openai_adapter import OpenAIAdapter  # noqa: E402
@@ -78,4 +80,7 @@ __all__ = [
     "GoogleAdapter",
     "OpenRouterAdapter",
     "FeatherlessAdapter",
+    "SystemMemoryStore",
+    "ScopeEnforcer",
+    "DispatchGuard",
 ]

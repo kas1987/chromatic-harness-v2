@@ -23,6 +23,8 @@ from router.contracts import (  # noqa: E402
     RouteAudit,
     RouteInput,
 )
+from memory.store import SystemMemoryStore  # noqa: E402
+from scope.guard import DispatchGuard  # noqa: E402
 
 
 @dataclass
@@ -52,7 +54,57 @@ class Orchestrator:
         )
 
     def attach_magnets(self, mission: MissionPacket) -> list[str]:
-        return ["intent_magnet", "scope_magnet", "execution_magnet", "confidence_magnet"]
+        return ["intent_magnet", "scope_magnet", "execution_magnet", "confidence_magnet", "memory_magnet"]
+
+    async def guard_and_inject(
+        self,
+        mission: MissionPacket,
+        *,
+        file_scope: str = "",
+        agent_id: str = "chromatic_orchestrator",
+    ) -> dict[str, Any]:
+        """Inject system memory context and record scope baseline before dispatch."""
+        guard = DispatchGuard()
+        guarded = await guard.guard(
+            mission.__dict__,
+            file_scope=file_scope,
+            agent_id=agent_id,
+        )
+        # Merge injected context back into mission
+        mission.metadata.update(guarded.mission.get("metadata", {}))
+        return {
+            "mission_id": mission.mission_id,
+            "status": "guarded_and_ready",
+            "scope_baseline": {
+                "expected_scope": guarded.scope_baseline.expected_scope if guarded.scope_baseline else "",
+                "baseline_count": guarded.scope_baseline.baseline_count if guarded.scope_baseline else 0,
+            },
+            "injected_rules": [r["name"] for r in guarded.injected_context.get("governance_rules", [])],
+            "scope_header_present": bool(guarded.scope_header),
+        }
+
+    async def verify_scope_after_work(
+        self,
+        mission: MissionPacket,
+        baseline: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Post-work scope verification. Must run before marking mission complete."""
+        from scope.enforcer import ScopeEnforcer, ScopeBaseline
+        if not baseline.get("expected_scope"):
+            return {"passed": True, "reason": "no_scope_declared"}
+        enforcer = ScopeEnforcer()
+        sb = ScopeBaseline(
+            mission_id=mission.mission_id,
+            expected_scope=baseline["expected_scope"],
+            baseline_count=baseline.get("baseline_count", 0),
+        )
+        result = await enforcer.enforce_and_log(sb, task_id=mission.mission_id)
+        return {
+            "passed": result.passed,
+            "violations": result.violations,
+            "new_files_outside_scope": result.new_files,
+            "modified_outside_scope": result.modified_outside,
+        }
 
     def dispatch(self, mission: MissionPacket) -> dict[str, Any]:
         return {
