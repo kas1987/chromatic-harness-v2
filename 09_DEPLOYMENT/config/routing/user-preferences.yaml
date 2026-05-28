@@ -1,0 +1,27 @@
+# User-level routing preferences
+# Place a copy at ~/.claude/config/routing/user-preferences.yaml
+
+version: 2
+
+speed_mode: balance       # speed | balance | low
+auto_adjust: true         # allow router to override based on budget/connectivity
+
+# Override: never route to these providers (e.g., avoid OpenAI for political reasons)
+provider_blocklist: []
+
+# Override: always prefer this provider when available (ignores routing table)
+provider_preference: null   # e.g. "gemini", "ollama_local", "native_claude"
+
+# Budget cap per provider per week (USD)
+budget_caps:
+  gemini: 10.00
+  openai: 5.00
+  claude_api: 20.00
+  runpod: 5.00
+
+# Remote Ollama endpoints to probe
+remote_ollama:
+  - name: "desktop-4070"
+    host: "desktop.local"
+    port: 11434
+    enabled: true

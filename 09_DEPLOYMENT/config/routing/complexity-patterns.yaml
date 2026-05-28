@@ -1,0 +1,102 @@
+# Complexity classification patterns (C1–C4)
+# The router uses these to assign a C-level to an incoming task description.
+# Matching is case-insensitive and supports multi-word phrases.
+
+version: 2
+
+levels:
+  C1:
+    name: "Mechanical"
+    description: "Transform, format, convert, extract, summarize. Single-step. No reasoning."
+    keywords:
+      - "json-to-table"
+      - "json to table"
+      - "frontmatter"
+      - "csv"
+      - "format"
+      - "boilerplate"
+      - "scaffold directory layout"
+      - "scaffold the layout"
+      - "directory structure"
+      - "extract"
+      - "summarize"
+      - "table"
+      - "convert"
+      - "markdown table"
+      - "regex"
+      - "parse"
+    max_files: 1
+    reasoning_depth: none
+    typical_tools: [read, write]
+
+  C2:
+    name: "Structured"
+    description: "Code review, small refactor, single-file changes, smoke tests, pattern matching. Bounded scope."
+    keywords:
+      - "scaffold module"
+      - "scaffold a module"
+      - "scaffold the"
+      - "code review"
+      - "review code"
+      - "PR review"
+      - "smoke test"
+      - "lint"
+      - "refactor"
+      - "single-file"
+      - "fix"
+      - "debug"
+      - "unit test"
+      - "boilerplate for"
+      - "generate boilerplate"
+    max_files: 3
+    reasoning_depth: shallow
+    typical_tools: [read, write, bash_grep, bash_ls]
+
+  C3:
+    name: "Reasoning"
+    description: "Multi-file integration, architecture decisions, root-cause analysis, design trade-offs. Requires synthesis."
+    keywords:
+      - "debug the"
+      - "root cause"
+      - "root-cause"
+      - "architecture"
+      - "integration"
+      - "multi-file"
+      - "design"
+      - "trace cross-file"
+      - "trace dependencies"
+      - "refactor across"
+      - "review architecture"
+      - "plan"
+      - "investigate"
+      - "analyze"
+    max_files: 10
+    reasoning_depth: medium
+    typical_tools: [read, write, bash, web_search]
+
+  C4:
+    name: "Creative / Novel"
+    description: "Brainstorming, novel problem solving, creative writing, complex multi-step reasoning, research synthesis. Unbounded."
+    keywords:
+      - "brainstorm"
+      - "design tradeoffs"
+      - "design trade-offs"
+      - "novel"
+      - "creative"
+      - "strategy"
+      - "research"
+      - "synthesize"
+      - "invent"
+      - "plan the"
+      - "architect"
+      - "recommend"
+      - "explore"
+    max_files: null   # unlimited
+    reasoning_depth: deep
+    typical_tools: [read, write, bash, web_search, Agent_spawn]
+
+# Scoring heuristic:
+# 1. Count keyword matches per level (case-insensitive, whole-word-ish)
+# 2. Highest match count wins
+# 3. Break ties with reasoning_depth from task description length
+#    (longer descriptions with deep-analysis language → bump up)
