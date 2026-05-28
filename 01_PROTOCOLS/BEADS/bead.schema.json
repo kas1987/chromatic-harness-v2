@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Bead",
+  "type": "object",
+  "required": ["bead_id", "title", "priority", "status", "objective", "definition_of_done"],
+  "properties": {
+    "bead_id": {"type": "string"},
+    "title": {"type": "string"},
+    "source": {"type": "string"},
+    "priority": {"type": "string", "enum": ["p0", "p1", "p2", "p3"]},
+    "status": {"type": "string", "enum": ["created", "triaged", "assigned", "active", "review", "done", "blocked", "parked", "failed"]},
+    "owner": {"type": "string"},
+    "objective": {"type": "string"},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 100},
+    "risk": {"type": "string"},
+    "definition_of_done": {"type": "array", "items": {"type": "string"}},
+    "stop_conditions": {"type": "array", "items": {"type": "string"}}
+  }
+}

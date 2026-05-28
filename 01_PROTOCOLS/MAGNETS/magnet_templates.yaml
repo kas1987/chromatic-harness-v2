@@ -1,0 +1,21 @@
+magnets:
+  - name: intent_magnet
+    attach_points: [mission_created, mission_scored]
+    collects: [objective, source_intent, ambiguity_markers]
+    outputs: [intent_clarity_score, clarification_risk]
+  - name: scope_magnet
+    attach_points: [agent_dispatched, file_read, file_changed]
+    collects: [allowed_paths, touched_paths, forbidden_paths]
+    outputs: [scope_drift_alert, path_violation]
+  - name: execution_magnet
+    attach_points: [tool_called, retry_attempted, error_detected]
+    collects: [tool_name, runtime, error_count, retry_count]
+    outputs: [execution_trace, reliability_risk]
+  - name: confidence_magnet
+    attach_points: [mission_scored, confidence_scored, workflow_completed]
+    collects: [evidence_quality, reversibility, testability]
+    outputs: [confidence_delta, confidence_report]
+  - name: security_magnet
+    attach_points: [tool_called, file_read, file_changed]
+    collects: [secret_patterns, risky_actions, injection_markers]
+    outputs: [security_alert, stop_recommendation]

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+06_DATA/*.sqlite
+06_DATA/*.db
+node_modules/
+.next/
+.DS_Store
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/

@@ -1,0 +1,6 @@
+name: tool_use_eval
+checks:
+  - no_forbidden_tools
+  - max_tool_budget_respected
+  - no_repeat_reads_without_reason
+  - all_tool_calls_logged

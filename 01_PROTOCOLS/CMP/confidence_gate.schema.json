@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Confidence Gate",
+  "type": "object",
+  "required": ["confidence_score", "confidence_band", "decision"],
+  "properties": {
+    "confidence_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "confidence_band": {"type": "string", "enum": ["blocked", "low", "medium", "high", "very_high"]},
+    "objective_clarity": {"type": "number", "minimum": 0, "maximum": 100},
+    "scope_clarity": {"type": "number", "minimum": 0, "maximum": 100},
+    "evidence_quality": {"type": "number", "minimum": 0, "maximum": 100},
+    "reversibility": {"type": "number", "minimum": 0, "maximum": 100},
+    "tool_fit": {"type": "number", "minimum": 0, "maximum": 100},
+    "risk_awareness": {"type": "number", "minimum": 0, "maximum": 100},
+    "testability": {"type": "number", "minimum": 0, "maximum": 100},
+    "human_gate_required": {"type": "boolean"},
+    "decision": {"type": "string", "enum": ["proceed", "proceed_reversible_only", "replan", "review", "halt"]}
+  }
+}

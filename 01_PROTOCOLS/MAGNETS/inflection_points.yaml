@@ -1,0 +1,15 @@
+inflection_points:
+  - mission_created
+  - mission_scored
+  - agent_dispatched
+  - tool_called
+  - file_read
+  - file_changed
+  - test_started
+  - test_completed
+  - error_detected
+  - retry_attempted
+  - confidence_scored
+  - human_gate_triggered
+  - bead_created
+  - workflow_completed

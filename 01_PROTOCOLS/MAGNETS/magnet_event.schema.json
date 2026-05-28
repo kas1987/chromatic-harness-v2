@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Magnet Event",
+  "type": "object",
+  "required": ["event_id", "mission_id", "magnet_name", "inflection_point", "timestamp", "observed_signal"],
+  "properties": {
+    "event_id": {"type": "string"},
+    "mission_id": {"type": "string"},
+    "magnet_name": {"type": "string"},
+    "inflection_point": {"type": "string"},
+    "timestamp": {"type": "string"},
+    "observed_signal": {"type": "object"},
+    "risk_delta": {"type": "number"},
+    "confidence_delta": {"type": "number"},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "recommended_action": {"type": "string"}
+  }
+}

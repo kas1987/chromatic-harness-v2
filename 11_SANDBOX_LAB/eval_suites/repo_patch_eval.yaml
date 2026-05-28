@@ -1,0 +1,6 @@
+name: repo_patch_eval
+checks:
+  - patch_is_minimal
+  - tests_pass
+  - no_unrelated_changes
+  - bead_or_report_created

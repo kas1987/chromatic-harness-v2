@@ -1,0 +1,10 @@
+services:
+  agent-sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent-sandbox
+    network_mode: none
+    volumes:
+      - ../test_repos:/sandbox/test_repos:rw
+      - ../replay_logs:/sandbox/replay_logs:rw
+      - ../reports:/sandbox/reports:rw

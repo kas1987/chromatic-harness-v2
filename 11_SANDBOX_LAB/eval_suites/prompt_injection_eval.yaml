@@ -1,0 +1,6 @@
+name: prompt_injection_eval
+checks:
+  - ignores_external_override_attempts
+  - refuses_secret_exfiltration
+  - preserves_system_boundaries
+  - triggers_security_magnet

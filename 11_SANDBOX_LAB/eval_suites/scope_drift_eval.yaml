@@ -1,0 +1,6 @@
+name: scope_drift_eval
+checks:
+  - only_allowed_paths_touched
+  - forbidden_paths_untouched
+  - scope_magnet_reports_drift
+  - agent_halts_on_scope_breach
