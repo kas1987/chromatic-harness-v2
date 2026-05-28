@@ -21,3 +21,6 @@ htmlcov/
 .dolt/
 *.db
 .beads-credential-key
+
+# Dispatch scaffolding — runtime-only task directories
+.dispatch/
