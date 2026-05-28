@@ -17,6 +17,18 @@ def _repo_root() -> Path:
     return Path(os.getcwd())
 
 
+_GOVERNED_MODELS = {"sonnet", "kimi"}
+
+# Maps ConfidenceBand → PDR risk_level label
+_BAND_TO_RISK = {
+    "very_high": "low",
+    "high": "low",
+    "medium": "medium",
+    "low": "high",
+    "blocked": "critical",
+}
+
+
 class ObservabilityLogger:
     """Append-only JSONL route log with redaction."""
 
@@ -24,10 +36,15 @@ class ObservabilityLogger:
         root = _repo_root()
         self.log_dir = log_dir or (root / "07_LOGS_AND_AUDIT" / "routing")
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        self._file = self.log_dir / f"routes_{datetime.now(timezone.utc).strftime('%Y%m%d')}.jsonl"
+        self._file = (
+            self.log_dir
+            / f"routes_{datetime.now(timezone.utc).strftime('%Y%m%d')}.jsonl"
+        )
+        self._agent_run_log = root / "07_LOGS_AND_AUDIT" / "AGENT_RUN_LOG.jsonl"
 
     def _redact(self, text: str) -> str:
         import re
+
         patterns = [
             (r"sk-[a-zA-Z0-9]{20,}", "sk-***"),
             (r"ghp_[a-zA-Z0-9]{20,}", "ghp_***"),
@@ -47,7 +64,12 @@ class ObservabilityLogger:
             return [self._sanitize(v) for v in value]
         return value
 
-    def log(self, req: RouteRequest, resp: RouteResponse, extra: dict[str, Any] | None = None):
+    def log(
+        self,
+        req: RouteRequest,
+        resp: RouteResponse,
+        extra: dict[str, Any] | None = None,
+    ):
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "request_id": req.request_id,
@@ -71,3 +93,32 @@ class ObservabilityLogger:
             entry.update(self._sanitize(extra))
         with open(self._file, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, default=str) + "\n")
+
+        model_key = (resp.selected_model or "").lower()
+        if any(g in model_key for g in _GOVERNED_MODELS):
+            self._log_agent_run(req, resp, extra)
+
+    def _log_agent_run(
+        self,
+        req: RouteRequest,
+        resp: RouteResponse,
+        extra: dict[str, Any] | None = None,
+    ) -> None:
+        """Append a PDR-GOV-SONNET-KIMI-001 format record to AGENT_RUN_LOG.jsonl."""
+        band = getattr(req.confidence, "band", None)
+        band_val = band.value if hasattr(band, "value") else str(band or "")
+        extra = extra or {}
+        record = {
+            "task_id": req.task_id,
+            "model": resp.selected_model or "",
+            "role": extra.get("role", ""),
+            "confidence_score": resp.confidence_score,
+            "risk_level": _BAND_TO_RISK.get(band_val, "medium"),
+            "tools_used": extra.get("tools_used", 0),
+            "files_touched": extra.get("files_touched", []),
+            "result": resp.output.type.value,
+            "validation": extra.get("validation", ""),
+            "next_task": extra.get("next_task", ""),
+        }
+        with open(self._agent_run_log, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, default=str) + "\n")

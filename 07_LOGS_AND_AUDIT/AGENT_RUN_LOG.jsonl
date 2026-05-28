@@ -1,0 +1,1 @@
+{"_schema":"AGENT_RUN_LOG v1","_fields":["task_id","model","role","confidence_score","risk_level","tools_used","files_touched","result","validation","next_task"],"_source":"PDR-GOV-SONNET-KIMI-001","_gate":"docs/governance/CONFIDENCE_GATE.md"}

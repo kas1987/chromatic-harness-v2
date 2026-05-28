@@ -1,5 +1,7 @@
 # API Routing Policy
 
+> **Sonnet + Kimi governance:** see `docs/governance/MODEL_ROUTING_RULES.md` and `docs/governance/CONFIDENCE_GATE.md` for model-specific routing and confidence scoring. Governed by `docs/pdr/PDR-GOV-SONNET-KIMI-001.md`.
+
 ## Canonical Rule
 
 No agent, repo script, workflow, or UI component should call external LLM APIs directly.
