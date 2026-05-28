@@ -70,10 +70,15 @@ class AnthropicAdapter(BaseAdapter):
             client = self._get_client()
             start = time.time()
 
+            messages = (
+                req.input.messages
+                if req.input.messages
+                else [{"role": "user", "content": req.objective}]
+            )
             response = await client.messages.create(
                 model=self.cfg.get("model", "claude-3-5-sonnet-20241022"),
                 max_tokens=req.constraints.max_tokens or 2048,
-                messages=[{"role": "user", "content": req.prompt}],
+                messages=messages,
                 timeout=self.cfg.get("timeout", 30),
             )
 

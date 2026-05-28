@@ -64,9 +64,14 @@ class OllamaRemoteAdapter(BaseAdapter):
         if not self.model:
             return self.normalize_error(req.request_id, "No Ollama model configured")
 
+        messages = (
+            req.input.messages
+            if req.input.messages
+            else [{"role": "user", "content": req.objective}]
+        )
         payload = {
             "model": self.model,
-            "messages": [{"role": "user", "content": req.prompt}],
+            "messages": messages,
             "stream": False,
         }
 

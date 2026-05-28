@@ -70,11 +70,16 @@ class GoogleAdapter(BaseAdapter):
             model = genai.GenerativeModel(self.cfg.get("model", "gemini-pro"))
             start = time.time()
 
+            prompt = (
+                "\n".join([m.get("content", "") for m in req.input.messages])
+                if req.input.messages
+                else req.objective
+            )
             response = model.generate_content(
-                req.prompt,
+                prompt,
                 generation_config=genai.types.GenerationConfig(
                     max_output_tokens=req.constraints.max_tokens or 2048,
-                    temperature=req.constraints.temperature or 0.7,
+                    temperature=0.7,
                 ),
             )
 

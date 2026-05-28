@@ -70,13 +70,18 @@ class OpenRouterAdapter(BaseAdapter):
             client = self._get_client()
             start = time.time()
 
+            messages = (
+                req.input.messages
+                if req.input.messages
+                else [{"role": "user", "content": req.objective}]
+            )
             response = await client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
                 json={
                     "model": self.cfg.get("model", "openrouter/auto"),
-                    "messages": [{"role": "user", "content": req.prompt}],
+                    "messages": messages,
                     "max_tokens": req.constraints.max_tokens or 2048,
-                    "temperature": req.constraints.temperature or 0.7,
+                    "temperature": 0.7,
                 },
             )
 
