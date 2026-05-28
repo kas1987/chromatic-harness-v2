@@ -1,0 +1,72 @@
+{
+  "source_epic": "chromatic-harness-v2-option-c",
+  "timestamp": "2026-05-28T23:59:59Z",
+  "items": [
+    {
+      "id": "phase-7-agent-registration-ui",
+      "title": "Phase 7: Agent Registration UI + Promotion Timeline",
+      "type": "feature",
+      "severity": "high",
+      "description": "Build React component for registering new agents and visualizing L0-L5 promotion timeline with real-time level/risk updates. Integrate with Agent Trust Profiles panel for seamless onboarding UI.",
+      "estimated_hours": 8,
+      "blocked_by": [],
+      "depends_on": ["chromatic-harness-v2-option-c"]
+    },
+    {
+      "id": "phase-7-mission-replay-analytics",
+      "title": "Phase 7: Mission Replay + Historical Analytics Dashboard",
+      "type": "feature",
+      "severity": "high",
+      "description": "Add time-travel replay of mission execution events, confidence progression timeline, gate decision history, and performance metrics (tokens/tools/wall-time per phase). Enable post-incident analysis and trend detection.",
+      "estimated_hours": 12,
+      "blocked_by": [],
+      "depends_on": ["chromatic-harness-v2-option-c"]
+    },
+    {
+      "id": "tech-debt-websocket-load-balancing",
+      "title": "Tech Debt: WebSocket Load Balancing + Event Persistence",
+      "type": "tech-debt",
+      "severity": "medium",
+      "description": "Current WebSocket (Phase 6.5) scales to single server. Add Redis pub/sub for multi-instance horizontal scaling and event history persistence for replay capability. Required before production multi-instance deployment.",
+      "estimated_hours": 10,
+      "blocked_by": [],
+      "depends_on": ["chromatic-harness-v2-option-c"]
+    },
+    {
+      "id": "tech-debt-auth-layer",
+      "title": "Tech Debt: Authentication + RBAC for Multi-User Support",
+      "type": "tech-debt",
+      "severity": "high",
+      "description": "Add JWT-based auth to Console API and WebSocket. Implement role-based access control (admin/reviewer/executor). Scope mission visibility and bead permissions per user. Required for team environments.",
+      "estimated_hours": 14,
+      "blocked_by": [],
+      "depends_on": ["chromatic-harness-v2-option-c"]
+    },
+    {
+      "id": "improvement-test-pyramid-validation",
+      "title": "Improvement: Automated Test Pyramid Validation in Confidence Magnet",
+      "type": "improvement",
+      "severity": "medium",
+      "description": "Extend ConfidenceMagnet to validate test pyramid compliance per level (unit/integration/e2e ratio). Emit warnings when ratios deviate from standard. Helps catch test imbalance before confidence score alone would flag it.",
+      "estimated_hours": 6,
+      "blocked_by": [],
+      "depends_on": ["chromatic-harness-v2-option-c"]
+    },
+    {
+      "id": "improvement-magnet-plugins",
+      "title": "Improvement: Extensible Magnet Plugin Framework",
+      "type": "improvement",
+      "severity": "low",
+      "description": "Refactor Magnets to use plugin interface so custom magnets (domain-specific, security-specific, cost-optimized) can be registered at runtime without modifying core classes.",
+      "estimated_hours": 8,
+      "blocked_by": [],
+      "depends_on": ["chromatic-harness-v2-option-c"]
+    }
+  ],
+  "consumed": false,
+  "claim_status": "available",
+  "claimed_by": null,
+  "claimed_at": null,
+  "consumed_by": null,
+  "consumed_at": null
+}
