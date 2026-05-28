@@ -33,6 +33,12 @@ async def init_db():
             data TEXT NOT NULL,
             created_at TEXT NOT NULL
         )""")
+        await db.execute("""CREATE TABLE IF NOT EXISTS agent_profiles (
+            agent_id TEXT PRIMARY KEY,
+            data TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )""")
         await db.commit()
 
 

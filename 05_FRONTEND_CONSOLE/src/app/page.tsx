@@ -4,12 +4,16 @@ import { useEffect, useState, useCallback } from "react";
 import {
   getMissions,
   getBeads,
+  getAgents,
   createMission,
   getMissionEvents,
   type Mission,
   type Bead,
   type MagnetEvent,
+  type AgentProfile,
 } from "@/lib/api";
+import AgentProfiles from "@/components/AgentProfiles";
+import AgentRegistration from "@/components/AgentRegistration";
 
 const PANEL: React.CSSProperties = {
   border: "1px solid #333",
@@ -51,15 +55,18 @@ export default function ConsolePage() {
   const [missions, setMissions] = useState<Mission[]>([]);
   const [beads, setBeads] = useState<Bead[]>([]);
   const [events, setEvents] = useState<MagnetEvent[]>([]);
+  const [agents, setAgents] = useState<AgentProfile[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<AgentProfile | null>(null);
   const [selected, setSelected] = useState<Mission | null>(null);
   const [newObjective, setNewObjective] = useState("");
   const [apiStatus, setApiStatus] = useState<"ok" | "err" | "?">("?");
 
   const refresh = useCallback(async () => {
     try {
-      const [ms, bs] = await Promise.all([getMissions(), getBeads()]);
+      const [ms, bs, ags] = await Promise.all([getMissions(), getBeads(), getAgents()]);
       setMissions(ms);
       setBeads(bs);
+      setAgents(ags);
       setApiStatus("ok");
       if (selected) {
         const evs = await getMissionEvents(selected.mission_id);
@@ -226,6 +233,27 @@ export default function ConsolePage() {
           ))}
         </div>
 
+      </div>
+
+      {/* Full-width row: Agent Trust Profiles + Registration */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <AgentProfiles
+          agents={agents}
+          selectedAgent={selectedAgent}
+          onSelect={setSelectedAgent}
+        />
+        <AgentRegistration
+          selectedAgent={selectedAgent}
+          onAgentRegistered={(agent) => {
+            setAgents(prev => {
+              const idx = prev.findIndex(a => a.agent_id === agent.agent_id);
+              return idx >= 0
+                ? prev.map(a => a.agent_id === agent.agent_id ? agent : a)
+                : [agent, ...prev];
+            });
+            setSelectedAgent(agent);
+          }}
+        />
       </div>
     </div>
   );

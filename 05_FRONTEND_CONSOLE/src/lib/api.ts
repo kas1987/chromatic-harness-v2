@@ -174,3 +174,40 @@ export async function getHealthStatus(): Promise<{ status: string }> {
     return { status: "unavailable" };
   }
 }
+
+export interface PromotionRecord {
+  level: number;
+  date: string;
+  reason: string;
+}
+
+export interface LevelThreshold {
+  min_executions: number;
+  min_success_rate: number;
+  max_risk: number;
+}
+
+export async function registerAgent(payload: {
+  agent_id: string;
+  description?: string;
+  initial_level?: number;
+}): Promise<AgentProfile> {
+  return apiCall("POST", "/agents", payload);
+}
+
+export async function promoteAgent(
+  agentId: string,
+  newLevel: number,
+  reason: string
+): Promise<AgentProfile> {
+  return apiCall("POST", `/agents/${agentId}/promote`, {
+    new_level: newLevel,
+    reason,
+  });
+}
+
+export async function getLevelThresholds(): Promise<
+  Record<string, LevelThreshold>
+> {
+  return apiCall("GET", "/agents/meta/level-thresholds");
+}

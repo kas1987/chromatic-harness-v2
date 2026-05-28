@@ -65,3 +65,46 @@ class BeadResponse(BaseModel):
     source: str
     mission_id: Optional[str]
     created_at: str
+
+
+class PromotionRecord(BaseModel):
+    level: int
+    date: str
+    reason: str
+
+
+class ViolationRecord(BaseModel):
+    date: str
+    violation_type: str
+
+
+class RegisterAgentRequest(BaseModel):
+    agent_id: str
+    description: str = ""
+    initial_level: int = Field(default=0, ge=0, le=5)
+
+
+class AgentProfileResponse(BaseModel):
+    agent_id: str
+    description: str
+    current_level: int
+    total_executions: int
+    successful_executions: int
+    success_rate: float
+    avg_confidence: float
+    risk_score: float
+    promotion_history: list[PromotionRecord]
+    last_violation: Optional[ViolationRecord]
+    created_at: str
+    updated_at: str
+
+
+class RecordExecutionRequest(BaseModel):
+    success: bool
+    confidence_score: float = Field(default=75.0, ge=0.0, le=100.0)
+    risk_delta: float = 0.0
+
+
+class PromoteAgentRequest(BaseModel):
+    new_level: int = Field(ge=0, le=5)
+    reason: str
