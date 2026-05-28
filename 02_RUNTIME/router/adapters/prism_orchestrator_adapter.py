@@ -77,7 +77,7 @@ class PrismOrchestratorAdapter(BaseAdapter):
 
             payload = {
                 "prompt": prompt,
-                "entrypoint": "chromatic",
+                "entrypoint": self.cfg.get("entrypoint", "ollama"),
                 "metadata": {
                     "priority": "normal",
                     "task_type": req.task_type.value,
@@ -97,7 +97,13 @@ class PrismOrchestratorAdapter(BaseAdapter):
                 )
 
             data = response.json()
-            content = data.get("output", "")
+            if not data.get("ok", True) and not data.get("output"):
+                error_msg = (
+                    data.get("error") or data.get("reason") or "Prism returned ok=false"
+                )
+                return self.normalize_error(req.request_id, f"Prism: {error_msg[:300]}")
+
+            content = data.get("output") or ""
 
             return RouteResponse(
                 request_id=req.request_id,
