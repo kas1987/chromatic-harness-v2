@@ -1,0 +1,41 @@
+# Privacy policy and provider allowlists per privacy class
+# P0 (unrestricted) → P4 (legal/HIPAA/GDPR)
+
+privacy_classes:
+  P0:
+    description: "Public, non-sensitive, no PII"
+    allowed_providers:
+      - openai
+      - anthropic
+      - google
+      - ollama
+      - lmstudio
+      - openrouter
+      - featherless
+      - prism-orchestrator
+      - native_claude
+      - together_ai
+      - moonshot
+
+  P1:
+    description: "Internal/business, no confidential data"
+    allowed_providers:
+      - openai
+      - anthropic
+      - google
+      - prism-orchestrator
+      - native_claude
+
+  P2:
+    description: "Confidential business data, PII okay with controls"
+    allowed_providers:
+      - native_claude
+      - prism-orchestrator
+
+  P3:
+    description: "Blocked: API keys, secrets, credentials"
+    allowed_providers: []
+
+  P4:
+    description: "Blocked without human gate: HIPAA, GDPR, legal"
+    allowed_providers: []
