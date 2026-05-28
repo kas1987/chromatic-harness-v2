@@ -17,6 +17,10 @@ htmlcov/
 # Router observability logs
 07_LOGS_AND_AUDIT/routing/*.jsonl
 
+# Runtime event logs (agentops, router events — never commit)
+10_RUNTIME/logs/*.jsonl
+09_DEPLOYMENT/10_RUNTIME/logs/*.jsonl
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
