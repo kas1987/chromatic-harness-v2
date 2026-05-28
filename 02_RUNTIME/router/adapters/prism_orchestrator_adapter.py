@@ -20,14 +20,16 @@ from ..contracts import (
 
 class PrismOrchestratorAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
-        cfg = cfg or {
-            "enabled": os.environ.get("PRISM_ORCHESTRATOR_ENABLED", "false").lower()
-            == "true",
-            "base_url": os.environ.get(
+        cfg = dict(cfg) if cfg else {}
+        if "enabled" not in cfg:
+            cfg["enabled"] = (
+                os.environ.get("PRISM_ORCHESTRATOR_ENABLED", "false").lower() == "true"
+            )
+        if "base_url" not in cfg:
+            cfg["base_url"] = os.environ.get(
                 "PRISM_ORCHESTRATOR_URL", "http://127.0.0.1:8000"
-            ),
-            "timeout": 60,
-        }
+            )
+        cfg.setdefault("timeout", 60)
         super().__init__("prism-orchestrator", cfg)
         self._client = None
 
