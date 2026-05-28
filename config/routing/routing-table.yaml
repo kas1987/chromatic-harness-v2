@@ -15,8 +15,8 @@ routes:
     max_privacy: P2
 
   coding:
-    default: openai
-    fallback: [anthropic]
+    default: kimi
+    fallback: [openai, anthropic]
     max_privacy: P1
 
   review:
