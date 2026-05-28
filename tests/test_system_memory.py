@@ -3,26 +3,20 @@
 from __future__ import annotations
 
 import os
-import sys
 import tempfile
 from pathlib import Path
 
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-_RUNTIME = os.path.join(_REPO, "02_RUNTIME")
-sys.path.insert(0, _REPO)
-sys.path.insert(0, _RUNTIME)
-
 import pytest
 
-from memory.store import SystemMemoryStore, Learning, GovernanceRule, ScopeViolation
-from scope.enforcer import ScopeEnforcer, ScopeBaseline, ScopeCheckResult
+from memory.store import SystemMemoryStore, Learning, ScopeViolation
+from scope.enforcer import ScopeEnforcer
 
 
 @pytest.fixture
 def temp_db():
     # Use a persistent temp file; Windows may lock it but tests are short-lived
     import tempfile
+
     f = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
     path = f.name
     f.close()
@@ -57,12 +51,12 @@ async def test_get_rules_by_category(store):
 async def test_get_learnings(store):
     learnings = await store.get_learnings(scope="cross-cutting", limit=10)
     assert len(learnings) >= 1
-    assert all(l.scope == "cross-cutting" for l in learnings)
+    assert all(learning.scope == "cross-cutting" for learning in learnings)
 
 
 @pytest.mark.asyncio
 async def test_insert_and_retrieve_learning(store):
-    l = Learning(
+    learning = Learning(
         id="L-TEST-001",
         title="Test Learning",
         category="process",
@@ -71,7 +65,7 @@ async def test_insert_and_retrieve_learning(store):
         content="Test content for persistent memory.",
         source="test_suite",
     )
-    await store.insert_learning(l)
+    await store.insert_learning(learning)
     retrieved = await store.get_learnings(limit=100)
     assert any(r.id == "L-TEST-001" for r in retrieved)
 
@@ -106,7 +100,9 @@ async def test_record_and_retrieve_violation(store):
 
 @pytest.mark.asyncio
 async def test_session_lifecycle(store):
-    sid = await store.start_session(agent_id="test-agent", project_context={"repo": "test"})
+    sid = await store.start_session(
+        agent_id="test-agent", project_context={"repo": "test"}
+    )
     assert sid
     await store.end_session(sid, outcome="success", injected_memory=["L-001", "R-001"])
 
@@ -115,9 +111,13 @@ def test_scope_enforcer_baseline():
     with tempfile.TemporaryDirectory() as tmp:
         # Init a git repo for testing
         os.system(f"git init -q {tmp}")
-        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(parents=True, exist_ok=True)
+        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(
+            parents=True, exist_ok=True
+        )
         (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").write_text("x")
-        (Path(tmp) / "02_RUNTIME" / "router.py").parent.mkdir(parents=True, exist_ok=True)
+        (Path(tmp) / "02_RUNTIME" / "router.py").parent.mkdir(
+            parents=True, exist_ok=True
+        )
         (Path(tmp) / "02_RUNTIME" / "router.py").write_text("y")
         os.system(f"git -C {tmp} add . && git -C {tmp} commit -q -m 'init'")
 
@@ -129,7 +129,9 @@ def test_scope_enforcer_baseline():
 def test_scope_enforcer_passes_when_no_changes():
     with tempfile.TemporaryDirectory() as tmp:
         os.system(f"git init -q {tmp}")
-        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(parents=True, exist_ok=True)
+        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(
+            parents=True, exist_ok=True
+        )
         (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").write_text("x")
         os.system(f"git -C {tmp} add . && git -C {tmp} commit -q -m 'init'")
 
@@ -142,7 +144,9 @@ def test_scope_enforcer_passes_when_no_changes():
 def test_scope_enforcer_detects_out_of_scope_file():
     with tempfile.TemporaryDirectory() as tmp:
         os.system(f"git init -q {tmp}")
-        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(parents=True, exist_ok=True)
+        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(
+            parents=True, exist_ok=True
+        )
         (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").write_text("x")
         os.system(f"git -C {tmp} add . && git -C {tmp} commit -q -m 'init'")
 
@@ -161,7 +165,14 @@ def test_scope_enforcer_detects_out_of_scope_file():
 
 def test_scope_header_generation():
     enforcer = ScopeEnforcer()
-    rules = [{"severity": "critical", "name": "TEST", "description": "desc", "fix": "fix_code"}]
+    rules = [
+        {
+            "severity": "critical",
+            "name": "TEST",
+            "description": "desc",
+            "fix": "fix_code",
+        }
+    ]
     header = enforcer.build_scope_header("05_FRONTEND_CONSOLE/", rules)
     assert "FILE SCOPE: 05_FRONTEND_CONSOLE/" in header
     assert "TEST" in header

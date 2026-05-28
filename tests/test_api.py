@@ -1,30 +1,21 @@
 """Tests for Chromatic Harness v2 API."""
 
-import sys
 import os
 import tempfile
+import importlib
 import pytest
-
-# Point to the API directory
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-_RUNTIME = os.path.join(_REPO, "02_RUNTIME")
-sys.path.insert(0, _REPO)
-sys.path.insert(0, _RUNTIME)
-sys.path.insert(0, os.path.join(_RUNTIME, "api"))
 
 # Use temp SQLite for tests — must be set before importing api modules
 _tmpdir = tempfile.mkdtemp()
 os.environ["CHROMATIC_DB_PATH"] = os.path.join(_tmpdir, "test.sqlite")
 
-import importlib
-import api.db as db_module
-import api.main as api_module
+import api.db as db_module  # noqa: E402
+import api.main as api_module  # noqa: E402
 
 importlib.reload(db_module)
 importlib.reload(api_module)
 
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient  # noqa: E402
 
 
 @pytest.fixture(scope="session")

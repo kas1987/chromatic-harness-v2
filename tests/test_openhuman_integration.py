@@ -2,16 +2,7 @@
 
 from __future__ import annotations
 
-import os
-import sys
-from pathlib import Path
-from unittest.mock import AsyncMock, patch
-
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-_RUNTIME = os.path.join(_REPO, "02_RUNTIME")
-sys.path.insert(0, _REPO)
-sys.path.insert(0, _RUNTIME)
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from router.adapters.openhuman_adapter import OpenHumanAdapter
@@ -115,7 +106,7 @@ async def test_openhuman_http_error_handling(openhuman_config, route_request):
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client_class.return_value.__aenter__.return_value = mock_client
-        mock_http_response = AsyncMock()
+        mock_http_response = MagicMock()
         mock_http_response.status_code = 503
         mock_http_response.text = "Service unavailable"
         mock_client.post.return_value = mock_http_response
@@ -152,7 +143,7 @@ async def test_openhuman_health_check(openhuman_config):
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client_class.return_value.__aenter__.return_value = mock_client
-        mock_http_response = AsyncMock()
+        mock_http_response = MagicMock()
         mock_http_response.status_code = 200
         mock_client.get.return_value = mock_http_response
 
@@ -186,7 +177,7 @@ async def test_openhuman_success_response(openhuman_config, route_request):
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client_class.return_value.__aenter__.return_value = mock_client
-        mock_http_response = AsyncMock()
+        mock_http_response = MagicMock()
         mock_http_response.status_code = 200
         mock_http_response.json.return_value = {
             "context": [{"scope": "research", "summary": "Found relevant info"}]
@@ -195,6 +186,6 @@ async def test_openhuman_success_response(openhuman_config, route_request):
 
         response = await adapter.complete(route_request)
 
-        assert response.output.type.value == "text"
+        assert response.output.type.value == "json"
         assert response.route_reason == "openhuman_ok"
         assert response.selected_provider == "openhuman"

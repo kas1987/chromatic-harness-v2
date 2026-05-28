@@ -1,15 +1,6 @@
 """Tests enforcing OpenHuman Phase-1 read-only boundary."""
 
-import sys
-import os
 import pytest
-
-_HERE = os.path.dirname(os.path.abspath(__file__))
-_REPO = os.path.dirname(_HERE)
-_RUNTIME = os.path.join(_REPO, "02_RUNTIME")
-sys.path.insert(0, _REPO)
-sys.path.insert(0, _RUNTIME)
-
 import importlib
 
 import router.contracts as contracts_mod
@@ -18,7 +9,7 @@ import router.adapters.openhuman_adapter as oh_mod
 importlib.reload(contracts_mod)
 importlib.reload(oh_mod)
 
-from router.contracts import (
+from router.contracts import (  # noqa: E402
     RouteRequest,
     RouteConstraints,
     RouteConfidence,
@@ -26,11 +17,10 @@ from router.contracts import (
     RouteInput,
     TaskType,
     PrivacyClass,
-    ConfidenceBand,
     OutputType,
 )
-from router.adapters.openhuman_adapter import OpenHumanAdapter
-from router.confidence import ConfidenceGate
+from router.adapters.openhuman_adapter import OpenHumanAdapter  # noqa: E402
+from router.confidence import ConfidenceGate  # noqa: E402
 
 
 def make_oh_req(
@@ -71,7 +61,13 @@ async def test_openhuman_disabled_by_default():
 
 @pytest.mark.asyncio
 async def test_openhuman_readonly_allows_memory_search():
-    oh = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787", "default_mode": "read_only"})
+    oh = OpenHumanAdapter(
+        {
+            "enabled": True,
+            "base_url": "http://127.0.0.1:8787",
+            "default_mode": "read_only",
+        }
+    )
     req = make_oh_req(action="memory_search")
     resp = await oh.complete(req)
     assert resp.route_reason != "openhuman_readonly_blocked"
@@ -80,7 +76,13 @@ async def test_openhuman_readonly_allows_memory_search():
 
 @pytest.mark.asyncio
 async def test_openhuman_readonly_blocks_send_email():
-    oh = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787", "default_mode": "read_only"})
+    oh = OpenHumanAdapter(
+        {
+            "enabled": True,
+            "base_url": "http://127.0.0.1:8787",
+            "default_mode": "read_only",
+        }
+    )
     req = make_oh_req(action="send_email")
     resp = await oh.complete(req)
     assert resp.route_reason == "openhuman_readonly_blocked"
@@ -90,7 +92,13 @@ async def test_openhuman_readonly_blocks_send_email():
 
 @pytest.mark.asyncio
 async def test_openhuman_write_action_blocked_even_if_not_readonly():
-    oh = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787", "default_mode": "governed"})
+    oh = OpenHumanAdapter(
+        {
+            "enabled": True,
+            "base_url": "http://127.0.0.1:8787",
+            "default_mode": "governed",
+        }
+    )
     req = make_oh_req(action="delete_files")
     resp = await oh.complete(req)
     assert resp.route_reason == "openhuman_write_blocked"
@@ -100,8 +108,11 @@ async def test_openhuman_write_action_blocked_even_if_not_readonly():
 @pytest.mark.asyncio
 async def test_openhuman_disabled_when_allow_openhuman_false():
     from router.router import ChromaticRouter
+
     router = ChromaticRouter()
-    req = make_oh_req(allow_openhuman=False, confidence_score=90.0, privacy_class=PrivacyClass.P1)
+    req = make_oh_req(
+        allow_openhuman=False, confidence_score=90.0, privacy_class=PrivacyClass.P1
+    )
     resp = await router.route(req)
     assert resp.selected_provider == "mock"
     assert resp.fallback_used is True
@@ -110,6 +121,7 @@ async def test_openhuman_disabled_when_allow_openhuman_false():
 @pytest.mark.asyncio
 async def test_openhuman_never_receives_p3():
     from router.router import ChromaticRouter
+
     router = ChromaticRouter()
     req = make_oh_req(privacy_class=PrivacyClass.P3, confidence_score=95.0)
     resp = await router.route(req)
@@ -120,6 +132,7 @@ async def test_openhuman_never_receives_p3():
 @pytest.mark.asyncio
 async def test_openhuman_p4_blocked_without_human_gate():
     from router.router import ChromaticRouter
+
     router = ChromaticRouter()
     req = make_oh_req(privacy_class=PrivacyClass.P4, confidence_score=95.0)
     resp = await router.route(req)

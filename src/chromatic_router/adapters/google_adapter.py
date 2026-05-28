@@ -1,4 +1,5 @@
 """Google Gemini adapter stub."""
+# ruff: noqa: E402
 
 from __future__ import annotations
 
@@ -11,7 +12,13 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from router.adapters.base import BaseAdapter, AdapterHealth  # noqa: E402
-from router.contracts import RouteRequest, RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs  # noqa: E402
+from router.contracts import (
+    RouteRequest,
+    RouteResponse,
+    OutputType,
+    RouteOutput,
+    RouteLogs,
+)  # noqa: E402
 
 
 class GoogleAdapter(BaseAdapter):
@@ -31,11 +38,15 @@ class GoogleAdapter(BaseAdapter):
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append("GoogleAdapter.complete() is a stub — wire google.generativeai SDK when ready.")
+        logs.warnings.append(
+            "GoogleAdapter.complete() is a stub — wire google.generativeai SDK when ready."
+        )
         return RouteResponse(
             request_id=req.request_id,
             selected_provider=self.name,
             route_reason="google_stub",
-            output=RouteOutput(type=OutputType.TEXT, content="[Google stub — not yet wired]"),
+            output=RouteOutput(
+                type=OutputType.TEXT, content="[Google stub — not yet wired]"
+            ),
             logs=logs,
         )
