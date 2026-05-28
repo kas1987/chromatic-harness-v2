@@ -53,3 +53,10 @@ providers:
     env_key: OPENHUMAN_BEARER_TOKEN
     privacy_max: P2
     default_mode: read_only
+
+  prism-orchestrator:
+    type: cross_project
+    enabled: true
+    base_url: http://host.docker.internal:8000
+    env_key: PRISM_ORCHESTRATOR_ENABLED
+    privacy_max: P2
