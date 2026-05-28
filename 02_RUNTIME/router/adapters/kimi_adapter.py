@@ -23,13 +23,13 @@ _DEFAULT_MODEL = "moonshot-v1-32k"
 
 class KimiAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
-        cfg = cfg or {
-            "enabled": bool(os.environ.get("MOONSHOT_API_KEY")),
-            "env_key": "MOONSHOT_API_KEY",
-            "base_url": _BASE_URL,
-            "model": _DEFAULT_MODEL,
-            "timeout": 90,
-        }
+        cfg = dict(cfg) if cfg else {}
+        env_key = cfg.get("env_key", "MOONSHOT_API_KEY")
+        cfg["enabled"] = bool(os.environ.get(env_key))
+        cfg.setdefault("env_key", "MOONSHOT_API_KEY")
+        cfg.setdefault("base_url", _BASE_URL)
+        cfg.setdefault("model", _DEFAULT_MODEL)
+        cfg.setdefault("timeout", 90)
         super().__init__("kimi", cfg)
         self._client = None
 
