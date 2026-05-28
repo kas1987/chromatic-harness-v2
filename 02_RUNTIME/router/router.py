@@ -63,22 +63,34 @@ class ChromaticRouter:
                 self.adapters[name] = OllamaRemoteAdapter(name, cfg)
             elif name == "lmstudio":
                 from .adapters.lmstudio_adapter import LMStudioAdapter
+
                 self.adapters[name] = LMStudioAdapter(cfg)
             elif name == "openai":
                 from .adapters.openai_adapter import OpenAIAdapter
+
                 self.adapters[name] = OpenAIAdapter(cfg)
             elif name == "anthropic":
                 from .adapters.anthropic_adapter import AnthropicAdapter
+
                 self.adapters[name] = AnthropicAdapter(cfg)
             elif name == "google":
                 from .adapters.google_adapter import GoogleAdapter
+
                 self.adapters[name] = GoogleAdapter(cfg)
             elif name == "openrouter":
                 from .adapters.openrouter_adapter import OpenRouterAdapter
+
                 self.adapters[name] = OpenRouterAdapter(cfg)
             elif name == "featherless":
                 from .adapters.featherless_adapter import FeatherlessAdapter
+
                 self.adapters[name] = FeatherlessAdapter(cfg)
+            elif name == "prism-orchestrator":
+                from .adapters.prism_orchestrator_adapter import (
+                    PrismOrchestratorAdapter,
+                )
+
+                self.adapters[name] = PrismOrchestratorAdapter(cfg)
         if "mock" not in self.adapters:
             self.adapters["mock"] = MockAdapter()
 
@@ -87,12 +99,12 @@ class ChromaticRouter:
         preferred = req.preferred_provider
 
         # ── NEW: context-aware route when no explicit preference ────────────
-        if (not preferred or preferred == "auto"):
+        if not preferred or preferred == "auto":
             try:
                 context = self.context_detector.detect()
                 complexity = self.complexity_classifier.classify(
                     description=req.objective,
-                    prompt="",   # TODO: expose full prompt on RouteRequest
+                    prompt="",  # TODO: expose full prompt on RouteRequest
                 )
                 selection = self.provider_selector.select(
                     complexity=complexity,
@@ -112,7 +124,9 @@ class ChromaticRouter:
                     )
                     return primary, fallback, logs
             except Exception as exc:
-                logs.warnings.append(f"Context routing failed ({exc}), falling back to legacy route.")
+                logs.warnings.append(
+                    f"Context routing failed ({exc}), falling back to legacy route."
+                )
 
         # ── LEGACY: task-type based route ────────────────────────────────────
         task_route = self.loader.route_for_task(req.task_type.value)
@@ -143,7 +157,9 @@ class ChromaticRouter:
             if cand in allowed or cand == "mock":
                 filtered.append(cand)
             else:
-                logs.warnings.append(f"Provider {cand} removed by privacy policy for {pc.value}.")
+                logs.warnings.append(
+                    f"Provider {cand} removed by privacy policy for {pc.value}."
+                )
         if not filtered:
             logs.errors.append("No candidate provider passed privacy gate.")
             return "mock", [], logs
@@ -155,7 +171,9 @@ class ChromaticRouter:
             return False
         return adapter.enabled
 
-    async def route(self, req: RouteRequest | None = None, **kwargs: Any) -> RouteResponse:
+    async def route(
+        self, req: RouteRequest | None = None, **kwargs: Any
+    ) -> RouteResponse:
         if req is None:
             req = self._build_request(**kwargs)
 
@@ -301,7 +319,13 @@ class ChromaticRouter:
         caller: str = "unknown",
         **kwargs: Any,
     ) -> RouteRequest:
-        from .contracts import RouteInput, RouteConstraints, RouteConfidence, RouteAudit, TaskType
+        from .contracts import (
+            RouteInput,
+            RouteConstraints,
+            RouteConfidence,
+            RouteAudit,
+            TaskType,
+        )
 
         return RouteRequest(
             request_id=request_id or str(uuid.uuid4()),
@@ -311,10 +335,20 @@ class ChromaticRouter:
             input=RouteInput(),
             constraints=RouteConstraints(
                 privacy_class=PrivacyClass(privacy_class),
-                **{k: v for k, v in kwargs.items() if k in {
-                    "max_cost_usd", "max_latency_ms", "max_tokens",
-                    "allow_cloud", "allow_broker", "allow_openhuman", "allow_tools"
-                }},
+                **{
+                    k: v
+                    for k, v in kwargs.items()
+                    if k
+                    in {
+                        "max_cost_usd",
+                        "max_latency_ms",
+                        "max_tokens",
+                        "allow_cloud",
+                        "allow_broker",
+                        "allow_openhuman",
+                        "allow_tools",
+                    }
+                },
             ),
             confidence=RouteConfidence(
                 score=confidence_score,
