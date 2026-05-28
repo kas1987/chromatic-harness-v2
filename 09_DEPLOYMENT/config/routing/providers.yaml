@@ -205,4 +205,27 @@ providers:
     latency_ms_estimate: 1500
     authentication: session
 
-# Featuerless omitted — no API key configured
+  # ── Cross-Project Mesh ────────────────────────────────────────────────────
+
+  prism-orchestrator:
+    name: "Prism Orchestrator (Dual-Entry Dispatcher)"
+    endpoint: "http://127.0.0.1:8000"
+    type: "cross_project"
+    cost_per_1m_tokens: 0.00            # delegates to backends
+    latency_ms_estimate: 2000
+    authentication: env_var             # PRISM_ORCHESTRATOR_ENABLED
+    models:
+      - name: "prism-auto"
+        context: 128000
+        best_for: [C2, C3]
+        note: "Routes to Ollama, Claude CLI, or cloud per policy"
+      - name: "ollama-via-prism"
+        context: 128000
+        best_for: [C1, C2]
+        note: "Prism → local Ollama"
+      - name: "claude-cli-via-prism"
+        context: 999999
+        best_for: [C3, C4]
+        note: "Prism → Claude CLI daemon"
+
+# Featherless omitted — no API key configured
