@@ -348,9 +348,74 @@ If uncertain, state confidence level explicitly.
 
 ---
 
-## 8. Implementation Notes
+## 10. Speed Mode: Latency vs Cost Slider
 
-### 8.1 What to Build
+On the laptop specifically, the user can select a **speed mode** that shifts the routing boundary independent of C-level:
+
+| Mode | Meaning | C1→ | C2→ | C3→ | C4→ | Best For |
+|------|---------|-----|-----|-----|-----|----------|
+| **speed** | Fastest response, cost secondary | Ollama local (if <2s) else Gemini flash | Gemini flash | Gemini pro | Claude sonnet / Gemini ultra | Live coding, tight feedback loops, demos |
+| **balance** | Default — cost-aware but not penny-pinching | Ollama local | Ollama local / remote | Gemini pro | Claude sonnet / Gemini pro | Daily development |
+| **low** | Minimize external calls, maximize local | Ollama local | Ollama local / remote | Ollama local (try first) | Gemini pro (last resort) | Offline work, saving credits, plane wifi |
+
+### Speed Mode Implementation
+
+```python
+class SpeedMode(Enum):
+    SPEED = "speed"      # latency-first; cloud liberally
+    BALANCE = "balance"  # cost-latency tradeoff; default
+    LOW = "low"          # cost-first; local stubbornly
+```
+
+The **provider_selector** receives `speed_mode` as an input and shifts the routing table boundary accordingly. Speed mode is orthogonal to C-level: the same C3 task can go to Gemini (speed), Ollama (low), or either (balance).
+
+### Speed Mode Detection (Auto)
+
+If user doesn't specify, the router can infer from signals:
+- Recent API call latency > 5s → auto-downshift toward `speed`
+- No internet connectivity → force `low`
+- Budget threshold exceeded → auto-downshift toward `low`
+- Agent spawn from CLI with `--fast` flag → `speed`
+- Agent spawn from VS Code extension → `balance` (default)
+- Agent spawn during `git push` pre-push hook → `low` (don't burn cloud credits on gate checks)
+
+### Speed Mode Persistent Preference
+
+Stored in `~/.claude/config/routing/user-preferences.yaml`:
+
+```yaml
+speed_mode: balance   # user override; one of speed | balance | low
+auto_adjust: true     # allow router to shift based on budget/connectivity
+```
+
+---
+
+## 11. Implementation Plan — Priority Order
+
+### Phase 1: Core Router (this session)
+1. `09_DEPLOYMENT/config/routing/providers.yaml`
+2. `09_DEPLOYMENT/config/routing/complexity-patterns.yaml`
+3. `09_DEPLOYMENT/config/routing/routing-table.yaml`
+4. `09_DEPLOYMENT/config/routing/user-preferences.yaml`
+5. `02_RUNTIME/router/context_detector.py`
+6. `02_RUNTIME/router/complexity_classifier.py`
+7. `02_RUNTIME/router/provider_selector.py`
+
+### Phase 2: Adapters (next session)
+8. `02_RUNTIME/router/adapters/ollama_remote.py`
+9. Wire router into `02_RUNTIME/router/router.py`
+10. Replace `.claude/hooks/model-router.sh` with Python invocation
+
+### Phase 3: Validation (next session)
+11. pytest suite for complexity_classifier (50 test descriptions)
+12. pytest suite for provider_selector (all C×speed×context combos)
+13. Pre-push hook updated to run pytest instead of bats
+
+---
+
+## 12. Implementation Notes
+
+### 12.1 What to Build
 
 1. **`02_RUNTIME/router/context_detector.py`**
    - Detects laptop vs desktop vs server
@@ -383,7 +448,7 @@ If uncertain, state confidence level explicitly.
    - Adapter for reaching Ollama on desktop over LAN
    - Same interface as local Ollama adapter
 
-### 8.2 What to Deprecate
+### 12.2 What to Deprecate
 
 - `~/.claude/hooks/model-router.sh` → replaced by Python gate
 - `~/.claude/config/provider-tiers.json` → replaced by YAML configs above
@@ -392,7 +457,7 @@ If uncertain, state confidence level explicitly.
 
 ---
 
-## 9. Validation Checklist
+## 13. Validation Checklist
 
 Before this goes live:
 
