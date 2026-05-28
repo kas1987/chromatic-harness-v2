@@ -16,4 +16,5 @@ provider_cost_estimates:
   google: { input: 1.25, output: 10.00 }
   openrouter: { input: 3.00, output: 15.00 }
   featherless: { input: 0.20, output: 0.60 }
+  kimi: { input: 0.12, output: 0.12 }
   openhuman: { input: 0.0, output: 0.0 }

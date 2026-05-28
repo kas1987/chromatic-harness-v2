@@ -7,11 +7,11 @@ version: "2.0"
 privacy_classes:
   P0:
     description: "Public docs, public code, generic prompts"
-    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless, openhuman, prism-orchestrator, native_claude]
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless, kimi, openhuman, prism-orchestrator, native_claude]
 
   P1:
     description: "Repo plans, non-secret project state"
-    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless, prism-orchestrator, native_claude]
+    allowed_providers: [ollama, lmstudio, openai, anthropic, google, openrouter, featherless, kimi, prism-orchestrator, native_claude]
 
   P2:
     description: "Personal context, private repo strategy, financial/legal docs"

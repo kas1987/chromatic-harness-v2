@@ -59,6 +59,15 @@ providers:
     enabled: true
     privacy_max: P2
 
+  kimi:
+    type: broker
+    enabled: true
+    base_url: https://api.moonshot.cn/v1
+    env_key: MOONSHOT_API_KEY
+    model: moonshot-v1-32k
+    privacy_max: P1
+    role: builder_scout
+
   prism-orchestrator:
     type: cross_project
     enabled: true

@@ -85,6 +85,10 @@ class ChromaticRouter:
                 from .adapters.featherless_adapter import FeatherlessAdapter
 
                 self.adapters[name] = FeatherlessAdapter(cfg)
+            elif name == "kimi":
+                from .adapters.kimi_adapter import KimiAdapter
+
+                self.adapters[name] = KimiAdapter(cfg)
             elif name == "prism-orchestrator":
                 from .adapters.prism_orchestrator_adapter import (
                     PrismOrchestratorAdapter,
