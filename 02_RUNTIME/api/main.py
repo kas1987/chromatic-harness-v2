@@ -55,7 +55,7 @@ from router.contracts import (  # noqa: E402
 )
 
 from auth import (  # noqa: E402
-    AUTH_ENABLED,
+    is_auth_enabled,
     hash_password,
     verify_password,
     create_access_token,
@@ -180,7 +180,7 @@ async def route_request(payload: dict):
 
 @app.get("/auth/status")
 async def auth_status():
-    return {"auth_enabled": AUTH_ENABLED}
+    return {"auth_enabled": is_auth_enabled()}
 
 
 @app.post("/auth/register", response_model=UserResponse, status_code=201)

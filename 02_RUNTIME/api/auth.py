@@ -28,7 +28,11 @@ except ImportError:
 
 _DEPS_AVAILABLE = _JOSE_AVAILABLE and _BCRYPT_AVAILABLE
 
-AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "false").lower() == "true"
+def is_auth_enabled() -> bool:
+    """Read AUTH_ENABLED at call time so test import order cannot stale-cache it."""
+    return os.environ.get("AUTH_ENABLED", "false").lower() == "true"
+
+
 SECRET_KEY = os.environ.get("AUTH_SECRET_KEY", "chromatic-dev-secret-change-in-prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("AUTH_TOKEN_EXPIRE_MINUTES", "60"))
@@ -101,7 +105,7 @@ async def get_current_user(
     token: Optional[str] = Depends(_oauth2_scheme),
 ) -> Optional[CurrentUser]:
     """FastAPI dependency. Returns None when auth is disabled (open access)."""
-    if not AUTH_ENABLED:
+    if not is_auth_enabled():
         return None
     if not token:
         raise HTTPException(
