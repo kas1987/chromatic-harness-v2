@@ -36,6 +36,7 @@ from models import (  # noqa: E402
     TrendPoint,
     MagnetBreakdown,
     ActionCount,
+    AgentLeadResponse,
 )
 
 # Router integration — normal import because _RUNTIME is on sys.path
@@ -61,9 +62,11 @@ def _load_module(name: str, path: str):
 
 
 _orch_mod = _load_module(
-    "orchestrator", os.path.join(_RUNTIME, "orchestrator", "orchestrator.py")
+    "chromatic_orchestrator",
+    os.path.join(_RUNTIME, "orchestrator", "orchestrator.py"),
 )
 Orchestrator = _orch_mod.Orchestrator
+MissionPacket = _orch_mod.MissionPacket
 
 _mag_mod = _load_module(
     "base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py")
@@ -351,6 +354,68 @@ async def get_mission_analytics(
         top_actions=top_actions,
         avg_risk_delta=round(avg_risk, 4),
         avg_confidence_delta=round(avg_conf, 4),
+    )
+
+
+@app.post("/missions/{mission_id}/synthesize", response_model=AgentLeadResponse)
+async def synthesize_mission(
+    mission_id: str,
+    auto_create_bead: bool = Query(default=False, alias="create_bead"),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Run MagnetOrchestrator + Agent Lead synthesis on mission magnet events."""
+    async with db.execute(
+        "SELECT data FROM missions WHERE mission_id = ?", (mission_id,)
+    ) as cur:
+        mission_row = await cur.fetchone()
+    if not mission_row:
+        raise HTTPException(status_code=404, detail="Mission not found")
+
+    async with db.execute(
+        "SELECT data FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
+        (mission_id,),
+    ) as cur:
+        event_rows = await cur.fetchall()
+
+    mission = json.loads(mission_row[0])
+    events = [json.loads(r[0]) for r in event_rows]
+
+    orch = Orchestrator()
+    packet = MissionPacket(
+        mission_id=mission["mission_id"],
+        objective=mission["objective"],
+        agent_role=mission.get("agent_role", "agent_lead"),
+        autonomy_level=mission.get("autonomy_level", "L1"),
+        confidence_required=mission.get("confidence_required", 75.0),
+        allowed_tools=mission.get("allowed_tools", []),
+        stop_conditions=mission.get("stop_conditions", []),
+        required_outputs=mission.get("required_outputs", []),
+    )
+    output = orch.synthesize_mission(packet, events)
+
+    bead_created = None
+    if auto_create_bead and output.suggested_bead:
+        sb = output.suggested_bead
+        bead_req = CreateBeadRequest(
+            title=sb["title"],
+            objective=sb["objective"],
+            priority=sb.get("priority", "p2"),
+            source=sb.get("source", "agent_lead"),
+            mission_id=mission_id,
+        )
+        bead_created = await create_bead(bead_req, db)
+
+    return AgentLeadResponse(
+        mission_id=mission_id,
+        decision=output.decision,
+        composite_score=output.composite_score,
+        final_report=output.final_report,
+        pr_package=output.pr_package,
+        next_steps=output.next_steps,
+        audit_log=output.audit_log,
+        handoff_prep=output.handoff_prep,
+        suggested_bead=output.suggested_bead,
+        bead_created=bead_created,
     )
 
 

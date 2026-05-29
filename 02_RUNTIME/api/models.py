@@ -137,3 +137,16 @@ class MissionAnalyticsResponse(BaseModel):
     top_actions: list[ActionCount]
     avg_risk_delta: float
     avg_confidence_delta: float
+
+
+class AgentLeadResponse(BaseModel):
+    mission_id: str
+    decision: str
+    composite_score: float
+    final_report: dict
+    pr_package: dict
+    next_steps: dict
+    audit_log: dict
+    handoff_prep: dict
+    suggested_bead: Optional[dict] = None
+    bead_created: Optional[BeadResponse] = None

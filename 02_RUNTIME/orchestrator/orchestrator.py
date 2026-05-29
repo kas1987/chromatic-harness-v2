@@ -24,8 +24,9 @@ from router.contracts import (  # noqa: E402
     RouteAudit,
     RouteInput,
 )
-from memory.store import SystemMemoryStore  # noqa: E402
 from scope.guard import DispatchGuard  # noqa: E402
+from magnets.base_magnet import MagnetEvent  # noqa: E402
+from magnets.magnet_orchestrator import MagnetOrchestrator  # noqa: E402
 
 
 @dataclass
@@ -59,13 +60,28 @@ class Orchestrator:
         )
 
     def attach_magnets(self, mission: MissionPacket) -> list[str]:
-        return [
-            "intent_magnet",
-            "scope_magnet",
-            "execution_magnet",
-            "confidence_magnet",
-            "memory_magnet",
-        ]
+        return MagnetOrchestrator().registered_magnets()
+
+    def synthesize_mission(
+        self,
+        mission: MissionPacket,
+        events: list[MagnetEvent | dict],
+    ):
+        """Run magnet pipeline + Agent Lead synthesis on mission events."""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "agent_lead", os.path.join(_HERE, "agent_lead.py")
+        )
+        mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+        sys.modules["agent_lead"] = mod
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+        AgentLead = mod.AgentLead
+
+        orchestrator = MagnetOrchestrator()
+        report = orchestrator.process(mission.mission_id, events)
+        lead = AgentLead(orchestrator)
+        return lead.run(mission.__dict__, events, report)
 
     async def guard_and_inject(
         self,
