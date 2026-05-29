@@ -7,33 +7,16 @@
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
-import { EventEmitter } from 'events';
+import { MagnetEventMessage, MissionEventHub } from './event_store';
+
+export type { MagnetEventMessage } from './event_store';
 
 /**
- * WebSocket event for magnet reports
+ * Mission event bus — persists to JSONL and emits locally.
  */
-export interface MagnetEventMessage {
-  type: 'magnet_event' | 'magnet_synthesis' | 'gate_decision' | 'bead_created';
-  mission_id: string;
-  timestamp: number;
-  data: {
-    magnet_type?: string;
-    score?: number;
-    anomalies?: Array<{ level: string; message: string }>;
-    synthesis_score?: number;
-    recommendation?: string;
-    gate_name?: string;
-    gate_passed?: boolean;
-    bead_id?: string;
-    bead_type?: string;
-  };
-}
+export class MissionEventBus {
+  private hub = MissionEventHub.getInstance();
 
-/**
- * Mission event bus
- * Emits magnet events as they occur
- */
-export class MissionEventBus extends EventEmitter {
   private static instance: MissionEventBus;
 
   static getInstance(): MissionEventBus {
@@ -43,48 +26,56 @@ export class MissionEventBus extends EventEmitter {
     return MissionEventBus.instance;
   }
 
+  private publish(event: MagnetEventMessage) {
+    this.hub.publish(event.mission_id, event);
+  }
+
   emitMagnetEvent(missionId: string, magnetType: string, score: number, anomalies: any[]) {
-    this.emit(`mission:${missionId}`, {
+    this.publish({
       type: 'magnet_event',
       mission_id: missionId,
       timestamp: Date.now(),
       data: { magnet_type: magnetType, score, anomalies },
-    } as MagnetEventMessage);
+    });
   }
 
   emitSynthesis(missionId: string, synthesisScore: number, recommendation: string) {
-    this.emit(`mission:${missionId}`, {
+    this.publish({
       type: 'magnet_synthesis',
       mission_id: missionId,
       timestamp: Date.now(),
       data: { synthesis_score: synthesisScore, recommendation },
-    } as MagnetEventMessage);
+    });
   }
 
   emitGateDecision(missionId: string, gateName: string, passed: boolean) {
-    this.emit(`mission:${missionId}`, {
+    this.publish({
       type: 'gate_decision',
       mission_id: missionId,
       timestamp: Date.now(),
       data: { gate_name: gateName, gate_passed: passed },
-    } as MagnetEventMessage);
+    });
   }
 
   emitBeadCreated(missionId: string, beadId: string, beadType: string) {
-    this.emit(`mission:${missionId}`, {
+    this.publish({
       type: 'bead_created',
       mission_id: missionId,
       timestamp: Date.now(),
       data: { bead_id: beadId, bead_type: beadType },
-    } as MagnetEventMessage);
+    });
   }
 
   onMissionEvent(missionId: string, callback: (event: MagnetEventMessage) => void) {
-    this.on(`mission:${missionId}`, callback);
+    this.hub.onMissionEvent(missionId, callback);
   }
 
   offMissionEvent(missionId: string, callback: (event: MagnetEventMessage) => void) {
-    this.off(`mission:${missionId}`, callback);
+    this.hub.offMissionEvent(missionId, callback);
+  }
+
+  replay(missionId: string, limit = 100): MagnetEventMessage[] {
+    return this.hub.replay(missionId, limit);
   }
 }
 
@@ -116,6 +107,13 @@ export class WebSocketManager {
         this.connections.set(missionId, new Set());
       }
       this.connections.get(missionId)!.add(ws);
+
+      // Replay persisted history for late subscribers
+      for (const past of this.eventBus.replay(missionId, 50)) {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(past));
+        }
+      }
 
       // Listen for magnet events
       const eventHandler = (event: MagnetEventMessage) => {

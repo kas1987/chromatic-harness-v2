@@ -6,16 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .base_magnet import MagnetEvent
-from .closure_magnet import ClosureMagnet
-from .confidence_magnet import ConfidenceMagnet
-from .cost_magnet import CostMagnet
-from .execution_magnet import ExecutionMagnet
-from .intake_magnet import IntakeMagnet
-from .intent_magnet import IntentMagnet
-from .memory_magnet import MemoryMagnet
-from .scope_magnet import ScopeMagnet
-from .security_magnet import SecurityMagnet
-from .validation_magnet import ValidationMagnet
+from .plugin import MagnetRegistry, default_registry
 
 
 @dataclass
@@ -47,33 +38,27 @@ class MagnetReport:
 class MagnetOrchestrator:
     """Runs the six-stage magnet feedback pipeline on a batch of events."""
 
-    def __init__(self) -> None:
-        self._magnets = {
-            m.name: m
-            for m in (
-                IntakeMagnet(),
-                IntentMagnet(),
-                ScopeMagnet(),
-                ExecutionMagnet(),
-                CostMagnet(),
-                ConfidenceMagnet(),
-                ValidationMagnet(),
-                MemoryMagnet(),
-                SecurityMagnet(),
-                ClosureMagnet(),
-            )
-        }
+    def __init__(self, registry: MagnetRegistry | None = None) -> None:
+        self._registry = registry or default_registry()
+
+    def registry(self) -> MagnetRegistry:
+        return self._registry
+
+    def register_plugin(self, plugin: object) -> None:
+        """Register a custom MagnetPlugin at runtime."""
+        from .plugin import MagnetPlugin
+
+        if not isinstance(plugin, MagnetPlugin):
+            raise TypeError("plugin must implement MagnetPlugin")
+        self._registry.register(plugin)
 
     def registered_magnets(self) -> list[str]:
-        return sorted(self._magnets.keys())
+        return self._registry.names()
 
     def observe(
         self, mission_id: str, magnet_name: str, inflection_point: str, signal: dict
     ) -> MagnetEvent:
-        magnet = self._magnets.get(magnet_name)
-        if magnet is None:
-            magnet = self._magnets["intent_magnet"]
-        return magnet.observe(mission_id, inflection_point, signal)
+        return self._registry.observe(mission_id, magnet_name, inflection_point, signal)
 
     def process(
         self, mission_id: str, events: list[MagnetEvent | dict[str, Any]]

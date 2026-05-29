@@ -21,6 +21,7 @@ REQUIRED_FILES = [
     "12_HANDOFFS/PRE_SESSION_INVENTORY.md",
     "docs/PRE_SESSION_AND_TOOLS.md",
     "docs/CURSOR_CONTEXT_HYGIENE.md",
+    "docs/AGENT_ANTIPATTERNS.md",
     "config/pre_session/inventory.snapshot.json",
     "config/pre_session/mcp.profile.yaml",
     "scripts/generate_pre_session_inventory.py",
@@ -30,12 +31,48 @@ REQUIRED_FILES = [
     "scripts/pre_session_common.py",
     ".claude/settings.json",
     ".cursor/rules/context-hygiene.mdc",
+    ".claude/workflows/ship.js",
+    ".claude/workflows/README.md",
+    "scripts/sync_claude_workflows.ps1",
+    "scripts/workflow_go.py",
+    "scripts/workflow_git.py",
+    "scripts/auto_intake.py",
+    "scripts/poll_inbox.py",
+    "scripts/chromatic_mcp_server.py",
+    "docs/CHROMATIC_MCP_SERVER.md",
+    "scripts/validate_intake_loop.py",
+    "scripts/harvest_rigs.py",
+    "docs/KNOWLEDGE_HARVEST.md",
+    ".gitmodules",
+    "02_RUNTIME/runtime-engines/manifest.json",
+    "02_RUNTIME/adapters/roach-pi-loader.ts",
+    "02_RUNTIME/adapters/roach_pi_guard.py",
+    "scripts/roach_pi_status.py",
+    "scripts/init_roach_pi_submodule.ps1",
+    "docs/ROACH_PI_RUNTIME.md",
+    "docs/pdr/PDR-DYNAMIC-WORKFLOW-RUNTIME-001.md",
+    "docs/workflows/WORKFLOW_RUNTIME.md",
+    "docs/workflows/DYNAMIC_WORKFLOW_SPEC.md",
+    "docs/workflows/GO_MODES.md",
+    "docs/workflows/PERMISSION_GATE.md",
+    "docs/workflows/VERIFIER_GATE.md",
+    "docs/workflows/TASK_GRAPH_SCHEMA.json",
+    "docs/workflows/WORKFLOW_RUN_LOG.jsonl",
+    "docs/workflows/GIT_CONFIDENCE_PIPELINE.md",
+    "docs/workflows/TWO_LOG_AUDIT.md",
+    "07_LOGS_AND_AUDIT/execution/execution.jsonl",
+    "07_LOGS_AND_AUDIT/traces/traces.jsonl",
+    "07_LOGS_AND_AUDIT/decisions/decision_log.jsonl",
+    "docs/INTAKE_QUEUE.md",
+    "01_PROTOCOLS/INTAKE/intake_queue.schema.json",
+    "07_LOGS_AND_AUDIT/intake_queue.jsonl",
 ]
 
 REQUIRED_STRINGS_IN_AGENTS = [
     "SESSION_COMPACT",
     "PRE_SESSION_AND_TOOLS",
     "CURSOR_CONTEXT_HYGIENE",
+    "AGENT_ANTIPATTERNS",
     "generate_pre_session_inventory",
     "audit_mcp_context",
     "check_agent_operations",
@@ -94,6 +131,15 @@ def main() -> int:
         text = ops_md.read_text(encoding="utf-8")
         if "audit_mcp_context" not in text:
             errors.append("AGENT_OPERATIONS.md missing audit_mcp_context reference")
+        if "AGENT_ANTIPATTERNS" not in text:
+            errors.append("AGENT_OPERATIONS.md missing AGENT_ANTIPATTERNS reference")
+
+    for wf in ("ship.js", "qa.js", "close-issue.js", "go.js"):
+        wf_path = REPO / ".claude/workflows" / wf
+        if wf_path.is_file():
+            wf_text = wf_path.read_text(encoding="utf-8").lower()
+            if "label:" in wf_text and "crank" in wf_text and "do not run /crank" not in wf_text:
+                errors.append(f".claude/workflows/{wf} must not invoke /crank")
 
     if errors:
         print("AGENT OPERATIONS CHECK FAILED", file=sys.stderr)

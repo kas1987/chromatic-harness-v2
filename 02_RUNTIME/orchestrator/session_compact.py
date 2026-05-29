@@ -97,4 +97,24 @@ def write_handoff(
         "decision": decision,
     }
     _LATEST.write_text(json.dumps(latest, indent=2) + "\n", encoding="utf-8")
+
+    try:
+        from intake.closure_feedback import enqueue_session_follow_ups
+
+        enqueue_session_follow_ups(goals, mission_id=str(mission_id))
+    except Exception:
+        pass  # intake queue optional during bootstrap
+
+    try:
+        import sys
+
+        runtime = _REPO / "02_RUNTIME"
+        if str(runtime) not in sys.path:
+            sys.path.insert(0, str(runtime))
+        from knowledge.harvest_rigs import run_session_harvest
+
+        run_session_harvest(_REPO, dry_run=False, min_confidence=0.6)
+    except OSError:
+        pass  # harvest optional when .agents trees missing
+
     return out_path

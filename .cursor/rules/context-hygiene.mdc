@@ -17,4 +17,8 @@ Before long sessions on this repo:
 
 Skills: read `SKILL.md` on demand; do not assume full skill bodies are loaded.
 
+Workflows: use repo lite `/ship`, `/close-issue`, `/qa` — never chain `/crank` or council skills unattended. See `docs/AGENT_ANTIPATTERNS.md`.
+
+Do not trust: CRG limiting Cursor MCP injection; chat memory over git/beads; scanning all `~/.claude/projects/**/*.jsonl`.
+
 Harness API/magnets are optional for lean Claude-only work.

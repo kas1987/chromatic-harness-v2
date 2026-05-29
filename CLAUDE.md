@@ -40,6 +40,7 @@ Canonical protocol: [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT
 
 **Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — run `python scripts/generate_pre_session_inventory.py` before changing MCP/tools.  
 **MCP / lean context:** [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) — disable heavy MCPs in Cursor; `python scripts/audit_mcp_context.py`  
+**Antipatterns (token burn):** [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) — do not trust CRG for Cursor MCP; use lite `/ship`  
 **CI guard:** `python scripts/check_agent_operations.py`
 
 ## Session Completion

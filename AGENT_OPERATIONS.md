@@ -35,9 +35,18 @@ python scripts/audit_mcp_context.py --profile harness_dev
 |------|-----|
 | Handoff + compact rules | [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) |
 | **MCP disable / lean Claude** | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
+| **Do not trust / do not do** | [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) |
 | Tools / MCP / CRG baseline | [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) |
 | Issue tracking | [AGENTS.md](AGENTS.md) (beads — not TodoWrite) |
 | In-flight RPI | `.agents/rpi/execution-packet.json` (if exists) |
+| Lite Claude workflows | `.claude/workflows/` → `scripts/sync_claude_workflows.ps1` |
+| **GO modes (bounded runtime)** | `python scripts/workflow_go.py GO` or `/go` — [docs/workflows/GO_MODES.md](docs/workflows/GO_MODES.md); **no** unattended `GO SWARM` ([AGENT_ANTIPATTERNS](docs/AGENT_ANTIPATTERNS.md)) |
+| **Git ship (confidence-gated)** | `python scripts/workflow_git.py plan` → `ship --execute` — [docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md) |
+| **Intake queue (close loop)** | [docs/INTAKE_QUEUE.md](docs/INTAKE_QUEUE.md) — `python scripts/auto_intake.py` |
+| **Chromatic MCP (lite)** | [docs/CHROMATIC_MCP_SERVER.md](docs/CHROMATIC_MCP_SERVER.md) — one server vs 15 plugins |
+| **Two-log audit** | [docs/workflows/TWO_LOG_AUDIT.md](docs/workflows/TWO_LOG_AUDIT.md) — `07_LOGS_AND_AUDIT/execution/` + `traces/` |
+| **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff |
+| **roach-pi runtime** | `python scripts/roach_pi_status.py` — [docs/ROACH_PI_RUNTIME.md](docs/ROACH_PI_RUNTIME.md); init via `init_roach_pi_submodule.ps1` |
 
 **Brownfield:** Do not start a new RPI epic on top of in-flight work without reading the execution packet and checking the branch.
 
@@ -57,6 +66,8 @@ python scripts/audit_mcp_context.py --profile harness_dev
 | Strict CI/local gate | `python scripts/audit_mcp_context.py --strict` |
 
 **Daily harness dev:** disable at least Resend, Playwright, and Opsera MCPs (~43k+ tok combined). Re-enable only for email, browser, or security tasks.
+
+**Workflows:** sync lite defaults — `powershell -File scripts/sync_claude_workflows.ps1`. Do **not** run heavy `/ship` (crank chain) or bulk-read `~/.claude/projects/**/*.jsonl`. See [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md).
 
 **Claude Code hooks** (`.claude/settings.json`): `session_start.py` prints handoff; `gate.py` on Agent dispatch for CRG advisory.
 

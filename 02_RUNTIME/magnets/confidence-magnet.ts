@@ -10,6 +10,7 @@
 
 import { BaseMagnet } from './base-magnet';
 import { TestResult } from '../../01_PROTOCOLS/RUNTIME_ADAPTER_INTERFACE';
+import { analyzeTestPyramid, type PyramidAnalysis } from './test_pyramid';
 
 export class ConfidenceMagnet extends BaseMagnet {
   private testResults: TestResult[] = [];
@@ -18,6 +19,8 @@ export class ConfidenceMagnet extends BaseMagnet {
   private hasReviewApproval = false;
   private documentationQuality = 0; // 0-1
   private codeCommentRatio = 0; // 0-1
+  private pyramidAnalysis: PyramidAnalysis | null = null;
+  private pyramidPenalty = 0;
 
   constructor() {
     super('confidence');
@@ -58,6 +61,36 @@ export class ConfidenceMagnet extends BaseMagnet {
     this.observe('tests_passed', passed);
     this.observe('tests_total', total);
     this.observe('test_pass_rate', passRate);
+
+    this.pyramidAnalysis = analyzeTestPyramid(results);
+    this.observe('test_pyramid', {
+      counts: this.pyramidAnalysis.counts,
+      ratios: this.pyramidAnalysis.ratios,
+      targets: this.pyramidAnalysis.targets,
+      balanced: this.pyramidAnalysis.balanced,
+    });
+
+    for (const warning of this.pyramidAnalysis.warnings) {
+      const isError = warning.includes('imbalance') || warning.includes('inverted');
+      this.raiseAnomaly(
+        isError ? 'warn' : 'info',
+        warning,
+        {
+          counts: this.pyramidAnalysis.counts,
+          ratios: this.pyramidAnalysis.ratios,
+          max_deviation: this.pyramidAnalysis.max_deviation,
+        },
+        'Rebalance tests toward unit-heavy pyramid (70/20/10)'
+      );
+    }
+
+    if (this.pyramidAnalysis.max_deviation >= 0.25) {
+      this.pyramidPenalty = 0.08;
+    } else if (this.pyramidAnalysis.max_deviation >= 0.15) {
+      this.pyramidPenalty = 0.03;
+    } else {
+      this.pyramidPenalty = 0;
+    }
   }
 
   /**
@@ -207,6 +240,8 @@ export class ConfidenceMagnet extends BaseMagnet {
       score += 0.1;
     }
 
+    score -= this.pyramidPenalty;
+
     // Penalize anomalies
     for (const anomaly of this.anomalies) {
       if (anomaly.level === 'error') score -= 0.1;
@@ -248,5 +283,7 @@ export class ConfidenceMagnet extends BaseMagnet {
     this.hasReviewApproval = false;
     this.documentationQuality = 0;
     this.codeCommentRatio = 0;
+    this.pyramidAnalysis = null;
+    this.pyramidPenalty = 0;
   }
 }

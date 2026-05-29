@@ -63,3 +63,17 @@ profiles:
 # Fail audit if total descriptor estimate exceeds this (enabled folders on disk).
 warn_total_tokens: 12000
 block_ci_total_tokens: 50000
+
+# Claude Code workflows — sync lite versions from repo (not HEAVY archives).
+#   powershell -File scripts/sync_claude_workflows.ps1
+# Cost reference: docs/AGENT_ANTIPATTERNS.md
+workflow_policy:
+  sync_from_repo: .claude/workflows
+  skip_patterns:
+    - "*.HEAVY.js.bak"
+  max_recommended_chain_agents: 3
+  forbidden_in_unattended:
+    - crank
+    - post-mortem --deep
+    - council validate
+    - bulk transcript scan
