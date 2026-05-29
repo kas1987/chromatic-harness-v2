@@ -29,6 +29,12 @@ jobs:
       - name: Format check
         run: ruff format --check src/ tests/
 
+      - name: Type check
+        run: |
+          pip install mypy types-PyYAML
+          mypy src/ --config-file mypy.ini
+          mypy 02_RUNTIME/router/ 02_RUNTIME/memory/ 02_RUNTIME/api/ --config-file mypy.ini
+
       - name: Run tests with coverage
         run: pytest tests/ -v --tb=short --cov --cov-report=term
         env:
