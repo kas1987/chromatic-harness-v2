@@ -14,20 +14,24 @@ from fastapi.security import OAuth2PasswordBearer
 
 try:
     from jose import JWTError, jwt
-    from passlib.context import CryptContext
 
-    _DEPS_AVAILABLE = True
+    _JOSE_AVAILABLE = True
 except ImportError:
-    _DEPS_AVAILABLE = False
+    _JOSE_AVAILABLE = False
+
+try:
+    import bcrypt as _bcrypt
+
+    _BCRYPT_AVAILABLE = True
+except ImportError:
+    _BCRYPT_AVAILABLE = False
+
+_DEPS_AVAILABLE = _JOSE_AVAILABLE and _BCRYPT_AVAILABLE
 
 AUTH_ENABLED = os.environ.get("AUTH_ENABLED", "false").lower() == "true"
 SECRET_KEY = os.environ.get("AUTH_SECRET_KEY", "chromatic-dev-secret-change-in-prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("AUTH_TOKEN_EXPIRE_MINUTES", "60"))
-
-_pwd_context = (
-    CryptContext(schemes=["bcrypt"], deprecated="auto") if _DEPS_AVAILABLE else None
-)
 _oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
 
@@ -42,15 +46,15 @@ _ROLE_RANK = {Role.executor: 0, Role.reviewer: 1, Role.admin: 2}
 
 
 def hash_password(plain: str) -> str:
-    if not _pwd_context:
-        raise RuntimeError("passlib not installed")
-    return _pwd_context.hash(plain)
+    if not _BCRYPT_AVAILABLE:
+        raise RuntimeError("bcrypt not installed")
+    return _bcrypt.hashpw(plain.encode(), _bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    if not _pwd_context:
+    if not _BCRYPT_AVAILABLE:
         return False
-    return _pwd_context.verify(plain, hashed)
+    return _bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def create_access_token(user_id: str, role: str) -> str:
