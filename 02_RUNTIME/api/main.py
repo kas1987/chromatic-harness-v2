@@ -7,7 +7,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 import uuid
 
-from fastapi import FastAPI, HTTPException, Depends
+from collections import Counter
+from typing import Optional
+
+from fastapi import FastAPI, HTTPException, Depends, Query
 import aiosqlite
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -29,6 +32,10 @@ from models import (  # noqa: E402
     AgentProfileResponse,
     RecordExecutionRequest,
     PromoteAgentRequest,
+    MissionAnalyticsResponse,
+    TrendPoint,
+    MagnetBreakdown,
+    ActionCount,
 )
 
 # Router integration — normal import because _RUNTIME is on sys.path
@@ -43,7 +50,7 @@ from router.contracts import (  # noqa: E402
     RouteInput,
 )
 
-import importlib.util as _ilu
+import importlib.util as _ilu  # noqa: E402
 
 
 def _load_module(name: str, path: str):
@@ -236,13 +243,115 @@ async def create_event(
 
 
 @app.get("/missions/{mission_id}/events", response_model=list[MagnetEventResponse])
-async def list_events(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
+async def list_events(
+    mission_id: str,
+    from_ts: Optional[str] = Query(
+        default=None, description="ISO timestamp lower bound"
+    ),
+    to_ts: Optional[str] = Query(default=None, description="ISO timestamp upper bound"),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    sql = "SELECT data FROM magnet_events WHERE mission_id = ?"
+    params: list = [mission_id]
+    if from_ts:
+        sql += " AND created_at >= ?"
+        params.append(from_ts)
+    if to_ts:
+        sql += " AND created_at <= ?"
+        params.append(to_ts)
+    sql += " ORDER BY created_at"
+    async with db.execute(sql, params) as cur:
+        rows = await cur.fetchall()
+    return [MagnetEventResponse(**json.loads(r[0])) for r in rows]
+
+
+@app.get("/missions/{mission_id}/analytics", response_model=MissionAnalyticsResponse)
+async def get_mission_analytics(
+    mission_id: str, db: aiosqlite.Connection = Depends(get_db)
+):
     async with db.execute(
-        "SELECT data FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
+        "SELECT data, created_at FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
         (mission_id,),
     ) as cur:
         rows = await cur.fetchall()
-    return [MagnetEventResponse(**json.loads(r[0])) for r in rows]
+
+    if not rows:
+        return MissionAnalyticsResponse(
+            mission_id=mission_id,
+            event_count=0,
+            duration_seconds=0.0,
+            confidence_trend=[],
+            risk_trend=[],
+            magnet_breakdown=[],
+            top_actions=[],
+            avg_risk_delta=0.0,
+            avg_confidence_delta=0.0,
+        )
+
+    events = [json.loads(r[0]) for r in rows]
+    timestamps = [r[1] for r in rows]
+
+    # Duration
+    try:
+        t_first = datetime.fromisoformat(timestamps[0].replace("Z", "+00:00"))
+        t_last = datetime.fromisoformat(timestamps[-1].replace("Z", "+00:00"))
+        duration_seconds = (t_last - t_first).total_seconds()
+    except Exception:
+        duration_seconds = 0.0
+
+    # Cumulative trend lines
+    cum_confidence = 0.0
+    cum_risk = 0.0
+    confidence_trend: list[TrendPoint] = []
+    risk_trend: list[TrendPoint] = []
+    for ev, ts in zip(events, timestamps):
+        cum_confidence += ev.get("confidence_delta", 0.0)
+        cum_risk += ev.get("risk_delta", 0.0)
+        confidence_trend.append(
+            TrendPoint(timestamp=ts, value=round(cum_confidence, 3))
+        )
+        risk_trend.append(TrendPoint(timestamp=ts, value=round(cum_risk, 3)))
+
+    # Magnet breakdown
+    magnet_stats: dict[str, dict] = {}
+    for ev in events:
+        name = ev.get("magnet_name", "unknown")
+        if name not in magnet_stats:
+            magnet_stats[name] = {"count": 0, "risk": 0.0, "confidence": 0.0}
+        magnet_stats[name]["count"] += 1
+        magnet_stats[name]["risk"] += ev.get("risk_delta", 0.0)
+        magnet_stats[name]["confidence"] += ev.get("confidence_delta", 0.0)
+    magnet_breakdown = [
+        MagnetBreakdown(
+            magnet_name=k,
+            event_count=v["count"],
+            total_risk_delta=round(v["risk"], 3),
+            total_confidence_delta=round(v["confidence"], 3),
+        )
+        for k, v in sorted(magnet_stats.items(), key=lambda x: -x[1]["count"])
+    ]
+
+    # Top recommended actions
+    action_counts = Counter(ev.get("recommended_action", "none") for ev in events)
+    top_actions = [
+        ActionCount(action=a, count=c) for a, c in action_counts.most_common(5)
+    ]
+
+    n = len(events)
+    avg_risk = sum(ev.get("risk_delta", 0.0) for ev in events) / n
+    avg_conf = sum(ev.get("confidence_delta", 0.0) for ev in events) / n
+
+    return MissionAnalyticsResponse(
+        mission_id=mission_id,
+        event_count=n,
+        duration_seconds=round(duration_seconds, 1),
+        confidence_trend=confidence_trend,
+        risk_trend=risk_trend,
+        magnet_breakdown=magnet_breakdown,
+        top_actions=top_actions,
+        avg_risk_delta=round(avg_risk, 4),
+        avg_confidence_delta=round(avg_conf, 4),
+    )
 
 
 @app.post("/beads", response_model=BeadResponse)

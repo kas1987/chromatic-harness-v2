@@ -108,3 +108,32 @@ class RecordExecutionRequest(BaseModel):
 class PromoteAgentRequest(BaseModel):
     new_level: int = Field(ge=0, le=5)
     reason: str
+
+
+class TrendPoint(BaseModel):
+    timestamp: str
+    value: float
+
+
+class MagnetBreakdown(BaseModel):
+    magnet_name: str
+    event_count: int
+    total_risk_delta: float
+    total_confidence_delta: float
+
+
+class ActionCount(BaseModel):
+    action: str
+    count: int
+
+
+class MissionAnalyticsResponse(BaseModel):
+    mission_id: str
+    event_count: int
+    duration_seconds: float
+    confidence_trend: list[TrendPoint]
+    risk_trend: list[TrendPoint]
+    magnet_breakdown: list[MagnetBreakdown]
+    top_actions: list[ActionCount]
+    avg_risk_delta: float
+    avg_confidence_delta: float

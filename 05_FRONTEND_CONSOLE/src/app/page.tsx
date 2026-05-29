@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import AgentProfiles from "@/components/AgentProfiles";
 import AgentRegistration from "@/components/AgentRegistration";
+import MissionReplay from "@/components/MissionReplay";
 
 const PANEL: React.CSSProperties = {
   border: "1px solid #333",
@@ -235,8 +236,15 @@ export default function ConsolePage() {
 
       </div>
 
+      {/* Full-width row: Mission Replay (when mission selected) */}
+      {selected && (
+        <div style={{ marginTop: 16 }}>
+          <MissionReplay missionId={selected.mission_id} />
+        </div>
+      )}
+
       {/* Full-width row: Agent Trust Profiles + Registration */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
         <AgentProfiles
           agents={agents}
           selectedAgent={selectedAgent}
