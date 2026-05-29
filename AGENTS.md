@@ -90,6 +90,7 @@ The chat is not the system of record. When context is heavy (~50–65% of effect
 **Playbook:** [04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md](04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md)  
 **Template:** [12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md](12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md)  
 **Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — regenerate with `python scripts/generate_pre_session_inventory.py` before changing tools/MCP  
+**MCP / lean Claude (with or without API):** [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) — `python scripts/audit_mcp_context.py --profile harness_dev`  
 **CI guard:** `python scripts/check_agent_operations.py` — fails if mandatory docs are removed
 
 Checkpoint commands:

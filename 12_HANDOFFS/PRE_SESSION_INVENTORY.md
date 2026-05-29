@@ -1,7 +1,7 @@
 # Pre-Session Inventory (Quick Reference)
 
 > Full doc: [docs/PRE_SESSION_AND_TOOLS.md](../docs/PRE_SESSION_AND_TOOLS.md)  
-> Generated: `2026-05-29T01:24:16.995915+00:00`
+> Generated: `2026-05-29T01:54:53.811789+00:00`
 
 ## At a glance
 
@@ -17,6 +17,11 @@
 1. `python scripts/generate_pre_session_inventory.py`
 2. Review diff in `config/pre_session/inventory.snapshot.json`
 3. Update CRG policy if needed
+
+## Lean Cursor context (disable heavy MCPs)
+
+`python scripts/audit_mcp_context.py --profile harness_dev`  
+See [docs/CURSOR_CONTEXT_HYGIENE.md](../docs/CURSOR_CONTEXT_HYGIENE.md)
 
 ## Session start
 

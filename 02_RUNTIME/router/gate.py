@@ -53,6 +53,8 @@ LOG_DIR = Path(
 )
 LOG_FILE = LOG_DIR / "log.jsonl"
 BLOCK_ENABLED = os.environ.get("ROUTER_BLOCK_ENABLED", "true").lower() == "true"
+# CRG token budget uses max_tokens * context_budget_pct; 8k default caused false BLOCKED.
+CONTEXT_MAX_TOKENS = int(os.environ.get("ROUTER_CONTEXT_MAX_TOKENS", "128000"))
 MAX_LOG_LINES = int(os.environ.get("ROUTER_MAX_LOG_LINES", "2000"))
 TOOL_USE_PATTERN = os.environ.get(
     "TOOL_USE_PATTERN",
@@ -119,6 +121,7 @@ def _context_gate_advisory(description: str, prompt: str, complexity_level: str)
             objective=description or prompt[:200],
             constraints=RouteConstraints(
                 privacy_class=PrivacyClass.P1,
+                max_tokens=CONTEXT_MAX_TOKENS,
                 allow_tools=True,
                 allow_skills=True,
                 allow_mcp=True,

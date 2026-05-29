@@ -1,11 +1,12 @@
 # Pre-Session Tools, Resources, and MCP Inventory
 
-> **Generated:** `2026-05-29T01:24:16.995915+00:00`  
+> **Generated:** `2026-05-29T01:54:53.811789+00:00`  
 > **Regenerate:** `python scripts/generate_pre_session_inventory.py`  
 > **MCP path scanned:** `C:\Users\kas41\chromatic-harness-v2\tests\fixtures\mcp_minimal`
 
 Baseline documentation before changing tool exposure, MCP plugins, or CRG policy.
 See also: [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)
+**Lean Cursor context:** [docs/CURSOR_CONTEXT_HYGIENE.md](../docs/CURSOR_CONTEXT_HYGIENE.md) — `python scripts/audit_mcp_context.py`
 
 ---
 
