@@ -1,7 +1,7 @@
 # Pre-Session Inventory (Quick Reference)
 
 > Full doc: [docs/PRE_SESSION_AND_TOOLS.md](../docs/PRE_SESSION_AND_TOOLS.md)  
-> Generated: `2026-05-29T01:54:53.811789+00:00`
+> Generated: `2026-05-29T02:13:32.225026+00:00`
 
 ## At a glance
 

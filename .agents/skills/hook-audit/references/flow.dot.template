@@ -1,0 +1,133 @@
+// flow.dot.template — Claude Code Hook Harness Map
+//
+// USAGE:
+//   dot -Tsvg flow.dot.template -o hook-flow.svg
+//   dot -Tpng flow.dot.template -o hook-flow.png
+//
+// CUSTOMIZATION:
+//   Replace HOOK_COMMAND_* labels with your actual hook commands.
+//   Add/remove hook nodes to match your settings.json.
+//   Use the color guide below for cost classes.
+//
+// COLOR GUIDE (fillcolor):
+//   "#d4edda" / green  = 🟢 Fast  (< 100ms, no additionalContext injection)
+//   "#fff3cd" / yellow = 🟡 Medium (100–500ms OR injects < 200 tokens)
+//   "#f8d7da" / red    = 🔴 Heavy  (> 500ms OR injects > 200 tokens)
+//   "#e2e3e5" / grey   = 🔵 Info   (structural node, not a hook)
+//   "#cfe2ff" / blue   = event node (Claude Code lifecycle event)
+
+digraph claude_hook_harness {
+    rankdir=TB;
+    compound=true;
+    splines=ortho;
+    nodesep=0.5;
+    ranksep=0.8;
+
+    graph [
+        fontname="Helvetica",
+        fontsize=12,
+        label="Claude Code Hook Harness\n(generated from settings.json)",
+        labelloc=t
+    ];
+    node [
+        fontname="Helvetica",
+        fontsize=10,
+        style=filled,
+        shape=box,
+        margin="0.2,0.1"
+    ];
+    edge [fontname="Helvetica", fontsize=9];
+
+    // ── Claude Code Lifecycle Events ─────────────────────────────────────────
+
+    subgraph cluster_lifecycle {
+        label="Claude Code Lifecycle";
+        style=dashed;
+        color="#999999";
+
+        SessionStart  [label="SessionStart",  fillcolor="#cfe2ff", shape=ellipse];
+        PreToolUse    [label="PreToolUse",     fillcolor="#cfe2ff", shape=ellipse];
+        PostToolUse   [label="PostToolUse",    fillcolor="#cfe2ff", shape=ellipse];
+        UserPrompt    [label="UserPromptSubmit", fillcolor="#cfe2ff", shape=ellipse];
+        Stop          [label="Stop",           fillcolor="#cfe2ff", shape=ellipse];
+        PreCompact    [label="PreCompact",     fillcolor="#cfe2ff", shape=ellipse];
+        SessionEnd    [label="SessionEnd",     fillcolor="#cfe2ff", shape=ellipse];
+        Notification  [label="Notification",   fillcolor="#cfe2ff", shape=ellipse];
+    }
+
+    // ── Hook Commands ────────────────────────────────────────────────────────
+    // Replace labels with your actual hook commands.
+    // Duplicate a node (with suffix _2, _3) if multiple hooks share an event.
+
+    subgraph cluster_hooks {
+        label="Hook Commands";
+        style=dashed;
+        color="#666666";
+
+        // 🟢 Fast hooks (green)
+        ao_extract     [label="ao.sh extract\n(transcript extract)", fillcolor="#d4edda"];
+        prompt_db      [label="prompt-db inject\n(session start)", fillcolor="#d4edda"];
+        model_router   [label="model-router.sh\n(agent routing log)", fillcolor="#d4edda"];
+        yolo_guard     [label="yolo-guard.sh\n(hard block enforcement)", fillcolor="#d4edda"];
+        precompact_msg [label="printf PreCompact\n(compact guidance)", fillcolor="#d4edda"];
+
+        // 🟡 Medium hooks (yellow)
+        post_file_write [label="post-file-write.sh\n(ruff + json validate)", fillcolor="#fff3cd"];
+        context_guard   [label="context-guard.sh\n(context % warning)", fillcolor="#fff3cd"];
+        response_guard  [label="response-size-guard.sh\n(> 5k token warn)", fillcolor="#fff3cd"];
+        notify_tts      [label="notify-tts.sh\n(TTS notification)", fillcolor="#fff3cd"];
+
+        // 🔴 Heavy hooks (red — flag for review)
+        usage_tracker  [label="usage-tracker.sh\n(token usage log)", fillcolor="#f8d7da"];
+        ao_forge       [label="ao.sh forge transcript\n(transcript queue)", fillcolor="#f8d7da"];
+        flywheel_close [label="ao.sh flywheel close\n(knowledge loop)", fillcolor="#f8d7da"];
+        pre_commit_sh  [label="pre-commit.sh\n(git safety check)", fillcolor="#f8d7da"];
+    }
+
+    // ── Edges: Event → Hook ──────────────────────────────────────────────────
+    // Label edges with matcher when not catch-all.
+
+    // SessionStart
+    SessionStart -> ao_extract      [label="(all)"];
+    SessionStart -> prompt_db       [label="(all)"];
+
+    // PreToolUse
+    PreToolUse -> pre_commit_sh     [label="matcher: Bash"];
+    PreToolUse -> yolo_guard        [label="matcher: Bash"];
+    PreToolUse -> model_router      [label="matcher: Agent"];
+
+    // PostToolUse
+    PostToolUse -> post_file_write  [label="matcher: Write|Edit|NotebookEdit"];
+    PostToolUse -> response_guard   [label="matcher: (catch-all)"];
+
+    // UserPromptSubmit
+    UserPrompt -> context_guard     [label="(all)"];
+
+    // Stop
+    Stop -> usage_tracker           [label="(all)"];
+    Stop -> flywheel_close          [label="(all)"];
+    Stop -> context_guard           [label="(all)"];
+
+    // PreCompact
+    PreCompact -> precompact_msg    [label="(all)"];
+
+    // SessionEnd
+    SessionEnd -> ao_forge          [label="(all)"];
+
+    // Notification
+    Notification -> notify_tts      [label="(all)"];
+
+    // ── Cost Legend ──────────────────────────────────────────────────────────
+
+    subgraph cluster_legend {
+        label="Cost Legend";
+        style=filled;
+        fillcolor="#f8f9fa";
+
+        leg_fast   [label="🟢 Fast\n< 100ms, no injection", fillcolor="#d4edda", width=2];
+        leg_medium [label="🟡 Medium\n100–500ms or < 200 tok", fillcolor="#fff3cd", width=2];
+        leg_heavy  [label="🔴 Heavy\n> 500ms or > 200 tok", fillcolor="#f8d7da", width=2];
+
+        leg_fast -> leg_medium -> leg_heavy [style=invis];
+    }
+}
