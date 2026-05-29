@@ -1,0 +1,7 @@
+{
+  "name": "hook-audit-tests",
+  "private": true,
+  "scripts": {
+    "test": "npx bats tests/"
+  }
+}
