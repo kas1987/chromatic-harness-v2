@@ -1,4 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3030";
+const PYTHON_API_BASE =
+  process.env.NEXT_PUBLIC_PYTHON_API_URL || "http://localhost:8787";
 
 export interface MissionPacket {
   objective: string;
@@ -210,4 +212,62 @@ export async function getLevelThresholds(): Promise<
   Record<string, LevelThreshold>
 > {
   return apiCall("GET", "/agents/meta/level-thresholds");
+}
+
+export interface TrendPoint {
+  timestamp: string;
+  value: number;
+}
+
+export interface MagnetBreakdown {
+  magnet_name: string;
+  event_count: number;
+  total_risk_delta: number;
+  total_confidence_delta: number;
+}
+
+export interface MissionAnalytics {
+  mission_id: string;
+  event_count: number;
+  duration_seconds: number;
+  confidence_trend: TrendPoint[];
+  risk_trend: TrendPoint[];
+  magnet_breakdown: MagnetBreakdown[];
+  top_actions: Array<{ action: string; count: number }>;
+  avg_risk_delta: number;
+  avg_confidence_delta: number;
+}
+
+export async function getMissionAnalytics(
+  missionId: string
+): Promise<MissionAnalytics | null> {
+  try {
+    const res = await fetch(
+      `${PYTHON_API_BASE}/missions/${missionId}/analytics`
+    );
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function getMissionEventsRange(
+  missionId: string,
+  fromTs?: string,
+  toTs?: string
+): Promise<MagnetEvent[]> {
+  try {
+    const params = new URLSearchParams();
+    if (fromTs) params.set("from_ts", fromTs);
+    if (toTs) params.set("to_ts", toTs);
+    const qs = params.toString() ? `?${params}` : "";
+    const res = await fetch(
+      `${PYTHON_API_BASE}/missions/${missionId}/events${qs}`
+    );
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
 }
