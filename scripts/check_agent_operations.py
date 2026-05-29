@@ -26,6 +26,8 @@ REQUIRED_FILES = [
     "scripts/generate_pre_session_inventory.py",
     "scripts/audit_mcp_context.py",
     "scripts/session_start.py",
+    "scripts/session_context_report.py",
+    "scripts/pre_session_common.py",
     ".claude/settings.json",
     ".cursor/rules/context-hygiene.mdc",
 ]

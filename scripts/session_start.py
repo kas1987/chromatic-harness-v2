@@ -7,11 +7,13 @@ this repo's session_start command. Safe when bd is missing (exit 0).
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
+_REPORT = _REPO / "scripts" / "session_context_report.py"
 _HANDOFF = _REPO / ".agents" / "handoffs" / "latest.json"
 _OPS = _REPO / "AGENT_OPERATIONS.md"
 _HYGIENE = _REPO / "docs" / "CURSOR_CONTEXT_HYGIENE.md"
@@ -30,7 +32,22 @@ def main() -> int:
     print("--- Quick refs ---")
     print(f"  Operations: {_OPS.relative_to(_REPO)}")
     print(f"  MCP trim:   {_HYGIENE.relative_to(_REPO)}")
-    print("  Audit MCP:  python scripts/audit_mcp_context.py\n")
+    print("  Audit MCP:  python scripts/audit_mcp_context.py")
+    print("  Context:    python scripts/session_context_report.py --log\n")
+
+    runtime = os.environ.get("CHROMATIC_RUNTIME", "claude")
+    if _REPORT.is_file():
+        subprocess.run(
+            [
+                sys.executable,
+                str(_REPORT),
+                "--log",
+                "--invoked-by",
+                runtime,
+            ],
+            cwd=_REPO,
+            check=False,
+        )
 
     try:
         subprocess.run(["bd", "prime"], cwd=_REPO, check=False)

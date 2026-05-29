@@ -49,13 +49,22 @@ On a typical machine with 15 MCP plugins, descriptor bulk alone was **~47k token
 
 Defined in `config/pre_session/mcp.profile.yaml`.
 
-### 2. Audit your machine
+### 2. Audit and log your machine
 
 ```bash
 # Copy settings.example.yaml → settings.local.yaml and set mcp_descriptors_path
+python scripts/session_context_report.py --log --invoked-by cursor
 python scripts/audit_mcp_context.py --profile harness_dev
 python scripts/audit_mcp_context.py --strict   # exit 1 if still too heavy
 ```
+
+**Log file:** `.agents/logs/session-context.jsonl` (one JSON line per run; gitignored)
+
+| Flag | Purpose |
+|------|---------|
+| `--invoked-by cursor\|claude\|harness` | Tags who triggered the report |
+| `--runtime cursor` | Print only Cursor section |
+| `--json` | Machine-readable full report |
 
 ### 3. Disable heavy MCPs in Cursor UI
 

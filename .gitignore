@@ -32,6 +32,7 @@ htmlcov/
 
 # Session handoff runtime artifacts (generated per agent session)
 .agents/handoffs/latest.json
+.agents/logs/
 12_HANDOFFS/sessions/*.md
 !12_HANDOFFS/sessions/.gitkeep
 
