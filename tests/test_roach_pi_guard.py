@@ -25,8 +25,10 @@ def test_manifest_loads():
     assert "tmdgusya/roach-pi" in manifest["upstream_url"]
 
 
-def test_detect_mode_stub_when_submodule_empty():
-    status = detect_mode(root=REPO)
+def test_detect_mode_stub_when_submodule_empty(tmp_path: Path):
+    empty = tmp_path / "roach-pi"
+    empty.mkdir()
+    status = detect_mode(roach_root=empty, root=tmp_path)
     assert status["mode"] == "stub"
     assert not status["healthy"]
 

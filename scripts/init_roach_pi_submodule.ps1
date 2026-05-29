@@ -4,7 +4,7 @@ $RepoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $RepoRoot
 
 if (-not (Test-Path ".gitmodules")) {
-    Write-Error ".gitmodules missing — run from chromatic-harness-v2 root"
+    Write-Error ".gitmodules missing - run from chromatic-harness-v2 root"
 }
 
 Write-Host "Initializing submodule 02_RUNTIME/runtime-engines/roach-pi ..."
