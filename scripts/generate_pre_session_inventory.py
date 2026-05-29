@@ -198,6 +198,7 @@ def render_full_doc(snapshot: dict) -> str:
         "",
         "Baseline documentation before changing tool exposure, MCP plugins, or CRG policy.",
         "See also: [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)",
+        "**Lean Cursor context:** [docs/CURSOR_CONTEXT_HYGIENE.md](../docs/CURSOR_CONTEXT_HYGIENE.md) — `python scripts/audit_mcp_context.py`",
         "",
         "---",
         "",
@@ -373,6 +374,11 @@ def render_handoffs_index(snapshot: dict) -> str:
 1. `python scripts/generate_pre_session_inventory.py`
 2. Review diff in `config/pre_session/inventory.snapshot.json`
 3. Update CRG policy if needed
+
+## Lean Cursor context (disable heavy MCPs)
+
+`python scripts/audit_mcp_context.py --profile harness_dev`  
+See [docs/CURSOR_CONTEXT_HYGIENE.md](../docs/CURSOR_CONTEXT_HYGIENE.md)
 
 ## Session start
 

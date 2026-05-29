@@ -39,6 +39,7 @@ Do not rely on chat memory alone. At ~50–65% context pressure, phase boundarie
 Canonical protocol: [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md)
 
 **Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — run `python scripts/generate_pre_session_inventory.py` before changing MCP/tools.  
+**MCP / lean context:** [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) — disable heavy MCPs in Cursor; `python scripts/audit_mcp_context.py`  
 **CI guard:** `python scripts/check_agent_operations.py`
 
 ## Session Completion

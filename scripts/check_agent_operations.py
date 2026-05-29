@@ -20,14 +20,22 @@ REQUIRED_FILES = [
     "12_HANDOFFS/SESSION_COMPACT.md",
     "12_HANDOFFS/PRE_SESSION_INVENTORY.md",
     "docs/PRE_SESSION_AND_TOOLS.md",
+    "docs/CURSOR_CONTEXT_HYGIENE.md",
     "config/pre_session/inventory.snapshot.json",
+    "config/pre_session/mcp.profile.yaml",
     "scripts/generate_pre_session_inventory.py",
+    "scripts/audit_mcp_context.py",
+    "scripts/session_start.py",
+    ".claude/settings.json",
+    ".cursor/rules/context-hygiene.mdc",
 ]
 
 REQUIRED_STRINGS_IN_AGENTS = [
     "SESSION_COMPACT",
     "PRE_SESSION_AND_TOOLS",
+    "CURSOR_CONTEXT_HYGIENE",
     "generate_pre_session_inventory",
+    "audit_mcp_context",
     "check_agent_operations",
     "AGENT_OPERATIONS",
 ]
@@ -74,8 +82,16 @@ def main() -> int:
     claude_md = REPO / "CLAUDE.md"
     if claude_md.is_file():
         text = claude_md.read_text(encoding="utf-8")
-        if "AGENT_OPERATIONS" not in text and "PRE_SESSION_AND_TOOLS" not in text:
-            errors.append("CLAUDE.md missing agent operations / pre-session references")
+        if "AGENT_OPERATIONS" not in text:
+            errors.append("CLAUDE.md missing AGENT_OPERATIONS reference")
+        if "CURSOR_CONTEXT_HYGIENE" not in text and "audit_mcp_context" not in text:
+            errors.append("CLAUDE.md missing MCP hygiene reference")
+
+    ops_md = REPO / "AGENT_OPERATIONS.md"
+    if ops_md.is_file():
+        text = ops_md.read_text(encoding="utf-8")
+        if "audit_mcp_context" not in text:
+            errors.append("AGENT_OPERATIONS.md missing audit_mcp_context reference")
 
     if errors:
         print("AGENT OPERATIONS CHECK FAILED", file=sys.stderr)

@@ -21,18 +21,40 @@ bd ready
 git branch --show-current
 git status --short
 
-# 4. Know your tool surface (read once per machine, again after MCP changes)
+# 4. Trim MCP context (Cursor / Claude — even without harness API)
+python scripts/audit_mcp_context.py --profile harness_dev
+
+# 5. Know your tool surface (again after MCP plugin changes)
 #    docs/PRE_SESSION_AND_TOOLS.md
 ```
 
 | Step | Doc |
 |------|-----|
 | Handoff + compact rules | [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) |
+| **MCP disable / lean Claude** | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
 | Tools / MCP / CRG baseline | [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) |
 | Issue tracking | [AGENTS.md](AGENTS.md) (beads — not TodoWrite) |
 | In-flight RPI | `.agents/rpi/execution-packet.json` (if exists) |
 
 **Brownfield:** Do not start a new RPI epic on top of in-flight work without reading the execution packet and checking the branch.
+
+---
+
+## MCP context (Cursor / native Claude)
+
+**Cursor injects every enabled MCP’s tool schemas into every turn** (~tens of thousands of tokens). The harness CRG layer does **not** turn MCPs off in Cursor — you do.
+
+| Action | Command / place |
+|--------|-----------------|
+| Audit token bulk | `python scripts/audit_mcp_context.py --profile harness_dev` |
+| Profiles (what to disable) | `config/pre_session/mcp.profile.yaml` |
+| Full guide | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
+| Disable server | Cursor **Settings → MCP** → toggle off (reversible) |
+| Strict CI/local gate | `python scripts/audit_mcp_context.py --strict` |
+
+**Daily harness dev:** disable at least Resend, Playwright, and Opsera MCPs (~43k+ tok combined). Re-enable only for email, browser, or security tasks.
+
+**Claude Code hooks** (`.claude/settings.json`): `session_start.py` prints handoff; `gate.py` on Agent dispatch for CRG advisory.
 
 ---
 
@@ -44,6 +66,7 @@ git status --short
 | Chat is not authoritative | Git + beads + handoff files hold facts |
 | At ~50–65% context pressure | Run [compact checkpoint](12_HANDOFFS/SESSION_COMPACT.md#compact-checkpoint-65) |
 | Before changing router/MCP/CRG | Regenerate inventory (below) |
+| Before long Cursor sessions | Run MCP audit; disable unused plugins |
 
 ---
 
@@ -103,4 +126,4 @@ POST /missions/{mission_id}/synthesize?create_bead=true
 
 ## One-line summary
 
-**Start:** handoff → bd → git → know tools. **Change tools:** regenerate inventory + check script. **End:** test → beads → push → handoff.
+**Start:** handoff → bd → git → audit MCPs. **Change tools:** regenerate inventory + check script. **End:** test → beads → push → handoff.

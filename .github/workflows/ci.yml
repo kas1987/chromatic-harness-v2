@@ -24,6 +24,12 @@ jobs:
       - name: Agent operations guard (mandatory docs)
         run: python scripts/check_agent_operations.py
 
+      - name: MCP context audit (fixture baseline)
+        run: |
+          python scripts/audit_mcp_context.py \
+            --mcps-path tests/fixtures/mcp_minimal \
+            --profile harness_dev
+
       - name: Lint
         run: |
           pip install ruff
