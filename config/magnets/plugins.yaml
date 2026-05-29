@@ -1,0 +1,7 @@
+# Optional extra magnet plugins (Python MagnetPlugin classes).
+# Built-ins register via magnets.plugin.default_registry().
+# Add fully-qualified class paths here for dynamic load (future).
+
+plugins: []
+  # - module: magnets.plugins.secrets_plugin
+  #   class: SecretsSurfacePlugin

@@ -136,11 +136,37 @@ PRs should not delete hygiene docs. Use **fixture MCP path** in CI (minimal toke
 - [ ] `cat .agents/handoffs/latest.json` (or open after SessionStart hook)
 - [ ] `bd ready`
 - [ ] Re-enable MCPs only for the task (email, browser, etc.)
+- [ ] Sync **lite** Claude workflows: `powershell -File scripts/sync_claude_workflows.ps1`
+- [ ] Skim [AGENT_ANTIPATTERNS.md](AGENT_ANTIPATTERNS.md) — do not run heavy `/ship` or bulk-read transcripts
+
+---
+
+## Claude Code workflows (cost guards)
+
+Heavy user-global workflows (`~/.claude/workflows/`) caused **~1.3M token** burns by chaining `/crank`, council skills, and full transcript pass-through between `agent()` phases.
+
+| Use | Avoid |
+|-----|-------|
+| Repo **`/ship`** (lite): discovery + plan → beads | Old ship with **crank → vibe → release** |
+| **`/close-issue <id>`** one bead at a time | Unattended `/crank` until epic closed |
+| **`/qa`** = pytest + ruff only | Parallel complexity + security + perf + vibe |
+| **`bd ready`** between issues | Pasting prior phase output into next agent() |
+
+**Install safe defaults from this repo:**
+
+```powershell
+powershell -File scripts/sync_claude_workflows.ps1
+```
+
+Canonical copies: `.claude/workflows/` (lite). Archived reference: `*.HEAVY.js.bak` (not synced).
+
+Full **do not trust / do not do** list: [AGENT_ANTIPATTERNS.md](AGENT_ANTIPATTERNS.md)
 
 ---
 
 ## Related
 
+- [AGENT_ANTIPATTERNS.md](AGENT_ANTIPATTERNS.md)
 - [PRE_SESSION_AND_TOOLS.md](PRE_SESSION_AND_TOOLS.md)
 - [AGENT_OPERATIONS.md](../AGENT_OPERATIONS.md)
 - [SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)

@@ -1,0 +1,252 @@
+"""Drain intake queue into beads (bd create / claim)."""
+
+from __future__ import annotations
+
+import re
+import subprocess
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable
+
+from intake.queue import (
+    IntakeEntry,
+    default_queue_path,
+    list_queued,
+    record_status,
+)
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+_SKIP_ID_PREFIXES = ("example-",)
+
+
+@dataclass
+class ProcessResult:
+    entry_id: str
+    kind: str
+    status: str
+    bead_id: str = ""
+    message: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "entry_id": self.entry_id,
+            "kind": self.kind,
+            "status": self.status,
+            "bead_id": self.bead_id,
+            "message": self.message,
+        }
+
+
+@dataclass
+class DrainReport:
+    processed: int = 0
+    failed: int = 0
+    skipped: int = 0
+    results: list[ProcessResult] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "processed": self.processed,
+            "failed": self.failed,
+            "skipped": self.skipped,
+            "results": [r.to_dict() for r in self.results],
+        }
+
+
+def _should_skip(entry: IntakeEntry) -> bool:
+    if any(entry.id.startswith(p) for p in _SKIP_ID_PREFIXES):
+        return True
+    if entry.status != "queued":
+        return True
+    return False
+
+
+def simple_decompose(goal: str) -> list[dict[str, str]]:
+    """Split bullet goals into tasks; otherwise one atomic task (no LLM in P0)."""
+    lines = [ln.strip() for ln in goal.splitlines() if ln.strip()]
+    bullets = [ln for ln in lines if re.match(r"^[-*•]\s+|\d+[.)]\s+", ln)]
+    if len(bullets) >= 2:
+        tasks: list[dict[str, str]] = []
+        for bullet in bullets:
+            title = re.sub(r"^[-*•]\s+|\d+[.)]\s+", "", bullet).strip()[:200]
+            if title:
+                tasks.append({"title": title, "description": bullet})
+        return tasks or [{"title": goal[:120], "description": goal}]
+    return [{"title": (goal[:120] or "Intake goal"), "description": goal}]
+
+
+def _run_bd(
+    args: list[str],
+    *,
+    cwd: Path,
+    runner: Callable[[list[str], Path], subprocess.CompletedProcess[str]] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    cmd = ["bd", *args]
+    if runner:
+        return runner(cmd, cwd)
+    return subprocess.run(
+        cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+
+
+def _parse_bead_id(output: str) -> str:
+    m = re.search(r"chromatic-harness-v2-[a-z0-9]+", output)
+    if m:
+        return m.group(0)
+    m = re.search(r"\b[a-z]{2}-[a-zA-Z0-9]{3,5}\b", output)
+    return m.group(0) if m else ""
+
+
+def _bd_create(
+    title: str,
+    *,
+    description: str = "",
+    priority: str = "P2",
+    issue_type: str = "task",
+    cwd: Path,
+    runner=None,
+    dry_run: bool = False,
+) -> tuple[bool, str, str]:
+    if dry_run:
+        return True, "dry-run-bead", "dry-run"
+    args = ["create", title, "--type", issue_type, "--priority", priority]
+    if description:
+        args.extend(["--description", description[:4000]])
+    proc = _run_bd(args, cwd=cwd, runner=runner)
+    out = (proc.stdout or "") + (proc.stderr or "")
+    if proc.returncode != 0:
+        return False, "", out.strip()[:500]
+    bead_id = _parse_bead_id(out)
+    return bool(bead_id), bead_id, out.strip()[:200]
+
+
+def _bd_claim(bead_id: str, *, cwd: Path, runner=None, dry_run: bool = False) -> tuple[bool, str]:
+    if dry_run:
+        return True, "dry-run-claim"
+    proc = _run_bd(["update", bead_id, "--claim"], cwd=cwd, runner=runner)
+    out = (proc.stdout or "") + (proc.stderr or "")
+    return proc.returncode == 0, out.strip()[:300]
+
+
+def process_entry(
+    entry: IntakeEntry,
+    *,
+    repo_root: Path | None = None,
+    queue_path: Path | None = None,
+    runner=None,
+    dry_run: bool = False,
+    claim: bool = True,
+) -> ProcessResult:
+    """Process one intake entry into beads."""
+    repo = repo_root or REPO_ROOT
+    qpath = queue_path or default_queue_path(repo)
+
+    if _should_skip(entry):
+        if not dry_run:
+            record_status(entry, "skipped", path=qpath, repo_root=repo, error="skip rule")
+        return ProcessResult(entry.id, entry.kind, "skipped", message="skip rule")
+
+    if not dry_run:
+        record_status(entry, "processing", path=qpath, repo_root=repo)
+
+    try:
+        if entry.kind == "bead_dispatch":
+            bead_id = entry.bead_id or entry.id
+            if claim:
+                ok, msg = _bd_claim(bead_id, cwd=repo, runner=runner, dry_run=dry_run)
+                if not ok:
+                    if not dry_run:
+                        record_status(entry, "failed", path=qpath, repo_root=repo, error=msg)
+                    return ProcessResult(entry.id, entry.kind, "failed", bead_id=bead_id, message=msg)
+            if not dry_run:
+                record_status(entry, "processed", path=qpath, repo_root=repo, bead_id=bead_id)
+            return ProcessResult(
+                entry.id, entry.kind, "processed", bead_id=bead_id, message="dispatch claimed"
+            )
+
+        tasks = (
+            simple_decompose(entry.goal or entry.title)
+            if entry.kind == "goal"
+            else [{"title": entry.title[:200], "description": entry.goal or entry.title}]
+        )
+
+        created: list[str] = []
+        for task in tasks:
+            ok, bead_id, msg = _bd_create(
+                task["title"],
+                description=task.get("description", ""),
+                priority=entry.priority,
+                issue_type=entry.type,
+                cwd=repo,
+                runner=runner,
+                dry_run=dry_run,
+            )
+            if not ok:
+                if not dry_run:
+                    record_status(entry, "failed", path=qpath, repo_root=repo, error=msg)
+                return ProcessResult(entry.id, entry.kind, "failed", message=msg)
+            if claim and bead_id:
+                _bd_claim(bead_id, cwd=repo, runner=runner, dry_run=dry_run)
+            created.append(bead_id)
+
+        primary = created[0] if created else ""
+        if not dry_run:
+            record_status(
+                entry,
+                "processed",
+                path=qpath,
+                repo_root=repo,
+                bead_id=primary,
+            )
+        return ProcessResult(
+            entry.id,
+            entry.kind,
+            "processed",
+            bead_id=primary,
+            message=f"created {len(created)} bead(s)",
+        )
+    except Exception as exc:
+        if not dry_run:
+            record_status(entry, "failed", path=qpath, repo_root=repo, error=str(exc))
+        return ProcessResult(entry.id, entry.kind, "failed", message=str(exc))
+
+
+def drain_queue(
+    *,
+    repo_root: Path | None = None,
+    queue_path: Path | None = None,
+    limit: int | None = None,
+    runner=None,
+    dry_run: bool = False,
+    claim: bool = True,
+) -> DrainReport:
+    """Process all queued intake entries (newest deduped state per id)."""
+    repo = repo_root or REPO_ROOT
+    qpath = queue_path or default_queue_path(repo)
+    report = DrainReport()
+    queued = list_queued(path=qpath, repo_root=repo)
+    if limit is not None:
+        queued = queued[:limit]
+
+    for entry in queued:
+        result = process_entry(
+            entry,
+            repo_root=repo,
+            queue_path=qpath,
+            runner=runner,
+            dry_run=dry_run,
+            claim=claim,
+        )
+        report.results.append(result)
+        if result.status == "processed":
+            report.processed += 1
+        elif result.status == "skipped":
+            report.skipped += 1
+        else:
+            report.failed += 1
+    return report

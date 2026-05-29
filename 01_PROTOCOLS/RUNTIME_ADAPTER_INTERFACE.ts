@@ -53,6 +53,12 @@ export interface ExecutionResult {
 
   // Magnet reports from runtime observation
   magnet_reports: MagnetReport[];
+
+  /** Optional runtime adapter diagnostics (submodule vs stub, paths). */
+  runtime_info?: {
+    mode: string;
+    roach_pi_root?: string;
+  };
 }
 
 /**
@@ -113,6 +119,10 @@ export interface TestResult {
   duration_ms: number;
   assertion?: string;
   error_message?: string;
+  /** Optional path hint for pyramid classification */
+  suite_path?: string;
+  /** Explicit layer override */
+  layer?: 'unit' | 'integration' | 'e2e';
 }
 
 /**

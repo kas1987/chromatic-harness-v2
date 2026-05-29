@@ -12,6 +12,7 @@
 import { MissionPacket } from '../../01_PROTOCOLS/RUNTIME_ADAPTER_INTERFACE';
 import { CMPExecutor } from '../cmp-bridge/cmp-executor';
 import { MissionStore } from './mission-store';
+import { MissionEventHub } from './event_store';
 
 /**
  * Simple HTTP response wrapper
@@ -446,6 +447,63 @@ export class ConsoleServer {
       return {
         status: 'ok',
         data: agent,
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        error: (error as Error).message,
+        timestamp: Date.now(),
+      };
+    }
+  }
+
+  /**
+   * GET /missions/:id/events/replay — persisted WebSocket event history
+   */
+  handleReplayEvents(mission_id: string, limit = 100): APIResponse<{ events: unknown[] }> {
+    try {
+      const events = MissionEventHub.getInstance().replay(mission_id, limit);
+      return {
+        status: 'ok',
+        data: { events, count: events.length },
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      return {
+        status: 'error',
+        error: (error as Error).message,
+        timestamp: Date.now(),
+      };
+    }
+  }
+
+  /**
+   * POST /internal/events — ingest event (multi-instance fanout target)
+   */
+  handleIngestEvent(body: {
+    mission_id: string;
+    type: string;
+    data?: Record<string, unknown>;
+    timestamp?: number;
+  }): APIResponse<{ published: boolean }> {
+    try {
+      if (!body.mission_id || !body.type) {
+        return {
+          status: 'error',
+          error: 'mission_id and type required',
+          timestamp: Date.now(),
+        };
+      }
+      MissionEventHub.getInstance().publish(body.mission_id, {
+        type: body.type as any,
+        mission_id: body.mission_id,
+        timestamp: body.timestamp || Date.now(),
+        data: body.data || {},
+      });
+      return {
+        status: 'ok',
+        data: { published: true },
         timestamp: Date.now(),
       };
     } catch (error) {

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Harness Intake Queue Entry",
+  "description": "Append-only JSONL record for goals and dispatch items before auto_intake creates or claims beads.",
+  "type": "object",
+  "required": ["id", "source", "kind", "status", "title", "queued_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable entry id (uuid) or existing bead id when kind=bead_dispatch"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["bead_hook", "closure", "inbox", "manual", "goal", "workflow"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["bead_dispatch", "goal", "follow_up"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "processing", "processed", "failed", "skipped"]
+    },
+    "title": { "type": "string" },
+    "goal": {
+      "type": "string",
+      "description": "Full goal text when kind=goal; used by GoalDecomposer"
+    },
+    "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
+    "type": { "type": "string", "enum": ["task", "bug", "epic", "chore"] },
+    "tier": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4,
+      "description": "OL routing tier (0=mechanical .. 4=novel)"
+    },
+    "bead_id": {
+      "type": "string",
+      "description": "Set when kind=bead_dispatch and bead already exists"
+    },
+    "context": { "type": "object" },
+    "queued_at": { "type": "string", "format": "date-time" },
+    "processed_at": { "type": "string", "format": "date-time" },
+    "error": { "type": "string" }
+  }
+}

@@ -88,9 +88,10 @@ export const DEFAULT_REGISTRY_CONFIG: RuntimeRegistryConfig = {
     adapter: RoachPiAdapter,
     config: {
       base_branch: 'main',
-      repo_path: process.env.REPO_PATH || './repo',
+      repo_path: process.env.REPO_PATH || '.',
       timeout_seconds: 1800,
       retry_strategy: 'exponential',
+      roach_pi_root: process.env.ROACH_PI_ROOT,
     },
   },
   // 'langraph': { ... },

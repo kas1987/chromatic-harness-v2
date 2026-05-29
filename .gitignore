@@ -17,9 +17,21 @@ htmlcov/
 # Router observability logs
 07_LOGS_AND_AUDIT/routing/*.jsonl
 
+# Intake / workflow / WS runtime logs (local only)
+07_LOGS_AND_AUDIT/intake_queue.jsonl
+07_LOGS_AND_AUDIT/decisions/*.jsonl
+07_LOGS_AND_AUDIT/execution/*.jsonl
+07_LOGS_AND_AUDIT/traces/*.jsonl
+07_LOGS_AND_AUDIT/ws_events/*.jsonl
+!07_LOGS_AND_AUDIT/ws_events/.gitkeep
+
 # Runtime event logs (agentops, router events — never commit)
 10_RUNTIME/logs/*.jsonl
 09_DEPLOYMENT/10_RUNTIME/logs/*.jsonl
+02_RUNTIME/api/10_RUNTIME/
+
+# Session context logging (local only)
+.agents/logs/
 
 # Beads / Dolt files (added by bd init)
 .dolt/
