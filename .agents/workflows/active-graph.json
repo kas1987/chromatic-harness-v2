@@ -1,0 +1,95 @@
+{
+  "workflow_id": "WF-pipeline",
+  "objective": "Next harness task",
+  "created_at": "2026-05-29T04:35:39Z",
+  "risk_level": "low",
+  "global_stop_conditions": [
+    "confidence_below_threshold",
+    "scope_unclear",
+    "no_unattended_swarm"
+  ],
+  "tasks": [
+    {
+      "task_id": "task-scout",
+      "title": "Scout: Next harness task",
+      "assigned_model": "sonnet",
+      "role": "scout",
+      "depends_on": [],
+      "allowed_files": [],
+      "forbidden_files": [],
+      "tool_budget": 15,
+      "confidence_required": 70,
+      "risk_level": "low",
+      "acceptance_criteria": [],
+      "stop_conditions": [
+        "confidence_below_threshold",
+        "scope_unclear"
+      ],
+      "status": "pending"
+    },
+    {
+      "task_id": "task-build",
+      "title": "Build: Next harness task",
+      "assigned_model": "kimi",
+      "role": "worker",
+      "depends_on": [
+        "task-scout"
+      ],
+      "allowed_files": [],
+      "forbidden_files": [],
+      "tool_budget": 40,
+      "confidence_required": 75,
+      "risk_level": "low",
+      "acceptance_criteria": [],
+      "stop_conditions": [
+        "confidence_below_threshold",
+        "scope_unclear"
+      ],
+      "status": "pending"
+    },
+    {
+      "task_id": "task-verify",
+      "title": "Verify: Next harness task",
+      "assigned_model": "sonnet",
+      "role": "verifier",
+      "depends_on": [
+        "task-build"
+      ],
+      "allowed_files": [],
+      "forbidden_files": [],
+      "tool_budget": 12,
+      "confidence_required": 80,
+      "risk_level": "low",
+      "acceptance_criteria": [],
+      "stop_conditions": [
+        "confidence_below_threshold",
+        "scope_unclear"
+      ],
+      "status": "pending"
+    },
+    {
+      "task_id": "task-scribe",
+      "title": "Log: Next harness task",
+      "assigned_model": "kimi",
+      "role": "scribe",
+      "depends_on": [
+        "task-verify"
+      ],
+      "allowed_files": [
+        "docs/",
+        "07_LOGS_AND_AUDIT/",
+        ".agents/handoffs/"
+      ],
+      "forbidden_files": [],
+      "tool_budget": 8,
+      "confidence_required": 65,
+      "risk_level": "low",
+      "acceptance_criteria": [],
+      "stop_conditions": [
+        "confidence_below_threshold",
+        "scope_unclear"
+      ],
+      "status": "pending"
+    }
+  ]
+}

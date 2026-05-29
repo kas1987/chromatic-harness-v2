@@ -24,8 +24,9 @@ from router.contracts import (  # noqa: E402
     RouteAudit,
     RouteInput,
 )
-from memory.store import SystemMemoryStore  # noqa: E402
 from scope.guard import DispatchGuard  # noqa: E402
+from magnets.base_magnet import MagnetEvent  # noqa: E402
+from magnets.magnet_orchestrator import MagnetOrchestrator  # noqa: E402
 
 
 @dataclass
@@ -58,14 +59,69 @@ class Orchestrator:
             required_outputs=["agent_lead_report", "next_bead"],
         )
 
+    def create_mission_from_task(self, task: dict[str, Any]) -> MissionPacket:
+        """Build a mission packet from a workflow task-graph node or CLI task dict."""
+        title = task.get("title") or task.get("objective", "")
+        allowed_files = task.get("allowed_files") or []
+        confidence_required = float(
+            task.get("confidence_required", task.get("confidence_score", 75))
+        )
+        stop_conditions = list(
+            task.get(
+                "stop_conditions",
+                [
+                    "confidence_below_threshold",
+                    "scope_unclear",
+                    "security_risk_detected",
+                ],
+            )
+        )
+        role = task.get("role", "worker")
+        tool_budget = task.get("tool_budget", 0)
+        allowed_tools = ["filesystem.read"]
+        if allowed_files:
+            allowed_tools.append("filesystem.write")
+        return MissionPacket(
+            mission_id=f"CHR-MISSION-{str(uuid.uuid4())[:8].upper()}",
+            objective=title,
+            agent_role=role,
+            autonomy_level="L2" if tool_budget > 20 else "L1",
+            confidence_required=confidence_required,
+            allowed_tools=allowed_tools,
+            stop_conditions=stop_conditions,
+            required_outputs=["task_result", "verifier_report"],
+            metadata={
+                "task_id": task.get("task_id", ""),
+                "assigned_model": task.get("assigned_model", ""),
+                "allowed_files": allowed_files,
+                "tool_budget": tool_budget,
+                "bead_id": task.get("bead_id", ""),
+            },
+        )
+
     def attach_magnets(self, mission: MissionPacket) -> list[str]:
-        return [
-            "intent_magnet",
-            "scope_magnet",
-            "execution_magnet",
-            "confidence_magnet",
-            "memory_magnet",
-        ]
+        return MagnetOrchestrator().registered_magnets()
+
+    def synthesize_mission(
+        self,
+        mission: MissionPacket,
+        events: list[MagnetEvent | dict],
+    ):
+        """Run magnet pipeline + Agent Lead synthesis on mission events."""
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "agent_lead", os.path.join(_HERE, "agent_lead.py")
+        )
+        mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+        sys.modules["agent_lead"] = mod
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+        AgentLead = mod.AgentLead
+
+        orchestrator = MagnetOrchestrator()
+        report = orchestrator.process(mission.mission_id, events)
+        lead = AgentLead(orchestrator)
+        return lead.run(mission.__dict__, events, report)
 
     async def guard_and_inject(
         self,

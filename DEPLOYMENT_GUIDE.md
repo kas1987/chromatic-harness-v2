@@ -190,14 +190,36 @@ curl http://localhost:3030/agents/openhands-001
 
 ### Environment Variables
 
-**Frontend (.env.local):**
+Copy the router/runtime template and fill in keys for providers you use:
+
+```bash
+cp 09_DEPLOYMENT/.env.example 09_DEPLOYMENT/.env
+# Load into shell (PowerShell):
+# Get-Content 09_DEPLOYMENT/.env | ForEach-Object { if ($_ -match '^([^#=]+)=(.*)$') { Set-Item -Path "env:$($matches[1])" -Value $matches[2] } }
+```
+
+| Variable | Provider | Required for |
+|----------|----------|----------------|
+| `MOONSHOT_API_KEY` | Kimi (Moonshot) | Coding/scout routes (`config/routing/providers.yaml` → `kimi`) |
+| `GOOGLE_API_KEY` | Google Gemini | `google` adapter / Gemini tasks |
+| `ANTHROPIC_API_KEY` | Claude | `anthropic` / native Claude paths |
+| `OPENAI_API_KEY` | OpenAI | `openai` adapter |
+| `OPENROUTER_API_KEY` | OpenRouter | Broker fallback |
+| `FEATHERLESS_API_KEY` | Featherless | Broker fallback |
+| `OPENHUMAN_BEARER_TOKEN` | OpenHuman sidecar | Only when `OPENHUMAN_ENABLED=true` |
+| `GITHUB_TOKEN` | GitHub MCP / PR flows | Optional for git automation |
+
+**Kimi and Google fail silently** when keys are missing: the router registers the adapter but `health_check` reports unreachable and routes fall through to the next provider. Set both keys during harness dev if you rely on the Sonnet-plans / Kimi-builds workflow ([MODEL_ROUTING_RULES.md](docs/governance/MODEL_ROUTING_RULES.md)).
+
+**Frontend (`05_FRONTEND_CONSOLE/.env.local`):**
 ```
 NEXT_PUBLIC_API_URL=http://localhost:3030
 ```
 
-**Backend:**
+**Console API backend:**
 - PORT: 3030 (hardcoded in ConsoleServer)
 - Can be modified in console-server.ts line 32
+- Router adapters read keys from the process environment (see `09_DEPLOYMENT/.env`)
 
 ### API Base URL
 
@@ -257,6 +279,21 @@ pkill -f "next dev"
 # Then restart following Quick Start steps
 ```
 
+### Router skips Kimi or Google (silent)
+
+**Symptom:** Coding tasks route to mock/OpenRouter instead of Kimi; Gemini never selected.
+
+**Check:**
+```bash
+# Keys present?
+python -c "import os; print('MOONSHOT', bool(os.getenv('MOONSHOT_API_KEY'))); print('GOOGLE', bool(os.getenv('GOOGLE_API_KEY')))"
+
+# Provider registration
+python -c "import sys; sys.path.insert(0,'02_RUNTIME'); from router.router import Router; r=Router(); print('kimi' in r.adapters, 'google' in r.adapters)"
+```
+
+**Fix:** Set `MOONSHOT_API_KEY` and/or `GOOGLE_API_KEY` in `09_DEPLOYMENT/.env` and export before starting the API or running `pytest tests/test_kimi_and_governance.py`.
+
 ### Missions not showing in dashboard
 
 **Debug:**
@@ -305,10 +342,13 @@ Edit src/app/page.tsx to remove unused panels for lighter rendering.
 Replace HTTP polling with WebSocket for instant magnet events:
 ```bash
 # Frontend subscribes to mission events
-ws://localhost:3030/missions/:id/events
+ws://localhost:3030/ws/missions/:id/events
 
 # Server pushes magnet reports in real-time
+# Late subscribers receive replay from 07_LOGS_AND_AUDIT/ws_events/*.jsonl
 ```
+
+**Multi-instance:** set `REDIS_URL` and run `python scripts/ws_redis_fanout.py` with `CONSOLE_INSTANCE_URLS`. See [docs/console/WEBSOCKET_EVENT_BUS.md](docs/console/WEBSOCKET_EVENT_BUS.md).
 
 ### Phase 7: Mission Replay
 

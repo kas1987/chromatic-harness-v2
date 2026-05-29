@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Dynamic Workflow Task Graph",
+  "type": "object",
+  "required": ["workflow_id", "objective", "risk_level", "tasks"],
+  "properties": {
+    "workflow_id": { "type": "string" },
+    "objective": { "type": "string" },
+    "created_at": { "type": "string" },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "global_stop_conditions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "title", "assigned_model", "role", "tool_budget", "confidence_required", "risk_level", "status"],
+        "properties": {
+          "task_id": { "type": "string" },
+          "title": { "type": "string" },
+          "assigned_model": { "type": "string", "enum": ["sonnet", "kimi", "gpt", "gemini", "codex", "local", "human"] },
+          "role": { "type": "string", "enum": ["orchestrator", "architect", "worker", "verifier", "scribe", "auditor", "scout"] },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "allowed_files": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "forbidden_files": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "tool_budget": { "type": "integer", "minimum": 0 },
+          "confidence_required": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "risk_level": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+          "acceptance_criteria": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "stop_conditions": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "status": { "type": "string", "enum": ["pending", "active", "blocked", "review", "done", "failed", "parked"] }
+        }
+      }
+    }
+  }
+}

@@ -93,7 +93,13 @@ function PromotionTimeline({
     <div style={{ marginTop: 8 }}>
       {/* Level rail */}
       <div
-        style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 12 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0,
+          marginBottom: 12,
+          position: "relative",
+        }}
       >
         {[0, 1, 2, 3, 4, 5].map((lvl) => (
           <div key={lvl} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>

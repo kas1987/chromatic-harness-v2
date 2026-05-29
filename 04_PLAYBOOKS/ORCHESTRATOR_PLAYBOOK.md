@@ -7,8 +7,10 @@ The Orchestrator selects the next bounded task, creates a CMP Mission Packet, di
 ## Loop
 
 ```text
-Observe → Classify → Score → Create Mission Packet → Attach Magnets → Dispatch → Validate → Record → Queue Next
+Observe → Classify → Score → Create Mission Packet → Attach Magnets → Dispatch → Validate → Record → Compact/Handoff → Queue Next
 ```
+
+At mission close: synthesize magnet events (`POST /missions/{id}/synthesize`), persist handoff per [SESSION_COMPACT_PLAYBOOK.md](SESSION_COMPACT_PLAYBOOK.md).
 
 ## Required Inputs
 

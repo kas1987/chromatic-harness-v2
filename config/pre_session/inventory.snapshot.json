@@ -1,0 +1,454 @@
+{
+  "generated_at": "2026-05-29T04:35:35.555897+00:00",
+  "repo": "C:\\Users\\kas41\\chromatic-harness-v2",
+  "mcp_descriptors_path": "C:\\Users\\kas41\\chromatic-harness-v2\\tests\\fixtures\\mcp_minimal",
+  "summary": {
+    "native_tool_count": 15,
+    "subagent_count": 9,
+    "mcp_server_count": 1,
+    "mcp_tool_count": 1,
+    "crg_resource_count": 15
+  },
+  "native_tools": [
+    {
+      "name": "Shell",
+      "purpose": "Run terminal commands (git, bd, pytest, docker)"
+    },
+    {
+      "name": "Read",
+      "purpose": "Read files including images"
+    },
+    {
+      "name": "Write / StrReplace / Delete",
+      "purpose": "Create and edit files"
+    },
+    {
+      "name": "Grep",
+      "purpose": "Ripgrep search"
+    },
+    {
+      "name": "Glob",
+      "purpose": "Find files by pattern"
+    },
+    {
+      "name": "WebSearch / WebFetch",
+      "purpose": "Web lookup when enabled"
+    },
+    {
+      "name": "GenerateImage",
+      "purpose": "Image generation when explicitly requested"
+    },
+    {
+      "name": "ReadLints",
+      "purpose": "IDE linter diagnostics"
+    },
+    {
+      "name": "EditNotebook",
+      "purpose": "Jupyter cell edits"
+    },
+    {
+      "name": "CallMcpTool",
+      "purpose": "Invoke MCP server tools"
+    },
+    {
+      "name": "FetchMcpResource",
+      "purpose": "Read MCP resources"
+    },
+    {
+      "name": "Task",
+      "purpose": "Spawn subagents (explore, shell, ci-investigator, etc.)"
+    },
+    {
+      "name": "SwitchMode",
+      "purpose": "Plan vs agent mode"
+    },
+    {
+      "name": "AskQuestion",
+      "purpose": "Structured user multiple-choice"
+    },
+    {
+      "name": "Await",
+      "purpose": "Poll background shells"
+    }
+  ],
+  "subagents": [
+    "generalPurpose",
+    "explore",
+    "shell",
+    "cursor-guide",
+    "ci-investigator",
+    "best-of-n-runner",
+    "granola-engineer",
+    "devsecops",
+    "investigator"
+  ],
+  "mcp_servers": [
+    {
+      "id": "plugin-test-server",
+      "display_name": "test-server",
+      "tool_count": 1,
+      "tools": [
+        "sample_tool"
+      ],
+      "status": "active"
+    }
+  ],
+  "crg_manifest": [
+    {
+      "id": "audit",
+      "type": "skill",
+      "description": "Audit/refactor skills",
+      "estimated_tokens": 600,
+      "risk_level": "low",
+      "task_types": [
+        "review",
+        "coding"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "bash",
+      "type": "tool",
+      "description": "Execute shell commands",
+      "estimated_tokens": 120,
+      "risk_level": "high",
+      "task_types": [
+        "coding",
+        "review",
+        "personal_context"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "browser",
+      "type": "extension",
+      "description": "Browser automation",
+      "estimated_tokens": 600,
+      "risk_level": "medium",
+      "task_types": [
+        "research"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "codex_team",
+      "type": "agent",
+      "description": "Codex sub-agents",
+      "estimated_tokens": 900,
+      "risk_level": "medium",
+      "task_types": [
+        "coding",
+        "research"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "council",
+      "type": "skill",
+      "description": "Multi-model consensus",
+      "estimated_tokens": 800,
+      "risk_level": "low",
+      "task_types": [
+        "research",
+        "planning"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "edit",
+      "type": "tool",
+      "description": "Precise file edits",
+      "estimated_tokens": 100,
+      "risk_level": "low",
+      "task_types": [
+        "planning",
+        "coding",
+        "review"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1",
+        "P2"
+      ]
+    },
+    {
+      "id": "github_read",
+      "type": "mcp",
+      "description": "GitHub read ops",
+      "estimated_tokens": 400,
+      "risk_level": "low",
+      "task_types": [
+        "research",
+        "integration_action"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "github_write",
+      "type": "mcp",
+      "description": "GitHub write ops",
+      "estimated_tokens": 450,
+      "risk_level": "medium",
+      "task_types": [
+        "integration_action"
+      ],
+      "privacy_classes": [
+        "P0"
+      ]
+    },
+    {
+      "id": "read",
+      "type": "tool",
+      "description": "Read file contents",
+      "estimated_tokens": 80,
+      "risk_level": "low",
+      "task_types": [
+        "classification",
+        "planning",
+        "coding",
+        "review",
+        "research"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1",
+        "P2"
+      ]
+    },
+    {
+      "id": "secrets_read",
+      "type": "mcp",
+      "description": "Secret manager access",
+      "estimated_tokens": 300,
+      "risk_level": "critical",
+      "task_types": [
+        "integration_action"
+      ],
+      "privacy_classes": [
+        "P0"
+      ]
+    },
+    {
+      "id": "security",
+      "type": "skill",
+      "description": "Security scanning",
+      "estimated_tokens": 700,
+      "risk_level": "medium",
+      "task_types": [
+        "review",
+        "coding"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "shell_execute",
+      "type": "mcp",
+      "description": "Remote shell execution",
+      "estimated_tokens": 500,
+      "risk_level": "high",
+      "task_types": [
+        "coding",
+        "integration_action"
+      ],
+      "privacy_classes": [
+        "P0"
+      ]
+    },
+    {
+      "id": "test",
+      "type": "skill",
+      "description": "Test generation and coverage",
+      "estimated_tokens": 500,
+      "risk_level": "low",
+      "task_types": [
+        "coding",
+        "review"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "web_search",
+      "type": "mcp",
+      "description": "Web search/browse",
+      "estimated_tokens": 350,
+      "risk_level": "low",
+      "task_types": [
+        "research"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1"
+      ]
+    },
+    {
+      "id": "write",
+      "type": "tool",
+      "description": "Write or overwrite files",
+      "estimated_tokens": 80,
+      "risk_level": "low",
+      "task_types": [
+        "planning",
+        "coding",
+        "review"
+      ],
+      "privacy_classes": [
+        "P0",
+        "P1",
+        "P2"
+      ]
+    }
+  ],
+  "harness_mcp_families": [
+    {
+      "family": "filesystem.read",
+      "purpose": "Inspect files",
+      "risk": "Low"
+    },
+    {
+      "family": "filesystem.patch",
+      "purpose": "Patch scoped files",
+      "risk": "Medium"
+    },
+    {
+      "family": "github.read",
+      "purpose": "Issues, PRs, repo content",
+      "risk": "Low"
+    },
+    {
+      "family": "github.write",
+      "purpose": "Issues, branches, PRs",
+      "risk": "Medium"
+    },
+    {
+      "family": "shell.execute",
+      "purpose": "Run tests/scripts",
+      "risk": "High"
+    },
+    {
+      "family": "database.read",
+      "purpose": "Inspect state",
+      "risk": "Low"
+    },
+    {
+      "family": "database.write",
+      "purpose": "Update state",
+      "risk": "Medium"
+    },
+    {
+      "family": "browser.search",
+      "purpose": "Current research",
+      "risk": "Low"
+    },
+    {
+      "family": "secrets.read",
+      "purpose": "Secret access",
+      "risk": "Critical"
+    },
+    {
+      "family": "deploy.production",
+      "purpose": "Production deploy",
+      "risk": "Critical"
+    }
+  ],
+  "crg_to_cursor_mapping": [
+    {
+      "crg_id": "read",
+      "cursor_surface": "Read",
+      "notes": "Native"
+    },
+    {
+      "crg_id": "write",
+      "cursor_surface": "Write",
+      "notes": "Native"
+    },
+    {
+      "crg_id": "edit",
+      "cursor_surface": "StrReplace",
+      "notes": "Native"
+    },
+    {
+      "crg_id": "bash",
+      "cursor_surface": "Shell",
+      "notes": "Native"
+    },
+    {
+      "crg_id": "audit",
+      "cursor_surface": "Skills (on-demand Read)",
+      "notes": "Pull"
+    },
+    {
+      "crg_id": "test",
+      "cursor_surface": "Skills (on-demand Read)",
+      "notes": "Pull"
+    },
+    {
+      "crg_id": "security",
+      "cursor_surface": "Skills + Opsera MCP",
+      "notes": "Pull / MCP"
+    },
+    {
+      "crg_id": "council",
+      "cursor_surface": "Skills (on-demand Read)",
+      "notes": "Pull"
+    },
+    {
+      "crg_id": "github_read",
+      "cursor_surface": "plugin-github-github",
+      "notes": "MCP (auth required)"
+    },
+    {
+      "crg_id": "github_write",
+      "cursor_surface": "plugin-github-github",
+      "notes": "MCP (auth required)"
+    },
+    {
+      "crg_id": "web_search",
+      "cursor_surface": "WebSearch / Playwright",
+      "notes": "Native / MCP"
+    },
+    {
+      "crg_id": "shell_execute",
+      "cursor_surface": "Shell / remote MCP",
+      "notes": "Native"
+    },
+    {
+      "crg_id": "secrets_read",
+      "cursor_surface": "Blocked by policy",
+      "notes": "Critical \u2014 gate"
+    },
+    {
+      "crg_id": "browser",
+      "cursor_surface": "plugin-playwright-playwright",
+      "notes": "MCP"
+    },
+    {
+      "crg_id": "codex_team",
+      "cursor_surface": "Task subagents",
+      "notes": "Native"
+    }
+  ]
+}

@@ -53,6 +53,8 @@ LOG_DIR = Path(
 )
 LOG_FILE = LOG_DIR / "log.jsonl"
 BLOCK_ENABLED = os.environ.get("ROUTER_BLOCK_ENABLED", "true").lower() == "true"
+# CRG token budget uses max_tokens * context_budget_pct; 8k default caused false BLOCKED.
+CONTEXT_MAX_TOKENS = int(os.environ.get("ROUTER_CONTEXT_MAX_TOKENS", "128000"))
 MAX_LOG_LINES = int(os.environ.get("ROUTER_MAX_LOG_LINES", "2000"))
 TOOL_USE_PATTERN = os.environ.get(
     "TOOL_USE_PATTERN",
@@ -91,6 +93,55 @@ def _has_tool_use(haystack: str) -> bool:
     import re
 
     return bool(re.search(TOOL_USE_PATTERN, haystack, re.IGNORECASE))
+
+
+def _context_gate_advisory(description: str, prompt: str, complexity_level: str) -> str:
+    """Append CRG resource-filtering note to PreToolUse advisory."""
+    try:
+        _cg = _load_submodule("context_gate", "context_gate.py")
+        _contracts = _load_submodule("contracts", "contracts.py")
+        ContextGate = _cg.ContextGate
+        RouteRequest = _contracts.RouteRequest
+        TaskType = _contracts.TaskType
+        RouteConstraints = _contracts.RouteConstraints
+        PrivacyClass = _contracts.PrivacyClass
+
+        haystack = f"{description}\n{prompt}".lower()
+        if "research" in haystack or "investigate" in haystack:
+            task_type = TaskType.RESEARCH
+        elif "review" in haystack or "audit" in haystack:
+            task_type = TaskType.REVIEW
+        else:
+            task_type = TaskType.CODING
+
+        req = RouteRequest(
+            request_id="pre-agent-hook",
+            task_id="pre-agent",
+            task_type=task_type,
+            objective=description or prompt[:200],
+            constraints=RouteConstraints(
+                privacy_class=PrivacyClass.P1,
+                max_tokens=CONTEXT_MAX_TOKENS,
+                allow_tools=True,
+                allow_skills=True,
+                allow_mcp=True,
+            ),
+        )
+        result = ContextGate().check(req, complexity_level=complexity_level)
+        if not result.ok:
+            return (
+                f" | CRG BLOCKED ({result.estimated_context_tokens} tok budget)"
+            )
+        handoff_hint = ""
+        handoff_path = _REPO / ".agents" / "handoffs" / "latest.json"
+        if handoff_path.is_file():
+            handoff_hint = " | handoff: .agents/handoffs/latest.json"
+        return (
+            f" | CRG {len(result.allowed_resources)} resources"
+            f"{handoff_hint} | ops: AGENT_OPERATIONS.md"
+        )
+    except Exception:
+        return ""
 
 
 def main() -> None:
@@ -168,10 +219,11 @@ def main() -> None:
         override_note = ""
 
     # ── Format advisory (after all overrides) ───────────────────────────
+    ctx_note = _context_gate_advisory(description, prompt, complexity.level)
     advisory = (
         f"ROUTER C={complexity.level} speed={selection.speed_mode} "
         f"provider={chosen.provider} model={chosen.model} — "
-        f"{chosen.reason}{override_note}"
+        f"{chosen.reason}{override_note}{ctx_note}"
     )
 
     # ── Output to stdout ────────────────────────────────────────────────

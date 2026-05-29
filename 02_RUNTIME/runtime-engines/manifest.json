@@ -1,0 +1,11 @@
+{
+  "runtime_id": "roach-pi",
+  "submodule_path": "02_RUNTIME/runtime-engines/roach-pi",
+  "upstream_url": "https://github.com/tmdgusya/roach-pi.git",
+  "health_markers": [
+    "extensions/agentic-harness/package.json",
+    "extensions/agentic-harness/index.ts"
+  ],
+  "default_mode": "stub",
+  "notes": "Run scripts/init_roach_pi_submodule.ps1 to populate the submodule."
+}
