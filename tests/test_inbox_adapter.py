@@ -29,7 +29,15 @@ def _seed_db(path: Path) -> None:
     )
     conn.execute(
         "INSERT INTO queue_items VALUES (?,?,?,?,?,?,?)",
-        ("1", "github", "Fix intake", "Details here", "1", "pending", "2026-05-29T00:00:00Z"),
+        (
+            "1",
+            "github",
+            "Fix intake",
+            "Details here",
+            "1",
+            "pending",
+            "2026-05-29T00:00:00Z",
+        ),
     )
     conn.execute(
         "INSERT INTO queue_items VALUES (?,?,?,?,?,?,?)",

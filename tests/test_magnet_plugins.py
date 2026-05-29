@@ -5,23 +5,24 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
-from magnets.base_magnet import MagnetEvent
-from magnets.magnet_orchestrator import MagnetOrchestrator
-from magnets.plugin import MagnetPlugin, MagnetRegistry, default_registry
-from magnets.plugins.secrets_plugin import SecretsSurfacePlugin
+from magnets.base_magnet import MagnetEvent  # noqa: E402
+from magnets.magnet_orchestrator import MagnetOrchestrator  # noqa: E402
+from magnets.plugin import MagnetPlugin, MagnetRegistry, default_registry  # noqa: E402
+from magnets.plugins.secrets_plugin import SecretsSurfacePlugin  # noqa: E402
 
 
 class EchoPlugin(MagnetPlugin):
     name = "echo_plugin"
 
-    def observe(self, mission_id: str, inflection_point: str, signal: dict) -> MagnetEvent:
+    def observe(
+        self, mission_id: str, inflection_point: str, signal: dict
+    ) -> MagnetEvent:
         return MagnetEvent(
             mission_id=mission_id,
             magnet_name=self.name,

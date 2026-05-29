@@ -6,7 +6,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = REPO / "02_RUNTIME"
@@ -22,7 +21,12 @@ def test_file_store_append_and_replay(tmp_path: Path):
     for i in range(3):
         store.append(
             mission,
-            {"type": "magnet_event", "mission_id": mission, "timestamp": i, "data": {"i": i}},
+            {
+                "type": "magnet_event",
+                "mission_id": mission,
+                "timestamp": i,
+                "data": {"i": i},
+            },
         )
     replay = store.replay(mission, limit=10)
     assert len(replay) == 3
@@ -34,7 +38,12 @@ def test_mission_event_hub_publish(tmp_path: Path):
     mission = "m-hub-1"
     hub.publish(
         mission,
-        {"type": "gate_decision", "mission_id": mission, "timestamp": 1, "data": {"gate_name": "intent"}},
+        {
+            "type": "gate_decision",
+            "mission_id": mission,
+            "timestamp": 1,
+            "data": {"gate_name": "intent"},
+        },
     )
     events = hub.replay(mission)
     assert len(events) == 1
