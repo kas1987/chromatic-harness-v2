@@ -12,7 +12,7 @@ from intake.auto_intake import (
     process_entry,
     simple_decompose,
 )
-from intake.queue import append_entry, default_queue_path, list_queued
+from intake.queue import append_entry, list_queued
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -52,7 +52,9 @@ def test_process_bead_dispatch_dry_run(tmp_path: Path, monkeypatch: pytest.Monke
     assert result.bead_id == "chromatic-harness-v2-test1"
 
 
-def test_process_goal_creates_via_mock_bd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_process_goal_creates_via_mock_bd(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     import intake.queue as qmod
 
     q = tmp_path / "intake_queue.jsonl"

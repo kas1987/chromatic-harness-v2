@@ -56,7 +56,9 @@ def test_record_workflow_run_writes_three_logs(tmp_path: Path):
     assert decision_lines[-1]["input_score"] == 62.0
 
 
-def test_append_run_log_mirrors_two_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_append_run_log_mirrors_two_log(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     import workflows.run_log as run_log_mod
 
     wf_log = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
@@ -64,7 +66,11 @@ def test_append_run_log_mirrors_two_log(tmp_path: Path, monkeypatch: pytest.Monk
 
     append_run_log(
         tmp_path,
-        {"mode": "GO AUDIT", "bead_id": "chromatic-harness-v2-test", "decision": "audit"},
+        {
+            "mode": "GO AUDIT",
+            "bead_id": "chromatic-harness-v2-test",
+            "decision": "audit",
+        },
     )
     assert wf_log.is_file()
     audit = TwoLogAudit(tmp_path)

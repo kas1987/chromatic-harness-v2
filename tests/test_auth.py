@@ -16,7 +16,7 @@ _tmp_db = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
 _tmp_db.close()
 os.environ["CHROMATIC_DB_PATH"] = _tmp_db.name
 
-import sys
+import sys  # noqa: E402
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "02_RUNTIME", "api"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "02_RUNTIME"))

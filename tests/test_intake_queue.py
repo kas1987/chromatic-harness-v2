@@ -10,7 +10,6 @@ import pytest
 from intake.queue import (
     append_entry,
     list_queued,
-    normalize_entry,
     validate_entry,
 )
 
