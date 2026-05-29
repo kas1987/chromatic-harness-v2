@@ -36,6 +36,10 @@ from models import (  # noqa: E402
     TrendPoint,
     MagnetBreakdown,
     ActionCount,
+    AgentLeadResponse,
+    UserRegisterRequest,
+    UserResponse,
+    TokenResponse,
 )
 
 # Router integration — normal import because _RUNTIME is on sys.path
@@ -50,6 +54,14 @@ from router.contracts import (  # noqa: E402
     RouteInput,
 )
 
+from auth import (  # noqa: E402
+    is_auth_enabled,
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user,
+)
+
 import importlib.util as _ilu  # noqa: E402
 
 
@@ -61,9 +73,11 @@ def _load_module(name: str, path: str):
 
 
 _orch_mod = _load_module(
-    "orchestrator", os.path.join(_RUNTIME, "orchestrator", "orchestrator.py")
+    "chromatic_orchestrator",
+    os.path.join(_RUNTIME, "orchestrator", "orchestrator.py"),
 )
 Orchestrator = _orch_mod.Orchestrator
+MissionPacket = _orch_mod.MissionPacket
 
 _mag_mod = _load_module(
     "base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py")
@@ -162,6 +176,67 @@ async def route_request(payload: dict):
             "errors": resp.logs.errors,
         },
     }
+
+
+@app.get("/auth/status")
+async def auth_status():
+    return {"auth_enabled": is_auth_enabled()}
+
+
+@app.post("/auth/register", response_model=UserResponse, status_code=201)
+async def register_user(
+    req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)
+):
+    async with db.execute(
+        "SELECT user_id FROM users WHERE username = ?", (req.username,)
+    ) as cur:
+        if await cur.fetchone():
+            raise HTTPException(status_code=409, detail="Username already taken")
+    user_id = str(uuid.uuid4())
+    ts = NOW()
+    hashed = hash_password(req.password)
+    await db.execute(
+        "INSERT INTO users (user_id, username, hashed_password, role, created_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, req.username, hashed, req.role, ts),
+    )
+    await db.commit()
+    return UserResponse(
+        user_id=user_id, username=req.username, role=req.role, created_at=ts
+    )
+
+
+@app.post("/auth/token", response_model=TokenResponse)
+async def login(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute(
+        "SELECT user_id, hashed_password, role FROM users WHERE username = ?",
+        (req.username,),
+    ) as cur:
+        row = await cur.fetchone()
+    if not row or not verify_password(req.password, row[1]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token(user_id=row[0], role=row[2])
+    return TokenResponse(access_token=token, user_id=row[0], role=row[2])
+
+
+@app.get("/auth/me", response_model=UserResponse)
+async def auth_me(
+    current_user=Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    if current_user is None:
+        raise HTTPException(
+            status_code=401, detail="Auth disabled or not authenticated"
+        )
+    async with db.execute(
+        "SELECT username, role, created_at FROM users WHERE user_id = ?",
+        (current_user.user_id,),
+    ) as cur:
+        row = await cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserResponse(
+        user_id=current_user.user_id, username=row[0], role=row[1], created_at=row[2]
+    )
 
 
 @app.post("/missions", response_model=MissionResponse)
@@ -351,6 +426,68 @@ async def get_mission_analytics(
         top_actions=top_actions,
         avg_risk_delta=round(avg_risk, 4),
         avg_confidence_delta=round(avg_conf, 4),
+    )
+
+
+@app.post("/missions/{mission_id}/synthesize", response_model=AgentLeadResponse)
+async def synthesize_mission(
+    mission_id: str,
+    auto_create_bead: bool = Query(default=False, alias="create_bead"),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Run MagnetOrchestrator + Agent Lead synthesis on mission magnet events."""
+    async with db.execute(
+        "SELECT data FROM missions WHERE mission_id = ?", (mission_id,)
+    ) as cur:
+        mission_row = await cur.fetchone()
+    if not mission_row:
+        raise HTTPException(status_code=404, detail="Mission not found")
+
+    async with db.execute(
+        "SELECT data FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
+        (mission_id,),
+    ) as cur:
+        event_rows = await cur.fetchall()
+
+    mission = json.loads(mission_row[0])
+    events = [json.loads(r[0]) for r in event_rows]
+
+    orch = Orchestrator()
+    packet = MissionPacket(
+        mission_id=mission["mission_id"],
+        objective=mission["objective"],
+        agent_role=mission.get("agent_role", "agent_lead"),
+        autonomy_level=mission.get("autonomy_level", "L1"),
+        confidence_required=mission.get("confidence_required", 75.0),
+        allowed_tools=mission.get("allowed_tools", []),
+        stop_conditions=mission.get("stop_conditions", []),
+        required_outputs=mission.get("required_outputs", []),
+    )
+    output = orch.synthesize_mission(packet, events)
+
+    bead_created = None
+    if auto_create_bead and output.suggested_bead:
+        sb = output.suggested_bead
+        bead_req = CreateBeadRequest(
+            title=sb["title"],
+            objective=sb["objective"],
+            priority=sb.get("priority", "p2"),
+            source=sb.get("source", "agent_lead"),
+            mission_id=mission_id,
+        )
+        bead_created = await create_bead(bead_req, db)
+
+    return AgentLeadResponse(
+        mission_id=mission_id,
+        decision=output.decision,
+        composite_score=output.composite_score,
+        final_report=output.final_report,
+        pr_package=output.pr_package,
+        next_steps=output.next_steps,
+        audit_log=output.audit_log,
+        handoff_prep=output.handoff_prep,
+        suggested_bead=output.suggested_bead,
+        bead_created=bead_created,
     )
 
 

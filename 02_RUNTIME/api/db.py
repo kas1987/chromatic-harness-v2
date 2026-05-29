@@ -39,6 +39,13 @@ async def init_db():
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         )""")
+        await db.execute("""CREATE TABLE IF NOT EXISTS users (
+            user_id TEXT PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            hashed_password TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'executor',
+            created_at TEXT NOT NULL
+        )""")
         await db.commit()
 
 

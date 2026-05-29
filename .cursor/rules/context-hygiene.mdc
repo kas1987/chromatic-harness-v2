@@ -1,0 +1,24 @@
+---
+description: Keep Cursor pre-session context lean for Chromatic Harness work
+alwaysApply: true
+---
+
+# Context hygiene (Cursor / Claude)
+
+Pre-session cost is dominated by **enabled MCP tool schemas**, not harness CRG.
+
+Before long sessions on this repo:
+
+1. Run `python scripts/session_context_report.py --log --invoked-by cursor`
+2. Run `python scripts/audit_mcp_context.py --profile harness_dev`
+3. Disable unused MCPs in **Cursor Settings → MCP** (see `docs/CURSOR_CONTEXT_HYGIENE.md`)
+4. For daily dev, keep **Resend, Playwright, Opsera** off unless the task needs them
+5. Use `bd` + handoff files — not chat — for state (`AGENT_OPERATIONS.md`)
+
+Skills: read `SKILL.md` on demand; do not assume full skill bodies are loaded.
+
+Workflows: use repo lite `/ship`, `/close-issue`, `/qa` — never chain `/crank` or council skills unattended. See `docs/AGENT_ANTIPATTERNS.md`.
+
+Do not trust: CRG limiting Cursor MCP injection; chat memory over git/beads; scanning all `~/.claude/projects/**/*.jsonl`.
+
+Harness API/magnets are optional for lean Claude-only work.

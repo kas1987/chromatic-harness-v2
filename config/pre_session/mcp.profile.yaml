@@ -1,0 +1,79 @@
+# MCP exposure profiles for Chromatic Harness v2
+# Cursor injects enabled MCP tool schemas into every turn (~chars/4 tokens).
+# Use: python scripts/audit_mcp_context.py --profile harness_dev
+#
+# Disable in Cursor: Settings → MCP → toggle server off (reversible).
+# Re-enable when you need email, browser, SRE, etc.
+
+version: 1
+
+# Servers to keep OFF for daily harness work (largest context cost first).
+# Re-enable individually when the task needs them.
+disable_for_daily_dev:
+  - plugin-resend-resend          # ~30k tok — email/marketing API
+  - plugin-playwright-playwright  # ~5k tok — browser automation
+  - plugin-opsera-devsecops-opsera # ~7k tok — security scans
+  - plugin-datadog-datadog
+  - plugin-tabnine-tabnine-context
+  - plugin-tabnine-tabnine-coaching
+  - plugin-paper-desktop-paper
+  - plugin-spottercode-spottercode
+  - plugin-granola-granola
+  - plugin-vantage-vantage
+  - user-live-director
+  - user-review-daemon
+  - user-sequential-thinking
+  - user-wispr-flow
+
+profiles:
+  harness_dev:
+    description: >
+      Default for Chromatic repo work. Native tools + shell + beads.
+      No MCP required; lowest pre-session context.
+    recommended_enabled:
+      - plugin-github-github   # only when doing PR/CI; else disable too
+    notes: |
+      For pure coding, disable ALL MCPs in Cursor settings.
+      Use `gh` via Shell instead of GitHub MCP when possible.
+
+  harness_github:
+    description: GitHub PR/issue work on this repo.
+    recommended_enabled:
+      - plugin-github-github
+
+  harness_email:
+    description: Resend / agent inbox work.
+    recommended_enabled:
+      - plugin-resend-resend
+
+  harness_browser:
+    description: UI verification or scraping.
+    recommended_enabled:
+      - plugin-playwright-playwright
+
+  harness_security:
+    description: DevSecOps scans before release.
+    recommended_enabled:
+      - plugin-opsera-devsecops-opsera
+
+  harness_full:
+    description: Everything enabled — high context cost (~47k+ tok on typical machine).
+    recommended_enabled: []  # empty = no restrictions documented here
+
+# Fail audit if total descriptor estimate exceeds this (enabled folders on disk).
+warn_total_tokens: 12000
+block_ci_total_tokens: 50000
+
+# Claude Code workflows — sync lite versions from repo (not HEAVY archives).
+#   powershell -File scripts/sync_claude_workflows.ps1
+# Cost reference: docs/AGENT_ANTIPATTERNS.md
+workflow_policy:
+  sync_from_repo: .claude/workflows
+  skip_patterns:
+    - "*.HEAVY.js.bak"
+  max_recommended_chain_agents: 3
+  forbidden_in_unattended:
+    - crank
+    - post-mortem --deep
+    - council validate
+    - bulk transcript scan

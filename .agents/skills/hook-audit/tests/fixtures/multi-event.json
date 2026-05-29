@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {"hooks": [{"type": "command", "command": "true", "timeout": 5}]}
+    ],
+    "PreToolUse": [
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "true", "timeout": 2}]}
+    ],
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "true", "timeout": 3}]}
+    ]
+  }
+}

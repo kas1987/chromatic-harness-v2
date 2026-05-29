@@ -1,5 +1,7 @@
 # Agent Instructions
 
+> **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory checklist for Claude, Pi, Codex, and all harness agents.
+
 This project uses **bd** (beads) for issue tracking. Run `bd prime` for full workflow context.
 
 > **Architecture in one line:** Issues live in a local Dolt database
@@ -69,6 +71,37 @@ bd close <id>         # Complete work
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
 
+## Session Compact (all harness agents)
+
+**Applies to:** Claude, Pi, Codex, and every runtime operating inside Chromatic Harness v2.
+
+The chat is not the system of record. When context is heavy (~50–65% of effective window) or at phase boundaries, **compact** state into the repo:
+
+| Artifact | Purpose |
+|----------|---------|
+| `bd` | Open/closed work |
+| `12_HANDOFFS/sessions/<mission>.md` | Human-readable handoff |
+| `.agents/handoffs/latest.json` | Pointer for next session start |
+| `.agents/rpi/execution-packet.json` | In-flight RPI epics |
+
+**Session start:** If `.agents/handoffs/latest.json` exists, read it and the `handoff_path` file before new work.
+
+**Full protocol:** [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md)  
+**Playbook:** [04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md](04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md)  
+**Template:** [12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md](12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md)  
+**Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — regenerate with `python scripts/generate_pre_session_inventory.py` before changing tools/MCP  
+**MCP / lean Claude (with or without API):** [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) — `python scripts/audit_mcp_context.py --profile harness_dev`  
+**Do not trust / do not do:** [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) — token burn antipatterns, lite workflows  
+**CI guard:** `python scripts/check_agent_operations.py` — fails if mandatory docs are removed
+
+Checkpoint commands:
+
+```bash
+git branch --show-current && git status --short && git log -1 --oneline
+bd ready
+pytest tests/ -q
+```
+
 ## Session Completion
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
@@ -86,7 +119,7 @@ bd close <id>         # Complete work
    ```
 5. **Clean up** - Clear stashes, prune remote branches
 6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
+7. **Hand off** - Write handoff per [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) (update `.agents/handoffs/latest.json`)
 
 **CRITICAL RULES:**
 - Work is NOT complete until `git push` succeeds

@@ -22,3 +22,13 @@ This file defines the MCP tool families Chromatic Harness expects to connect thr
 ## Rule
 
 MCP exposes capability. CMP grants permission.
+
+## Cursor workspace inventory (baseline)
+
+Before adding or removing MCP plugins, regenerate the baseline:
+
+```bash
+python scripts/generate_pre_session_inventory.py
+```
+
+See [docs/PRE_SESSION_AND_TOOLS.md](../../docs/PRE_SESSION_AND_TOOLS.md) and `config/pre_session/inventory.snapshot.json`.

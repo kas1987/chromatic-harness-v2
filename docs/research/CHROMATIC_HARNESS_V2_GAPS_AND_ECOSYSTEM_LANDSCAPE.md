@@ -8,6 +8,8 @@ The v2.0 pipeline defines a complete autonomous execution loop — `INTENT → M
 
 **Bottom line:** The harness has a solid foundation (router, gates, memory, magnets spec, 53/53 tests). What is missing is the connective tissue: MCP servers that actually run, a full 7-magnet runtime coordinator, an agent workflow graph, a two-log audit system, a self-healing confidence gate, and the auto-intake pipeline that feeds goals into beads as atomic tasks.
 
+**Consolidation epic (close loops first):** See [V2_CONSOLIDATION_BEADS.md](./V2_CONSOLIDATION_BEADS.md) — bead `chromatic-harness-v2-h24`.
+
 ---
 
 ## Current Repo State
