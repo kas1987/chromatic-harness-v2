@@ -8,6 +8,7 @@
 | [governance/](governance/) | Confidence gate, routing, mission packets |
 | [routing/](routing/) | API routing, OpenHuman boundary |
 | [research/](research/) | Gap analysis, ecosystem landscape |
+| [retros/2026-05-29-session-roi-production-readiness.md](retros/2026-05-29-session-roi-production-readiness.md) | **Session retro** — context ROI, throughput, prod readiness, tomorrow beads |
 | [pdr/](pdr/) | Product decision records |
 
 Handoffs: [12_HANDOFFS/](../12_HANDOFFS/)
