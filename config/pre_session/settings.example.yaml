@@ -1,0 +1,12 @@
+# Copy to settings.local.yaml (gitignored) and set your machine path.
+#
+#   cp config/pre_session/settings.example.yaml config/pre_session/settings.local.yaml
+#
+# Then run:
+#   python scripts/generate_pre_session_inventory.py
+
+# Cursor MCP tool descriptors (from Cursor's project mcps folder)
+mcp_descriptors_path: "C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps"
+
+# Optional: path to Cursor user skills (informational only)
+cursor_skills_path: "C:/Users/kas41/.cursor/skills-cursor"
