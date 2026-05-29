@@ -150,3 +150,23 @@ class AgentLeadResponse(BaseModel):
     handoff_prep: dict
     suggested_bead: Optional[dict] = None
     bead_created: Optional[BeadResponse] = None
+
+
+class UserRegisterRequest(BaseModel):
+    username: str
+    password: str
+    role: str = "executor"
+
+
+class UserResponse(BaseModel):
+    user_id: str
+    username: str
+    role: str
+    created_at: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+    role: str

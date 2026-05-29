@@ -37,6 +37,9 @@ from models import (  # noqa: E402
     MagnetBreakdown,
     ActionCount,
     AgentLeadResponse,
+    UserRegisterRequest,
+    UserResponse,
+    TokenResponse,
 )
 
 # Router integration — normal import because _RUNTIME is on sys.path
@@ -49,6 +52,14 @@ from router.contracts import (  # noqa: E402
     RouteConfidence,
     RouteAudit,
     RouteInput,
+)
+
+from auth import (  # noqa: E402
+    AUTH_ENABLED,
+    hash_password,
+    verify_password,
+    create_access_token,
+    get_current_user,
 )
 
 import importlib.util as _ilu  # noqa: E402
@@ -165,6 +176,67 @@ async def route_request(payload: dict):
             "errors": resp.logs.errors,
         },
     }
+
+
+@app.get("/auth/status")
+async def auth_status():
+    return {"auth_enabled": AUTH_ENABLED}
+
+
+@app.post("/auth/register", response_model=UserResponse, status_code=201)
+async def register_user(
+    req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)
+):
+    async with db.execute(
+        "SELECT user_id FROM users WHERE username = ?", (req.username,)
+    ) as cur:
+        if await cur.fetchone():
+            raise HTTPException(status_code=409, detail="Username already taken")
+    user_id = str(uuid.uuid4())
+    ts = NOW()
+    hashed = hash_password(req.password)
+    await db.execute(
+        "INSERT INTO users (user_id, username, hashed_password, role, created_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, req.username, hashed, req.role, ts),
+    )
+    await db.commit()
+    return UserResponse(
+        user_id=user_id, username=req.username, role=req.role, created_at=ts
+    )
+
+
+@app.post("/auth/token", response_model=TokenResponse)
+async def login(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute(
+        "SELECT user_id, hashed_password, role FROM users WHERE username = ?",
+        (req.username,),
+    ) as cur:
+        row = await cur.fetchone()
+    if not row or not verify_password(req.password, row[1]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_access_token(user_id=row[0], role=row[2])
+    return TokenResponse(access_token=token, user_id=row[0], role=row[2])
+
+
+@app.get("/auth/me", response_model=UserResponse)
+async def auth_me(
+    current_user=Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    if current_user is None:
+        raise HTTPException(
+            status_code=401, detail="Auth disabled or not authenticated"
+        )
+    async with db.execute(
+        "SELECT username, role, created_at FROM users WHERE user_id = ?",
+        (current_user.user_id,),
+    ) as cur:
+        row = await cur.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserResponse(
+        user_id=current_user.user_id, username=row[0], role=row[1], created_at=row[2]
+    )
 
 
 @app.post("/missions", response_model=MissionResponse)
