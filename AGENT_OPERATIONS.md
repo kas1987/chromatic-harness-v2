@@ -21,10 +21,13 @@ bd ready
 git branch --show-current
 git status --short
 
-# 4. Trim MCP context (Cursor / Claude — even without harness API)
+# 4. Log what enters context (Cursor + Claude + Harness)
+python scripts/session_context_report.py --log --invoked-by cursor
+
+# 5. Trim MCP context (Cursor / Claude — even without harness API)
 python scripts/audit_mcp_context.py --profile harness_dev
 
-# 5. Know your tool surface (again after MCP plugin changes)
+# 6. Know your tool surface (again after MCP plugin changes)
 #    docs/PRE_SESSION_AND_TOOLS.md
 ```
 
@@ -47,6 +50,7 @@ python scripts/audit_mcp_context.py --profile harness_dev
 | Action | Command / place |
 |--------|-----------------|
 | Audit token bulk | `python scripts/audit_mcp_context.py --profile harness_dev` |
+| **Session context log** | `python scripts/session_context_report.py --log` |
 | Profiles (what to disable) | `config/pre_session/mcp.profile.yaml` |
 | Full guide | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
 | Disable server | Cursor **Settings → MCP** → toggle off (reversible) |
