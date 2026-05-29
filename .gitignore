@@ -28,6 +28,7 @@ htmlcov/
 # Runtime event logs (agentops, router events — never commit)
 10_RUNTIME/logs/*.jsonl
 09_DEPLOYMENT/10_RUNTIME/logs/*.jsonl
+05_FRONTEND_CONSOLE/10_RUNTIME/logs/*.jsonl
 02_RUNTIME/api/10_RUNTIME/
 
 # Session context logging (local only)
