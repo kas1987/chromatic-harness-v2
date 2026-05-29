@@ -15,14 +15,19 @@ Core layers:
 
 Start with `08_PDRS/PDR_CHROMATIC_HARNESS_V2.md`.
 
-## Agent operations
+## Agent operations (mandatory)
+
+**All agents (Claude, Pi, Codex):** read [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) first.
 
 | Doc | Purpose |
 |-----|---------|
-| [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) | Tools, MCP, and CRG baseline — **regenerate before changing tool exposure** |
-| [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) | Session compaction and handoff protocol |
-| [AGENTS.md](AGENTS.md) | Agent rules (beads, push, compact) |
+| [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) | **Start here** — session start / change-control / session end |
+| [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) | Tools, MCP, CRG baseline |
+| [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) | Compaction and handoff |
+| [04_PLAYBOOKS/AGENT_ONBOARDING_PLAYBOOK.md](04_PLAYBOOKS/AGENT_ONBOARDING_PLAYBOOK.md) | Per-persona rules (Claude, Pi, Codex) |
+| [AGENTS.md](AGENTS.md) | Beads, push, compact |
 
 ```bash
-python scripts/generate_pre_session_inventory.py
+python scripts/check_agent_operations.py      # CI — verify docs intact
+python scripts/generate_pre_session_inventory.py  # after MCP/tool changes
 ```

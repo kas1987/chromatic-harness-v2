@@ -97,6 +97,8 @@ Follow **AGENTS.md → Session Completion** (quality gates, beads, **push**), th
 
 ## Session start (resume)
 
+Read [AGENT_OPERATIONS.md](../AGENT_OPERATIONS.md) first, then:
+
 ```bash
 bd prime
 cat .agents/handoffs/latest.json    # if present

@@ -1,5 +1,7 @@
 # Project Instructions for AI Agents
 
+> **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory for Claude, Pi, and all harness agents.
+
 This file provides instructions and context for AI coding agents working on this project.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
@@ -36,7 +38,8 @@ Do not rely on chat memory alone. At ~50–65% context pressure, phase boundarie
 
 Canonical protocol: [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md)
 
-**Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — run `python scripts/generate_pre_session_inventory.py` before changing MCP/tools.
+**Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — run `python scripts/generate_pre_session_inventory.py` before changing MCP/tools.  
+**CI guard:** `python scripts/check_agent_operations.py`
 
 ## Session Completion
 

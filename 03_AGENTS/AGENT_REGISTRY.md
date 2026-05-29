@@ -1,5 +1,7 @@
 # Agent Registry
 
+**Onboarding (all agents):** [AGENT_OPERATIONS.md](../AGENT_OPERATIONS.md) · [AGENT_ONBOARDING_PLAYBOOK.md](../04_PLAYBOOKS/AGENT_ONBOARDING_PLAYBOOK.md)
+
 | Agent | Role | Default Autonomy | Notes |
 |---|---|---:|---|
 | Agent Lead | Synthesis, final findings, next actions | L1-L3 | Does not perform main work |

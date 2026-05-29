@@ -129,7 +129,14 @@ def _context_gate_advisory(description: str, prompt: str, complexity_level: str)
             return (
                 f" | CRG BLOCKED ({result.estimated_context_tokens} tok budget)"
             )
-        return f" | CRG {len(result.allowed_resources)} resources"
+        handoff_hint = ""
+        handoff_path = _REPO / ".agents" / "handoffs" / "latest.json"
+        if handoff_path.is_file():
+            handoff_hint = " | handoff: .agents/handoffs/latest.json"
+        return (
+            f" | CRG {len(result.allowed_resources)} resources"
+            f"{handoff_hint} | ops: AGENT_OPERATIONS.md"
+        )
     except Exception:
         return ""
 
