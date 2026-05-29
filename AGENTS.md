@@ -86,7 +86,8 @@ The chat is not the system of record. When context is heavy (~50–65% of effect
 
 **Full protocol:** [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md)  
 **Playbook:** [04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md](04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md)  
-**Template:** [12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md](12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md)
+**Template:** [12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md](12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md)  
+**Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — regenerate with `python scripts/generate_pre_session_inventory.py` before changing tools/MCP
 
 Checkpoint commands:
 

@@ -34,3 +34,6 @@ htmlcov/
 .agents/handoffs/latest.json
 12_HANDOFFS/sessions/*.md
 !12_HANDOFFS/sessions/.gitkeep
+
+# Pre-session inventory machine-local paths
+config/pre_session/settings.local.yaml

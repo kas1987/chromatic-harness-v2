@@ -152,7 +152,9 @@ Agent Lead `handoff_prep` is persisted to `12_HANDOFFS/sessions/` when `session_
 
 ## Related
 
+- [PRE_SESSION_INVENTORY.md](PRE_SESSION_INVENTORY.md) — tools, MCP, CRG baseline (before changing exposure)
 - [AGENT_HANDOFF_TEMPLATE.md](AGENT_HANDOFF_TEMPLATE.md)
+- [../docs/PRE_SESSION_AND_TOOLS.md](../docs/PRE_SESSION_AND_TOOLS.md) — full inventory reference
 - [../04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md](../04_PLAYBOOKS/SESSION_COMPACT_PLAYBOOK.md)
 - [../AGENTS.md](../AGENTS.md) — Session Completion
 - [../01_PROTOCOLS/CMP/CMP_SPEC.md](../01_PROTOCOLS/CMP/CMP_SPEC.md) — Mission packets

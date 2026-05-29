@@ -14,3 +14,15 @@ Core layers:
 - Sandbox Lab: safe testing layer for OpenHuman, Hermes, OpenHands, or other future agent frameworks
 
 Start with `08_PDRS/PDR_CHROMATIC_HARNESS_V2.md`.
+
+## Agent operations
+
+| Doc | Purpose |
+|-----|---------|
+| [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) | Tools, MCP, and CRG baseline — **regenerate before changing tool exposure** |
+| [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) | Session compaction and handoff protocol |
+| [AGENTS.md](AGENTS.md) | Agent rules (beads, push, compact) |
+
+```bash
+python scripts/generate_pre_session_inventory.py
+```

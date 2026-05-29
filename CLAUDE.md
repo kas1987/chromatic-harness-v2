@@ -36,6 +36,8 @@ Do not rely on chat memory alone. At ~50–65% context pressure, phase boundarie
 
 Canonical protocol: [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md)
 
+**Pre-session inventory:** [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) — run `python scripts/generate_pre_session_inventory.py` before changing MCP/tools.
+
 ## Session Completion
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
