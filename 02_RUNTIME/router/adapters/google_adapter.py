@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import time
+from typing import Any
 
 from .base import BaseAdapter, AdapterHealth
 from ..contracts import (
@@ -27,9 +28,9 @@ class GoogleAdapter(BaseAdapter):
         cfg.setdefault("model", _DEFAULT_MODEL)
         cfg.setdefault("timeout", 30)
         super().__init__("google", cfg)
-        self._client = None
+        self._client: Any = None
 
-    def _get_client(self):
+    def _get_client(self) -> Any:
         if self._client is None:
             try:
                 from google import genai

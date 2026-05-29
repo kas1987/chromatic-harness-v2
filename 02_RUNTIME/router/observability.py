@@ -112,7 +112,10 @@ class ObservabilityLogger:
     ) -> None:
         """Append a PDR-GOV-SONNET-KIMI-001 format record to AGENT_RUN_LOG.jsonl."""
         band = getattr(req.confidence, "band", None)
-        band_val = band.value if hasattr(band, "value") else str(band or "")
+        if band is not None and hasattr(band, "value"):
+            band_val = str(band.value)
+        else:
+            band_val = str(band or "")
         extra = extra or {}
         record = {
             "task_id": req.task_id,

@@ -17,16 +17,16 @@ SpeedMode = Literal["speed", "balance", "low"]
 
 @dataclasses.dataclass(frozen=True)
 class ProviderChoice:
-    provider: str           # e.g. "ollama_local", "gemini"
-    model: str | None       # e.g. "llama3.2:3b", "gemini-2.5-flash"
-    tier: int               # 0–4, informational only
+    provider: str  # e.g. "ollama_local", "gemini"
+    model: str | None  # e.g. "llama3.2:3b", "gemini-2.5-flash"
+    tier: int  # 0–4, informational only
     reason: str
 
 
 @dataclasses.dataclass(frozen=True)
 class SelectionResult:
     ranked_choices: list[ProviderChoice]
-    context_key: str        # e.g. "context_laptop"
+    context_key: str  # e.g. "context_laptop"
     speed_mode: SpeedMode
     c_level: str
 
@@ -34,10 +34,17 @@ class SelectionResult:
 class ProviderSelector:
     """Reads routing-table.yaml and resolves providers."""
 
-    DEFAULT_ROUTING_TABLE = Path(__file__).resolve().parent.parent.parent / \
-        "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
+    DEFAULT_ROUTING_TABLE = (
+        Path(__file__).resolve().parent.parent.parent
+        / "09_DEPLOYMENT"
+        / "config"
+        / "routing"
+        / "routing-table.yaml"
+    )
 
-    DEFAULT_PREFS = Path.home() / ".claude" / "config" / "routing" / "user-preferences.yaml"
+    DEFAULT_PREFS = (
+        Path.home() / ".claude" / "config" / "routing" / "user-preferences.yaml"
+    )
 
     def __init__(
         self,
@@ -99,7 +106,7 @@ class ProviderSelector:
         # Persistent user setting
         user_mode = self._prefs.get("speed_mode")
         if user_mode in ("speed", "balance", "low"):
-            return user_mode
+            return user_mode  # type: ignore[return-value]
 
         # Auto-detect
         if not context.internet_reachable:
@@ -125,7 +132,9 @@ class ProviderSelector:
 
     # ── Routing table lookup ─────────────────────────────────────────────
 
-    def _lookup_routing_table(self, ctx_key: str, mode: SpeedMode, c_level: str) -> list[ProviderChoice]:
+    def _lookup_routing_table(
+        self, ctx_key: str, mode: SpeedMode, c_level: str
+    ) -> list[ProviderChoice]:
         raw = self._table.get(ctx_key, {})
         mode_map = raw.get(mode, {})
         entries: list[str] = mode_map.get(c_level, [])
@@ -137,12 +146,14 @@ class ProviderSelector:
                 provider, model = entry.split(":", 1)
             else:
                 provider, model = entry, None
-            choices.append(ProviderChoice(
-                provider=provider,
-                model=model,
-                tier=self._infer_tier(provider),
-                reason=f"routing table: {ctx_key}/{mode}/{c_level}",
-            ))
+            choices.append(
+                ProviderChoice(
+                    provider=provider,
+                    model=model,
+                    tier=self._infer_tier(provider),
+                    reason=f"routing table: {ctx_key}/{mode}/{c_level}",
+                )
+            )
         return choices
 
     @staticmethod
@@ -164,7 +175,9 @@ class ProviderSelector:
 
     # ── Availability filtering ─────────────────────────────────────────
 
-    def _filter_by_availability(self, choices: list[ProviderChoice], context: RuntimeContext) -> list[ProviderChoice]:
+    def _filter_by_availability(
+        self, choices: list[ProviderChoice], context: RuntimeContext
+    ) -> list[ProviderChoice]:
         filtered = []
         for c in choices:
             if c.provider == "ollama_local" and not context.ollama_local_reachable:
@@ -179,12 +192,14 @@ class ProviderSelector:
             filtered.append(c)
         if not filtered:
             # Ultimate fallback
-            filtered.append(ProviderChoice(
-                provider="native_claude",
-                model=None,
-                tier=4,
-                reason="no reachable providers — fallback to native",
-            ))
+            filtered.append(
+                ProviderChoice(
+                    provider="native_claude",
+                    model=None,
+                    tier=4,
+                    reason="no reachable providers — fallback to native",
+                )
+            )
         return filtered
 
     @staticmethod
@@ -210,7 +225,9 @@ class ProviderSelector:
         blocklist = self._prefs.get("provider_blocklist", [])
         return [c for c in choices if c.provider not in blocklist]
 
-    def _apply_preference_override(self, choices: list[ProviderChoice]) -> list[ProviderChoice]:
+    def _apply_preference_override(
+        self, choices: list[ProviderChoice]
+    ) -> list[ProviderChoice]:
         pref = self._prefs.get("provider_preference")
         if not pref:
             return choices

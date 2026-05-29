@@ -106,10 +106,10 @@ class NativeClaudeAdapter(BaseAdapter):
         timeout = self.cfg.get("timeout", _TIMEOUT)
 
         if self._use_relay():
-            return await self._complete_relay(
+            return await self._complete_relay(  # type: ignore[return-value]
                 req, prompt, system_parts, model, timeout, logs
             )
-        return await self._complete_subprocess(
+        return await self._complete_subprocess(  # type: ignore[return-value]
             req, prompt, system_parts, model, timeout, logs
         )
 

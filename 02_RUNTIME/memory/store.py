@@ -19,10 +19,14 @@ import aiosqlite
 
 
 _SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
-_DB_PATH = Path(os.environ.get(
-    "CHROMATIC_MEMORY_DB",
-    Path(__file__).resolve().parent.parent.parent / "06_DATA" / "system_memory.sqlite",
-))
+_DB_PATH = Path(
+    os.environ.get(
+        "CHROMATIC_MEMORY_DB",
+        Path(__file__).resolve().parent.parent.parent
+        / "06_DATA"
+        / "system_memory.sqlite",
+    )
+)
 
 
 def _now() -> str:
@@ -103,7 +107,7 @@ class SystemMemoryStore:
             else:
                 rows = []
             await conn.commit()
-            return rows
+            return rows  # type: ignore[return-value]
         finally:
             await conn.close()
 
@@ -113,7 +117,7 @@ class SystemMemoryStore:
             cursor = await conn.execute(sql, params)
             rows = await cursor.fetchall()
             await conn.commit()
-            return rows
+            return rows  # type: ignore[return-value]
         finally:
             await conn.close()
 
@@ -141,9 +145,16 @@ class SystemMemoryStore:
                (id, title, category, confidence, scope, content, source, epic, created_at, active)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                learning.id, learning.title, learning.category,
-                learning.confidence, learning.scope, learning.content,
-                learning.source, learning.epic, learning.created_at, learning.active,
+                learning.id,
+                learning.title,
+                learning.category,
+                learning.confidence,
+                learning.scope,
+                learning.content,
+                learning.source,
+                learning.epic,
+                learning.created_at,
+                learning.active,
             ),
         )
 
@@ -256,7 +267,9 @@ class SystemMemoryStore:
         )
         return sid
 
-    async def end_session(self, session_id: str, outcome: str, injected_memory: list[str]) -> None:
+    async def end_session(
+        self, session_id: str, outcome: str, injected_memory: list[str]
+    ) -> None:
         await self._execute(
             "UPDATE agent_sessions SET session_end = ?, outcome = ?, injected_memory = ? WHERE id = ?",
             (_now(), outcome, json.dumps(injected_memory), session_id),
@@ -277,7 +290,11 @@ class SystemMemoryStore:
             severity="critical" if privacy_class in ("P3", "P4") else None,
         )
         if include_rules:
-            rules = [r for r in rules if r.rule_name in include_rules or r.category in include_rules]
+            rules = [
+                r
+                for r in rules
+                if r.rule_name in include_rules or r.category in include_rules
+            ]
 
         recent_learnings = await self.get_learnings(
             scope="cross-cutting",

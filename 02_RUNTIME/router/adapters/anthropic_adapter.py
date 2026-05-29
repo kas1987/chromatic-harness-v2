@@ -7,6 +7,7 @@ import time
 from typing import Any
 
 from .base import BaseAdapter, AdapterHealth
+import httpx
 from ..contracts import (
     RouteRequest,
     RouteResponse,
@@ -26,9 +27,9 @@ class AnthropicAdapter(BaseAdapter):
         cfg.setdefault("model", "claude-3-5-sonnet-20241022")
         cfg.setdefault("timeout", 30)
         super().__init__("anthropic", cfg)
-        self._client = None
+        self._client: Any = None
 
-    def _get_client(self):
+    def _get_client(self) -> Any:
         if self._client is None:
             try:
                 from anthropic import AsyncAnthropic
