@@ -1,0 +1,42 @@
+{
+  "epic_id": "chromatic-harness-v2-review-2026-05-28",
+  "goal": "Review entire repo: harness health, gaps, and fix priorities",
+  "complexity": "full",
+  "phase": "discovery_complete",
+  "created_at": "2026-05-28T00:00:00Z",
+  "done_criteria": [
+    "Scorecard against PDR MVP deliverables",
+    "Identify broken/in-progress work",
+    "Map gaps to beads issues with priority",
+    "Recommend next RPI targets"
+  ],
+  "findings_summary": {
+    "tests": "123 passed / 3 failed (CRG integration)",
+    "lint": "3 ruff errors, 3 files need format",
+    "ci": "GitHub Actions present (ruff, mypy, pytest)",
+    "uncommitted": "CRG epic work in progress (9 files)"
+  },
+  "priority_fixes": [
+    "P0: Finish CRG epic — fix 3 integration test failures, commit, close e9b/qr5",
+    "P0: Fix test_context_gate allow_tools_false test failure",
+    "P1: Agent Lead — implement 02_RUNTIME/orchestrator/agent_lead.py",
+    "P1: MagnetOrchestrator — wire 8 magnets into COLLECT→RECOMMEND pipeline",
+    "P1: MCP layer — no server code, only manifest spec",
+    "P1: Resolve src/chromatic_router vs 02_RUNTIME/router duplication",
+    "P2: Auto-intake pipeline (package-ingest skills → beads)",
+    "P2: WebSocket server not wired to FastAPI (hook exists, unused in page.tsx)",
+    "P2: Sandbox Lab eval suites exist but no runner/automation",
+    "P2: 04_PLAYBOOKS empty, 12_HANDOFFS empty",
+    "P3: Auth/RBAC (beads k6d), magnet plugin framework (38b)"
+  ],
+  "working_well": [
+    "Multi-provider router with 12+ adapters",
+    "Privacy/Budget/Confidence gates + policy loader",
+    "FastAPI backend with missions, beads, agents, analytics",
+    "Frontend console: missions, magnets, beads, agent registration, replay",
+    "System memory + scope guard",
+    "Beads tracking with CI remediation largely complete",
+    "Docker compose for api + console",
+    "82→123 test growth; audit remediation mostly landed"
+  ]
+}

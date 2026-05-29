@@ -55,6 +55,10 @@ class RouteConstraints:
     allow_broker: bool = True
     allow_openhuman: bool = False
     allow_tools: bool = False
+    allow_skills: bool = True
+    allow_mcp: bool = True
+    max_context_resources: int = 20
+    context_resource_allowlist: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -119,3 +123,19 @@ class RouteResponse:
     output: RouteOutput = field(default_factory=RouteOutput)
     usage: RouteUsage = field(default_factory=RouteUsage)
     logs: RouteLogs = field(default_factory=RouteLogs)
+    context_resources: list[str] = field(default_factory=list)
+
+
+@dataclass
+class DeniedResource:
+    resource_id: str
+    reason: str
+
+
+@dataclass
+class ContextGateResult:
+    ok: bool
+    allowed_resources: list[str] = field(default_factory=list)
+    denied_resources: list[DeniedResource] = field(default_factory=list)
+    estimated_context_tokens: int = 0
+    logs: list[str] = field(default_factory=list)

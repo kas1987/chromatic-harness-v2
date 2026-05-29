@@ -1,0 +1,110 @@
+# Context Resource Governance Policy
+# Controls what tools, skills, MCPs, and agents are loaded into pre-context.
+# Applied BEFORE Privacy/Confidence/Budget gates in the router.
+
+version: 1
+
+# ── Global defaults ────────────────────────────────────────────────────────
+defaults:
+  # Maximum context window % that can be consumed by tool/skill descriptions
+  max_context_budget_pct: 25
+
+  # Hard cap on number of resources loaded (regardless of budget)
+  max_resources: 20
+
+  # Minimum complexity tier required for ANY resource to load (fail-safe)
+  min_complexity: C1
+
+# ── Task-type specific rules ───────────────────────────────────────────────
+task_rules:
+  classification:
+    max_resources: 8
+    allowed_types: [tool]
+    blocked_resources: [bash, shell_execute, secrets_read]
+    context_budget_pct: 15
+
+  planning:
+    max_resources: 12
+    allowed_types: [tool, skill, mcp]
+    blocked_resources: [secrets_read]
+    context_budget_pct: 20
+
+  coding:
+    max_resources: 16
+    allowed_types: [tool, skill, mcp, extension]
+    blocked_resources: [secrets_read]
+    context_budget_pct: 25
+
+  review:
+    max_resources: 14
+    allowed_types: [tool, skill]
+    blocked_resources: [bash, shell_execute, secrets_read]
+    context_budget_pct: 20
+
+  research:
+    max_resources: 12
+    allowed_types: [tool, skill, mcp, extension]
+    blocked_resources: [bash, shell_execute, secrets_read, codex_team]
+    context_budget_pct: 22
+
+  personal_context:
+    max_resources: 6
+    allowed_types: [tool]
+    blocked_resources: [bash, write, edit, shell_execute, secrets_read]
+    context_budget_pct: 10
+
+  integration_action:
+    max_resources: 18
+    allowed_types: [tool, mcp, agent]
+    blocked_resources: []
+    context_budget_pct: 25
+
+# ── Complexity-based resource caps ─────────────────────────────────────────
+complexity_caps:
+  C1:
+    max_resources: 8
+    max_risk: low
+    allowed_types: [tool]
+  C2:
+    max_resources: 12
+    max_risk: medium
+    allowed_types: [tool, skill]
+  C3:
+    max_resources: 16
+    max_risk: high
+    allowed_types: [tool, skill, mcp, extension]
+  C4:
+    max_resources: 24
+    max_risk: critical
+    allowed_types: [tool, skill, mcp, extension, agent]
+
+# ── Privacy-class resource restrictions ──────────────────────────────────────
+privacy_rules:
+  P0:
+    max_risk: critical
+    allowed_types: [tool, skill, mcp, extension, agent]
+    blocked_resources: []
+  P1:
+    max_risk: high
+    allowed_types: [tool, skill, mcp, extension]
+    blocked_resources: [secrets_read]
+  P2:
+    max_risk: medium
+    allowed_types: [tool, skill]
+    blocked_resources: [bash, shell_execute, secrets_read, github_write, browser]
+  P3:
+    max_risk: low
+    allowed_types: [tool]
+    blocked_resources: [bash, write, edit, shell_execute, secrets_read, github_write, web_search, browser]
+  P4:
+    max_risk: low
+    allowed_types: [tool]
+    blocked_resources: [bash, write, edit, shell_execute, secrets_read, github_write, web_search, browser, codex_team]
+
+# ── Context budget per privacy class ───────────────────────────────────────
+context_budget:
+  P0: 25
+  P1: 25
+  P2: 20
+  P3: 10
+  P4: 5

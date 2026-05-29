@@ -5,6 +5,7 @@ import uuid
 from typing import Any
 
 from .contracts import (
+    ContextGateResult,
     RouteRequest,
     RouteResponse,
     RouteLogs,
@@ -20,9 +21,11 @@ from .budget import BudgetGate
 from .observability import ObservabilityLogger
 from .adapters.base import BaseAdapter
 from .adapters.mock import MockAdapter
-from .complexity_classifier import ComplexityClassifier
+from .complexity_classifier import ComplexityClassifier, ComplexityResult
 from .context_detector import ContextDetector
 from .provider_selector import ProviderSelector
+from .context_gate import ContextGate
+from .context_policy import ContextPolicyLoader
 from .adapters.ollama_remote import OllamaRemoteAdapter
 from .adapters.openhuman_adapter import OpenHumanAdapter
 
@@ -41,6 +44,8 @@ class ChromaticRouter:
     ):
         self.loader = loader or PolicyLoader()
         self.logger = logger or ObservabilityLogger()
+        self.context_gate = ContextGate()
+        self.context_policy_loader = ContextPolicyLoader()
         self.confidence_gate = ConfidenceGate()
         self.privacy_gate = PrivacyGate(self.loader)
         self.budget_gate = BudgetGate(self.loader)
@@ -188,6 +193,27 @@ class ChromaticRouter:
         t0 = time.perf_counter()
         logs = RouteLogs()
 
+        # 0. Context Resource Gate — runs BEFORE privacy/confidence/budget
+        complexity = self.complexity_classifier.classify(req.objective)
+        cg_result = self.context_gate.check(req, complexity_level=complexity.level)
+        logs.policy_checks.extend(cg_result.logs)
+        if not cg_result.ok:
+            resp = RouteResponse(
+                request_id=req.request_id,
+                selected_provider="",
+                route_reason="context_gate_blocked",
+                confidence_score=req.confidence.score,
+                privacy_class=req.constraints.privacy_class,
+                context_resources=cg_result.allowed_resources,
+                output=RouteOutput(
+                    type=OutputType.ERROR,
+                    content="Blocked by context gate. Context budget exceeded or critical resources blocked.",
+                ),
+                logs=logs,
+            )
+            self.logger.log(req, resp)
+            return resp
+
         # 1. Privacy gate
         ok, plogs = self.privacy_gate.check(req)
         logs.policy_checks.extend(plogs.policy_checks)
@@ -200,6 +226,7 @@ class ChromaticRouter:
                 route_reason="privacy_gate_blocked",
                 confidence_score=req.confidence.score,
                 privacy_class=req.constraints.privacy_class,
+                context_resources=cg_result.allowed_resources,
                 output=RouteOutput(
                     type=OutputType.ERROR,
                     content="Blocked by privacy gate. See logs.errors.",
@@ -221,6 +248,7 @@ class ChromaticRouter:
                 route_reason="confidence_gate_blocked",
                 confidence_score=req.confidence.score,
                 privacy_class=req.constraints.privacy_class,
+                context_resources=cg_result.allowed_resources,
                 output=RouteOutput(
                     type=OutputType.ERROR,
                     content="Blocked by confidence gate. Score < 60.",
@@ -248,6 +276,7 @@ class ChromaticRouter:
                 confidence_score=req.confidence.score,
                 privacy_class=req.constraints.privacy_class,
                 cost_estimate_usd=est_cost,
+                context_resources=cg_result.allowed_resources,
                 output=RouteOutput(
                     type=OutputType.ERROR,
                     content="Blocked by budget gate. See logs.errors.",
@@ -306,6 +335,7 @@ class ChromaticRouter:
         resp.fallback_used = fallback_used
         resp.privacy_class = req.constraints.privacy_class
         resp.confidence_score = req.confidence.score
+        resp.context_resources = cg_result.allowed_resources
 
         latency = int((time.perf_counter() - t0) * 1000)
         resp.latency_ms = latency
@@ -355,6 +385,10 @@ class ChromaticRouter:
                         "allow_broker",
                         "allow_openhuman",
                         "allow_tools",
+                        "allow_skills",
+                        "allow_mcp",
+                        "max_context_resources",
+                        "context_resource_allowlist",
                     }
                 },
             ),
