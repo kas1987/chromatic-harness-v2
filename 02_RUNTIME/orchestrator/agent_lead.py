@@ -70,7 +70,7 @@ class AgentLead:
         audit_log = self._audit_log(mission, report, events)
         suggested_bead = self._suggest_bead(mission, recommendation, report)
 
-        return AgentLeadOutput(
+        output = AgentLeadOutput(
             final_report=final_report,
             pr_package=pr_package,
             next_steps=next_steps,
@@ -80,6 +80,12 @@ class AgentLead:
             decision=recommendation["decision"],
             composite_score=report.score,
         )
+        try:
+            _sc = _load_local("session_compact", "session_compact.py")
+            _sc.write_handoff(handoff, mission=mission, agent="agent_lead")
+        except Exception:
+            pass
+        return output
 
     def _synthesize(
         self, mission: dict[str, Any], report: MagnetReport

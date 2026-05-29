@@ -20,3 +20,7 @@ Chromatic Harness v2 turns user intent into governed missions, executes them thr
 ## Source of Truth Rule
 
 This manifest and the protocol specs are authoritative. Agent docs, frontend docs, runtime scripts, and prompts must defer to these files rather than duplicating policy.
+
+## Session Continuity
+
+All harness agents (Claude, Pi, Codex, and registered runtimes) follow [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md) for context compaction and handoff. Chat history is not authoritative; beads, git, and handoff files are.

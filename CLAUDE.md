@@ -24,6 +24,18 @@ bd close <id>         # Complete work
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
 
+## Session Compact (Claude, Pi, and all harness agents)
+
+Do not rely on chat memory alone. At ~50–65% context pressure, phase boundaries, or session end, externalize state:
+
+- **beads** (`bd ready`, close/update issues)
+- **Handoff file** — `12_HANDOFFS/sessions/<mission>.md` from [AGENT_HANDOFF_TEMPLATE.md](12_HANDOFFS/AGENT_HANDOFF_TEMPLATE.md)
+- **Pointer** — `.agents/handoffs/latest.json`
+
+**Session start:** Read `.agents/handoffs/latest.json` if present, then the referenced handoff path.
+
+Canonical protocol: [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md)
+
 ## Session Completion
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
@@ -41,7 +53,7 @@ bd close <id>         # Complete work
    ```
 5. **Clean up** - Clear stashes, prune remote branches
 6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
+7. **Hand off** - Per [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) (`.agents/handoffs/latest.json`)
 
 **CRITICAL RULES:**
 - Work is NOT complete until `git push` succeeds

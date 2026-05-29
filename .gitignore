@@ -29,3 +29,8 @@ htmlcov/
 # Dispatch scaffolding — runtime-only task directories
 .dispatch/
 *.tsbuildinfo
+
+# Session handoff runtime artifacts (generated per agent session)
+.agents/handoffs/latest.json
+12_HANDOFFS/sessions/*.md
+!12_HANDOFFS/sessions/.gitkeep
