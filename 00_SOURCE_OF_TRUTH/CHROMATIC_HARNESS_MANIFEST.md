@@ -28,3 +28,7 @@ All harness agents (Claude, Pi, Codex, and registered runtimes) follow [12_HANDO
 ## Pre-Session Tool Inventory
 
 Documented baseline of native tools, MCP servers, and CRG resources: [docs/PRE_SESSION_AND_TOOLS.md](../docs/PRE_SESSION_AND_TOOLS.md). Regenerate before changing tool exposure: `python scripts/generate_pre_session_inventory.py`.
+
+## Agent Operations (mandatory)
+
+All harness agents read [AGENT_OPERATIONS.md](../AGENT_OPERATIONS.md) at session start. CI enforces doc presence via `scripts/check_agent_operations.py`.

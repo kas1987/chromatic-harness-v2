@@ -2,6 +2,7 @@
 
 | Doc | Topic |
 |-----|-------|
+| [../AGENT_OPERATIONS.md](../AGENT_OPERATIONS.md) | **Mandatory agent checklist** (start here) |
 | [PRE_SESSION_AND_TOOLS.md](PRE_SESSION_AND_TOOLS.md) | **Tools, MCP, CRG baseline** (regeneratable) |
 | [IMPORT_STRATEGY.md](IMPORT_STRATEGY.md) | `src/` vs `02_RUNTIME/` imports |
 | [governance/](governance/) | Confidence gate, routing, mission packets |

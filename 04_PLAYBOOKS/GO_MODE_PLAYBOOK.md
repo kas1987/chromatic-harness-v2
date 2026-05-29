@@ -4,6 +4,8 @@
 
 Defines what happens when the user says GO or requests autonomous continuation.
 
+**Prerequisite:** [AGENT_OPERATIONS.md](../AGENT_OPERATIONS.md) — session start, compact, and handoff rules apply to every GO run.
+
 ## GO Rule
 
 GO does not mean wander. GO means select the highest-priority unblocked Bead or mission, score confidence, attach Magnets, and execute only inside approved boundaries.
