@@ -27,7 +27,7 @@ class OpenRouterAdapter(BaseAdapter):
         cfg.setdefault("model", "openrouter/auto")
         cfg.setdefault("timeout", 60)
         super().__init__("openrouter", cfg)
-        self._client = None
+        self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:

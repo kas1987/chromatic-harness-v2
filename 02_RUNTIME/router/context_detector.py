@@ -13,7 +13,7 @@ from typing import Any
 
 @dataclasses.dataclass(frozen=True)
 class RuntimeContext:
-    device_type: str          # "laptop" | "desktop" | "server" | "unknown"
+    device_type: str  # "laptop" | "desktop" | "server" | "unknown"
     gpu_model: str | None
     gpu_vram_gb: float | None
     gpu_available: bool
@@ -21,11 +21,11 @@ class RuntimeContext:
     ollama_local_models: list[str]
     remote_ollama_endpoints: list[dict[str, Any]]
     internet_reachable: bool
-    connectivity: str         # "full" | "limited" | "offline"
-    memory_pressure: str       # "low" | "medium" | "high" — not implemented yet
-    os_family: str             # "windows" | "linux" | "macos"
+    connectivity: str  # "full" | "limited" | "offline"
+    memory_pressure: str  # "low" | "medium" | "high" — not implemented yet
+    os_family: str  # "windows" | "linux" | "macos"
     cpu_count: int
-    is_battery: bool           # True if laptop on battery
+    is_battery: bool  # True if laptop on battery
 
 
 class ContextDetector:
@@ -65,8 +65,15 @@ class ContextDetector:
         # Windows: try nvidia-smi
         try:
             out = subprocess.run(
-                ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=5, check=False,
+                [
+                    "nvidia-smi",
+                    "--query-gpu=name,memory.total",
+                    "--format=csv,noheader,nounits",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
             )
             if out.returncode == 0 and out.stdout.strip():
                 line = out.stdout.strip().splitlines()[0]
@@ -81,7 +88,10 @@ class ContextDetector:
         try:
             out = subprocess.run(
                 ["wmic", "path", "win32_VideoController", "get", "name,AdapterRAM"],
-                capture_output=True, text=True, timeout=5, check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
             )
             if out.returncode == 0:
                 lines = out.stdout.strip().splitlines()
@@ -101,8 +111,16 @@ class ContextDetector:
         # Linux / WSL2 fallback
         try:
             out = subprocess.run(
-                ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=5, check=False, shell=False,
+                [
+                    "nvidia-smi",
+                    "--query-gpu=name,memory.total",
+                    "--format=csv,noheader,nounits",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+                shell=False,
             )
             if out.returncode == 0 and out.stdout.strip():
                 line = out.stdout.strip().splitlines()[0]
@@ -127,8 +145,12 @@ class ContextDetector:
             with urllib.request.urlopen(req, timeout=cls.TIMEOUT_S) as resp:
                 if resp.status == 200:
                     import json
+
                     data = json.loads(resp.read())
-                    models = [m.get("name", m.get("model", "")) for m in data.get("models", [])]
+                    models = [
+                        m.get("name", m.get("model", ""))
+                        for m in data.get("models", [])
+                    ]
                     return True, [m for m in models if m]
         except Exception:
             pass
@@ -158,7 +180,10 @@ class ContextDetector:
             try:
                 out = subprocess.run(
                     ["sysctl", "-n", "hw.model"],
-                    capture_output=True, text=True, timeout=2, check=False,
+                    capture_output=True,
+                    text=True,
+                    timeout=2,
+                    check=False,
                 )
                 if "macbook" in out.stdout.lower():
                     return "laptop"
@@ -180,6 +205,7 @@ class ContextDetector:
         try:
             if platform.system().lower() == "windows":
                 import ctypes
+
                 # GetSystemPowerStatus
                 class SYSTEM_POWER_STATUS(ctypes.Structure):
                     _fields_ = [
@@ -190,15 +216,18 @@ class ContextDetector:
                         ("BatteryLifeTime", ctypes.c_ulong),
                         ("BatteryFullLifeTime", ctypes.c_ulong),
                     ]
+
                 sps = SYSTEM_POWER_STATUS()
                 if ctypes.windll.kernel32.GetSystemPowerStatus(ctypes.byref(sps)):
-                    return sps.ACLineStatus == 0  # 0 = battery, 1 = AC
+                    return sps.ACLineStatus == 0  # type: ignore[return-value]  # 0 = battery, 1 = AC
         except Exception:
             pass
 
         try:
             # Linux /sys/class/power_supply/BAT0/status
-            bat_status = Path("/sys/class/power_supply/BAT0/status").read_text().strip().lower()
+            bat_status = (
+                Path("/sys/class/power_supply/BAT0/status").read_text().strip().lower()
+            )
             return bat_status == "discharging"
         except Exception:
             pass

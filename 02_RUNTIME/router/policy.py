@@ -41,26 +41,26 @@ class PolicyLoader:
 
     def providers(self) -> dict[str, Any]:
         data = self._load("providers.yaml") or {}
-        return data.get("providers", {})
+        return data.get("providers", {})  # type: ignore[return-value]
 
     def routes(self) -> dict[str, Any]:
         data = self._load("routing-table.yaml") or {}
-        return data.get("routes", {})
+        return data.get("routes", {})  # type: ignore[return-value]
 
     def privacy(self) -> dict[str, Any]:
         data = self._load("privacy-policy.yaml") or {}
-        return data.get("privacy_classes", {})
+        return data.get("privacy_classes", {})  # type: ignore[return-value]
 
     def budget(self) -> dict[str, Any]:
         data = self._load("budget-policy.yaml") or {}
-        return data.get("budget", {})
+        return data.get("budget", {})  # type: ignore[return-value]
 
     def provider_costs(self) -> dict[str, float]:
         data = self._load("budget-policy.yaml") or {}
-        return data.get("provider_cost_estimates", {})
+        return data.get("provider_cost_estimates", {})  # type: ignore[return-value]
 
     def route_for_task(self, task_type: str) -> dict[str, Any]:
-        return self.routes().get(task_type, {})
+        return self.routes().get(task_type, {})  # type: ignore[return-value]
 
     def provider_cfg(self, name: str) -> dict[str, Any]:
-        return self.providers().get(name, {})
+        return self.providers().get(name, {})  # type: ignore[return-value]

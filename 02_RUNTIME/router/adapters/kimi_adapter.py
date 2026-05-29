@@ -31,7 +31,7 @@ class KimiAdapter(BaseAdapter):
         cfg.setdefault("model", _DEFAULT_MODEL)
         cfg.setdefault("timeout", 90)
         super().__init__("kimi", cfg)
-        self._client = None
+        self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:

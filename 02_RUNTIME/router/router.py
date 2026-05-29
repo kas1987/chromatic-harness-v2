@@ -260,7 +260,7 @@ class ChromaticRouter:
         # 4. Execute via adapter with fallback
         provider_used = chosen
         fallback_used = False
-        resp: RouteResponse | None = None
+        resp: RouteResponse | None = None  # type: ignore[no-redef]
         for cand in [chosen, *fallbacks]:
             if not self._provider_is_available(cand):
                 logs.warnings.append(f"Provider {cand} not available or disabled.")

@@ -27,7 +27,7 @@ class LMStudioAdapter(BaseAdapter):
             "timeout": 60,
         }
         super().__init__("lmstudio", cfg)
-        self._client = None
+        self._client: httpx.AsyncClient | None = None
 
     def _url(self, path: str) -> str:
         host = self.cfg.get("host", "localhost")

@@ -37,8 +37,11 @@ class OpenHumanAdapter(BaseAdapter):
     def __init__(self, cfg: dict[str, Any] | None = None):
         if cfg is None:
             cfg = {
-                "enabled": os.environ.get("OPENHUMAN_ENABLED", "false").lower() == "true",
-                "base_url": os.environ.get("OPENHUMAN_BASE_URL", "http://127.0.0.1:8787"),
+                "enabled": os.environ.get("OPENHUMAN_ENABLED", "false").lower()
+                == "true",
+                "base_url": os.environ.get(
+                    "OPENHUMAN_BASE_URL", "http://127.0.0.1:8787"
+                ),
                 "env_key": "OPENHUMAN_BEARER_TOKEN",
                 "privacy_max": "P2",
                 "default_mode": "read_only",
@@ -51,7 +54,9 @@ class OpenHumanAdapter(BaseAdapter):
 
     async def health(self) -> AdapterHealth:
         if not self.enabled:
-            return AdapterHealth(reachable=False, latency_ms=0, error="disabled_by_config")
+            return AdapterHealth(
+                reachable=False, latency_ms=0, error="disabled_by_config"
+            )
         t0 = time.perf_counter()
         try:
             async with httpx.AsyncClient() as client:
@@ -61,7 +66,9 @@ class OpenHumanAdapter(BaseAdapter):
             latency = int((time.perf_counter() - t0) * 1000)
             ok = r.status_code == 200
             return AdapterHealth(
-                reachable=ok, latency_ms=latency, error="" if ok else f"status={r.status_code}"
+                reachable=ok,
+                latency_ms=latency,
+                error="" if ok else f"status={r.status_code}",
             )
         except Exception as exc:
             latency = int((time.perf_counter() - t0) * 1000)
@@ -71,7 +78,7 @@ class OpenHumanAdapter(BaseAdapter):
         meta = req.input.metadata or {}
         action = meta.get("action", "")
         if action:
-            return action
+            return action  # type: ignore[return-value]
         mapping = {
             "personal_context": "memory_search",
             "research": "context_query",
@@ -82,12 +89,16 @@ class OpenHumanAdapter(BaseAdapter):
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
         if not self.enabled:
-            logs.errors.append("OpenHuman is disabled by config (OPENHUMAN_ENABLED=false).")
+            logs.errors.append(
+                "OpenHuman is disabled by config (OPENHUMAN_ENABLED=false)."
+            )
             return RouteResponse(
                 request_id=req.request_id,
                 selected_provider=self.name,
                 route_reason="openhuman_disabled",
-                output=RouteOutput(type=OutputType.ERROR, content="OpenHuman disabled."),
+                output=RouteOutput(
+                    type=OutputType.ERROR, content="OpenHuman disabled."
+                ),
                 logs=logs,
             )
 
@@ -109,9 +120,7 @@ class OpenHumanAdapter(BaseAdapter):
             )
 
         if action in self.WRITE_ACTIONS:
-            logs.errors.append(
-                f"OpenHuman write action '{action}' blocked by policy."
-            )
+            logs.errors.append(f"OpenHuman write action '{action}' blocked by policy.")
             return RouteResponse(
                 request_id=req.request_id,
                 selected_provider=self.name,
@@ -139,7 +148,9 @@ class OpenHumanAdapter(BaseAdapter):
                 )
             latency = int((time.perf_counter() - t0) * 1000)
             if r.status_code != 200:
-                logs.errors.append(f"OpenHuman returned {r.status_code}: {r.text[:200]}")
+                logs.errors.append(
+                    f"OpenHuman returned {r.status_code}: {r.text[:200]}"
+                )
                 return RouteResponse(
                     request_id=req.request_id,
                     selected_provider=self.name,

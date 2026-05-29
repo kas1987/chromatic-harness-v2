@@ -27,13 +27,15 @@ _REPO = _ROUTER_DIR.parent.parent
 if str(_REPO) not in sys.path:
     sys.path.insert(0, str(_REPO))
 
+
 def _load_submodule(name: str, fname: str):
     path = _ROUTER_DIR / fname
     spec = importlib.util.spec_from_file_location(f"router.{name}", path)
-    mod = importlib.util.module_from_spec(spec)
+    mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
     sys.modules.setdefault(f"router.{name}", mod)
-    spec.loader.exec_module(mod)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
     return mod
+
 
 _context = _load_submodule("context_detector", "context_detector.py")
 _complexity = _load_submodule("complexity_classifier", "complexity_classifier.py")
@@ -46,13 +48,15 @@ ProviderSelector = _selector.ProviderSelector
 ProviderChoice = _selector.ProviderChoice
 
 
-LOG_DIR = Path(os.environ.get("ROUTER_LOG_DIR", Path.home() / ".claude" / ".agents" / "router"))
+LOG_DIR = Path(
+    os.environ.get("ROUTER_LOG_DIR", Path.home() / ".claude" / ".agents" / "router")
+)
 LOG_FILE = LOG_DIR / "log.jsonl"
 BLOCK_ENABLED = os.environ.get("ROUTER_BLOCK_ENABLED", "true").lower() == "true"
 MAX_LOG_LINES = int(os.environ.get("ROUTER_MAX_LOG_LINES", "2000"))
 TOOL_USE_PATTERN = os.environ.get(
     "TOOL_USE_PATTERN",
-    "bash|glob|grep|install|execute|curl|npm |pip |webfetch|websearch"
+    "bash|glob|grep|install|execute|curl|npm |pip |webfetch|websearch",
 )
 
 
@@ -61,7 +65,7 @@ def _read_stdin() -> dict[str, Any]:
     if not data:
         return {}
     try:
-        return json.loads(data)
+        return json.loads(data)  # type: ignore[return-value]
     except Exception:
         return {}
 
@@ -85,6 +89,7 @@ def _log_entry(entry: dict) -> None:
 
 def _has_tool_use(haystack: str) -> bool:
     import re
+
     return bool(re.search(TOOL_USE_PATTERN, haystack, re.IGNORECASE))
 
 
@@ -110,9 +115,16 @@ def main() -> None:
     complexity = classifier.classify(description, prompt)
     selection = selector.select(complexity, context)
 
-    ranked: list[ProviderChoice] = selection.ranked_choices
-    chosen = ranked[0] if ranked else ProviderChoice(
-        provider="native_claude", model=None, tier=4, reason="no providers available"
+    ranked: list[Any] = selection.ranked_choices
+    chosen = (
+        ranked[0]
+        if ranked
+        else ProviderChoice(
+            provider="native_claude",
+            model=None,
+            tier=4,
+            reason="no providers available",
+        )
     )
 
     # ── Blocking logic (speed-mode-aware) ──────────────────────────────
@@ -125,7 +137,12 @@ def main() -> None:
         should_block = False  # Advisory only; user wants speed
     elif speed_mode == "low":
         # In low mode, only allow local providers (ollama, lmstudio, native_claude)
-        should_block = chosen.provider not in ("ollama_local", "ollama_remote_desktop", "lmstudio", "native_claude")
+        should_block = chosen.provider not in (
+            "ollama_local",
+            "ollama_remote_desktop",
+            "lmstudio",
+            "native_claude",
+        )
     else:
         # balance mode: block non-tier-4 pure-LLM calls (cost discipline)
         should_block = (
@@ -142,8 +159,10 @@ def main() -> None:
         override_note = " | caller specified haiku - cap at tier-1"
     if model_requested.lower() == "opus":
         chosen = ProviderChoice(
-            provider="native_claude", model="opus", tier=4,
-            reason="caller specified opus - tier-4 (native)"
+            provider="native_claude",
+            model="opus",
+            tier=4,
+            reason="caller specified opus - tier-4 (native)",
         )
         should_block = False
         override_note = ""
@@ -182,23 +201,33 @@ def main() -> None:
 
 
 def _emit_advisory(advisory: str) -> None:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stdout.write(json.dumps({
-        "hookSpecificOutput": {
-            "additionalContext": advisory,
-        }
-    }, ensure_ascii=False))
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    sys.stdout.write(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "additionalContext": advisory,
+                }
+            },
+            ensure_ascii=False,
+        )
+    )
 
 
 def _emit_deny(advisory: str) -> None:
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stdout.write(json.dumps({
-        "hookSpecificOutput": {
-            "permissionDecision": "deny",
-            "denyReason": f"Use cheaper tier instead. {advisory}",
-            "additionalContext": advisory,
-        }
-    }, ensure_ascii=False))
+    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    sys.stdout.write(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "permissionDecision": "deny",
+                    "denyReason": f"Use cheaper tier instead. {advisory}",
+                    "additionalContext": advisory,
+                }
+            },
+            ensure_ascii=False,
+        )
+    )
 
 
 if __name__ == "__main__":

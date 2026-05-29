@@ -27,7 +27,7 @@ class FeatherlessAdapter(BaseAdapter):
         cfg.setdefault("model", "meta-llama/Llama-3.1-8B-Instruct")
         cfg.setdefault("timeout", 60)
         super().__init__("featherless", cfg)
-        self._client = None
+        self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
         if self._client is None:

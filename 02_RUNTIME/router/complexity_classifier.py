@@ -15,7 +15,7 @@ CLevel = Literal["C1", "C2", "C3", "C4"]
 class ComplexityResult:
     level: CLevel
     name: str
-    confidence: float   # 0.0–1.0
+    confidence: float  # 0.0–1.0
     matched_keywords: list[str]
     reasoning_depth: str
 
@@ -23,8 +23,13 @@ class ComplexityResult:
 class ComplexityClassifier:
     """Reads complexity-patterns.yaml and classifies task descriptions."""
 
-    DEFAULT_CONFIG = Path(__file__).resolve().parent.parent.parent / \
-        "09_DEPLOYMENT" / "config" / "routing" / "complexity-patterns.yaml"
+    DEFAULT_CONFIG = (
+        Path(__file__).resolve().parent.parent.parent
+        / "09_DEPLOYMENT"
+        / "config"
+        / "routing"
+        / "complexity-patterns.yaml"
+    )
 
     def __init__(self, config_path: Path | None = None):
         self._config_path = config_path or self.DEFAULT_CONFIG
@@ -42,15 +47,50 @@ class ComplexityClassifier:
     def _build_defaults(self) -> None:
         # Inline fallback if YAML missing
         self._levels = {
-            "C1": {"keywords": ["format", "convert", "extract", "json-to-table", "boilerplate"]},
-            "C2": {"keywords": ["scaffold", "code review", "smoke test", "lint", "fix", "debug"]},
-            "C3": {"keywords": ["debug the", "root cause", "architecture", "integration", "multi-file"]},
-            "C4": {"keywords": ["brainstorm", "design tradeoffs", "novel", "creative", "strategy"]},
+            "C1": {
+                "keywords": [
+                    "format",
+                    "convert",
+                    "extract",
+                    "json-to-table",
+                    "boilerplate",
+                ]
+            },
+            "C2": {
+                "keywords": [
+                    "scaffold",
+                    "code review",
+                    "smoke test",
+                    "lint",
+                    "fix",
+                    "debug",
+                ]
+            },
+            "C3": {
+                "keywords": [
+                    "debug the",
+                    "root cause",
+                    "architecture",
+                    "integration",
+                    "multi-file",
+                ]
+            },
+            "C4": {
+                "keywords": [
+                    "brainstorm",
+                    "design tradeoffs",
+                    "novel",
+                    "creative",
+                    "strategy",
+                ]
+            },
         }
 
     # ── Core classify ───────────────────────────────────────────────────────
 
-    def classify(self, description: str, prompt: str = "", max_files_hint: int | None = None) -> ComplexityResult:
+    def classify(
+        self, description: str, prompt: str = "", max_files_hint: int | None = None
+    ) -> ComplexityResult:
         """Return C-level for a task."""
         haystack = f"{description}\n{prompt}".lower()
 
@@ -101,7 +141,7 @@ class ComplexityClassifier:
 
         cfg = self._levels.get(best_level, {})
         return ComplexityResult(
-            level=best_level,
+            level=best_level,  # type: ignore[arg-type]
             name=cfg.get("name", best_level),
             confidence=round(confidence, 2),
             matched_keywords=matched.get(best_level, []),
@@ -114,9 +154,11 @@ class ComplexityClassifier:
         """Classify many descriptions; useful for the 50-test validation suite."""
         out = []
         for t in tasks:
-            out.append(self.classify(
-                description=t.get("description", ""),
-                prompt=t.get("prompt", ""),
-                max_files_hint=t.get("max_files"),
-            ))
+            out.append(
+                self.classify(
+                    description=t.get("description", ""),
+                    prompt=t.get("prompt", ""),
+                    max_files_hint=t.get("max_files"),
+                )
+            )
         return out

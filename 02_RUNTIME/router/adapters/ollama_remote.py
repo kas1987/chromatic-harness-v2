@@ -33,7 +33,7 @@ class OllamaRemoteAdapter(BaseAdapter):
         self.port = cfg.get("port", 11434)
         self.model = cfg.get("model", "llama3.1:8b")
         self.timeout_s = cfg.get("timeout_s", 30)
-        self._client = None
+        self._client: httpx.AsyncClient | None = None
 
     def _url(self, path: str) -> str:
         return f"http://{self.host}:{self.port}{path}"
