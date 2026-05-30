@@ -26,6 +26,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Seed runtime log placeholders
+        run: |
+          mkdir -p 07_LOGS_AND_AUDIT/execution 07_LOGS_AND_AUDIT/traces 07_LOGS_AND_AUDIT/decisions
+          touch 07_LOGS_AND_AUDIT/execution/execution.jsonl \
+                07_LOGS_AND_AUDIT/traces/traces.jsonl \
+                07_LOGS_AND_AUDIT/decisions/decision_log.jsonl \
+                07_LOGS_AND_AUDIT/intake_queue.jsonl
+
       - name: Governance stack
         run: python scripts/validate_governance_stack.py
 
