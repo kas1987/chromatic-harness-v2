@@ -1,0 +1,132 @@
+{
+  "generated_at": "2026-05-30T20:57:30.874428+00:00",
+  "status": "green",
+  "coverage": {
+    "forecast_rows": 83,
+    "daily_ledger_rows": 53125,
+    "scored_rows": 0
+  },
+  "metrics": {
+    "day": {
+      "samples": 0,
+      "mae_usd": 0.0,
+      "mape_pct": 0.0
+    },
+    "week": {
+      "samples": 0,
+      "mae_usd": 0.0,
+      "mape_pct": 0.0
+    },
+    "month": {
+      "samples": 0,
+      "mae_usd": 0.0,
+      "mape_pct": 0.0
+    }
+  },
+  "channels": {
+    "vscode": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "cursor": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "claude_code": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "codex": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "cli": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "other": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    }
+  },
+  "recommendations": [],
+  "latest": []
+}

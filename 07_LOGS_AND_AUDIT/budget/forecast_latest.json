@@ -1,0 +1,369 @@
+{
+  "generated_at": "2026-05-30T21:13:09.733197+00:00",
+  "boot": {
+    "estimated_tokens": 1447,
+    "session_cap_tokens": 200000,
+    "session_remaining_tokens": 198553,
+    "session_used_pct": 0.0072
+  },
+  "burn": {
+    "daily_spent_usd": 9036.9104,
+    "weekly_spent_usd": 9036.9104,
+    "monthly_spent_usd": 9036.9104,
+    "daily_burn_rate_usd": 1312.7144,
+    "weekly_trend_pct": 0.0
+  },
+  "limits": {
+    "daily": {
+      "cap_usd": 25.0,
+      "current_usd": 9036.9104,
+      "remaining_usd": 0.0
+    },
+    "weekly": {
+      "cap_usd": 100.0,
+      "current_usd": 9036.9104,
+      "remaining_usd": 0.0,
+      "forecast_remaining_usd": 0.0,
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 75.0,
+      "actual_gap_to_target_usd": 0.0,
+      "forecast_gap_to_target_usd": 0.0,
+      "optimization_state": "at_or_above_target",
+      "suggested_additional_spend_to_target_usd": 0.0,
+      "days_remaining_in_week_fractional": 0.116,
+      "days_remaining_in_week_calendar": 1,
+      "daily_spend_needed_to_hit_target_usd": 0.0,
+      "target_policy": {
+        "target_default_pct": 90.0,
+        "target_min_pct": 70.0,
+        "target_max_pct": 95.0,
+        "reasons": [
+          "base=90.0%",
+          "-unknown_warning(10.0%)",
+          "-risk_red(5.0%)",
+          "bounded=75.0%"
+        ]
+      },
+      "target_90_pct_usd": 75.0,
+      "actual_gap_to_90_pct_target_usd": 0.0,
+      "forecast_gap_to_90_pct_target_usd": 0.0,
+      "suggested_additional_spend_to_90_pct_usd": 0.0,
+      "daily_spend_needed_to_hit_90_pct_usd": 0.0
+    },
+    "monthly": {
+      "cap_usd": 400.0,
+      "current_usd": 9036.9104,
+      "remaining_usd": 0.0
+    }
+  },
+  "forecast": {
+    "end_of_day_usd": 9189.0009,
+    "end_of_week_usd": 9189.0009,
+    "end_of_month_usd": 10501.7154,
+    "daily_over_cap": true,
+    "weekly_over_cap": true,
+    "monthly_over_cap": true,
+    "daily_utilization_forecast": 367.56,
+    "weekly_utilization_forecast": 91.89,
+    "monthly_utilization_forecast": 26.2543,
+    "risk_level": "red"
+  },
+  "model_usage": {
+    "top_provider": {
+      "name": "workflow",
+      "events": 672,
+      "success_rate": 0.3333
+    },
+    "top_model": {
+      "name": "workflow:default",
+      "events": 672,
+      "success_rate": 0.3333
+    },
+    "provider_burn_breakdown": [
+      {
+        "provider": "unknown",
+        "events": 4594,
+        "event_share": 0.7284,
+        "estimated_daily_usd": 6582.4586,
+        "estimated_weekly_usd": 6582.4586,
+        "estimated_monthly_usd": 6582.4586
+      },
+      {
+        "provider": "workflow",
+        "events": 672,
+        "event_share": 0.1065,
+        "estimated_daily_usd": 962.8673,
+        "estimated_weekly_usd": 962.8673,
+        "estimated_monthly_usd": 962.8673
+      },
+      {
+        "provider": "mock",
+        "events": 615,
+        "event_share": 0.0975,
+        "estimated_daily_usd": 881.1955,
+        "estimated_weekly_usd": 881.1955,
+        "estimated_monthly_usd": 881.1955
+      },
+      {
+        "provider": "native_claude",
+        "events": 306,
+        "event_share": 0.0485,
+        "estimated_daily_usd": 438.4485,
+        "estimated_weekly_usd": 438.4485,
+        "estimated_monthly_usd": 438.4485
+      },
+      {
+        "provider": "gemini",
+        "events": 98,
+        "event_share": 0.0155,
+        "estimated_daily_usd": 140.4181,
+        "estimated_weekly_usd": 140.4181,
+        "estimated_monthly_usd": 140.4181
+      },
+      {
+        "provider": "openai",
+        "events": 14,
+        "event_share": 0.0022,
+        "estimated_daily_usd": 20.0597,
+        "estimated_weekly_usd": 20.0597,
+        "estimated_monthly_usd": 20.0597
+      },
+      {
+        "provider": "anthropic",
+        "events": 5,
+        "event_share": 0.0008,
+        "estimated_daily_usd": 7.1642,
+        "estimated_weekly_usd": 7.1642,
+        "estimated_monthly_usd": 7.1642
+      },
+      {
+        "provider": "openrouter",
+        "events": 3,
+        "event_share": 0.0005,
+        "estimated_daily_usd": 4.2985,
+        "estimated_weekly_usd": 4.2985,
+        "estimated_monthly_usd": 4.2985
+      }
+    ],
+    "provider_burn_breakdown_basis": "estimated_by_event_share",
+    "unknown_usage": {
+      "unknown_events": 4594,
+      "total_events": 6318,
+      "unknown_share": 0.7271,
+      "warning": true
+    }
+  },
+  "channels": {
+    "vscode": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 10.0,
+      "cap_weekly_usd": 40.0,
+      "cap_monthly_usd": 160.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 30.0,
+      "forecast_gap_to_target_usd": 30.0,
+      "daily_spend_needed_to_hit_target_usd": 30.0,
+      "optimization_state": "below_target"
+    },
+    "cursor": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 10.0,
+      "cap_weekly_usd": 40.0,
+      "cap_monthly_usd": 160.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 30.0,
+      "forecast_gap_to_target_usd": 30.0,
+      "daily_spend_needed_to_hit_target_usd": 30.0,
+      "optimization_state": "below_target"
+    },
+    "claude_code": {
+      "daily_spent_usd": 9036.9104,
+      "weekly_spent_usd": 9036.9104,
+      "monthly_spent_usd": 9036.9104,
+      "end_of_day_usd": 9189.0009,
+      "end_of_week_usd": 9189.0009,
+      "end_of_month_usd": 10501.7154,
+      "weekly_spent_share": 1.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 1837.8002,
+      "weekly_utilization_forecast": 459.45,
+      "monthly_utilization_forecast": 131.2714,
+      "risk_level": "red",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 0.0,
+      "daily_spend_needed_to_hit_target_usd": 0.0,
+      "optimization_state": "at_or_above_target"
+    },
+    "codex": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 15.0,
+      "daily_spend_needed_to_hit_target_usd": 15.0,
+      "optimization_state": "below_target"
+    },
+    "cli": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 15.0,
+      "daily_spend_needed_to_hit_target_usd": 15.0,
+      "optimization_state": "below_target"
+    },
+    "other": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 15.0,
+      "daily_spend_needed_to_hit_target_usd": 15.0,
+      "optimization_state": "below_target"
+    }
+  },
+  "axis_prepaid": {
+    "weekly_quota_pct": null,
+    "target_pct": 90.0,
+    "pace_needed": null,
+    "projected_close_pct": null,
+    "reset_at": null,
+    "status": "stale",
+    "fresh": false,
+    "source": "absent"
+  },
+  "roi_card": {
+    "routing_card": [
+      {
+        "c_level": "C1 mechanical",
+        "example": "format/convert/extract, frontmatter, json->table",
+        "tier": "T0 local (llama3.2/ollama)",
+        "quota": "FREE - quota-neutral",
+        "spends_quota": false
+      },
+      {
+        "c_level": "C2 structured",
+        "example": "single-file change, smoke test, 1-file PR review (<=3 files)",
+        "tier": "T0-T2 local / cheap API",
+        "quota": "FREE / tiny $",
+        "spends_quota": false
+      },
+      {
+        "c_level": "C3 reasoning",
+        "example": "multi-file integration, root-cause, refactor (<=10 files)",
+        "tier": "T3 Claude Sonnet (cloud)",
+        "quota": "SPENDS QUOTA - high ROI",
+        "spends_quota": true
+      },
+      {
+        "c_level": "C4 creative",
+        "example": "brainstorm, design, architecture, research synth (unbounded)",
+        "tier": "T4 Claude Opus / native",
+        "quota": "SPENDS QUOTA - highest ROI",
+        "spends_quota": true
+      }
+    ],
+    "ledger_events_by_axis": {
+      "P": 2234,
+      "D": 1308,
+      "F": 11
+    },
+    "ledger_events_by_c_level": {},
+    "ledger_rows": 3553,
+    "note": "spend prepaid Axis-P quota on highest complexity (C3/C4); keep C1/C2 on free local"
+  },
+  "dollar_forecast": {
+    "source": "forecast_latest.json",
+    "end_of_week_usd": 9189.0009,
+    "weekly_cap_usd": 100.0,
+    "weekly_utilization_forecast": 91.89,
+    "axis": "D",
+    "note": "ccusage $ is the Axis D estimator only; Axis P comes from quota_state"
+  },
+  "forecast_variance": {
+    "status": "green",
+    "metrics": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "coverage": {
+      "forecast_rows": 84,
+      "daily_ledger_rows": 103947,
+      "scored_rows": 0
+    },
+    "recommendations": []
+  },
+  "portfolio_forecast_generated_at": "2026-05-30T21:22:23.956513+00:00"
+}

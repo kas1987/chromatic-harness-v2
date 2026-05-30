@@ -1,0 +1,21 @@
+{
+  "required_signal_hits": 2,
+  "signals": {
+    "loc_delta_total": {
+      "enabled": true,
+      "min": 400
+    },
+    "policy_event_count": {
+      "enabled": true,
+      "min": 200
+    },
+    "open_tasks": {
+      "enabled": true,
+      "min": 4
+    },
+    "changed_files": {
+      "enabled": true,
+      "min": 12
+    }
+  }
+}

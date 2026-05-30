@@ -1,0 +1,461 @@
+{
+  "generated_at_utc": "2026-05-30T21:20:44Z",
+  "overall_status": "red",
+  "readiness_score": 24,
+  "counts": {
+    "pass": 13,
+    "warn": 2,
+    "fail": 3
+  },
+  "checks": [
+    {
+      "name": "unified_guard_ok",
+      "status": "fail",
+      "message": "ok=False",
+      "value": null
+    },
+    {
+      "name": "token_governance_green",
+      "status": "fail",
+      "message": "status=red",
+      "value": null
+    },
+    {
+      "name": "pre_session_fresh",
+      "status": "pass",
+      "message": "age_min=237.3",
+      "value": 237.3
+    },
+    {
+      "name": "unified_guard_fresh",
+      "status": "pass",
+      "message": "age_min=1.13",
+      "value": 1.13
+    },
+    {
+      "name": "handoff_present",
+      "status": "pass",
+      "message": "handoff_present=True",
+      "value": null
+    },
+    {
+      "name": "mcp_budget",
+      "status": "pass",
+      "message": "over_warn_threshold=False",
+      "value": null
+    },
+    {
+      "name": "coverage_provider_model",
+      "status": "warn",
+      "message": "provider=0.7366 model=0.7368 llm_events=0",
+      "value": null
+    },
+    {
+      "name": "coverage_task_exec",
+      "status": "warn",
+      "message": "task_id=0.8585 execution_status=0.8873 llm_events=0",
+      "value": null
+    },
+    {
+      "name": "coverage_confidence_cost_latency",
+      "status": "fail",
+      "message": "confidence=0.4413 cost=0.3344 latency=0.3344",
+      "value": null
+    },
+    {
+      "name": "agent_log_fresh_and_populated",
+      "status": "pass",
+      "message": "age_min=22.95 lines=1",
+      "value": {
+        "age_min": 22.95,
+        "lines": 1
+      }
+    },
+    {
+      "name": "codegraph_sample_size",
+      "status": "pass",
+      "message": "paired_count=1",
+      "value": 1
+    },
+    {
+      "name": "budget_forecast_present",
+      "status": "pass",
+      "message": "forecast artifact loaded",
+      "value": null
+    },
+    {
+      "name": "weekly_budget_optimization",
+      "status": "pass",
+      "message": "state=at_or_above_target target_pct=75.0 gap_target_usd=0.0 need_per_day_usd=0.0",
+      "value": {
+        "optimization_state": "at_or_above_target",
+        "target_utilization_pct": 75.0,
+        "forecast_gap_to_target_usd": 0.0,
+        "daily_spend_needed_to_hit_target_usd": 0.0
+      }
+    },
+    {
+      "name": "forecast_accuracy_present",
+      "status": "pass",
+      "message": "accuracy artifact loaded",
+      "value": null
+    },
+    {
+      "name": "forecast_accuracy_weekly",
+      "status": "pass",
+      "message": "status=green week_mape_pct=0.0",
+      "value": {
+        "status": "green",
+        "week_mape_pct": 0.0
+      }
+    },
+    {
+      "name": "budget_channels_present",
+      "status": "pass",
+      "message": "channels=6 vscode_week=0.0 cursor_week=0.0",
+      "value": {
+        "channels": 6,
+        "vscode_week": 0.0,
+        "cursor_week": 0.0
+      }
+    },
+    {
+      "name": "forecast_channel_trend_present",
+      "status": "pass",
+      "message": "trend artifact loaded",
+      "value": null
+    },
+    {
+      "name": "forecast_channel_trend_status",
+      "status": "pass",
+      "message": "status=green",
+      "value": {
+        "status": "green"
+      }
+    }
+  ],
+  "coverage": {
+    "provider": 0.7366,
+    "model": 0.7368,
+    "task_id": 0.8585,
+    "execution_status": 0.8873,
+    "confidence_score": 0.4413,
+    "cost_usd": 0.3344,
+    "latency_ms": 0.3344,
+    "llm_applicable_event_count": 0
+  },
+  "inputs": {
+    "unified_guard": "07_LOGS_AND_AUDIT\\unified_guard\\latest.json",
+    "pre_session": "07_LOGS_AND_AUDIT\\pre_session\\latest.json",
+    "token_governance": "07_LOGS_AND_AUDIT\\token_governance\\latest.json",
+    "governance_intelligence": "07_LOGS_AND_AUDIT\\governance_intelligence\\latest.json",
+    "agent_log": "07_LOGS_AND_AUDIT\\AGENT_RUN_LOG.jsonl",
+    "codegraph_scorecard": "07_LOGS_AND_AUDIT\\codegraph_effectiveness\\summary_latest.json",
+    "budget_forecast": "07_LOGS_AND_AUDIT\\budget\\forecast_latest.json",
+    "budget_forecast_accuracy": "07_LOGS_AND_AUDIT\\budget\\forecast_accuracy_latest.json",
+    "budget_channel_trend": "07_LOGS_AND_AUDIT\\budget\\forecast_channel_trend_latest.json"
+  },
+  "budget_weekly": {
+    "current_usd": 9036.9104,
+    "cap_usd": 100.0,
+    "remaining_usd": 0.0,
+    "forecast_remaining_usd": 0.0,
+    "target_utilization_pct": 75.0,
+    "target_utilization_usd": 75.0,
+    "forecast_gap_to_target_usd": 0.0,
+    "daily_spend_needed_to_hit_target_usd": 0.0,
+    "optimization_state": "at_or_above_target"
+  },
+  "forecast_accuracy": {
+    "status": "green",
+    "week_mape_pct": 0.0,
+    "coverage": {
+      "forecast_rows": 83,
+      "daily_ledger_rows": 53125,
+      "scored_rows": 0
+    }
+  },
+  "budget_channels": {
+    "vscode": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 10.0,
+      "cap_weekly_usd": 40.0,
+      "cap_monthly_usd": 160.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 30.0,
+      "forecast_gap_to_target_usd": 30.0,
+      "daily_spend_needed_to_hit_target_usd": 30.0,
+      "optimization_state": "below_target"
+    },
+    "cursor": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 10.0,
+      "cap_weekly_usd": 40.0,
+      "cap_monthly_usd": 160.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 30.0,
+      "forecast_gap_to_target_usd": 30.0,
+      "daily_spend_needed_to_hit_target_usd": 30.0,
+      "optimization_state": "below_target"
+    },
+    "claude_code": {
+      "daily_spent_usd": 9036.9104,
+      "weekly_spent_usd": 9036.9104,
+      "monthly_spent_usd": 9036.9104,
+      "end_of_day_usd": 9189.0009,
+      "end_of_week_usd": 9189.0009,
+      "end_of_month_usd": 10501.7154,
+      "weekly_spent_share": 1.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 1837.8002,
+      "weekly_utilization_forecast": 459.45,
+      "monthly_utilization_forecast": 131.2714,
+      "risk_level": "red",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 0.0,
+      "daily_spend_needed_to_hit_target_usd": 0.0,
+      "optimization_state": "at_or_above_target"
+    },
+    "codex": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 15.0,
+      "daily_spend_needed_to_hit_target_usd": 15.0,
+      "optimization_state": "below_target"
+    },
+    "cli": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 15.0,
+      "daily_spend_needed_to_hit_target_usd": 15.0,
+      "optimization_state": "below_target"
+    },
+    "other": {
+      "daily_spent_usd": 0.0,
+      "weekly_spent_usd": 0.0,
+      "monthly_spent_usd": 0.0,
+      "end_of_day_usd": 0.0,
+      "end_of_week_usd": 0.0,
+      "end_of_month_usd": 0.0,
+      "weekly_spent_share": 0.0,
+      "cap_daily_usd": 5.0,
+      "cap_weekly_usd": 20.0,
+      "cap_monthly_usd": 80.0,
+      "daily_utilization_forecast": 0.0,
+      "weekly_utilization_forecast": 0.0,
+      "monthly_utilization_forecast": 0.0,
+      "risk_level": "green",
+      "target_utilization_pct": 75.0,
+      "target_utilization_usd": 15.0,
+      "forecast_gap_to_target_usd": 15.0,
+      "daily_spend_needed_to_hit_target_usd": 15.0,
+      "optimization_state": "below_target"
+    }
+  },
+  "forecast_accuracy_channels": {
+    "vscode": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "cursor": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "claude_code": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "codex": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "cli": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    },
+    "other": {
+      "day": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "week": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      },
+      "month": {
+        "samples": 0,
+        "mae_usd": 0.0,
+        "mape_pct": 0.0
+      }
+    }
+  },
+  "forecast_accuracy_channel_trend": {
+    "generated_at": "2026-05-30T20:57:31.559174+00:00",
+    "status": "green",
+    "coverage": {
+      "history_rows": 70
+    },
+    "channels": {
+      "vscode": {
+        "points": 0,
+        "week_mape_latest": 0.0,
+        "week_mape_prev_avg": 0.0,
+        "week_mape_delta": 0.0,
+        "trend": "flat"
+      },
+      "cursor": {
+        "points": 0,
+        "week_mape_latest": 0.0,
+        "week_mape_prev_avg": 0.0,
+        "week_mape_delta": 0.0,
+        "trend": "flat"
+      },
+      "claude_code": {
+        "points": 0,
+        "week_mape_latest": 0.0,
+        "week_mape_prev_avg": 0.0,
+        "week_mape_delta": 0.0,
+        "trend": "flat"
+      },
+      "codex": {
+        "points": 0,
+        "week_mape_latest": 0.0,
+        "week_mape_prev_avg": 0.0,
+        "week_mape_delta": 0.0,
+        "trend": "flat"
+      },
+      "cli": {
+        "points": 0,
+        "week_mape_latest": 0.0,
+        "week_mape_prev_avg": 0.0,
+        "week_mape_delta": 0.0,
+        "trend": "flat"
+      },
+      "other": {
+        "points": 0,
+        "week_mape_latest": 0.0,
+        "week_mape_prev_avg": 0.0,
+        "week_mape_delta": 0.0,
+        "trend": "flat"
+      }
+    }
+  }
+}
