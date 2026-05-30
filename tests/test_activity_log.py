@@ -15,7 +15,7 @@ if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
 from activity.lanes import apply_lane_to_bead_fields  # noqa: E402
-from activity.log import log_activity  # noqa: E402
+from activity.log import emit_learning_outcome, log_activity  # noqa: E402
 from audit.two_log import TwoLogAudit  # noqa: E402
 from intake.auto_intake import drain_queue  # noqa: E402
 from intake.queue import list_queued  # noqa: E402
@@ -121,3 +121,134 @@ def test_auto_intake_applies_lane_prefix(
     )
     assert report.processed == 1
     assert created_titles and created_titles[0].startswith("[agent]")
+
+
+def test_emit_learning_outcome_writes_applied_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
+    monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
+
+    emitted = emit_learning_outcome(
+        tmp_path,
+        learning_name="my-learning",
+        outcome="applied_success",
+        rig_id="chromatic-harness-v2-test",
+    )
+    assert emitted is True
+    assert usage_log.is_file()
+    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    assert len(events) == 1
+    assert events[0]["event_type"] == "applied_success"
+    assert events[0]["learning_name"] == "my-learning"
+    assert events[0]["rig_id"] == "chromatic-harness-v2-test"
+    assert "idempotency_key" in events[0]
+
+
+def test_emit_learning_outcome_writes_applied_failure_with_category(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
+    monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
+
+    emit_learning_outcome(
+        tmp_path,
+        learning_name="my-learning",
+        outcome="applied_failure",
+        error_category="merge_conflict",
+    )
+    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    assert events[0]["event_type"] == "applied_failure"
+    assert events[0]["error_category"] == "merge_conflict"
+
+
+def test_emit_learning_outcome_deduplicates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
+    monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
+
+    ts = "2026-05-30T00:00:00Z"
+    emit_learning_outcome(
+        tmp_path,
+        learning_name="dup-learning",
+        outcome="applied_success",
+        timestamp_utc=ts,
+    )
+    second = emit_learning_outcome(
+        tmp_path,
+        learning_name="dup-learning",
+        outcome="applied_success",
+        timestamp_utc=ts,
+    )
+    assert second is False
+    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    assert len(events) == 1
+
+
+def test_emit_learning_outcome_rejects_invalid_outcome(tmp_path: Path) -> None:
+    result = emit_learning_outcome(tmp_path, learning_name="x", outcome="unknown")
+    assert result is False
+
+
+def test_log_activity_emits_applied_success_when_learning_provided(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
+    monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
+    monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
+    usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
+    monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
+
+    log_activity(
+        tmp_path,
+        event_type="phase.complete",
+        bead_id="chromatic-harness-v2-t1",
+        applied_learning="live-query-first-pattern",
+    )
+    assert usage_log.is_file()
+    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    assert any(
+        e["event_type"] == "applied_success"
+        and e["learning_name"] == "live-query-first-pattern"
+        for e in events
+    )
+
+
+def test_log_activity_emits_applied_failure_on_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
+    monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
+    monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
+    usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
+    monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
+
+    log_activity(
+        tmp_path,
+        event_type="git.failed",
+        bead_id="chromatic-harness-v2-t2",
+        error="push rejected",
+        applied_learning="safe-git-workflow-pattern",
+        error_category="push_rejected",
+    )
+    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    assert any(
+        e["event_type"] == "applied_failure"
+        and e["learning_name"] == "safe-git-workflow-pattern"
+        and e.get("error_category") == "push_rejected"
+        for e in events
+    )
+
+
+def test_log_activity_no_learning_emission_when_not_provided(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
+    monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
+    monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
+    usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
+    monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
+
+    log_activity(tmp_path, event_type="phase.start", summary="starting")
+    assert not usage_log.is_file()

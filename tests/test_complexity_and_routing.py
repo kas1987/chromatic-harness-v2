@@ -75,6 +75,55 @@ def test_batch_classify_matches_individual(classifier, complexity_matrix):
         assert result.level == case["expected"], case["id"]
 
 
+# ── codegraph impact-fan-out evidence signal (bead chromatic-harness-v2-9lih) ──
+
+
+def test_no_impact_is_keyword_only_no_regression(classifier):
+    """Omitting impact_fan_out must behave exactly like the keyword path."""
+    base = classifier.classify("format this json", "convert to a table")
+    assert base.level == "C1"
+    assert base.evidence_source == "none"
+
+
+def test_impact_fan_out_bumps_c1_to_c2(classifier):
+    """A mechanical task that actually touches several files is not C1."""
+    result = classifier.classify(
+        "format the config", "convert to a table", impact_fan_out=8
+    )
+    assert result.level == "C2"
+    assert result.evidence_source == "codegraph_impact"
+
+
+def test_large_impact_reaches_reasoning_tier(classifier):
+    """Very large blast radius reaches C3 even from a mechanical description."""
+    result = classifier.classify(
+        "format the config", "convert to a table", impact_fan_out=25
+    )
+    assert result.level == "C3"
+    assert result.evidence_source == "codegraph_impact"
+
+
+def test_impact_evidence_overrides_keyword_guess(classifier):
+    """Real fan-out (small) takes precedence over an inflated max_files guess."""
+    result = classifier.classify(
+        "format the config",
+        "convert to a table",
+        max_files_hint=99,
+        impact_fan_out=1,
+    )
+    assert result.level == "C1"
+    assert result.evidence_source == "none"
+
+
+def test_keyword_hint_still_works_without_impact(classifier):
+    """max_files_hint path is unchanged and reports keyword evidence."""
+    result = classifier.classify(
+        "format the config", "convert to a table", max_files_hint=8
+    )
+    assert result.level == "C2"
+    assert result.evidence_source == "keyword"
+
+
 # ── Context detector sanity checks ──────────────────────────────────────────
 
 

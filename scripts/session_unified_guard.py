@@ -40,6 +40,69 @@ def _run(cmd: list[str], timeout: int = 900) -> dict[str, Any]:
     }
 
 
+def _codegraph_freshness(stale_after_minutes: int = 60) -> dict[str, Any]:
+    """Non-blocking check that the codegraph index is not stale.
+
+    Governance gates (complexity_classifier impact fan-out, expansion-gate spine
+    check) read codegraph_impact; a stale graph yields wrong blast-radius. This
+    is advisory only — it never fails the guard (fail-open, per WARN policy). It
+    compares the newest source-file mtime against the codegraph DB mtime, so it
+    needs no codegraph CLI on PATH.
+    """
+    cg_db = REPO / ".codegraph" / "codegraph.db"
+    if not cg_db.exists():
+        return {
+            "name": "codegraph_freshness",
+            "ok": True,  # advisory — absence is not a guard failure
+            "status": "absent",
+            "advice": "codegraph not initialized: run `codegraph init -i .`",
+        }
+
+    db_mtime = cg_db.stat().st_mtime
+    source_exts = {".py", ".ts", ".tsx", ".js", ".jsx", ".yaml", ".yml"}
+    skip_dirs = {
+        ".git",
+        ".codegraph",
+        "node_modules",
+        "__pycache__",
+        ".venv",
+        "venv",
+        ".mypy_cache",
+        ".ruff_cache",
+        ".pytest_cache",
+        ".worktrees",
+        "dist",
+        "build",
+    }
+    newest = 0.0
+    newest_file = None
+    for path in REPO.rglob("*"):
+        if path.suffix not in source_exts or not path.is_file():
+            continue
+        if any(part in skip_dirs for part in path.parts):
+            continue
+        m = path.stat().st_mtime
+        if m > newest:
+            newest = m
+            newest_file = path
+    lag_minutes = max(0.0, (newest - db_mtime) / 60.0)
+    stale = lag_minutes > stale_after_minutes
+    rel = str(newest_file.relative_to(REPO)).replace("\\", "/") if newest_file else None
+    return {
+        "name": "codegraph_freshness",
+        "ok": True,  # advisory — never blocks the guard
+        "status": "stale" if stale else "fresh",
+        "index_lag_minutes": round(lag_minutes, 1),
+        "stale_after_minutes": stale_after_minutes,
+        "newest_source": rel,
+        "advice": (
+            "reindex before relying on impact: run `codegraph index .`"
+            if stale
+            else "index current"
+        ),
+    }
+
+
 def _detect_surface(explicit: str) -> str:
     if explicit != "auto":
         return explicit
@@ -65,13 +128,28 @@ def _write_receipt(payload: dict[str, Any]) -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Unified session automation guard")
-    parser.add_argument("--surface", choices=["auto", "ide", "cli", "mcp", "scheduler"], default="auto")
-    parser.add_argument("--invoked-by", choices=["cursor", "claude", "scheduler", "preflight", "automation"], default="automation")
-    parser.add_argument("--force", action="store_true", help="Force fresh boot regardless of manifest age")
-    parser.add_argument("--full", action="store_true", help="Run full session boot mode")
+    parser.add_argument(
+        "--surface", choices=["auto", "ide", "cli", "mcp", "scheduler"], default="auto"
+    )
+    parser.add_argument(
+        "--invoked-by",
+        choices=["cursor", "claude", "scheduler", "preflight", "automation"],
+        default="automation",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force fresh boot regardless of manifest age",
+    )
+    parser.add_argument(
+        "--full", action="store_true", help="Run full session boot mode"
+    )
     parser.add_argument("--skip-boot", action="store_true")
     parser.add_argument("--skip-token-loop", action="store_true")
-    parser.add_argument("--dry-run", action="store_true", help="Do not enqueue/drain intake suggestions")
+    parser.add_argument("--skip-codegraph", action="store_true")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Do not enqueue/drain intake suggestions"
+    )
     parser.add_argument("extras", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
@@ -104,7 +182,19 @@ def main() -> int:
             token_cmd.append("--dry-run")
         else:
             token_cmd.extend(["--enqueue-suggestions", "--drain-intake"])
-        steps.append({"name": "token_governance_closed_loop", **_run(token_cmd, timeout=900)})
+        steps.append(
+            {"name": "token_governance_closed_loop", **_run(token_cmd, timeout=900)}
+        )
+
+    cg = None
+    if not args.skip_codegraph:
+        cg = _codegraph_freshness()
+        steps.append(cg)  # advisory: cg["ok"] is always True, never fails the gate
+        if cg.get("status") == "stale":
+            print(
+                f"WARN codegraph index stale by {cg.get('index_lag_minutes')}m "
+                f"(newest: {cg.get('newest_source')}) — {cg.get('advice')}"
+            )
 
     ok = all(step.get("ok") for step in steps)
     payload = {
@@ -112,6 +202,7 @@ def main() -> int:
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "surface": surface,
         "invoked_by": args.invoked_by,
+        "codegraph_status": cg.get("status") if cg else "skipped",
         "steps": steps,
     }
     run_path = _write_receipt(payload)

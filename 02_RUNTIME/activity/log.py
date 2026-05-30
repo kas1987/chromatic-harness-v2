@@ -2,12 +2,94 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from activity.lanes import normalize_lane
+
+_USAGE_LOG_ENV = "CHROMATIC_LEARNING_USAGE_LOG"
+
+
+def _usage_log_path(repo_root: Path) -> Path:
+    import os
+
+    override = os.environ.get(_USAGE_LOG_ENV, "").strip()
+    if override:
+        return Path(override).resolve()
+    return repo_root / ".agents" / "metrics" / "learning_usage.jsonl"
+
+
+def _load_seen_ikeys(log_path: Path) -> set[str]:
+    seen: set[str] = set()
+    if not log_path.is_file():
+        return seen
+    for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        raw = line.strip()
+        if not raw:
+            continue
+        try:
+            row = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        key = str(row.get("idempotency_key") or "")
+        if key:
+            seen.add(key)
+    return seen
+
+
+def emit_learning_outcome(
+    repo_root: Path,
+    *,
+    learning_name: str,
+    outcome: str,
+    rig_id: str = "",
+    error_category: str = "",
+    timestamp_utc: str = "",
+) -> bool:
+    """Append one applied_success or applied_failure event to the learning usage log.
+
+    Returns True if emitted, False if skipped (duplicate or invalid input).
+    outcome must be 'applied_success' or 'applied_failure'.
+    """
+    if outcome not in ("applied_success", "applied_failure"):
+        return False
+    name = learning_name.strip()
+    if not name:
+        return False
+
+    ts = timestamp_utc.strip() or datetime.now(timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+    raw_key = f"{name}|{outcome}|{rig_id}|{ts}"
+    ikey = hashlib.sha1(raw_key.encode()).hexdigest()[:16]
+
+    log_path = _usage_log_path(repo_root)
+    seen = _load_seen_ikeys(log_path)
+    if ikey in seen:
+        return False
+
+    event: dict[str, Any] = {
+        "timestamp_utc": ts,
+        "event_type": outcome,
+        "learning_name": name,
+        "learning_path": f".agents/learnings/{name}.md",
+        "idempotency_key": ikey,
+        "notes": "workflow_execution",
+    }
+    if rig_id:
+        event["rig_id"] = rig_id
+    if error_category and outcome == "applied_failure":
+        event["error_category"] = error_category
+
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(event, ensure_ascii=True) + "\n")
+    return True
 
 
 @dataclass
@@ -59,6 +141,8 @@ def log_activity(
     intake_on_failure: bool = False,
     intake_context: dict[str, Any] | None = None,
     enqueue_intake: bool = False,
+    applied_learning: str = "",
+    error_category: str = "",
 ) -> ActivityLogResult:
     """Append workflow + two-log; optionally enqueue intake follow_up."""
     import sys
@@ -90,6 +174,16 @@ def log_activity(
 
     log_path = append_run_log(repo_root, payload)
     result = ActivityLogResult(workflow_log_path=str(log_path))
+
+    if applied_learning.strip():
+        outcome = "applied_failure" if error else "applied_success"
+        emit_learning_outcome(
+            repo_root,
+            learning_name=applied_learning.strip(),
+            outcome=outcome,
+            rig_id=bead_id,
+            error_category=error_category,
+        )
 
     do_intake = enqueue_intake or _should_enqueue_intake(
         lane=resolved_lane,
