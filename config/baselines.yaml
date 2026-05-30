@@ -1,0 +1,58 @@
+# Operating BASELINES - one per surface (App / CLI / VS Code / Cursor).
+#
+# A baseline is the healthy resting state for how we run Claude on a given surface.
+# baseline_audit.py measures the live config against these and flags drift/bloat.
+#
+# Each metric has: warn (soft cap - advisory) and max (hard cap - over budget).
+#   value <= warn  -> ok
+#   warn < value <= max -> warn
+#   value > max    -> over
+# Lower is better for every metric here (they all track bloat / cost / staleness).
+#
+# Rationale per metric:
+#   mcp_tokens        estimated tokens injected by enabled MCP servers (context bloat)
+#   mcp_count         number of enabled MCP servers
+#   hook_count        total hooks across all events in settings.json
+#   hook_high         HIGH-severity findings from audit_hooks.py (should be 0)
+#   env_keys          env vars set in settings.json (config surface area)
+#   instruction_kib   combined size of instruction files (CLAUDE.md, AGENTS.md, rules)
+#   manifest_age_hrs  pre-session manifest staleness
+
+defaults:
+  mcp_tokens: { warn: 8000, max: 20000 }
+  mcp_count: { warn: 6, max: 12 }
+  hook_count: { warn: 8, max: 16 }
+  hook_high: { warn: 0, max: 0 }
+  env_keys: { warn: 8, max: 16 }
+  instruction_kib: { warn: 48, max: 96 }
+  manifest_age_hrs: { warn: 6, max: 24 }
+
+surfaces:
+  # Claude Code CLI (this harness) - should be the leanest: few MCPs, fast boot.
+  cli:
+    mcp_tokens: { warn: 3000, max: 8000 }
+    mcp_count: { warn: 4, max: 8 }
+
+  # Claude Desktop App - moderate; MCPs loaded but not re-injected every turn.
+  app:
+    mcp_tokens: { warn: 5000, max: 12000 }
+
+  # VS Code extension - moderate.
+  vscode:
+    mcp_tokens: { warn: 8000, max: 18000 }
+
+  # Cursor - injects EVERY enabled MCP's schemas into EVERY turn, so the biggest
+  # bloat risk. Higher absolute budget but tightest count discipline.
+  cursor:
+    mcp_tokens: { warn: 12000, max: 35000 }
+    mcp_count: { warn: 5, max: 10 }
+
+# Advice strings surfaced when a metric is warn/over.
+advice:
+  mcp_tokens: "Disable unused MCP servers (Settings -> MCP); see docs/CURSOR_CONTEXT_HYGIENE.md. Run audit_mcp_context.py --profile harness_dev."
+  mcp_count: "Too many MCP servers enabled. Turn off ones not needed this session; re-enable on demand."
+  hook_count: "Hook sprawl. Consolidate or move heavy hooks off the synchronous path; see docs/audit/HOOK_ARCHITECTURE.md."
+  hook_high: "audit_hooks.py reported HIGH findings - fix before continuing (python scripts/audit_hooks.py)."
+  env_keys: "settings.json env is growing. Prune stale keys; verify each is documented."
+  instruction_kib: "Instruction files are large - trim CLAUDE.md / rules; large always-loaded instructions are per-turn cost."
+  manifest_age_hrs: "Pre-session manifest is stale. Run session_boot_automation.py --force or rely on the daily scheduler."
