@@ -89,15 +89,39 @@ Console uses production build ([`Dockerfile.console`](../../09_DEPLOYMENT/Docker
 
 ---
 
-## Pre-session (Cursor / Claude)
+## Pre-session (hands-off — default)
+
+You do **not** need to run preflight daily. Boot is automatic:
+
+| Trigger | Mechanism |
+|---------|-----------|
+| Cursor new chat | `.cursor/hooks.json` → `session_boot_automation.py` |
+| Claude Code | `session_start.py` on SessionStart |
+| Windows daily 07:55 | Task `ChromaticSessionBoot` |
+
+**Install tasks once:**
 
 ```powershell
-powershell -NoProfile -File scripts/session_preflight.ps1
+powershell -ExecutionPolicy Bypass -File scripts/install_automation_tasks.ps1
 ```
 
-Runs: `session_context_report --log`, `audit_mcp_context --profile harness_dev`, `validate_intake_loop`, `bd ready`.
+Manifest: `07_LOGS_AND_AUDIT/pre_session/latest.json` (refreshed when older than 6h unless `--force`).
 
-See also [CURSOR_CONTEXT_HYGIENE.md](../CURSOR_CONTEXT_HYGIENE.md).
+**Manual deep preflight** (debug / `-StrictMcp`):
+
+```powershell
+powershell -NoProfile -File scripts/session_preflight.ps1 -Full
+```
+
+```bash
+bash scripts/session_preflight.sh
+```
+
+WSL quick boot only: `bash scripts/run_session_boot.sh`
+
+See [CURSOR_CONTEXT_HYGIENE.md](../CURSOR_CONTEXT_HYGIENE.md), [PRE_SESSION_CONTEXT_POLICY.md](../governance/PRE_SESSION_CONTEXT_POLICY.md), and [HOOK_ARCHITECTURE.md](../audit/HOOK_ARCHITECTURE.md).
+
+**Hooks vs Scheduler:** IDE hooks (`sessionStart`, Claude `SessionStart`) run when you open a session; Task Scheduler runs boot/intake when the IDE is closed.
 
 ---
 

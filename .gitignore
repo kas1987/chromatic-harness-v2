@@ -21,6 +21,9 @@ htmlcov/
 07_LOGS_AND_AUDIT/intake_queue.jsonl
 07_LOGS_AND_AUDIT/intake_cycle/*.jsonl
 !07_LOGS_AND_AUDIT/intake_cycle/.gitkeep
+07_LOGS_AND_AUDIT/pre_session/latest.json
+07_LOGS_AND_AUDIT/pre_session/manifest_*.jsonl
+!07_LOGS_AND_AUDIT/pre_session/.gitkeep
 07_LOGS_AND_AUDIT/decisions/*.jsonl
 07_LOGS_AND_AUDIT/execution/*.jsonl
 07_LOGS_AND_AUDIT/traces/*.jsonl
@@ -53,3 +56,6 @@ htmlcov/
 
 # Pre-session inventory machine-local paths
 config/pre_session/settings.local.yaml
+
+# Claude Code personal hook overrides (copy from settings.local.json.example)
+.claude/settings.local.json

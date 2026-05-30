@@ -1,0 +1,18 @@
+{
+  "_comment": "Copy to .claude/settings.local.json (gitignored). Optional harness-only SessionStart.",
+  "_merge_note": "Claude Code may MERGE or REPLACE hooks with global settings — verify on your version before relying on slim mode.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/session_start.py",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

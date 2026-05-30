@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+"""Hands-off pre-session boot: doc guard, MCP audit, manifest, intake validation.
+
+Designed for Cursor sessionStart hooks, Claude SessionStart, and Task Scheduler.
+Skips rework when a fresh manifest already exists (default 6h).
+
+Usage:
+    python scripts/session_boot_automation.py --invoked-by cursor
+    python scripts/session_boot_automation.py --invoked-by scheduler --force
+    python scripts/session_boot_automation.py --full   # includes context report --log
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+_REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = _REPO / "scripts"
+
+
+def _repo_root() -> Path:
+    override = os.environ.get("CHROMATIC_REPO")
+    return Path(override).resolve() if override else _REPO
+
+
+def _manifest_path() -> Path:
+    override = os.environ.get("CHROMATIC_PRE_SESSION_DIR")
+    if override:
+        return Path(override).resolve() / "latest.json"
+    return _repo_root() / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
+
+
+def _parse_ts(iso: str) -> datetime | None:
+    try:
+        return datetime.fromisoformat(iso.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def manifest_is_fresh(max_age_hours: float) -> bool:
+    manifest = _manifest_path()
+    if not manifest.is_file():
+        return False
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        ts = _parse_ts(data.get("generated_at", ""))
+        if not ts:
+            return False
+        age = datetime.now(timezone.utc) - ts.astimezone(timezone.utc)
+        return age.total_seconds() < max_age_hours * 3600
+    except (json.JSONDecodeError, OSError):
+        return False
+
+
+def _run(
+    args: list[str],
+    *,
+    timeout: int = 90,
+    quiet: bool = False,
+) -> int:
+    cmd = [sys.executable, *args]
+    try:
+        r = subprocess.run(
+            cmd,
+            cwd=_REPO,
+            capture_output=quiet,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+        return r.returncode
+    except subprocess.TimeoutExpired:
+        print(f"TIMEOUT: {' '.join(args)}", file=sys.stderr)
+        return 124
+
+
+def run_boot(
+    *,
+    invoked_by: str,
+    force: bool = False,
+    full: bool = False,
+    max_age_hours: float,
+    mcps_path: str | None,
+) -> int:
+    errors: list[str] = []
+
+    if _run([str(_SCRIPTS / "check_agent_operations.py")], timeout=30, quiet=True) != 0:
+        errors.append("check_agent_operations failed")
+
+    fresh = manifest_is_fresh(max_age_hours) and not force
+    if fresh:
+        print(
+            f"Pre-session manifest fresh (<{max_age_hours}h); skipping heavy boot steps.",
+            file=sys.stderr,
+        )
+    else:
+        mcp_args = [
+            str(_SCRIPTS / "audit_mcp_context.py"),
+            "--profile",
+            "harness_dev",
+            "--json",
+        ]
+        if mcps_path:
+            mcp_args.extend(["--mcps-path", mcps_path])
+        if _run(mcp_args, timeout=120, quiet=True) != 0:
+            errors.append("audit_mcp_context failed")
+
+        manifest_args = [
+            str(_SCRIPTS / "pre_session_manifest.py"),
+            "--write",
+            "--invoked-by",
+            invoked_by,
+        ]
+        if mcps_path:
+            manifest_args.extend(["--mcps-path", mcps_path])
+        if _run(manifest_args, timeout=60, quiet=True) != 0:
+            errors.append("pre_session_manifest failed")
+
+    if _run([str(_SCRIPTS / "validate_intake_loop.py")], timeout=60, quiet=True) != 0:
+        errors.append("validate_intake_loop failed")
+
+    if full and not fresh:
+        ctx_args = [
+            str(_SCRIPTS / "session_context_report.py"),
+            "--log",
+            "--invoked-by",
+            invoked_by,
+            "--manifest",
+        ]
+        if mcps_path:
+            ctx_args.extend(["--mcps-path", mcps_path])
+        if _run(ctx_args, timeout=180, quiet=True) != 0:
+            errors.append("session_context_report failed")
+
+    manifest = _manifest_path()
+    if manifest.is_file():
+        try:
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+            summary = {
+                "generated_at": data.get("generated_at"),
+                "branch": data.get("branch"),
+                "context_tier": data.get("context_tier"),
+                "mcp_tokens": data.get("mcp_audit", {}).get(
+                    "estimated_tokens_if_enabled"
+                ),
+                "pack_version": data.get("pack_version"),
+                "invoked_by": invoked_by,
+                "boot_mode": "fresh_skip" if fresh else ("full" if full else "fast"),
+            }
+            print(json.dumps(summary, indent=2))
+        except (json.JSONDecodeError, OSError):
+            pass
+    else:
+        errors.append("manifest missing after boot")
+
+    if errors:
+        print("Session boot completed with errors:", ", ".join(errors), file=sys.stderr)
+        return 1
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Automated pre-session boot")
+    parser.add_argument(
+        "--invoked-by",
+        default=os.environ.get("CHROMATIC_RUNTIME", "automation"),
+        choices=["cursor", "claude", "scheduler", "preflight", "automation"],
+    )
+    parser.add_argument("--force", action="store_true", help="Ignore manifest freshness")
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Include session_context_report --log (slower)",
+    )
+    parser.add_argument("--mcps-path", help="Override MCP descriptors path")
+    parser.add_argument(
+        "--max-age-hours",
+        type=float,
+        default=float(os.environ.get("CHROMATIC_BOOT_MAX_AGE_HOURS", "6")),
+        help="Skip heavy steps if manifest is newer than this",
+    )
+    args = parser.parse_args()
+
+    fast_default = os.environ.get("CHROMATIC_BOOT_FAST", "1") != "0"
+    full = args.full or os.environ.get("CHROMATIC_BOOT_FULL", "0") == "1"
+    if fast_default and not args.full:
+        full = False
+
+    return run_boot(
+        invoked_by=args.invoked_by,
+        force=args.force,
+        full=full,
+        max_age_hours=args.max_age_hours,
+        mcps_path=args.mcps_path,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

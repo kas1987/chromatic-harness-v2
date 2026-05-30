@@ -7,13 +7,27 @@ alwaysApply: true
 
 Pre-session cost is dominated by **enabled MCP tool schemas**, not harness CRG.
 
-Before long sessions on this repo:
+Pre-session boot runs **automatically** (no daily manual steps):
 
-1. Run `python scripts/session_context_report.py --log --invoked-by cursor`
-2. Run `python scripts/audit_mcp_context.py --profile harness_dev`
-3. Disable unused MCPs in **Cursor Settings → MCP** (see `docs/CURSOR_CONTEXT_HYGIENE.md`)
-4. For daily dev, keep **Resend, Playwright, Opsera** off unless the task needs them
-5. Use `bd` + handoff files — not chat — for state (`AGENT_OPERATIONS.md`)
+- **Cursor:** `.cursor/hooks.json` → `sessionStart` → `session_boot_automation.py`
+- **Claude Code:** `.claude/settings.json` SessionStart → `session_start.py` (same boot)
+- **Windows:** Task Scheduler `ChromaticSessionBoot` daily 07:55 — `install_automation_tasks.ps1`
+
+Manifest: `07_LOGS_AND_AUDIT/pre_session/latest.json` (refreshed when stale, default 6h).
+
+Optional manual deep check: `powershell -File scripts/session_preflight.ps1 -Full`
+
+Before long sessions, still disable unused MCPs in Cursor Settings:
+
+1. Run `python scripts/audit_mcp_context.py --profile harness_dev` only if manifest is missing or MCP plugins changed
+2. Do **not** rely on chat for boot state — read `latest.json`
+4. Disable unused MCPs in **Cursor Settings → MCP** (see `docs/CURSOR_CONTEXT_HYGIENE.md`)
+5. For daily dev, keep **Resend, Playwright, Opsera** off unless the task needs them
+6. Use `bd` + handoff files — not chat — for state (`AGENT_OPERATIONS.md`)
+
+**Boot docs (P0):** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md), [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md). Tier rules: [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md). Do **not** auto-load [GOVERNANCE_AND_ROUTING_ARCHITECTURE.md](GOVERNANCE_AND_ROUTING_ARCHITECTURE.md) unless implementing routing (P3 deep).
+
+**Manifest:** `07_LOGS_AND_AUDIT/pre_session/latest.json` after preflight.
 
 Skills: read `SKILL.md` on demand; do not assume full skill bodies are loaded.
 

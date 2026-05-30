@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/session_start.py"
+            "command": "python scripts/session_start.py",
+            "timeout": 120
           }
         ]
       }
@@ -17,7 +18,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bd prime"
+            "command": "bd prime",
+            "timeout": 30
           }
         ]
       }
@@ -28,7 +30,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python 02_RUNTIME/router/gate.py"
+            "command": "python 02_RUNTIME/router/gate.py",
+            "timeout": 10
           }
         ]
       }
