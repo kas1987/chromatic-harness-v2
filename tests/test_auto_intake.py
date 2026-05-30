@@ -9,6 +9,7 @@ import pytest
 
 from intake.auto_intake import (
     _normalize_title,
+    _should_skip,
     drain_queue,
     process_entry,
     simple_decompose,
@@ -115,6 +116,24 @@ def test_drain_skips_example_prefix(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     report = drain_queue(repo_root=tmp_path, queue_path=q, dry_run=True)
     assert report.skipped == 1
     assert report.processed == 0
+
+
+def test_should_skip_agent_title_prefix():
+    class Entry:
+        id = "intake-123"
+        title = "[agent] Run new_session_bootstrap.py"
+        status = "queued"
+
+    assert _should_skip(Entry()) is True
+
+
+def test_should_not_skip_normal_queued_title():
+    class Entry:
+        id = "intake-123"
+        title = "Real follow-up work"
+        status = "queued"
+
+    assert _should_skip(Entry()) is False
 
 
 def test_validate_intake_loop_script():
