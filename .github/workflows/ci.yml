@@ -102,6 +102,10 @@ jobs:
             > workflow_git_plan.json
           python -c "import json; json.load(open('workflow_git_plan.json'))"
 
+      - name: PR governance metadata + artifact scope gate
+        if: github.event_name == 'pull_request'
+        run: python scripts/validate_pr_governance.py
+
       - name: Upload git plan artifact
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
