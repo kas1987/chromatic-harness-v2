@@ -1,6 +1,7 @@
 {
   "env": {
-    "ROUTER_CODEGRAPH_IMPACT": "true"
+    "ROUTER_CODEGRAPH_IMPACT": "true",
+    "CHROMATIC_LEAN_BOOT": "1"
   },
   "hooks": {
     "SessionStart": [
