@@ -1096,6 +1096,46 @@ def _git_loc_delta() -> dict[str, int]:
     }
 
 
+_CODE_SUFFIXES = (".py", ".go", ".ts", ".tsx", ".js", ".rs", ".sh")
+
+
+def _changed_code_files() -> list[str]:
+    """Code files changed vs HEAD (staged+unstaged+untracked)."""
+    code, out = _run(["git", "status", "--porcelain"], timeout=30)
+    if code != 0 or not out:
+        return []
+    files: list[str] = []
+    for line in out.splitlines():
+        path = line[3:].strip() if len(line) > 3 else ""
+        if path and path.endswith(_CODE_SUFFIXES):
+            files.append(path)
+    return files
+
+
+def run_change_gated_quality(*, run_pytest: bool) -> dict[str, Any]:
+    """Default-on quality gates when code changed (-477a): ruff (fast) always,
+    pytest when ``run_pytest``. Fail-open; returns a structured summary."""
+    changed = _changed_code_files()
+    summary: dict[str, Any] = {
+        "code_changed": bool(changed),
+        "changed_count": len(changed),
+        "ruff": None,
+        "pytest": None,
+    }
+    if not changed:
+        return summary
+    py_changed = [f for f in changed if f.endswith(".py")]
+    if py_changed:
+        code, out = _run(
+            [sys.executable, "-m", "ruff", "check", *py_changed], timeout=120
+        )
+        summary["ruff"] = {"exit": code, "ok": code == 0, "output": out[:1500]}
+    if run_pytest:
+        code, out = _run([sys.executable, "-m", "pytest", "tests/", "-q"], timeout=600)
+        summary["pytest"] = {"exit": code, "ok": code == 0, "output": out[:1500]}
+    return summary
+
+
 def _select_auto_turn_artifact_kind(result: dict[str, Any]) -> str:
     # Open beads imply in-flight work, so emit a learning checkpoint rather than a full post-mortem.
     if result.get("beads_ready"):
@@ -1371,7 +1411,16 @@ def main() -> int:
     )
     parser.add_argument("--no-spawn", action="store_true", help="Never spawn successor")
     parser.add_argument("--summary", default="", help="Override closeout summary")
-    parser.add_argument("--pytest", action="store_true", help="Run pytest tests/ -q")
+    parser.add_argument(
+        "--pytest",
+        action="store_true",
+        help="Force pytest tests/ -q even if no code changed",
+    )
+    parser.add_argument(
+        "--no-pytest",
+        action="store_true",
+        help="Skip pytest in the change-gated quality step (ruff still runs on changed .py)",
+    )
     parser.add_argument(
         "--epic-policy-config",
         default="",
@@ -1627,11 +1676,17 @@ def main() -> int:
             timeout=90,
         )
 
-    if args.pytest:
-        code, out = _run([sys.executable, "-m", "pytest", "tests/", "-q"], timeout=600)
-        result["pytest_exit"] = code
-        if code != 0:
-            handoff_prep["risks"].append(f"pytest failed (exit {code})")
+    # Change-gated quality (-477a): ruff/pytest default-on when code changed.
+    run_pytest = args.pytest or not args.no_pytest
+    quality = run_change_gated_quality(run_pytest=run_pytest)
+    result["quality"] = quality
+    if quality.get("pytest") and not quality["pytest"]["ok"]:
+        result["pytest_exit"] = quality["pytest"]["exit"]
+        handoff_prep["risks"].append(
+            f"pytest failed (exit {quality['pytest']['exit']})"
+        )
+    if quality.get("ruff") and not quality["ruff"]["ok"]:
+        handoff_prep["risks"].append("ruff check found issues")
 
     log_activity(
         args.summary or f"session closeout ({source}); budget={snapshot.decision}",
