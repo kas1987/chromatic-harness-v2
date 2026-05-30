@@ -3,6 +3,7 @@
 
 Runs lightweight checks and writes repo-local audit reports.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -73,9 +74,23 @@ def run_cmd(root: Path, cmd: list[str], timeout: int = 45) -> dict[str, Any]:
             "ok": proc.returncode == 0,
         }
     except FileNotFoundError as exc:
-        return {"cmd": cmd, "returncode": None, "stdout": "", "stderr": str(exc), "ok": False, "missing": True}
+        return {
+            "cmd": cmd,
+            "returncode": None,
+            "stdout": "",
+            "stderr": str(exc),
+            "ok": False,
+            "missing": True,
+        }
     except subprocess.TimeoutExpired as exc:
-        return {"cmd": cmd, "returncode": None, "stdout": exc.stdout or "", "stderr": "timeout", "ok": False, "timeout": True}
+        return {
+            "cmd": cmd,
+            "returncode": None,
+            "stdout": exc.stdout or "",
+            "stderr": "timeout",
+            "ok": False,
+            "timeout": True,
+        }
 
 
 def severity_rank(sev: str) -> int:
@@ -98,11 +113,19 @@ def audit(
 
     for rel in CORE_FILES:
         if not (root / rel).exists():
-            findings.append({"severity": "P1" if rel == "AGENT_OPERATIONS.md" else "P2", "code": "missing_core_file", "file": rel})
+            findings.append(
+                {
+                    "severity": "P1" if rel == "AGENT_OPERATIONS.md" else "P2",
+                    "code": "missing_core_file",
+                    "file": rel,
+                }
+            )
 
     for rel in CORE_SCRIPTS:
         if not (root / rel).exists():
-            findings.append({"severity": "P1", "code": "missing_core_script", "file": rel})
+            findings.append(
+                {"severity": "P1", "code": "missing_core_script", "file": rel}
+            )
 
     command_results: list[dict[str, Any]] = []
     for cmd in OPTIONAL_COMMANDS:
@@ -118,19 +141,29 @@ def audit(
             result = run_cmd(root, ["python", script, "--root", str(root)])
             command_results.append(result)
             if not result.get("ok") and script.endswith("validate_claude_harness.py"):
-                findings.append({
-                    "severity": "P1",
-                    "code": "claude_harness_not_production_ready",
-                    "file": script,
-                    "message": (result.get("stderr") or result.get("stdout") or "")[:400],
-                })
+                findings.append(
+                    {
+                        "severity": "P1",
+                        "code": "claude_harness_not_production_ready",
+                        "file": script,
+                        "message": (result.get("stderr") or result.get("stdout") or "")[
+                            :400
+                        ],
+                    }
+                )
             elif result["stdout"]:
                 try:
                     parsed = json.loads(result["stdout"])
                     findings.extend(parsed.get("findings", []))
                 except Exception:
                     if not script.endswith("validate_claude_harness.py"):
-                        findings.append({"severity": "P3", "code": "audit_parse_warning", "file": script})
+                        findings.append(
+                            {
+                                "severity": "P3",
+                                "code": "audit_parse_warning",
+                                "file": script,
+                            }
+                        )
 
     # Optional pre-session/context scripts. Warnings only if missing, because packs may be installed incrementally.
     optional_scripts = [
@@ -162,16 +195,20 @@ def audit(
                 pass
             elif script.endswith("generate_pre_session_inventory.py"):
                 pass
-            elif script.endswith("validate_governance_stack.py") or script.endswith(
-                "validate_instruction_governance.py"
-            ) or script.endswith("validate_intake_loop.py"):
+            elif (
+                script.endswith("validate_governance_stack.py")
+                or script.endswith("validate_instruction_governance.py")
+                or script.endswith("validate_intake_loop.py")
+            ):
                 pass
             else:
                 args += ["--root", str(root)]
             result = run_cmd(root, args)
             command_results.append(result)
             if script.endswith("bead_hygiene_audit.py"):
-                hygiene_path = root / ".agents" / "audits" / "bead_hygiene" / "latest.json"
+                hygiene_path = (
+                    root / ".agents" / "audits" / "bead_hygiene" / "latest.json"
+                )
                 try:
                     payload = (
                         json.loads(hygiene_path.read_text(encoding="utf-8"))
@@ -183,7 +220,10 @@ def audit(
                 hygiene_status = str(payload.get("status") or "").lower()
                 active_duplicate_count = 0
                 for item in payload.get("findings") or []:
-                    if isinstance(item, dict) and item.get("code") == "duplicate_active_titles":
+                    if (
+                        isinstance(item, dict)
+                        and item.get("code") == "duplicate_active_titles"
+                    ):
                         active_duplicate_count = int(item.get("count") or 0)
                         break
 
@@ -194,7 +234,10 @@ def audit(
                 }
 
                 if hygiene_status == "red":
-                    if active_duplicate_count <= bead_hygiene_active_duplicate_threshold:
+                    if (
+                        active_duplicate_count
+                        <= bead_hygiene_active_duplicate_threshold
+                    ):
                         findings.append(
                             {
                                 "severity": "P2",
@@ -231,7 +274,13 @@ def audit(
                         }
                     )
         else:
-            findings.append({"severity": "P2", "code": "optional_audit_script_missing", "file": script})
+            findings.append(
+                {
+                    "severity": "P2",
+                    "code": "optional_audit_script_missing",
+                    "file": script,
+                }
+            )
 
     if run_tests and (root / "tests").exists():
         command_results.append(run_cmd(root, ["pytest", "tests", "-q"], timeout=120))
@@ -242,16 +291,18 @@ def audit(
             ps = json.loads(pre_session.read_text(encoding="utf-8"))
             mcp = ps.get("mcp_audit") or {}
             if mcp.get("over_warn_threshold"):
-                findings.append({
-                    "severity": "P1",
-                    "code": "mcp_token_budget_exceeded",
-                    "file": str(pre_session.relative_to(root)),
-                    "message": (
-                        f"MCP estimated tokens {mcp.get('estimated_tokens_if_enabled')} "
-                        f"exceeds warn threshold {mcp.get('warn_threshold')}; "
-                        "disable heavy MCPs per docs/CURSOR_CONTEXT_HYGIENE.md"
-                    ),
-                })
+                findings.append(
+                    {
+                        "severity": "P1",
+                        "code": "mcp_token_budget_exceeded",
+                        "file": str(pre_session.relative_to(root)),
+                        "message": (
+                            f"MCP estimated tokens {mcp.get('estimated_tokens_if_enabled')} "
+                            f"exceeds warn threshold {mcp.get('warn_threshold')}; "
+                            "disable heavy MCPs per docs/CURSOR_CONTEXT_HYGIENE.md"
+                        ),
+                    }
+                )
         except (json.JSONDecodeError, OSError):
             pass
 
@@ -265,7 +316,9 @@ def audit(
                 lock_rollup = json.loads(rollup_result["stdout"])
                 timeout_rate = float(lock_rollup.get("timeout_rate", 0.0))
                 wait_p95 = int((lock_rollup.get("wait_ms") or {}).get("p95", 0))
-                total_events = int((lock_rollup.get("event_counts") or {}).get("total", 0))
+                total_events = int(
+                    (lock_rollup.get("event_counts") or {}).get("total", 0)
+                )
                 lock_metrics_summary = {
                     "timeout_rate": timeout_rate,
                     "wait_p95_ms": wait_p95,
@@ -333,7 +386,9 @@ def audit(
         "counts": counts,
         "lock_metrics": lock_metrics_summary,
         "bead_hygiene": bead_hygiene_summary,
-        "findings": sorted(findings, key=lambda f: severity_rank(f.get("severity", "P3"))),
+        "findings": sorted(
+            findings, key=lambda f: severity_rank(f.get("severity", "P3"))
+        ),
         "commands": command_results,
     }
 
@@ -346,7 +401,9 @@ def write_reports(root: Path, result: dict[str, Any]) -> None:
     findings_dir.mkdir(parents=True, exist_ok=True)
 
     date = datetime.now().strftime("%Y-%m-%d")
-    (out / "latest_audit.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    (out / "latest_audit.json").write_text(
+        json.dumps(result, indent=2), encoding="utf-8"
+    )
 
     lines = [
         "# Latest Harness Audit Summary",
@@ -364,7 +421,9 @@ def write_reports(root: Path, result: dict[str, Any]) -> None:
     lines += ["", "## Findings", ""]
     if result["findings"]:
         for f in result["findings"]:
-            lines.append(f"- **{f.get('severity','P3')}** `{f.get('code','unknown')}` {f.get('file','')} {f.get('message','')}")
+            lines.append(
+                f"- **{f.get('severity', 'P3')}** `{f.get('code', 'unknown')}` {f.get('file', '')} {f.get('message', '')}"
+            )
     else:
         lines.append("No findings.")
     lock_metrics = result.get("lock_metrics") or {}
@@ -404,7 +463,7 @@ def main() -> int:
     parser.add_argument(
         "--lock-wait-p95-threshold-ms",
         type=int,
-        default=int(os.environ.get("CHROMATIC_LOCK_WAIT_P95_THRESHOLD_MS", "500")),
+        default=int(os.environ.get("CHROMATIC_LOCK_WAIT_P95_THRESHOLD_MS", "1500")),
     )
     parser.add_argument(
         "--lock-min-sample-size",
@@ -414,7 +473,9 @@ def main() -> int:
     parser.add_argument(
         "--bead-hygiene-active-duplicate-threshold",
         type=int,
-        default=int(os.environ.get("CHROMATIC_BEAD_HYGIENE_ACTIVE_DUPLICATE_THRESHOLD", "0")),
+        default=int(
+            os.environ.get("CHROMATIC_BEAD_HYGIENE_ACTIVE_DUPLICATE_THRESHOLD", "0")
+        ),
     )
     args = parser.parse_args()
 

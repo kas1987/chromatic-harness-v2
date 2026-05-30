@@ -69,8 +69,12 @@ def _norm_title(title: str) -> str:
 
 
 def _id_malformed(issue_id: str) -> bool:
-    # Canonical IDs expected to look like "prefix-abc"; dot-delimited variants are suspicious.
+    # Canonical IDs look like "prefix-abc" or "prefix-abc.N" for hierarchical children.
+    # bd generates dot-notation child IDs automatically (e.g. prefix-ar7.5); these are valid.
     if "." in issue_id:
+        # Allow hierarchical child pattern: base-id.digits
+        if re.match(r"^[a-z0-9][a-z0-9-]*-[a-z0-9]{2,}\.\d+$", issue_id.lower()):
+            return False
         return True
     return not bool(re.match(r"^[a-z0-9][a-z0-9-]*-[a-z0-9]{2,}$", issue_id.lower()))
 
@@ -106,7 +110,9 @@ def _build_remediation_plan(
         )
         canonical = ranked[0]
         others = ranked[1:]
-        active_others = [r for r in others if r.get("status") in {"OPEN", "READY", "IN_PROGRESS"}]
+        active_others = [
+            r for r in others if r.get("status") in {"OPEN", "READY", "IN_PROGRESS"}
+        ]
 
         actions = [
             {
@@ -195,7 +201,8 @@ def build_report() -> dict[str, Any]:
         if len(group) <= 1:
             continue
         per_status = Counter(
-            _pick(r, "status", "state", "workflow_status").upper() or "UNKNOWN" for r in group
+            _pick(r, "status", "state", "workflow_status").upper() or "UNKNOWN"
+            for r in group
         )
         items = []
         for row in group:
@@ -203,7 +210,8 @@ def build_report() -> dict[str, Any]:
                 {
                     "id": _pick(row, "id", "issue_id", "key", "ticket_id"),
                     "title": _pick(row, "title", "name", "summary", "subject"),
-                    "status": _pick(row, "status", "state", "workflow_status").upper() or "UNKNOWN",
+                    "status": _pick(row, "status", "state", "workflow_status").upper()
+                    or "UNKNOWN",
                 }
             )
         duplicate_groups.append(
@@ -231,7 +239,9 @@ def build_report() -> dict[str, Any]:
             }
         )
     hot_duplicates = [
-        g for g in duplicate_groups if any(s in g["status_counts"] for s in ("OPEN", "READY", "IN_PROGRESS"))
+        g
+        for g in duplicate_groups
+        if any(s in g["status_counts"] for s in ("OPEN", "READY", "IN_PROGRESS"))
     ]
     if hot_duplicates:
         findings.append(
@@ -278,7 +288,9 @@ def build_report() -> dict[str, Any]:
     }
 
 
-def write_reports(report: dict[str, Any], *, write_remediation_plan: bool = False) -> dict[str, str]:
+def write_reports(
+    report: dict[str, Any], *, write_remediation_plan: bool = False
+) -> dict[str, str]:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_json = OUT_DIR / f"bead_hygiene_{ts}.json"
@@ -292,8 +304,8 @@ def write_reports(report: dict[str, Any], *, write_remediation_plan: bool = Fals
     lines = [
         "# Bead Hygiene Audit",
         "",
-        f"Timestamp: {report.get('timestamp','')}",
-        f"Status: {report.get('status','')}",
+        f"Timestamp: {report.get('timestamp', '')}",
+        f"Status: {report.get('status', '')}",
         "",
         "## Counts",
         "",
@@ -306,7 +318,9 @@ def write_reports(report: dict[str, Any], *, write_remediation_plan: bool = Fals
     ]
     if report.get("findings"):
         for finding in report["findings"]:
-            lines.append(f"- {finding.get('severity')} {finding.get('code')}: {finding.get('message')}")
+            lines.append(
+                f"- {finding.get('severity')} {finding.get('code')}: {finding.get('message')}"
+            )
     else:
         lines.append("- none")
 
@@ -331,7 +345,11 @@ def write_reports(report: dict[str, Any], *, write_remediation_plan: bool = Fals
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Audit bead hygiene pollution risks")
-    parser.add_argument("--write", action="store_true", help="Write .agents/audits/bead_hygiene artifacts")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Write .agents/audits/bead_hygiene artifacts",
+    )
     parser.add_argument(
         "--write-remediation-plan",
         action="store_true",
@@ -341,7 +359,9 @@ def main() -> int:
 
     report = build_report()
     if args.write:
-        report["artifacts"] = write_reports(report, write_remediation_plan=args.write_remediation_plan)
+        report["artifacts"] = write_reports(
+            report, write_remediation_plan=args.write_remediation_plan
+        )
 
     print(json.dumps(report, indent=2))
     return 1 if report.get("status") == "red" else 0
