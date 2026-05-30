@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-05-30T06:25:12.052499+00:00",
+  "runtime": "claude_code",
+  "task": "Production-readiness analysis and re-decomposition plan for blocked scout task",
+  "bead_id": "chromatic-harness-v2-sq2",
+  "t_level": "T2",
+  "privacy_class": "P1",
+  "complexity": {
+    "level": "C3",
+    "name": "Reasoning",
+    "confidence": 0.07,
+    "matched_keywords": [
+      "plan"
+    ],
+    "reasoning_depth": "medium",
+    "source": "classifier"
+  },
+  "confidence": {
+    "confidence_score": 78.9,
+    "risk_level": "low",
+    "scope_clarity": 81.0,
+    "evidence_quality": 82.5,
+    "reversibility": "yes",
+    "tool_budget_fit": true,
+    "cmp_decision": "proceed_reversible_only",
+    "decision": "execute",
+    "mutation_allowed": true,
+    "task_excerpt": "Production-readiness analysis and re-decomposition plan for blocked scout task"
+  },
+  "provider_choices": [
+    {
+      "provider": "gemini",
+      "model": "gemini-2.5-pro",
+      "tier": 3,
+      "reason": "routing table: context_laptop/balance/C3"
+    },
+    {
+      "provider": "openrouter",
+      "model": "moonshotai/kimi-k2-6",
+      "tier": 4,
+      "reason": "routing table: context_laptop/balance/C3"
+    },
+    {
+      "provider": "claude_api",
+      "model": "sonnet",
+      "tier": 4,
+      "reason": "routing table: context_laptop/balance/C3"
+    }
+  ],
+  "pre_swarm_gate": {
+    "ok": true,
+    "summary_tail": "PASS  session_boot_force\nPASS  check_agent_operations\nPASS  validate_governance_stack\nPASS  context_trim_audit\n\nPre-swarm gate OK (all checks passed)\n"
+  },
+  "decision": "execute",
+  "decision_reason": "within delegation bounds",
+  "next": "delegate"
+}

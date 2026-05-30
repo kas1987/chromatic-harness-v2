@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-30T02:42:29.769017+00:00",
+  "generated_at": "2026-05-30T09:41:04.997155+00:00",
   "repo": "C:\\Users\\kas41\\chromatic-harness-v2",
-  "mcp_descriptors_path": "C:\\Users\\kas41\\chromatic-harness-v2\\tests\\fixtures\\mcp_minimal",
+  "mcp_descriptors_path": "C:\\Users\\kas41\\.cursor\\projects\\c-Users-kas41-chromatic-harness-v2\\mcps",
   "summary": {
     "native_tool_count": 15,
     "subagent_count": 9,
-    "mcp_server_count": 1,
-    "mcp_tool_count": 1,
+    "mcp_server_count": 2,
+    "mcp_tool_count": 5,
     "crg_resource_count": 15
   },
   "native_tools": [
@@ -84,13 +84,24 @@
   ],
   "mcp_servers": [
     {
-      "id": "plugin-test-server",
-      "display_name": "test-server",
-      "tool_count": 1,
+      "id": "cursor-app-control",
+      "display_name": "cursor-app-control",
+      "tool_count": 5,
       "tools": [
-        "sample_tool"
+        "create_project",
+        "move_agent_to_cloned_root",
+        "move_agent_to_root",
+        "open_automation",
+        "rename_chat"
       ],
       "status": "active"
+    },
+    {
+      "id": "cursor-backend-control",
+      "display_name": "cursor-backend-control",
+      "tool_count": 0,
+      "tools": [],
+      "status": "registered_no_descriptors"
     }
   ],
   "crg_manifest": [

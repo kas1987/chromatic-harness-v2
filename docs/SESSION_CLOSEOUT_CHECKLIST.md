@@ -12,7 +12,7 @@ python scripts/session_closeout.py --invoked-by cursor
 
 Optional flags: `--harvest`, `--wiki-dry-run`, `--git-triage`, `--pytest`, `--spawn-successor` (with `CHROMATIC_AUTO_SPAWN=1` when budget allows).
 
-Outputs: `.agents/handoffs/transfer_packet.json`, `successor_prompt.md`, `latest.json`, markdown under `12_HANDOFFS/sessions/`.
+Outputs: `.agents/handoffs/transfer_packet.json`, `.agents/handoffs/closeout_telemetry_latest.json`, `successor_prompt.md`, `latest.json`, markdown under `12_HANDOFFS/sessions/`.
 
 Policy: [governance/AGENT_TRANSFER_POLICY.md](governance/AGENT_TRANSFER_POLICY.md).
 

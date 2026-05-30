@@ -1,8 +1,12 @@
 {
   "mcpServers": {
-    "gitkraken": {
-      "command": "gk",
-      "args": ["mcp"]
+    "chromatic-harness": {
+      "command": "python",
+      "args": ["-m", "chromatic_mcp.server"],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "02_RUNTIME"
+      }
     }
   }
 }

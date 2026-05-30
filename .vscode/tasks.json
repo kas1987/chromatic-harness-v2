@@ -2,39 +2,54 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Harness: Bootstrap Session",
+      "label": "Chromatic: Validate visual registry",
       "type": "shell",
-      "command": "python scripts/new_session_bootstrap.py --root .",
+      "command": "python scripts/validate_visual_registry.py",
       "problemMatcher": []
     },
     {
-      "label": "Harness: Context Trim Audit",
+      "label": "Chromatic: Generate Mermaid visuals",
       "type": "shell",
-      "command": "python scripts/context_trim_audit.py --root .",
+      "command": "python scripts/generate_harness_mermaid.py",
       "problemMatcher": []
     },
     {
-      "label": "Harness: Hard Rebuild Context",
-      "type": "shell",
-      "command": "python scripts/context_rebuild.py --root . --mode hard",
+      "label": "Chromatic: Validate and generate visuals",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Chromatic: Validate visual registry",
+        "Chromatic: Generate Mermaid visuals"
+      ],
       "problemMatcher": []
     },
     {
-      "label": "Harness: Daily Audit",
+      "label": "Harness: Bead Hygiene Remediation Commands",
       "type": "shell",
-      "command": "python scripts/daily_harness_audit.py --root . --report",
+      "command": "python scripts/bead_hygiene_remediation_commands.py --write",
       "problemMatcher": []
     },
     {
-      "label": "Harness: Strict Daily Audit",
+      "label": "Harness: Bead Hygiene Apply Remediation (Dry Run)",
       "type": "shell",
-      "command": "python scripts/daily_harness_audit.py --root . --report --strict",
+      "command": "python scripts/bead_hygiene_apply_remediation.py --write",
       "problemMatcher": []
     },
     {
-      "label": "Harness: Session Closeout",
+      "label": "Harness: Bead Hygiene Auto Loop",
       "type": "shell",
-      "command": "python scripts/session_closeout.py --invoked-by vscode",
+      "command": "python scripts/bead_hygiene_autoloop.py --cycles 3 --execute-malformed --delegate-claude",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Claude Delegation Observability",
+      "type": "shell",
+      "command": "python scripts/claude_delegation_observability.py --write",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Harvest + Promote to Wiki",
+      "type": "shell",
+      "command": "python scripts/harvest_rigs.py --execute ; python scripts/promote_to_wiki.py --dry-run ; python scripts/promote_to_wiki.py --execute",
       "problemMatcher": []
     }
   ]

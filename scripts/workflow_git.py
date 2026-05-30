@@ -24,6 +24,7 @@ if str(_RUNTIME) not in sys.path:
 from workflows.git_automation import run_git_pipeline  # noqa: E402
 from workflows.git_runner import VALID_BACKENDS, active_git_backend  # noqa: E402
 from workflows.run_log import append_run_log, read_last_entry  # noqa: E402
+from concurrency.session_lock import session_lock  # noqa: E402
 
 
 def _apply_git_backend(backend: str | None) -> None:
@@ -107,16 +108,18 @@ def cmd_ship(args: argparse.Namespace) -> int:
         return 1
 
     dry_run = not args.execute
-    result = run_git_pipeline(
-        REPO,
-        confidence=confidence,
-        risk_level=risk,
-        verifier_approved=verifier,
-        tests_passed=tests,
-        bead_id=args.bead_id or ctx.get("bead_id", ""),
-        commit_message=args.message,
-        dry_run=dry_run,
-    )
+    session_id = args.session_id.strip() or "script-workflow-git"
+    with session_lock("git_ship", session_id=session_id, timeout_seconds=args.lock_timeout):
+        result = run_git_pipeline(
+            REPO,
+            confidence=confidence,
+            risk_level=risk,
+            verifier_approved=verifier,
+            tests_passed=tests,
+            bead_id=args.bead_id or ctx.get("bead_id", ""),
+            commit_message=args.message,
+            dry_run=dry_run,
+        )
     out = result.to_dict()
     out["git_backend_active"] = active_git_backend()
     append_run_log(REPO, {"mode": "GIT SHIP", "execute": args.execute, **out})
@@ -158,6 +161,13 @@ def main() -> int:
     common.add_argument("--bead-id", default="")
     common.add_argument("--message", default="")
     common.add_argument("--from-log", action="store_true")
+    common.add_argument("--session-id", default="", help="Session id for lock ownership")
+    common.add_argument(
+        "--lock-timeout",
+        type=float,
+        default=30.0,
+        help="Seconds to wait for git ship lock",
+    )
     common.add_argument(
         "--backend",
         choices=sorted(VALID_BACKENDS),

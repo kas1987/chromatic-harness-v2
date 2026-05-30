@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import os
+import shutil
 import urllib.request
 import yaml
 from pathlib import Path
@@ -45,6 +46,13 @@ _PRIVACY_ORDER: dict[str, int] = {
     "P4": 4,
     "P5": 5,
 }
+
+_CLAUDE_SESSION_ENV_VARS: tuple[str, ...] = (
+    "CLAUDECODE",
+    "CLAUDE_SESSION_ID",
+    "CLAUDE_PROJECT_DIR",
+    "CLAUDECODE_SESSION_ID",
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -262,8 +270,8 @@ class ProviderSelector:
                 if not self._probe_remote_ollama(context.remote_ollama_endpoints):
                     continue
             if c.provider == "native_claude":
-                # TODO: detect if we're inside a Claude session
-                pass
+                if not self._native_claude_available():
+                    continue
             filtered.append(c)
         if not filtered:
             # Ultimate fallback
@@ -276,6 +284,14 @@ class ProviderSelector:
                 )
             )
         return filtered
+
+    @staticmethod
+    def _native_claude_available() -> bool:
+        if any(os.environ.get(name) for name in _CLAUDE_SESSION_ENV_VARS):
+            return True
+        if os.environ.get("NATIVE_CLAUDE_RELAY_URL", "").strip():
+            return True
+        return shutil.which("claude") is not None
 
     @staticmethod
     def _probe_remote_ollama(endpoints: list[dict]) -> bool:

@@ -3,6 +3,20 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $RepoRoot
 
+# Concurrent-run guard: exit immediately if another instance is already running.
+# Prevents multiple Task Scheduler firings from contending on intake_queue_mutation lock.
+$LockFile = Join-Path $env:TEMP "chromatic_intake_cycle.lock"
+$MyPid = $PID
+if (Test-Path $LockFile) {
+    $OtherPid = Get-Content $LockFile -ErrorAction SilentlyContinue
+    if ($OtherPid -and (Get-Process -Id ([int]$OtherPid) -ErrorAction SilentlyContinue)) {
+        Write-Host "run_intake_cycle: already running (pid=$OtherPid), skipping"
+        exit 0
+    }
+}
+Set-Content $LockFile $MyPid -Encoding utf8
+try {
+
 $LogDir = Join-Path $RepoRoot "07_LOGS_AND_AUDIT\intake_cycle"
 if (-not (Test-Path $LogDir)) {
     New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
@@ -68,3 +82,7 @@ Write-Host $line
 
 if ($pollExit -ne 0 -or $intakeExit -ne 0) { exit 1 }
 exit 0
+} finally {
+    # Release concurrent-run guard lock file
+    Remove-Item $LockFile -ErrorAction SilentlyContinue
+}

@@ -8,9 +8,18 @@ export const meta = {
   ],
 }
 
+import { assertBudgetAllows } from './_budget.js'
+
 const bug = args || 'bug (no description provided)'
 
 phase('Diagnose')
+assertBudgetAllows({
+  phase: 'diagnose',
+  estimatedTokens: 18000,
+  estimatedToolCalls: 4,
+  estimatedFilesRead: 5,
+  touchesTranscripts: false,
+})
 const hunt = await agent(
   `Diagnose: "${bug}". Read only files needed. Output: root cause, fix plan, files to touch.
 Do NOT run /security-suite or /council. Max 500 words.`,
@@ -18,6 +27,13 @@ Do NOT run /security-suite or /council. Max 500 words.`,
 )
 
 phase('Patch')
+assertBudgetAllows({
+  phase: 'patch',
+  estimatedTokens: 18000,
+  estimatedToolCalls: 5,
+  estimatedFilesRead: 6,
+  touchesTranscripts: false,
+})
 const patch = await agent(
   `Minimal fix only. No refactor.
 
@@ -27,6 +43,13 @@ ${hunt.slice(0, 2500)}`,
 )
 
 phase('Verify')
+assertBudgetAllows({
+  phase: 'verify',
+  estimatedTokens: 14000,
+  estimatedToolCalls: 3,
+  estimatedFilesRead: 3,
+  touchesTranscripts: false,
+})
 await agent(
   `python -m pytest tests/ -q --tb=line
 Then git pull --rebase && git push with concise commit message.

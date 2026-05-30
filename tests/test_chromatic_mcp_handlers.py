@@ -49,3 +49,14 @@ def test_call_tool_workflow_go():
     out = call_tool("workflow_go", {"mode": "GO AUDIT"})
     assert out["ok"] is True
     assert out["result"]["ok"] is True
+
+
+def test_call_tool_parallel_health():
+    from chromatic_mcp.handlers import call_tool
+
+    out = call_tool("parallel_health", {"prune": False})
+    assert out["ok"] is True
+    assert out["result"]["ok"] is True
+    payload = json.loads(out["result"]["stdout"].strip())
+    assert payload["ok"] is True
+    assert "summary" in payload

@@ -12,7 +12,9 @@ from router.provider_selector import ProviderSelector
 
 _REPO = Path(__file__).resolve().parent.parent
 _ROUTING_TABLE = _REPO / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
-_OPENROUTER_MODELS = _REPO / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
+_OPENROUTER_MODELS = (
+    _REPO / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
+)
 EMPTY_PREFS = Path(__file__).resolve().parent / "fixtures" / "empty_prefs.yaml"
 
 CLOUD_PROVIDERS = frozenset(
@@ -127,9 +129,7 @@ class TestLocalFirstRouting:
 class TestOfflineMatrix:
     @pytest.mark.parametrize("c_level", ["C1", "C2", "C3", "C4"])
     @pytest.mark.parametrize("privacy_class", ["P0", "P1", "P2"])
-    def test_offline_blocks_cloud(
-        self, selector, classifier, c_level, privacy_class
-    ):
+    def test_offline_blocks_cloud(self, selector, classifier, c_level, privacy_class):
         complexity = _classify(classifier, c_level)
         ctx = _laptop_online(
             internet_reachable=False,
@@ -144,9 +144,7 @@ class TestOfflineMatrix:
 
 class TestPrivacyClassMatrix:
     @pytest.mark.parametrize("privacy_class", ["P0", "P1", "P2"])
-    def test_p0_p2_allow_cloud_on_speed_c3(
-        self, selector, classifier, privacy_class
-    ):
+    def test_p0_p2_allow_cloud_on_speed_c3(self, selector, classifier, privacy_class):
         complexity = _classify(classifier, "C3")
         sel = selector.select(
             complexity,
@@ -158,9 +156,7 @@ class TestPrivacyClassMatrix:
         assert names & CLOUD_PROVIDERS
 
     @pytest.mark.parametrize("privacy_class", ["P0", "P1"])
-    def test_openrouter_allowed_p0_p1(
-        self, selector, classifier, privacy_class
-    ):
+    def test_openrouter_allowed_p0_p1(self, selector, classifier, privacy_class):
         complexity = _classify(classifier, "C3")
         sel = selector.select(
             complexity,
@@ -205,9 +201,7 @@ class TestRemoteOllamaMatrix:
         sel = selector.select(complexity, ctx, speed_mode="balance", privacy_class="P1")
         assert sel.context_key == "context_laptop_remote"
 
-    def test_remote_preferred_when_reachable(
-        self, selector, classifier, monkeypatch
-    ):
+    def test_remote_preferred_when_reachable(self, selector, classifier, monkeypatch):
         monkeypatch.setattr(
             ProviderSelector,
             "_probe_remote_ollama",

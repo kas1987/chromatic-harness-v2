@@ -69,8 +69,11 @@ class TwoLogAudit:
         handoff = workflow_entry.get("handoff") or {}
         mission_id = handoff.get("mission_id") or workflow_entry.get("mission_id", "")
         decision = workflow_entry.get("decision", "")
-        confidence = workflow_entry.get("confidence") or {}
-        score = confidence.get("confidence_score", workflow_entry.get("confidence_score", 0))
+        confidence_raw = workflow_entry.get("confidence")
+        confidence = confidence_raw if isinstance(confidence_raw, dict) else {}
+        score = confidence.get("confidence_score", workflow_entry.get("confidence_score"))
+        if score in (None, "") and confidence_raw not in (None, "") and not isinstance(confidence_raw, dict):
+            score = confidence_raw
         cmp_decision = confidence.get("cmp_decision", "")
 
         idem = _hash_payload(

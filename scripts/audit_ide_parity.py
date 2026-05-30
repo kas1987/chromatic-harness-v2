@@ -21,6 +21,7 @@ CHECK_FILES = {
     "cursor_rule": ".cursor/rules/harness-audit.mdc",
     "cursor_hooks": ".cursor/hooks.json",
     "vscode_tasks": ".vscode/tasks.json",
+    "claude_settings": ".claude/settings.json",
     "claude_md": "CLAUDE.md",
     "agents_md": "AGENTS.md",
     "agent_operations": "AGENT_OPERATIONS.md",
@@ -30,6 +31,7 @@ CLOSEOUT_MARKERS = [
     "session_closeout",
     "sessionEnd",
     "Session Closeout",
+    "SessionEnd",
 ]
 
 
@@ -38,6 +40,23 @@ def read_text(path: Path) -> str:
         return path.read_text(encoding="utf-8")
     except Exception:
         return ""
+
+
+def _claude_session_end_ok(root: Path) -> bool:
+    path = root / ".claude" / "settings.json"
+    if not path.is_file():
+        return False
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return False
+    for block in doc.get("hooks", {}).get("SessionEnd", []) or []:
+        if not isinstance(block, dict):
+            continue
+        for h in block.get("hooks", []):
+            if isinstance(h, dict) and "session_closeout.py" in str(h.get("command", "")):
+                return True
+    return False
 
 
 def audit(root: Path) -> dict[str, Any]:
@@ -49,9 +68,9 @@ def audit(root: Path) -> dict[str, Any]:
         exists = path.exists()
         text = read_text(path) if exists else ""
         files[name] = {"path": rel, "exists": exists, "size": len(text)}
-        if not exists and name in {"cursor_rule", "vscode_tasks", "agent_operations"}:
+        if not exists and name in {"cursor_rule", "vscode_tasks", "agent_operations", "claude_settings"}:
             findings.append({
-                "severity": "P2",
+                "severity": "P1" if name == "claude_settings" else "P2",
                 "code": "missing_wrapper_or_policy",
                 "file": rel,
                 "message": f"Expected IDE/policy file is missing: {rel}",
@@ -68,6 +87,7 @@ def audit(root: Path) -> dict[str, Any]:
             })
 
     wrapper_text = "\n".join(read_text(root / rel) for rel in CHECK_FILES.values())
+
     hooks_path = root / ".cursor" / "hooks" / "session_closeout.py"
     if not hooks_path.is_file():
         findings.append({
@@ -83,13 +103,22 @@ def audit(root: Path) -> dict[str, Any]:
             "file": ".cursor/hooks.json",
             "message": "Session closeout not referenced in IDE wrappers (sessionEnd / session_closeout)",
         })
+
+    if not _claude_session_end_ok(root):
+        findings.append({
+            "severity": "P1",
+            "code": "claude_session_end_missing",
+            "file": ".claude/settings.json",
+            "message": "Claude Code SessionEnd must call python scripts/session_closeout.py --invoked-by claude_code",
+        })
+
     claude_hook = root / ".claude" / "hooks" / "session_closeout.sh"
     if not claude_hook.is_file():
         findings.append({
             "severity": "P2",
             "code": "missing_claude_closeout_hook",
             "file": str(claude_hook.relative_to(root)),
-            "message": "Claude session closeout shell hook template missing",
+            "message": "Claude session closeout shell hook template missing (optional; settings.json is canonical)",
         })
 
     for command in REQUIRED_COMMANDS:

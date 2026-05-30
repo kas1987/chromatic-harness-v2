@@ -205,6 +205,59 @@ def test_run_log_append_and_read(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert "timestamp" in last
 
 
+def test_run_log_canonical_overrides_unknown_and_nulls(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    import workflows.run_log as run_log_mod
+
+    monkeypatch.setattr(
+        run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl"
+    )
+    append_run_log(
+        REPO,
+        {
+            "mode": "GO AUDIT",
+            "task_id": "T-2",
+            "provider": "unknown",
+            "selected_provider": "gemini",
+            "model": "unknown",
+            "selected_model": "gemini-2.5-pro",
+            "execution_status": "unknown",
+            "result_status": "execute",
+            "cost_usd": None,
+            "latency_ms": None,
+        },
+    )
+    last = read_last_entry(REPO)
+    assert last is not None
+    assert last["provider"] == "gemini"
+    assert last["model"] == "gemini-2.5-pro"
+    assert last["execution_status"] == "execute"
+    assert last["cost_usd"] == 0.0
+    assert last["latency_ms"] == 0.0
+
+
+def test_run_log_canonical_reads_scalar_confidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    import workflows.run_log as run_log_mod
+
+    monkeypatch.setattr(
+        run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl"
+    )
+    append_run_log(
+        REPO,
+        {
+            "mode": "GO VERIFY",
+            "task_id": "T-3",
+            "confidence": 77,
+        },
+    )
+    last = read_last_entry(REPO)
+    assert last is not None
+    assert last["confidence_score"] == 77.0
+
+
 def test_workflow_go_audit_subprocess():
     proc = subprocess.run(
         [sys.executable, str(SCRIPT), "GO AUDIT"],

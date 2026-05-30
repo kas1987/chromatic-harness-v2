@@ -107,6 +107,32 @@ class ChromaticRouter:
         if "mock" not in self.adapters:
             self.adapters["mock"] = MockAdapter()
 
+    @staticmethod
+    def _request_prompt_text(req: RouteRequest) -> str:
+        parts: list[str] = []
+
+        for message in req.input.messages:
+            content = message.get("content", "") if isinstance(message, dict) else ""
+            if isinstance(content, str):
+                text = content.strip()
+                if text:
+                    parts.append(text)
+                continue
+            if isinstance(content, list):
+                for item in content:
+                    if isinstance(item, dict):
+                        text = str(item.get("text", "")).strip()
+                        if text:
+                            parts.append(text)
+
+        metadata = req.input.metadata
+        if isinstance(metadata, dict):
+            metadata_prompt = metadata.get("prompt")
+            if isinstance(metadata_prompt, str) and metadata_prompt.strip():
+                parts.append(metadata_prompt.strip())
+
+        return "\n".join(parts)
+
     def _resolve_provider(self, req: RouteRequest) -> tuple[str, list[str], RouteLogs]:
         logs = RouteLogs()
         preferred = req.preferred_provider
@@ -117,7 +143,7 @@ class ChromaticRouter:
                 context = self.context_detector.detect()
                 complexity = self.complexity_classifier.classify(
                     description=req.objective,
-                    prompt="",  # TODO: expose full prompt on RouteRequest
+                    prompt=self._request_prompt_text(req),
                 )
                 selection = self.provider_selector.select(
                     complexity=complexity,
@@ -179,7 +205,9 @@ class ChromaticRouter:
             return "mock", [], logs
         return filtered[0], filtered[1:], logs
 
-    def _provider_is_available(self, name: str, req: RouteRequest | None = None) -> bool:
+    def _provider_is_available(
+        self, name: str, req: RouteRequest | None = None
+    ) -> bool:
         adapter = self.adapters.get(name)
         if not adapter:
             return False

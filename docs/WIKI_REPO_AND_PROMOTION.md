@@ -44,6 +44,25 @@ python scripts/promote_to_wiki.py --execute
 5. PR on chromatic-wiki          # CANON_PR_CHECKLIST → registry.yaml
 ```
 
+## Long-run loop post-mortem cadence
+
+For long-running agent batches (for example 10-cycle delegation loops), run this sequence immediately after the batch:
+
+```text
+1. Capture loop artifacts and delegation observability
+2. Write/append .agents/learnings entries from real failures and corrections
+3. python scripts/harvest_rigs.py --execute
+4. python scripts/promote_to_wiki.py --dry-run
+5. python scripts/promote_to_wiki.py --execute
+6. Open/update Wiki PR with incident notes and mitigation standards
+```
+
+Minimum data to preserve in each post-mortem learning:
+- control-plane counts (cycles, delegate calls, delegate return codes)
+- evidence-plane status (pickup correlation, reroute reason)
+- shell/automation failure modes encountered in the run
+- exact corrected command pattern used to recover
+
 Canon: [00_CANON/CANON_PR_CHECKLIST.md](https://github.com/kas1987/chromatic-wiki/blob/main/00_CANON/CANON_PR_CHECKLIST.md)  
 Beads: [beads/WIKI_V01_BEADS.md](beads/WIKI_V01_BEADS.md)  
 Rename: [WIKI_REPO_RENAME.md](WIKI_REPO_RENAME.md) *(completed 2026-05-30)*

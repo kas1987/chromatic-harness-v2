@@ -24,7 +24,9 @@ def _load_packet(path: Path) -> dict[str, Any]:
 
 
 def _prompt_body(repo_root: Path, packet: dict[str, Any]) -> str:
-    rel = packet.get("successor", {}).get("prompt_path", ".agents/handoffs/successor_prompt.md")
+    rel = packet.get("successor", {}).get(
+        "prompt_path", ".agents/handoffs/successor_prompt.md"
+    )
     p = repo_root / rel
     if p.is_file():
         return p.read_text(encoding="utf-8")[:12000]
@@ -78,7 +80,10 @@ def spawn_claude_cli(repo_root: Path, prompt: str) -> tuple[bool, str]:
                 return True, (r.stdout or "claude cli ok")[:500]
         except (FileNotFoundError, subprocess.TimeoutExpired):
             continue
-    return False, f"claude CLI unavailable; prompt saved to {tmp.relative_to(repo_root)}"
+    return (
+        False,
+        f"claude CLI unavailable; prompt saved to {tmp.relative_to(repo_root)}",
+    )
 
 
 def spawn_manual_bead(summary: str) -> tuple[bool, str]:
@@ -131,7 +136,11 @@ def main() -> int:
         ok, msg = spawn_manual_bead(
             f"Spawn blocked (decision={decision}). Read {packet_path.name}"
         )
-        print(json.dumps({"ok": ok, "adapter": "manual", "message": msg, "decision": decision}))
+        print(
+            json.dumps(
+                {"ok": ok, "adapter": "manual", "message": msg, "decision": decision}
+            )
+        )
         return 0
 
     cfg = load_agent_budget_config(_REPO)
@@ -152,7 +161,7 @@ def main() -> int:
             ok2, msg2 = spawn_manual_bead(msg)
             result["fallback"] = {"ok": ok2, "message": msg2}
         print(json.dumps(result, indent=2))
-        return 0 if result.get("ok") else 0
+        return 0 if result.get("ok") else 1
 
     if adapter == "claude_cli":
         ok, msg = spawn_claude_cli(_REPO, prompt)
@@ -161,7 +170,7 @@ def main() -> int:
             ok2, msg2 = spawn_manual_bead(msg)
             result["fallback"] = {"ok": ok2, "message": msg2}
         print(json.dumps(result, indent=2))
-        return 0
+        return 0 if ok else 1
 
     ok, msg = spawn_manual_bead(
         f"Handoff ready at {packet.get('handoff_path', '')}. Budget: {decision}."

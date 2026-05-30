@@ -28,7 +28,9 @@ def test_apply_lane_prefix_and_description():
     assert desc.startswith("lane: human")
 
 
-def test_log_activity_writes_workflow_and_execution(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_log_activity_writes_workflow_and_execution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
@@ -53,7 +55,9 @@ def test_log_activity_writes_workflow_and_execution(tmp_path: Path, monkeypatch:
     assert any(e.get("event_type") == "activity.phase.complete" for e in lines)
 
 
-def test_log_activity_enqueues_human_intake_on_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_log_activity_enqueues_human_intake_on_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
@@ -72,7 +76,9 @@ def test_log_activity_enqueues_human_intake_on_error(tmp_path: Path, monkeypatch
     assert any(e.lane == "human" for e in queued)
 
 
-def test_auto_intake_applies_lane_prefix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_auto_intake_applies_lane_prefix(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     queue = tmp_path / "07_LOGS_AND_AUDIT" / "intake_queue.jsonl"
     queue.parent.mkdir(parents=True, exist_ok=True)
 
