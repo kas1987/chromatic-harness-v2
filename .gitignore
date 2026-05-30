@@ -25,6 +25,8 @@ docs/workflows/WORKFLOW_RUN_LOG.jsonl
 .tmp_pre_session_pack/
 .agents/context/*.json
 .agents/context/BOOT_CONTEXT.md
+.agents/audits/*
+!.agents/audits/.gitkeep
 
 07_LOGS_AND_AUDIT/intake_queue.jsonl
 07_LOGS_AND_AUDIT/intake_cycle/*.jsonl

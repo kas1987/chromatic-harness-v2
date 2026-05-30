@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Harness: Bootstrap Session",
+      "type": "shell",
+      "command": "python scripts/new_session_bootstrap.py --root .",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Context Trim Audit",
+      "type": "shell",
+      "command": "python scripts/context_trim_audit.py --root .",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Hard Rebuild Context",
+      "type": "shell",
+      "command": "python scripts/context_rebuild.py --root . --mode hard",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Daily Audit",
+      "type": "shell",
+      "command": "python scripts/daily_harness_audit.py --root . --report",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Strict Daily Audit",
+      "type": "shell",
+      "command": "python scripts/daily_harness_audit.py --root . --report --strict",
+      "problemMatcher": []
+    }
+  ]
+}

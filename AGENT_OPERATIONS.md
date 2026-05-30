@@ -81,7 +81,7 @@ python scripts/session_boot_automation.py --force       # refresh manifest now
 | 70–74 | `plan_only` | Manual `GO DEEP` or improve handoff |
 | 75+ | `execute` | `/close-issue` or scoped implement (permission gate) |
 
-Docs: [docs/governance/CONFIDENCE_GATE.md](docs/governance/CONFIDENCE_GATE.md), [docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md), [docs/governance/WORKFLOW_BUDGET_CONTRACT.md](docs/governance/WORKFLOW_BUDGET_CONTRACT.md). Validate: `python scripts/validate_governance_stack.py`.
+Docs: [docs/governance/CONFIDENCE_GATE.md](docs/governance/CONFIDENCE_GATE.md), [docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md), [docs/governance/WORKFLOW_BUDGET_CONTRACT.md](docs/governance/WORKFLOW_BUDGET_CONTRACT.md). Validate: `python scripts/validate_governance_stack.py`. Daily audit: `python scripts/daily_harness_audit.py --root . --report` — [docs/governance/DAILY_AUDIT_RUNBOOK.md](docs/governance/DAILY_AUDIT_RUNBOOK.md).
 
 ### Git autonomy (tiered — no extra “please push” when gates pass)
 
