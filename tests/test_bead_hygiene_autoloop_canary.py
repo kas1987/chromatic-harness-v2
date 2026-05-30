@@ -8,7 +8,9 @@ from pathlib import Path
 import scripts.bead_hygiene_autoloop as autoloop
 
 
-def test_strict_canary_returns_nonzero_on_non_green(monkeypatch, tmp_path: Path) -> None:
+def test_strict_canary_returns_nonzero_on_non_green(
+    monkeypatch, tmp_path: Path
+) -> None:
     audit_dir = tmp_path / "bead_hygiene"
     delegation_dir = tmp_path / "delegation"
     audit_dir.mkdir(parents=True, exist_ok=True)
@@ -154,7 +156,9 @@ def test_strict_canary_counts_mixed_statuses(monkeypatch, tmp_path: Path) -> Non
     rc = autoloop.main()
     assert rc == 2
 
-    report = json.loads((audit_dir / "latest_autoloop_report.json").read_text(encoding="utf-8"))
+    report = json.loads(
+        (audit_dir / "latest_autoloop_report.json").read_text(encoding="utf-8")
+    )
     canary = report.get("delegation_canary") or {}
     assert canary.get("checked") == 2
     assert canary.get("counts") == {"green": 1, "yellow": 1, "red": 0}

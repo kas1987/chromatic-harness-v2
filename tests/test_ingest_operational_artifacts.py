@@ -206,7 +206,7 @@ def test_process_source_emits_success_event(
     assert stats["emitted"] == 1
     assert stats["skipped_no_outcome"] == 0
 
-    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    events = [json.loads(ln) for ln in usage_log.read_text().splitlines() if ln.strip()]
     assert len(events) == 1
     assert events[0]["event_type"] == "applied_success"
     assert events[0]["learning_name"] == "my-learning"

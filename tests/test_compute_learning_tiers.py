@@ -4,7 +4,9 @@ import json
 from datetime import datetime, timezone
 
 
-def _write_learning(path, name: str, category: str, confidence: float, date: str) -> None:
+def _write_learning(
+    path, name: str, category: str, confidence: float, date: str
+) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "\n".join(
@@ -70,7 +72,10 @@ def test_compute_learning_tiers_ranks_historical_usage_higher(tmp_path, monkeypa
     _write_usage(usage, rows)
 
     policy.parent.mkdir(parents=True, exist_ok=True)
-    policy.write_text((clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"), encoding="utf-8")
+    policy.write_text(
+        (clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
     monkeypatch.setattr(clt, "REPO", repo)
     monkeypatch.setattr(clt, "LEARNINGS", learnings)
@@ -102,7 +107,10 @@ def test_compute_learning_tiers_need_mapping(tmp_path, monkeypatch):
     _write_usage(usage, [])
 
     policy.parent.mkdir(parents=True, exist_ok=True)
-    policy.write_text((clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"), encoding="utf-8")
+    policy.write_text(
+        (clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
     monkeypatch.setattr(clt, "REPO", repo)
     monkeypatch.setattr(clt, "LEARNINGS", learnings)
@@ -114,7 +122,9 @@ def test_compute_learning_tiers_need_mapping(tmp_path, monkeypatch):
     assert item["need_level"] == "N1"
 
 
-def test_compute_learning_tiers_delta_promoted_from_previous_report(tmp_path, monkeypatch):
+def test_compute_learning_tiers_delta_promoted_from_previous_report(
+    tmp_path, monkeypatch
+):
     import scripts.compute_learning_tiers as clt
 
     repo = tmp_path
@@ -143,7 +153,10 @@ def test_compute_learning_tiers_delta_promoted_from_previous_report(tmp_path, mo
     _write_usage(usage, rows)
 
     policy.parent.mkdir(parents=True, exist_ok=True)
-    policy.write_text((clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"), encoding="utf-8")
+    policy.write_text(
+        (clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
     previous = {
         "top_ranked": [
@@ -168,7 +181,9 @@ def test_compute_learning_tiers_delta_promoted_from_previous_report(tmp_path, mo
     assert int(report["delta"]["promoted"]) >= 1
 
 
-def test_compute_learning_tiers_uses_previous_items_not_only_top_ranked(tmp_path, monkeypatch):
+def test_compute_learning_tiers_uses_previous_items_not_only_top_ranked(
+    tmp_path, monkeypatch
+):
     import scripts.compute_learning_tiers as clt
 
     repo = tmp_path
@@ -186,7 +201,10 @@ def test_compute_learning_tiers_uses_previous_items_not_only_top_ranked(tmp_path
     _write_usage(usage, [])
 
     policy.parent.mkdir(parents=True, exist_ok=True)
-    policy.write_text((clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"), encoding="utf-8")
+    policy.write_text(
+        (clt.REPO / "config" / "learning_tier_policy.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
     previous = {
         "items": [

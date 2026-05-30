@@ -358,11 +358,15 @@ class TestRemoteOllamaRouting:
 
 class TestNativeClaudeAvailability:
     def test_native_claude_filtered_without_runtime(self, selector, monkeypatch):
-        monkeypatch.setattr(ProviderSelector, "_native_claude_available", staticmethod(lambda: False))
+        monkeypatch.setattr(
+            ProviderSelector, "_native_claude_available", staticmethod(lambda: False)
+        )
         ctx = _laptop_remote_ctx(remote_endpoints=[])
         choices = [
             ProviderChoice(provider="native_claude", model=None, tier=0, reason="test"),
-            ProviderChoice(provider="ollama_local", model="llama3.2:3b", tier=0, reason="test"),
+            ProviderChoice(
+                provider="ollama_local", model="llama3.2:3b", tier=0, reason="test"
+            ),
         ]
 
         filtered = selector._filter_by_availability(choices, ctx)
@@ -370,7 +374,9 @@ class TestNativeClaudeAvailability:
         assert [choice.provider for choice in filtered] == ["ollama_local"]
 
     def test_native_claude_allowed_with_runtime(self, selector, monkeypatch):
-        monkeypatch.setattr(ProviderSelector, "_native_claude_available", staticmethod(lambda: True))
+        monkeypatch.setattr(
+            ProviderSelector, "_native_claude_available", staticmethod(lambda: True)
+        )
         ctx = _laptop_remote_ctx(remote_endpoints=[])
         choices = [
             ProviderChoice(provider="native_claude", model=None, tier=0, reason="test"),
