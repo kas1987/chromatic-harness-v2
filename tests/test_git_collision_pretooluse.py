@@ -45,6 +45,19 @@ def test_disabled_via_env_allows():
     assert p.returncode == 0
 
 
+def test_cross_repo_cd_fails_open():
+    # A `cd <other-repo> && gh pr create` must NOT be judged against this repo.
+    p = _run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": 'cd "C:/Users/kas41/some-other-repo" && gh pr create --title x'
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
 def test_malformed_stdin_allows():
     proc = subprocess.run(
         [sys.executable, str(_HOOK)],
