@@ -1,6 +1,5 @@
 """Integration test: mission -> magnet -> agent_lead -> bead_queue -> event_stream visibility."""
 
-import json
 import os
 import sys
 import tempfile
@@ -48,7 +47,7 @@ def event_hub(tmp_path):
 
 @pytest.fixture(scope="module")
 def intake_queue(repo_root):
-    from intake.queue import IntakeEntry, append_entry, default_queue_path
+    from intake.queue import default_queue_path
 
     return default_queue_path(repo_root)
 
@@ -284,7 +283,7 @@ class TestAgentLeadHandoffIntegration:
         repo_root,
     ):
         """Complete E2E: mission synthesis → bead decision → queue entry → event visibility."""
-        from intake.queue import IntakeEntry, append_entry
+        from intake.queue import append_entry
         import uuid
 
         # Step 1: Run synthesis
@@ -386,16 +385,6 @@ class TestAgentLeadHandoffIntegration:
             # Map synthesis risk to queue priority
             risk_level = output.final_report.get("risk_score", 0.5)
             priority = "P0" if risk_level > 0.7 else "P1" if risk_level > 0.4 else "P2"
-
-            entry_data = {
-                "id": "test-priority-mapping",
-                "source": "bead_hook",
-                "kind": "bead_dispatch",
-                "status": "queued",
-                "title": "Test priority mapping",
-                "priority": priority,
-                "context": {"risk_score": risk_level},
-            }
 
             assert priority in ("P0", "P1", "P2", "P3")
             if risk_level > 0.7:
