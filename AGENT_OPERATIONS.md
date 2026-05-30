@@ -187,7 +187,9 @@ Global `~/.claude/settings.json` **stacks** with project hooks. Run `python scri
 
 | Rule | Why |
 |------|-----|
+| **Always proceed — never idle on a T1–T3 decision** | [CONTINUOUS_EXECUTION_SOP](docs/governance/CONTINUOUS_EXECUTION_SOP.md): at every task boundary, proceed to the next step or pull from `bd ready`. Only stop for T4 / hard blocks / explicit pause. Checker: `python scripts/continuous_execution_check.py` |
 | Use `bd` for all tasks | Single source of truth for work |
+| Review `bd ready` at every task boundary | Pick next work from beads; keep the ready queue clean (dedupe auto-generated noise) |
 | Chat is not authoritative | Git + beads + handoff files hold facts |
 | At ~50–65% context pressure | Run [compact checkpoint](12_HANDOFFS/SESSION_COMPACT.md#compact-checkpoint-65) |
 | Before changing router/MCP/CRG | Regenerate inventory (below) |
