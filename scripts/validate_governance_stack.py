@@ -13,6 +13,8 @@ PYTHON = sys.executable
 GATES: list[tuple[str, list[str]]] = [
     ("agent_operations", [PYTHON, str(REPO / "scripts" / "check_agent_operations.py")]),
     ("instruction_governance", [PYTHON, str(REPO / "scripts" / "validate_instruction_governance.py")]),
+    ("instruction_drift", [PYTHON, str(REPO / "scripts" / "audit_instruction_drift.py"), "--root", str(REPO)]),
+    ("ide_parity", [PYTHON, str(REPO / "scripts" / "audit_ide_parity.py"), "--root", str(REPO)]),
     ("intake_loop", [PYTHON, str(REPO / "scripts" / "validate_intake_loop.py")]),
     ("context_trim", [PYTHON, str(REPO / "scripts" / "context_trim_audit.py")]),
     (

@@ -1,0 +1,35 @@
+---
+description: Chromatic Harness v2 audit, bootstrap, and context discipline for Cursor
+alwaysApply: true
+---
+
+# Chromatic Harness Cursor Audit Rule
+
+Before significant repo work, run:
+
+```bash
+python scripts/new_session_bootstrap.py --root .
+python scripts/context_trim_audit.py --root .
+python scripts/daily_harness_audit.py --root . --report
+python scripts/validate_governance_stack.py
+```
+
+Then read:
+
+```text
+.agents/context/BOOT_CONTEXT.md
+.agents/audits/latest_audit_summary.md
+```
+
+## Rules
+
+- Use `bd` for task tracking.
+- Do not use markdown TODOs as source of truth.
+- Do not bulk-load old logs, old handoffs, traces, or JSONL files.
+- Disable unnecessary MCPs before long sessions.
+- If audit is red, stop and fix context/governance before implementation.
+- If a destructive action is needed, request explicit human approval.
+
+## Cursor-specific caution
+
+Cursor may inject enabled MCP tool schemas into context. Keep the MCP surface lean and task-specific.
