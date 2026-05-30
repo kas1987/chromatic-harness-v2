@@ -31,7 +31,7 @@ Before long sessions, still disable unused MCPs in Cursor Settings:
 
 Skills: read `SKILL.md` on demand; do not assume full skill bodies are loaded.
 
-Workflows: use repo lite `/ship`, `/close-issue`, `/qa` — never chain `/crank` or council skills unattended. See `docs/AGENT_ANTIPATTERNS.md`.
+Workflows: use repo lite `/ship`, `/close-issue`, `/qa` — never chain `/crank` or council skills unattended. See `docs/AGENT_ANTIPATTERNS.md`. Implementation edits: follow `karpathy-guidelines.mdc` (surgical diffs, verifiable done criteria).
 
 Do not trust: CRG limiting Cursor MCP injection; chat memory over git/beads; scanning all `~/.claude/projects/**/*.jsonl`.
 

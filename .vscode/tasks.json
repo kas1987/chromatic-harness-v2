@@ -30,6 +30,12 @@
       "type": "shell",
       "command": "python scripts/daily_harness_audit.py --root . --report --strict",
       "problemMatcher": []
+    },
+    {
+      "label": "Harness: Session Closeout",
+      "type": "shell",
+      "command": "python scripts/session_closeout.py --invoked-by vscode",
+      "problemMatcher": []
     }
   ]
 }

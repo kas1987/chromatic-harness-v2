@@ -21,6 +21,14 @@ Then read:
 .agents/audits/latest_audit_summary.md
 ```
 
+## Karpathy pre-implementation
+
+Before editing code, confirm per [KARPATHY_DISCIPLINE.md](../docs/governance/KARPATHY_DISCIPLINE.md):
+
+- Assumptions stated or questions asked
+- Verifiable "done when" criteria written
+- Files in scope listed; everything else off-limits
+
 ## Rules
 
 - Use `bd` for task tracking.

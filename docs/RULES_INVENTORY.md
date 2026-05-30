@@ -24,6 +24,7 @@ Single map of **where rules live** and **which layer wins** when they conflict.
 |------|-------------|---------|
 | [context-hygiene.mdc](../.cursor/rules/context-hygiene.mdc) | yes | Lean MCP; session boot; no token burn |
 | [git-autonomy.mdc](../.cursor/rules/git-autonomy.mdc) | yes | Tiered commit/push/merge in this repo |
+| [karpathy-guidelines.mdc](../.cursor/rules/karpathy-guidelines.mdc) | yes | Surgical diffs; success criteria; pairs with roach-pi `discipline.ts` |
 
 ---
 
@@ -62,6 +63,7 @@ Home `~/AGENTS.md` is a **generic beads template**; prefer repo `AGENTS.md` when
 | [docs/workflows/PERMISSION_GATE.md](workflows/PERMISSION_GATE.md) | Action permissions |
 | [docs/workflows/GO_MODES.md](workflows/GO_MODES.md) | GO / self-heal |
 | [docs/AGENT_ANTIPATTERNS.md](AGENT_ANTIPATTERNS.md) | Do-not-trust list |
+| [docs/governance/KARPATHY_DISCIPLINE.md](governance/KARPATHY_DISCIPLINE.md) | Karpathy 4-pillar canon (implementation discipline) |
 
 ---
 
@@ -75,6 +77,9 @@ Home `~/AGENTS.md` is a **generic beads template**; prefer repo `AGENTS.md` when
 | `scripts/validate_instruction_governance.py` | Thin wrappers |
 | `scripts/validate_governance_stack.py` | CI gate bundle |
 | `scripts/check_agent_operations.py` | Required docs + links |
+| `roach-pi/.../discipline.ts` | Karpathy 4-pillar injection on plan-worker / worker |
+| `02_RUNTIME/magnets/discipline_magnet.py` | Karpathy telemetry scoring |
+| `scripts/validate_karpathy_discipline.py` | CI wiring gate |
 
 ---
 

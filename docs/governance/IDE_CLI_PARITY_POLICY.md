@@ -26,6 +26,7 @@ python scripts/new_session_bootstrap.py --root .
 python scripts/context_trim_audit.py --root .
 python scripts/context_rebuild.py --root . --mode hard
 python scripts/daily_harness_audit.py --root . --report
+python scripts/session_closeout.py --invoked-by cli
 ```
 
 ## Environment Expectations

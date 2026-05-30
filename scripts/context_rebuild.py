@@ -95,13 +95,31 @@ def git_state(root: Path) -> dict[str, Any]:
 
 def handoff_state(root: Path) -> dict[str, Any]:
     pointer = root / ".agents" / "handoffs" / "latest.json"
+    transfer_path = root / ".agents" / "handoffs" / "transfer_packet.json"
     state: dict[str, Any] = {
         "latest_pointer_exists": pointer.exists(),
         "latest_pointer_path": str(pointer.relative_to(root)) if pointer.exists() else None,
         "handoff_path": None,
+        "transfer_packet_exists": transfer_path.is_file(),
+        "transfer_packet_path": (
+            str(transfer_path.relative_to(root)) if transfer_path.is_file() else None
+        ),
+        "budget_decision": None,
+        "boot_commands": [],
         "raw": None,
         "error": None,
     }
+    if transfer_path.is_file():
+        try:
+            tp = json.loads(transfer_path.read_text(encoding="utf-8"))
+            state["transfer_packet"] = {
+                "updated_at": tp.get("updated_at"),
+                "budget_decision": (tp.get("budget") or {}).get("decision"),
+            }
+            state["budget_decision"] = (tp.get("budget") or {}).get("decision")
+            state["boot_commands"] = tp.get("boot_commands") or []
+        except Exception as exc:  # noqa: BLE001
+            state["transfer_packet_error"] = str(exc)
     if not pointer.exists():
         return state
     try:
@@ -111,6 +129,10 @@ def handoff_state(root: Path) -> dict[str, Any]:
             if isinstance(raw, dict) and raw.get(key):
                 state["handoff_path"] = raw[key]
                 break
+        if raw.get("budget_decision"):
+            state["budget_decision"] = raw["budget_decision"]
+        if raw.get("transfer_packet_path"):
+            state["transfer_packet_path"] = raw["transfer_packet_path"]
     except Exception as exc:  # noqa: BLE001 - robust audit script
         state["error"] = str(exc)
     return state

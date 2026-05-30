@@ -1,8 +1,24 @@
 """Budget gate for cost estimation and daily cap enforcement."""
 
 import os
+import sys
+from pathlib import Path
+
 from .contracts import RouteRequest, RouteLogs
 from .policy import PolicyLoader
+
+_RUNTIME = Path(__file__).resolve().parents[1]
+if str(_RUNTIME) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME))
+
+
+def _agent_daily_cap() -> float:
+    try:
+        from budget.ledger import daily_cap_usd
+
+        return daily_cap_usd()
+    except Exception:
+        return 10.0
 
 
 class BudgetGate:
@@ -31,7 +47,7 @@ class BudgetGate:
     def check(self, req: RouteRequest, provider: str) -> tuple[bool, RouteLogs, float]:
         logs = RouteLogs()
         est = self.estimate(provider, req.constraints.max_tokens)
-        cap = self.budget.get("daily_usd_cap", 10.0)
+        cap = self.budget.get("daily_usd_cap") or _agent_daily_cap()
         per_req_max = req.constraints.max_cost_usd
         daily = self._get_daily_spend()
 

@@ -57,12 +57,37 @@ def load_manifest(root: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def transfer_section(handoff: dict[str, Any]) -> str:
+    if not handoff.get("transfer_packet_exists"):
+        return ""
+    decision = handoff.get("budget_decision") or "unknown"
+    boot = handoff.get("boot_commands") or []
+    boot_lines = "\n".join(f"- `{c}`" for c in boot) if boot else "- (none in packet)"
+    halt = ""
+    if decision == "halt_human":
+        halt = "\n\n**HALT:** Budget exhausted — human lane only. Do not auto-spawn or burn cloud tokens."
+    return f"""
+## Agent Transfer (successor bootstrap)
+
+| Field | Value |
+|---|---|
+| Transfer packet | `{handoff.get("transfer_packet_path", ".agents/handoffs/transfer_packet.json")}` |
+| Budget decision | `{decision}` |
+{halt}
+
+### Boot commands (from ATP)
+
+{boot_lines}
+"""
+
+
 def render_boot_context(manifest: dict[str, Any]) -> str:
     git = manifest.get("git", {})
     handoff = manifest.get("handoff", {})
     beads = manifest.get("beads", {})
     policy = manifest.get("context_policy", {})
     audit = manifest.get("audit", {})
+    transfer = transfer_section(handoff)
 
     status_lines = git.get("status_short") or []
     status_text = "\n".join(status_lines) if status_lines else "clean or unavailable"
@@ -101,7 +126,7 @@ Latest pointer exists: {handoff.get('latest_pointer_exists', False)}
 Latest pointer path: {handoff.get('latest_pointer_path')}
 Handoff path: {handoff.get('handoff_path')}
 ```
-
+{transfer}
 ## Active Beads
 
 ```text

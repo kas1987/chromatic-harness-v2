@@ -136,9 +136,23 @@ def _context_gate_advisory(description: str, prompt: str, complexity_level: str)
         handoff_path = _REPO / ".agents" / "handoffs" / "latest.json"
         if handoff_path.is_file():
             handoff_hint = " | handoff: .agents/handoffs/latest.json"
+        budget_hint = ""
+        tp_path = _REPO / ".agents" / "handoffs" / "transfer_packet.json"
+        if tp_path.is_file():
+            try:
+                import json
+
+                tp = json.loads(tp_path.read_text(encoding="utf-8"))
+                decision = (tp.get("budget") or {}).get("decision", "")
+                if decision == "halt_human":
+                    budget_hint = " | BUDGET HALT: human lane only"
+                elif decision:
+                    budget_hint = f" | budget: {decision}"
+            except Exception:
+                pass
         return (
             f" | CRG {len(result.allowed_resources)} resources"
-            f"{handoff_hint} | ops: AGENT_OPERATIONS.md"
+            f"{handoff_hint}{budget_hint} | ops: AGENT_OPERATIONS.md"
         )
     except Exception:
         return ""
