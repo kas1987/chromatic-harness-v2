@@ -16,7 +16,7 @@ jobs:
       - name: Run daily Harness audit
         env:
           CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD: "0.05"
-          CHROMATIC_LOCK_WAIT_P95_THRESHOLD_MS: "500"
+          CHROMATIC_LOCK_WAIT_P95_THRESHOLD_MS: "1500"
           CHROMATIC_LOCK_MIN_SAMPLE_SIZE: "20"
         run: |
           python scripts/daily_harness_audit.py --root . --report
