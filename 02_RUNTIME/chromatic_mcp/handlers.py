@@ -15,10 +15,17 @@ _RUNTIME = REPO_ROOT / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
+
 def _session_id(raw: str | None) -> str:
     sid = (raw or "").strip()
     if sid:
         return sid
+    session_file = REPO_ROOT / ".agents" / "handoffs" / "cursor_session_id.txt"
+    if session_file.is_file():
+        try:
+            return session_file.read_text(encoding="utf-8").strip()
+        except Exception:
+            pass
     return "anonymous-session"
 
 
@@ -43,7 +50,9 @@ def workflow_go(mode: str = "GO") -> dict[str, Any]:
     return _run_script("workflow_go.py", mode)
 
 
-def workflow_git_ship(*, dry_run: bool = True, session_id: str | None = None) -> dict[str, Any]:
+def workflow_git_ship(
+    *, dry_run: bool = True, session_id: str | None = None
+) -> dict[str, Any]:
     args = ["ship", "--from-log", "--verifier", "approve", "--run-tests"]
     if not dry_run:
         args.append("--execute")

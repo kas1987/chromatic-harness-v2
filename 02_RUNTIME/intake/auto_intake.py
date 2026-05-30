@@ -70,10 +70,12 @@ def _existing_open_titles(
     Best effort only: if bd list fails, return empty set and continue processing.
     """
     titles: set[str] = set()
-    proc = _run_bd(["list", "--status", "open", "--limit", "0", "--json"], cwd=cwd, runner=runner)
+    proc = _run_bd(
+        ["list", "--status", "open", "--limit", "0", "--json"], cwd=cwd, runner=runner
+    )
     if proc.returncode != 0:
         return titles
-    rows = _extract_rows((proc.stdout or "") + (proc.stderr or ""))
+    rows = _extract_rows(proc.stdout or "")
     for row in rows:
         raw = str(row.get("title") or row.get("name") or row.get("summary") or "")
         norm = _normalize_title(raw)
@@ -200,7 +202,9 @@ def _bd_create(
     return bool(bead_id), bead_id, out.strip()[:200]
 
 
-def _bd_claim(bead_id: str, *, cwd: Path, runner=None, dry_run: bool = False) -> tuple[bool, str]:
+def _bd_claim(
+    bead_id: str, *, cwd: Path, runner=None, dry_run: bool = False
+) -> tuple[bool, str]:
     if dry_run:
         return True, "dry-run-claim"
     proc = _run_bd(["update", bead_id, "--claim"], cwd=cwd, runner=runner)
@@ -224,7 +228,9 @@ def process_entry(
 
     if _should_skip(entry):
         if not dry_run:
-            record_status(entry, "skipped", path=qpath, repo_root=repo, error="skip rule")
+            record_status(
+                entry, "skipped", path=qpath, repo_root=repo, error="skip rule"
+            )
         return ProcessResult(entry.id, entry.kind, "skipped", message="skip rule")
 
     if not dry_run:
@@ -237,29 +243,49 @@ def process_entry(
                 ok, msg = _bd_claim(bead_id, cwd=repo, runner=runner, dry_run=dry_run)
                 if not ok:
                     if not dry_run:
-                        record_status(entry, "failed", path=qpath, repo_root=repo, error=msg)
-                    return ProcessResult(entry.id, entry.kind, "failed", bead_id=bead_id, message=msg)
+                        record_status(
+                            entry, "failed", path=qpath, repo_root=repo, error=msg
+                        )
+                    return ProcessResult(
+                        entry.id, entry.kind, "failed", bead_id=bead_id, message=msg
+                    )
             if not dry_run:
-                record_status(entry, "processed", path=qpath, repo_root=repo, bead_id=bead_id)
+                record_status(
+                    entry, "processed", path=qpath, repo_root=repo, bead_id=bead_id
+                )
             return ProcessResult(
-                entry.id, entry.kind, "processed", bead_id=bead_id, message="dispatch claimed"
+                entry.id,
+                entry.kind,
+                "processed",
+                bead_id=bead_id,
+                message="dispatch claimed",
             )
 
         tasks = (
             simple_decompose(entry.goal or entry.title)
             if entry.kind == "goal"
-            else [{"title": entry.title[:200], "description": entry.goal or entry.title}]
+            else [
+                {"title": entry.title[:200], "description": entry.goal or entry.title}
+            ]
         )
+
+        if existing_open_titles is not None:
+            for task in tasks:
+                title_norm = _normalize_title(task["title"])
+                if title_norm and title_norm in existing_open_titles:
+                    message = f"prevented duplicate open-title: {task['title'][:120]}"
+                    if not dry_run:
+                        record_status(
+                            entry, "skipped", path=qpath, repo_root=repo, error=message
+                        )
+                    return ProcessResult(
+                        entry.id, entry.kind, "skipped", message=message
+                    )
 
         entry_lane = _resolve_lane(entry)
         created: list[str] = []
         for task in tasks:
             title_norm = _normalize_title(task["title"])
-            if title_norm and existing_open_titles is not None and title_norm in existing_open_titles:
-                message = f"prevented duplicate open-title: {task['title'][:120]}"
-                if not dry_run:
-                    record_status(entry, "skipped", path=qpath, repo_root=repo, error=message)
-                return ProcessResult(entry.id, entry.kind, "skipped", message=message)
             ok, bead_id, msg = _bd_create(
                 task["title"],
                 description=task.get("description", ""),
@@ -272,7 +298,9 @@ def process_entry(
             )
             if not ok:
                 if not dry_run:
-                    record_status(entry, "failed", path=qpath, repo_root=repo, error=msg)
+                    record_status(
+                        entry, "failed", path=qpath, repo_root=repo, error=msg
+                    )
                 return ProcessResult(entry.id, entry.kind, "failed", message=msg)
             if claim and bead_id:
                 _bd_claim(bead_id, cwd=repo, runner=runner, dry_run=dry_run)

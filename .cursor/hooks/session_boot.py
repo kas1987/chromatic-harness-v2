@@ -21,6 +21,13 @@ def _session_id() -> str:
     sid = os.environ.get("CHROMATIC_SESSION_ID", "").strip()
     if sid:
         return sid
+    if _SESSION_ID_FILE.is_file():
+        try:
+            file_sid = _SESSION_ID_FILE.read_text(encoding="utf-8").strip()
+            if file_sid:
+                return file_sid
+        except Exception:
+            pass
     generated = f"cursor-{uuid.uuid4()}"
     _SESSION_ID_FILE.parent.mkdir(parents=True, exist_ok=True)
     _SESSION_ID_FILE.write_text(generated, encoding="utf-8")

@@ -92,50 +92,56 @@ def acquire_lock(
         attempts += 1
         now = _utc_now()
         expires = now + timedelta(seconds=lease_seconds)
-        conn = _ensure_db()
         try:
-            stale = conn.execute(
-                "SELECT expires_at FROM session_locks WHERE lock_name = ?",
-                (lock_name,),
-            ).fetchone()
-            if stale:
-                try:
-                    stale_ts = _parse_iso(str(stale[0]))
-                except ValueError:
-                    stale_ts = now - timedelta(seconds=1)
-                if stale_ts <= now:
-                    conn.execute("DELETE FROM session_locks WHERE lock_name = ?", (lock_name,))
-
+            conn = _ensure_db()
             try:
-                conn.execute(
-                    """
-                    INSERT INTO session_locks
-                    (lock_name, owner_session_id, owner_token, acquired_at, expires_at)
-                    VALUES (?, ?, ?, ?, ?)
-                    """,
-                    (
-                        lock_name,
-                        session_id,
-                        owner_token,
-                        _utc_iso(now),
-                        _utc_iso(expires),
-                    ),
-                )
-                conn.commit()
-                wait_seconds = time.monotonic() - started
-                _emit_lock_metric(
-                    event_type="lock.acquire",
-                    lock_name=lock_name,
-                    session_id=session_id,
-                    wait_seconds=wait_seconds,
-                    attempts=attempts,
-                    decision="ok",
-                )
-                return owner_token
-            except sqlite3.IntegrityError:
-                pass
-        finally:
-            conn.close()
+                stale = conn.execute(
+                    "SELECT expires_at FROM session_locks WHERE lock_name = ?",
+                    (lock_name,),
+                ).fetchone()
+                if stale:
+                    try:
+                        stale_ts = _parse_iso(str(stale[0]))
+                    except ValueError:
+                        stale_ts = now - timedelta(seconds=1)
+                    if stale_ts <= now:
+                        conn.execute(
+                            "DELETE FROM session_locks WHERE lock_name = ?",
+                            (lock_name,),
+                        )
+
+                try:
+                    conn.execute(
+                        """
+                        INSERT INTO session_locks
+                        (lock_name, owner_session_id, owner_token, acquired_at, expires_at)
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            lock_name,
+                            session_id,
+                            owner_token,
+                            _utc_iso(now),
+                            _utc_iso(expires),
+                        ),
+                    )
+                    conn.commit()
+                    wait_seconds = time.monotonic() - started
+                    _emit_lock_metric(
+                        event_type="lock.acquire",
+                        lock_name=lock_name,
+                        session_id=session_id,
+                        wait_seconds=wait_seconds,
+                        attempts=attempts,
+                        decision="ok",
+                    )
+                    return owner_token
+                except sqlite3.IntegrityError:
+                    pass
+            finally:
+                conn.close()
+        except sqlite3.OperationalError:
+            pass
 
         if time.monotonic() - started >= timeout_seconds:
             wait_seconds = time.monotonic() - started
