@@ -238,7 +238,9 @@ def _emit_delegation_log(packet: dict) -> None:
     provider_choices = packet.get("provider_choices")
     top = provider_choices[0] if isinstance(provider_choices, list) and provider_choices else {}
     provider = top.get("provider") if isinstance(top, dict) else "unknown"
-    model = top.get("model") if isinstance(top, dict) else "unknown"
+    model = top.get("model") if isinstance(top, dict) else ""
+    if provider and not model:
+        model = f"{provider}:default"
 
     record = {
         "event_type": "delegation.gate",

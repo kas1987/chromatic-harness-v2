@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-30T07:38:44.131703+00:00",
+  "generated_at": "2026-05-30T07:57:11.039734+00:00",
   "rigs_scanned": [
     "chromatic-harness-v2"
   ],
@@ -9,6 +9,6 @@
   "promoted": [],
   "skipped": [],
   "dry_run": false,
-  "min_confidence": 0.5,
+  "min_confidence": 0.6,
   "global_hub": false
 }
