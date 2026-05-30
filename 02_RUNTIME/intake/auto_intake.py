@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 from activity.lanes import apply_lane_to_bead_fields, normalize_lane
+from intake.bd_runner import resolve_bd_argv
 from intake.queue import (
     IntakeEntry,
     default_queue_path,
@@ -82,7 +83,7 @@ def _run_bd(
     cwd: Path,
     runner: Callable[[list[str], Path], subprocess.CompletedProcess[str]] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    cmd = ["bd", *args]
+    cmd = [*resolve_bd_argv(), *args]
     if runner:
         return runner(cmd, cwd)
     return subprocess.run(
@@ -90,6 +91,8 @@ def _run_bd(
         cwd=cwd,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=60,
         check=False,
     )
