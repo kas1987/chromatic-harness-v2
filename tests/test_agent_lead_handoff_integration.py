@@ -174,7 +174,7 @@ class TestAgentLeadHandoffIntegration:
             "type": "task",
             "lane": "review",
             "context": {
-                "mission_id": "CHR-HANDOFF-1",
+                "mission_id": f"CHR-HANDOFF-{uuid.uuid4().hex[:8]}",
                 "suggested_by": "agent_lead",
                 "confidence_score": 88.5,
             },
