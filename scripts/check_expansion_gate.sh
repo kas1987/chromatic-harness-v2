@@ -27,6 +27,21 @@ check_file() {
 check_file "$GATE_DOC" "GOVERNANCE_EXPANSION_GATE.md"
 check_file "$MATRIX_DOC" "VALIDATION_MATRIX.md"
 
+# Machine-verifiable spine check (bead chromatic-harness-v2-4do0): when a layer
+# is named via SPINE_CHECK_LAYERS, verify it is actually wired in the codegraph
+# (indexed symbols with edges), not just checkbox-claimed. Advisory unless
+# SPINE_CHECK_STRICT=1. Never blocks the doc check above on its own.
+if [ -n "${SPINE_CHECK_LAYERS:-}" ]; then
+    spine_args=""
+    [ "${SPINE_CHECK_STRICT:-0}" = "1" ] && spine_args="--strict"
+    echo "EXPANSION_GATE: spine check for: $SPINE_CHECK_LAYERS"
+    # shellcheck disable=SC2086
+    if ! python "$REPO_ROOT/scripts/check_layer_spine.py" $spine_args $SPINE_CHECK_LAYERS; then
+        echo "EXPANSION_GATE: FAIL: prerequisite layer(s) not wired in codegraph"
+        fail=1
+    fi
+fi
+
 if [ "$fail" -eq 0 ]; then
     echo "EXPANSION_GATE: PASS"
     exit 0
