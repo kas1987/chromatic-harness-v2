@@ -32,12 +32,12 @@ Canonical map of Chromatic repos on this machine vs GitHub (`kas1987`), with har
 | Chromatic Harness v2 | `C:\Users\kas41\chromatic-harness-v2` | `kas1987/chromatic-harness-v2` | `session/chromatic-harness-v2-initial` | Primary harness | **Aligned** |
 | Fusion Computer | `C:\Users\kas41\fusion-computer` | `kas1987/fusion-computer` | `session/2026-05-28-harness-v2` | Templates & standards rig | **Aligned** |
 | Claude config | `C:\Users\kas41\.claude` | `kas1987/claude-config` | `session/mc-x1bi-governance-fixes` | Global Claude config | **Aligned** |
-| Chromatic stack | `C:\Users\kas41\chromatic-stack` | `kas1987/chromatic-stack` | `session/repo-governance-20260530` | Docker local agent stack | **Aligned** |
-| Design Studios | `C:\Users\kas41\chromatic-design-studios` | `kas1987/chromatic-design-studios` | `session/repo-governance-20260530` | Design system rig | **Aligned** |
+| Chromatic stack | `C:\Users\kas41\chromatic-stack` | `kas1987/chromatic-stack` | `master` | Docker local agent stack | **Aligned** |
+| Design Studios | `C:\Users\kas41\chromatic-design-studios` | `kas1987/chromatic-design-studios` | `master` | Design system rig | **Aligned** |
 | Claude Powerline | `C:\Users\kas41\claude-powerline` | `Owloops/claude-powerline` | `main` | Vendor statusline | Out of band |
-| Zelexdoll theme | `C:\Users\kas41\zelexdoll-theme` | *(none)* | `master` | Theme/assets | Out of band |
+| Zelexdoll theme | `C:\Users\kas41\archived\zelexdoll-theme` | *(none)* | — | Shopify theme (archived 2026-05-30) | **Archived** — see `ARCHIVED.md` in folder |
 | Global agents hub | `C:\Users\kas41\.agents` | *(none)* | — | Cross-rig learnings | **Fixed** — `.git` removed; plain directory hub |
-| User home | `C:\Users\kas41` | *(removed 2026-05-30)* | — | Was accidental git root | **Fixed** — `.git` → `.git.home-removed-20260530` |
+| User home | `C:\Users\kas41` | *(none)* | — | Was accidental git root | **Fixed** — backup `.git` deleted 2026-05-30 |
 
 **Submodule (correct):** `chromatic-harness-v2/02_RUNTIME/runtime-engines/roach-pi` → `tmdgusya/roach-pi`
 
@@ -69,6 +69,14 @@ Run `gh repo list kas1987 --limit 200` for live list. Only these are cloned unde
 | Creative | `The-Veil`, `Viel-Small-Town`, `3D_Meta` |
 | Routing | `9router`, `dmx` |
 | Legacy | `CCP`, `JOB`, `Master_CCC` |
+
+---
+
+## Archived projects
+
+| Project | Path | Notes |
+|---------|------|-------|
+| Zelexdoll theme | `C:\Users\kas41\archived\zelexdoll-theme` | Shopify theme; moved off profile root 2026-05-30 |
 
 ---
 
