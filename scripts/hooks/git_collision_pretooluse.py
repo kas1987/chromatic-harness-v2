@@ -31,11 +31,11 @@ _PR_RE = re.compile(r"\bgh\s+pr\s+create\b")
 _FORCE_RE = re.compile(r"(\s-f\b|--force\b|--force-with-lease\b|\s\+[\w/]+:)")
 
 
-def _current_branch() -> str:
+def _current_branch(cwd: Path | None = None) -> str:
     try:
         r = subprocess.run(
             ["git", "branch", "--show-current"],
-            cwd=_REPO,
+            cwd=str(cwd) if cwd is not None else str(_REPO),
             capture_output=True,
             text=True,
             timeout=10,
@@ -78,28 +78,43 @@ def main() -> int:
     if not (is_pr or is_push):
         return 0
 
-    # The probe reasons about _REPO (this repo). A command that `cd`s into a
-    # *different* repo (e.g. the wiki) would be judged against the wrong repo, so
-    # fail-open rather than false-block. Detect a leading `cd <path>` outside _REPO.
+    # Determine the effective working directory for the git/gh probes.
+    # Priority: (1) explicit payload cwd field, (2) leading `cd <path> &&`, (3) _REPO.
+    effective_cwd: Path | None = None
+
+    # Check for explicit cwd in the payload (Claude Code sets this on Bash calls).
+    payload_cwd = payload.get("cwd") or ((payload.get("tool_input") or {}).get("cwd"))
+    if payload_cwd:
+        try:
+            effective_cwd = Path(str(payload_cwd)).resolve()
+        except (OSError, ValueError):
+            effective_cwd = None
+
+    # Fall back to leading `cd <path> &&` detection.
     m = re.match(r"\s*cd\s+(['\"]?)([^'\"&|;]+)\1\s*&&", command)
-    if m:
+    if m and effective_cwd is None:
         target = m.group(2).strip()
         try:
-            if (
-                Path(target).resolve() != _REPO
-                and _REPO not in Path(target).resolve().parents
-            ):
-                return 0
+            effective_cwd = Path(target).resolve()
         except (OSError, ValueError):
+            return 0  # fail-open: can't parse path
+
+    # If the effective cwd is outside _REPO, fail-open: we can't reliably judge
+    # collisions for an unrelated repo.
+    if effective_cwd is not None:
+        if effective_cwd != _REPO and _REPO not in effective_cwd.parents:
             return 0
+    else:
+        effective_cwd = _REPO
 
     try:
         from concurrency.github_collision import OPEN_PR, PUSH, check_github_collision
 
         verdict = check_github_collision(
-            branch=_current_branch(),
+            branch=_current_branch(effective_cwd),
             action=OPEN_PR if is_pr else PUSH,
             force=bool(_FORCE_RE.search(command)),
+            cwd=str(effective_cwd),
         )
     except Exception:  # noqa: BLE001 — never break the tool call
         return 0
