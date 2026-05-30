@@ -118,7 +118,7 @@ export default function ConsolePage() {
 
   const filteredBeads = beads.filter(b => {
     if (beadFilter !== "all" && b.status !== beadFilter) return false;
-    if (beadPriorityFilter !== "all" && b.priority !== beadPriorityFilter) return false;
+    if (beadPriorityFilter !== "all" && String(b.priority) !== beadPriorityFilter.replace("p", "")) return false;
     return true;
   });
 
