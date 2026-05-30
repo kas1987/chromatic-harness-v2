@@ -436,11 +436,16 @@ def test_evaluate_epic_swot_policy_allows_when_complexity_high_and_no_recent_ope
     )
 
     snap = SimpleNamespace(session_est_tokens=160000, decision="spawn")
-    # Patch live query to force JSONL fallback so the test controls exactly which beads exist.
     import unittest.mock
 
-    with unittest.mock.patch.object(
-        session_closeout, "_fetch_swot_rows_live", return_value=None
+    # When live query succeeds with empty list (no open epics), creation is allowed.
+    with (
+        unittest.mock.patch.object(
+            session_closeout, "_fetch_swot_rows_live", return_value=[]
+        ),
+        unittest.mock.patch.object(
+            session_closeout, "_fetch_pending_swot_tasks_live", return_value=[]
+        ),
     ):
         out = session_closeout.evaluate_epic_swot_policy(
             snapshot=snap,
@@ -452,6 +457,26 @@ def test_evaluate_epic_swot_policy_allows_when_complexity_high_and_no_recent_ope
         )
     assert out["allow_create"] is True
     assert out["confidence_score"] >= out["threshold"]
+
+    # When live query fails (bd unavailable), creation is blocked to prevent duplicate spam.
+    with (
+        unittest.mock.patch.object(
+            session_closeout, "_fetch_swot_rows_live", return_value=None
+        ),
+        unittest.mock.patch.object(
+            session_closeout, "_fetch_pending_swot_tasks_live", return_value=None
+        ),
+    ):
+        out_fail_closed = session_closeout.evaluate_epic_swot_policy(
+            snapshot=snap,
+            beads_ready=[str(i) for i in range(9)],
+            git={"status_short": [f"M f{i}" for i in range(30)]},
+            issues_path=issues,
+            governance_path=gov,
+            now_utc=now,
+        )
+    assert out_fail_closed["allow_create"] is False
+    assert "bd live query failed" in out_fail_closed["decision_reason"]
 
 
 def test_evaluate_epic_swot_policy_handles_dict_coverage_values(tmp_path: Path):
@@ -968,7 +993,9 @@ def test_main_auto_turn_threshold_triggers_post_mortem_and_session_end_harvest(
     assert (tmp_path / payload["auto_turn"]["observation_log_path"]).is_file()
 
     harvest_call = next(
-        call for call in run_calls if "harvest_rigs.py" in " ".join(str(x) for x in call)
+        call
+        for call in run_calls
+        if "harvest_rigs.py" in " ".join(str(x) for x in call)
     )
     assert "--execute" in harvest_call
     assert "--session-end" in harvest_call
@@ -994,11 +1021,18 @@ def test_main_auto_turn_uses_checkpoint_when_tasks_open(tmp_path: Path, monkeypa
             return FakeSnapshot()
 
     def fake_run(cmd, *, timeout=120, cwd=None):
-        return 0, "1\t2\tfoo.py" if cmd[:4] == ["git", "diff", "--numstat", "HEAD"] else "ok"
+        return 0, "1\t2\tfoo.py" if cmd[:4] == [
+            "git",
+            "diff",
+            "--numstat",
+            "HEAD",
+        ] else "ok"
 
     monkeypatch.setattr(session_closeout, "_REPO", tmp_path)
     monkeypatch.setattr(session_closeout, "BudgetLedger", FakeLedger)
-    monkeypatch.setattr(session_closeout, "git_snapshot", lambda: {"status_short": [" M foo.py"]})
+    monkeypatch.setattr(
+        session_closeout, "git_snapshot", lambda: {"status_short": [" M foo.py"]}
+    )
     monkeypatch.setattr(session_closeout, "beads_ready_ids", lambda: ["bead-1"])
     monkeypatch.setattr(
         session_closeout,
