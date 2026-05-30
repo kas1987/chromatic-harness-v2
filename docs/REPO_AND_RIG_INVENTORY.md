@@ -115,11 +115,20 @@ C:\Users\kas41\
 
 ---
 
+## Downloads ingest
+
+See [docs/audit/DOWNLOADS_INGEST_20260530.md](audit/DOWNLOADS_INGEST_20260530.md) for PDR/zips pulled from `~/Downloads` into repo + beads.
+
+---
+
 ## Commands
 
 ```powershell
 # Regenerate audit table
 powershell -File scripts/audit_local_repos.ps1
+
+# Dedupe test closure noise in intake queue
+python scripts/dedupe_intake_queue.py
 
 # Harvest from extra rigs into harness hub
 python scripts/harvest_rigs.py --roots C:\Users\kas41\fusion-computer,C:\Users\kas41\chromatic-design-studios
