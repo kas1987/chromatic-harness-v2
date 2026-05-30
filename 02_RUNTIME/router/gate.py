@@ -362,6 +362,50 @@ def main() -> None:
     sys.exit(0)
 
 
+def _audit_router_decision(entry: dict) -> None:
+    """Write router.decision span + execution entry to two-log audit. Fail-open."""
+    try:
+        sys.path.insert(0, str(_RUNTIME_DIR))
+        from audit.two_log import TwoLogAudit  # type: ignore[import]
+
+        audit = TwoLogAudit(_REPO)
+        audit.append_execution(
+            {
+                "event_type": "router.decision",
+                "agent_role": "router",
+                "task_id": "routing",
+                "provider": entry.get("provider", ""),
+                "model": entry.get("target_model", ""),
+                "tier": entry.get("tier"),
+                "blocked": entry.get("blocked", False),
+                "c_level": entry.get("c_level", ""),
+                "speed_mode": entry.get("speed_mode", ""),
+                "reason": entry.get("reason", ""),
+                "description": entry.get("description", "")[:120],
+            }
+        )
+        audit.append_trace_span(
+            {
+                "name": "router.decision",
+                "kind": "INTERNAL",
+                "status": "OK",
+                "duration_ms": 0,
+                "attributes": {
+                    "gen_ai.operation.name": "routing",
+                    "gen_ai.request.model": entry.get("target_model", ""),
+                    "router.provider": entry.get("provider", ""),
+                    "router.tier": entry.get("tier"),
+                    "router.blocked": entry.get("blocked", False),
+                    "router.c_level": entry.get("c_level", ""),
+                    "router.speed_mode": entry.get("speed_mode", ""),
+                    "router.reason": entry.get("reason", ""),
+                },
+            }
+        )
+    except Exception:  # noqa: BLE001 — telemetry never blocks routing
+        pass
+
+
 def _emit_advisory(advisory: str) -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     sys.stdout.write(
