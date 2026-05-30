@@ -320,11 +320,19 @@ def test_main_passes_epic_policy_config_override(tmp_path: Path, monkeypatch):
         "write_handoff",
         lambda *args, **kwargs: _REPO / "12_HANDOFFS" / "handoff.md",
     )
-    monkeypatch.setattr(session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True})
-    monkeypatch.setattr(session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True}
+    )
+    monkeypatch.setattr(
+        session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None
+    )
     monkeypatch.setattr(session_closeout, "log_activity", lambda *args, **kwargs: None)
-    monkeypatch.setattr(session_closeout, "evaluate_epic_swot_policy", fake_evaluate_epic_swot_policy)
-    monkeypatch.setattr(session_closeout, "find_latest_open_swot_epic", lambda *args, **kwargs: {})
+    monkeypatch.setattr(
+        session_closeout, "evaluate_epic_swot_policy", fake_evaluate_epic_swot_policy
+    )
+    monkeypatch.setattr(
+        session_closeout, "find_latest_open_swot_epic", lambda *args, **kwargs: {}
+    )
     monkeypatch.setattr(
         session_closeout,
         "_write_closeout_telemetry_snapshot",
@@ -662,3 +670,185 @@ def test_evaluate_epic_swot_policy_respects_external_threshold(tmp_path: Path):
 
     assert out["threshold"] == 0.99
     assert out["allow_create"] is False
+
+
+def test_load_epic_swot_policy_config_rejects_invalid_scalar_ranges(tmp_path: Path):
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+
+    cfg = tmp_path / "epic_swot_policy.json"
+    cfg.write_text(
+        json.dumps(
+            {
+                "confidence_threshold": 1.5,
+                "block_penalty": -0.1,
+                "coverage": {
+                    "min_field_coverage": "bad",
+                    "field_weight": 2,
+                    "max_bonus": -1,
+                    "fields": "provider",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    out = session_closeout._load_epic_swot_policy_config(cfg)
+
+    assert out["confidence_threshold"] == 0.55
+    assert out["block_penalty"] == 0.8
+    assert out["coverage"]["min_field_coverage"] == 0.85
+    assert out["coverage"]["field_weight"] == 0.04
+    assert out["coverage"]["max_bonus"] == 0.14
+    assert out["coverage"]["fields"] == [
+        "provider",
+        "model",
+        "execution_status",
+        "task_id",
+    ]
+
+
+def test_load_epic_swot_policy_config_rejects_invalid_nested_thresholds(tmp_path: Path):
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+
+    cfg = tmp_path / "epic_swot_policy.json"
+    cfg.write_text(
+        json.dumps(
+            {
+                "history_windows": {"recent_open_hours": 0, "rolling_days": -5},
+                "history_limits": {"open_swot_total_cap": 0},
+                "session_tokens": {"high": {"min": -1, "score": 5}},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    out = session_closeout._load_epic_swot_policy_config(cfg)
+
+    assert out["history_windows"]["recent_open_hours"] == 8
+    assert out["history_windows"]["rolling_days"] == 7
+    assert out["history_limits"]["open_swot_total_cap"] == 1
+    assert out["session_tokens"]["high"]["min"] == 120000
+    assert out["session_tokens"]["high"]["score"] == 0.24
+
+
+def test_load_swot_epic_history_uses_live_query_when_available(tmp_path: Path):
+    """Live bd query result takes precedence over stale JSONL."""
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+    import unittest.mock
+
+    now = datetime(2026, 5, 30, 10, 0, 0, tzinfo=timezone.utc)
+    issues = tmp_path / "issues.jsonl"
+    # JSONL has no open rows — live query has one open row
+    issues.write_text("", encoding="utf-8")
+    live_row = {
+        "id": "chromatic-harness-v2-live",
+        "title": "EPIC-SWOT NEXT [20260530T095000Z]: Live",
+        "issue_type": "epic",
+        "status": "open",
+        "created_at": "2026-05-30T09:50:00Z",
+    }
+    with unittest.mock.patch.object(
+        session_closeout, "_fetch_swot_rows_live", return_value=[live_row]
+    ):
+        stats = session_closeout._load_swot_epic_history(
+            issues_path=issues, now_utc=now
+        )
+    assert stats["open_swot_total"] == 1
+
+
+def test_load_swot_epic_history_falls_back_to_jsonl(tmp_path: Path):
+    """When live query returns None, JSONL provides the history data."""
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+    import unittest.mock
+
+    now = datetime(2026, 5, 30, 10, 0, 0, tzinfo=timezone.utc)
+    issues = tmp_path / "issues.jsonl"
+    issues.write_text(
+        json.dumps(
+            {
+                "id": "chromatic-harness-v2-jsonl",
+                "title": "EPIC-SWOT NEXT [20260530T090000Z]: JSONL",
+                "issue_type": "epic",
+                "status": "open",
+                "created_at": "2026-05-30T09:00:00Z",
+            }
+        ),
+        encoding="utf-8",
+    )
+    with unittest.mock.patch.object(
+        session_closeout, "_fetch_swot_rows_live", return_value=None
+    ):
+        stats = session_closeout._load_swot_epic_history(
+            issues_path=issues, now_utc=now
+        )
+    assert stats["open_swot_total"] == 1
+
+
+def test_load_swot_epic_history_cap_enforced(tmp_path: Path):
+    """open_swot_total_cap=1: policy blocks when live query returns 2 open SWOT epics."""
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+    import unittest.mock
+
+    now = datetime(2026, 5, 30, 10, 0, 0, tzinfo=timezone.utc)
+    issues = tmp_path / "issues.jsonl"
+    issues.write_text("", encoding="utf-8")
+    gov = tmp_path / "gov.json"
+    gov.write_text(
+        json.dumps({"event_count": 0, "canonical_coverage": {}}), encoding="utf-8"
+    )
+    live_rows = [
+        {
+            "id": f"chromatic-harness-v2-swot-{i}",
+            "title": f"EPIC-SWOT NEXT [202605300900{i:02d}Z]: Seed",
+            "issue_type": "epic",
+            "status": "open",
+            "created_at": f"2026-05-30T09:00:0{i}Z",
+        }
+        for i in range(2)
+    ]
+    snap = __import__("types").SimpleNamespace(
+        session_est_tokens=50000, decision="spawn"
+    )
+    with unittest.mock.patch.object(
+        session_closeout, "_fetch_swot_rows_live", return_value=live_rows
+    ):
+        out = session_closeout.evaluate_epic_swot_policy(
+            snapshot=snap,
+            beads_ready=[],
+            git={"status_short": []},
+            issues_path=issues,
+            governance_path=gov,
+            now_utc=now,
+        )
+    assert out["allow_create"] is False
+    assert "open EPIC-SWOT" in out["decision_reason"]
+
+
+def test_load_swot_epic_history_counts_in_progress(tmp_path: Path):
+    """in_progress SWOT epics count toward open_swot_total (not just 'open')."""
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+    import unittest.mock
+
+    now = datetime(2026, 5, 30, 10, 0, 0, tzinfo=timezone.utc)
+    issues = tmp_path / "issues.jsonl"
+    issues.write_text("", encoding="utf-8")
+    live_row = {
+        "id": "chromatic-harness-v2-wip",
+        "title": "EPIC-SWOT NEXT [20260530T090000Z]: WIP",
+        "issue_type": "epic",
+        "status": "in_progress",
+        "created_at": "2026-05-30T09:00:00Z",
+    }
+    with unittest.mock.patch.object(
+        session_closeout, "_fetch_swot_rows_live", return_value=[live_row]
+    ):
+        stats = session_closeout._load_swot_epic_history(
+            issues_path=issues, now_utc=now
+        )
+    assert stats["open_swot_total"] == 1
