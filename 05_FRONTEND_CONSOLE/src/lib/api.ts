@@ -252,6 +252,23 @@ export async function getMissionAnalytics(
   }
 }
 
+export interface SynthesisResult {
+  mission_id: string;
+  recommendation: string;
+  confidence_score: number;
+  risk_level: string;
+  summary: string;
+  bead_created?: boolean;
+}
+
+export async function synthesizeMission(
+  missionId: string,
+  createBead?: boolean
+): Promise<SynthesisResult> {
+  const qs = createBead ? "?create_bead=true" : "";
+  return apiCall("POST", `/missions/${missionId}/synthesize${qs}`);
+}
+
 export async function getMissionEventsRange(
   missionId: string,
   fromTs?: string,

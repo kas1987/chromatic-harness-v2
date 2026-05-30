@@ -1,0 +1,23 @@
+{
+  "artifact": "chromatic-harness-visual-control-plane",
+  "version": "0.1.0",
+  "created": "2026-05-30",
+  "purpose": "Portable PDR and scaffold for visualizing Chromatic Harness layers across Claude, Cursor, VS Code, GitHub, n8n, Mermaid, and observability systems.",
+  "entrypoints": [
+    "README.md",
+    "CHROMATIC_VISUAL_CONTROL_PLANE_INDEX.md",
+    "docs/pdr/PDR_VISUAL_CONTROL_PLANE.md",
+    "docs/playbooks/VISUAL_CONTROL_PLANE_PLAYBOOK.md"
+  ],
+  "adapters": {
+    "claude": ".claude/CLAUDE.md",
+    "cursor": ".cursor/rules/chromatic-visual-control-plane.mdc",
+    "vscode": ".vscode/tasks.json",
+    "github_actions": ".github/workflows/visual-control-plane.yml"
+  },
+  "commands": [
+    "python scripts/validate_visual_registry.py",
+    "python scripts/generate_harness_mermaid.py",
+    "python scripts/install_visual_control_plane.py --target /path/to/repo"
+  ]
+}
