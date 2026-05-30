@@ -1,11 +1,11 @@
 # Wiki v0.1 — Beads backlog
 
-Epic and children for bootstrapping `kas1987/-Chromatic_Wiki`.
+Epic and children for bootstrapping `kas1987/chromatic-wiki`.
 
 ## Epic
 
 **Bead:** `chromatic-harness-v2-ar7` — Wiki v0.1 — scaffold, mirror, first canon  
-**Wiki branch:** `main` on `kas1987/-Chromatic_Wiki` (legacy session branch `session/wiki-v0-1-initial`)
+**Wiki branch:** `main` on `kas1987/chromatic-wiki` (legacy: `kas1987/-Chromatic_Wiki`, session branch `session/wiki-v0-1-initial`)
 
 ## Children
 

@@ -6,7 +6,7 @@ Usage:
   python scripts/promote_to_wiki.py --execute
   python scripts/promote_to_wiki.py --execute --min-confidence 0.8
 
-Requires CHROMATIC_WIKI_ROOT or default C:\\Users\\kas41\\-Chromatic_Wiki
+Requires CHROMATIC_WIKI_ROOT or default C:\\Users\\kas41\\chromatic-wiki
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_WIKI = Path(r"C:\Users\kas41\-Chromatic_Wiki")
+DEFAULT_WIKI = Path(r"C:\Users\kas41\chromatic-wiki")
 LEARNINGS = REPO / ".agents" / "learnings"
 WIKI_LEARNINGS = "02_LEARNINGS"
 
@@ -132,7 +132,7 @@ def main() -> int:
             json.dumps(
                 {
                     "error": f"Wiki root not found: {wiki}",
-                    "hint": "git clone https://github.com/kas1987/-Chromatic_Wiki.git",
+                    "hint": "git clone https://github.com/kas1987/chromatic-wiki.git",
                 },
                 indent=2,
             )

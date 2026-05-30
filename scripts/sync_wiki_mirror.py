@@ -21,7 +21,7 @@ from pathlib import Path
 import yaml
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_WIKI = Path(r"C:\Users\kas41\-Chromatic_Wiki")
+DEFAULT_WIKI = Path(r"C:\Users\kas41\chromatic-wiki")
 MIRROR_HEADER = (
     "<!-- MIRRORED from chromatic-harness-v2 — edit in harness or re-run sync_wiki_mirror.py --execute -->\n"
     f"<!-- synced_at: {{ts}} source: {{src}} -->\n\n"

@@ -20,7 +20,7 @@ The goal is to stop relying on agents to infer hidden intent. Instead, agents op
 |---|---|
 | PDR ID | PDR-CHROMATIC-BEADS-001 |
 | Project | Chromatic Knowledge Operating System |
-| Repo | `kas1987/-Chromatic_Wiki` |
+| Repo | `kas1987/chromatic-wiki` |
 | Status | Draft |
 | Owner | Human Owner / Chromatic Architect |
 | Primary Runtime | OpenRouter |

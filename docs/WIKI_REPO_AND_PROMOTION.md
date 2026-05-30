@@ -5,7 +5,7 @@
 | Repo | GitHub | Local (default) | Role |
 |------|--------|-----------------|------|
 | Harness v2 | `kas1987/chromatic-harness-v2` | `chromatic-harness-v2` | Execution, beads, automation, working `.agents/` knowledge |
-| **Wiki** | `kas1987/-Chromatic_Wiki` | `C:\Users\kas41\-Chromatic_Wiki` | Durable playbooks, learnings, governance, canon registry |
+| **Wiki** | `kas1987/chromatic-wiki` | `C:\Users\kas41\chromatic-wiki` | Durable playbooks, learnings, governance, canon registry |
 
 PDR metadata: [PDR_CHROMATIC_BEADS_OPENROUTER_PIPELINE.md](pdr/PDR_CHROMATIC_BEADS_OPENROUTER_PIPELINE.md) lists the Wiki as the Chromatic Knowledge OS repo.
 
@@ -41,25 +41,25 @@ python scripts/promote_to_wiki.py --execute
 2. promote_to_wiki.py --dry-run   # list candidates ≥ min confidence
 3. Human review                   # edit in Wiki or harness
 4. promote_to_wiki.py --execute   # copy to Wiki 02_LEARNINGS/
-5. PR on -Chromatic_Wiki          # CANON_PR_CHECKLIST → registry.yaml
+5. PR on chromatic-wiki          # CANON_PR_CHECKLIST → registry.yaml
 ```
 
-Canon: [00_CANON/CANON_PR_CHECKLIST.md](https://github.com/kas1987/-Chromatic_Wiki/blob/main/00_CANON/CANON_PR_CHECKLIST.md)  
+Canon: [00_CANON/CANON_PR_CHECKLIST.md](https://github.com/kas1987/chromatic-wiki/blob/main/00_CANON/CANON_PR_CHECKLIST.md)  
 Beads: [beads/WIKI_V01_BEADS.md](beads/WIKI_V01_BEADS.md)  
-Rename: [WIKI_REPO_RENAME.md](WIKI_REPO_RENAME.md)
+Rename: [WIKI_REPO_RENAME.md](WIKI_REPO_RENAME.md) *(completed 2026-05-30)*
 
 ## Environment
 
 Override Wiki path:
 
 ```powershell
-$env:CHROMATIC_WIKI_ROOT = "C:\Users\kas41\-Chromatic_Wiki"
+$env:CHROMATIC_WIKI_ROOT = "C:\Users\kas41\chromatic-wiki"
 ```
 
 ## Clone Wiki (one-time)
 
 ```powershell
-git clone https://github.com/kas1987/-Chromatic_Wiki.git C:\Users\kas41\-Chromatic_Wiki
+git clone https://github.com/kas1987/chromatic-wiki.git C:\Users\kas41\chromatic-wiki
 ```
 
 ## Related

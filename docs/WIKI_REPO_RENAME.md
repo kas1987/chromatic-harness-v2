@@ -1,6 +1,8 @@
-# Renaming `-Chromatic_Wiki` → `chromatic-wiki` (optional)
+# Renamed: `-Chromatic_Wiki` → `chromatic-wiki`
 
-The leading hyphen in `-Chromatic_Wiki` is awkward for paths and tooling. Rename when you are ready.
+**Status:** completed 2026-05-30. GitHub repo is [`kas1987/chromatic-wiki`](https://github.com/kas1987/chromatic-wiki).
+
+The leading hyphen in `-Chromatic_Wiki` was awkward for paths and tooling.
 
 ## GitHub rename
 
