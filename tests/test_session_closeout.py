@@ -1091,3 +1091,118 @@ def test_main_auto_turn_uses_checkpoint_when_tasks_open(tmp_path: Path, monkeypa
     assert row["artifact_kind"] == "checkpoint"
     assert row["loc_insertions"] == 1
     assert row["loc_deletions"] == 2
+
+
+# ── _emit_injected_learning_outcomes tests ─────────────────────────────────
+
+
+def test_emit_outcomes_no_injected_file(tmp_path, monkeypatch):
+    """Returns ok=False with skip_reason when injected_learnings.json is absent."""
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout
+
+    monkeypatch.setattr(
+        session_closeout, "_INJECTED_LEARNINGS", tmp_path / "missing.json"
+    )
+    monkeypatch.setattr(session_closeout, "_EXECUTION_LOG", tmp_path / "exec.jsonl")
+    result = session_closeout._emit_injected_learning_outcomes()
+    assert result["ok"] is False
+    assert "skip_reason" in result
+
+
+def test_emit_outcomes_success_path(tmp_path, monkeypatch):
+    """Emits applied_success when no error events found after injection."""
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout
+
+    now = "2026-05-30T10:00:00+00:00"
+    injected = tmp_path / "injected_learnings.json"
+    injected.write_text(
+        json.dumps(
+            {
+                "injected_at": now,
+                "terms": ["router"],
+                "learnings": [
+                    {
+                        "name": "my-learning",
+                        "path": "/repo/.agents/learnings/my-learning.md",
+                        "title": "My Learning",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    # Execution log has only a normal event after injection
+    exec_log = tmp_path / "execution.jsonl"
+    exec_log.write_text(
+        json.dumps(
+            {
+                "ts": "2026-05-30T10:01:00+00:00",
+                "event_type": "workflow.go_audit",
+                "workflow_decision": "ok",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    usage_log = tmp_path / "learning_usage.jsonl"
+    usage_log.write_text("", encoding="utf-8")
+
+    import unittest.mock
+
+    monkeypatch.setattr(session_closeout, "_INJECTED_LEARNINGS", injected)
+    monkeypatch.setattr(session_closeout, "_EXECUTION_LOG", exec_log)
+    with unittest.mock.patch("activity.log._usage_log_path", return_value=usage_log):
+        result = session_closeout._emit_injected_learning_outcomes()
+
+    assert result["ok"] is True
+    assert result["outcome"] == "applied_success"
+    assert result["had_error"] is False
+    assert any(e["name"] == "my-learning" for e in result["emitted"])
+
+
+def test_emit_outcomes_failure_path(tmp_path, monkeypatch):
+    """Emits applied_failure when an error event is found after injection."""
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout
+
+    now = "2026-05-30T10:00:00+00:00"
+    injected = tmp_path / "injected_learnings.json"
+    injected.write_text(
+        json.dumps(
+            {
+                "injected_at": now,
+                "terms": [],
+                "learnings": [
+                    {"name": "my-learning", "path": "", "title": "My Learning"}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    exec_log = tmp_path / "execution.jsonl"
+    exec_log.write_text(
+        json.dumps(
+            {
+                "ts": "2026-05-30T10:02:00+00:00",
+                "event_type": "workflow.error",
+                "workflow_decision": "error",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    usage_log = tmp_path / "learning_usage.jsonl"
+    usage_log.write_text("", encoding="utf-8")
+
+    import unittest.mock
+
+    monkeypatch.setattr(session_closeout, "_INJECTED_LEARNINGS", injected)
+    monkeypatch.setattr(session_closeout, "_EXECUTION_LOG", exec_log)
+    with unittest.mock.patch("activity.log._usage_log_path", return_value=usage_log):
+        result = session_closeout._emit_injected_learning_outcomes()
+
+    assert result["ok"] is True
+    assert result["outcome"] == "applied_failure"
+    assert result["had_error"] is True

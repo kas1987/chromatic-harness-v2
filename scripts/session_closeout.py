@@ -31,6 +31,81 @@ from budget.transfer_packet import (  # noqa: E402
 )
 from orchestrator.session_compact import write_handoff  # noqa: E402
 
+_INJECTED_LEARNINGS = _REPO / ".agents" / "context" / "injected_learnings.json"
+_EXECUTION_LOG = _REPO / "07_LOGS_AND_AUDIT" / "execution" / "execution.jsonl"
+
+
+def _emit_injected_learning_outcomes() -> dict[str, Any]:
+    """Emit applied_success or applied_failure for learnings injected at session start.
+
+    Heuristic: scan execution.jsonl for error events after the injection timestamp.
+    Any error → applied_failure for all injected learnings; clean close → applied_success.
+    Fail-open: never raises, returns a summary dict.
+    """
+    result: dict[str, Any] = {"ok": False, "emitted": [], "skipped": []}
+    try:
+        if not _INJECTED_LEARNINGS.exists():
+            result["skip_reason"] = "no injected_learnings.json"
+            return result
+        rec = json.loads(_INJECTED_LEARNINGS.read_text(encoding="utf-8"))
+        learnings = rec.get("learnings") or []
+        if not learnings:
+            result["skip_reason"] = "empty learnings list"
+            return result
+        injected_at = rec.get("injected_at", "")
+
+        # Detect errors in execution.jsonl after the injection timestamp
+        had_error = False
+        if _EXECUTION_LOG.exists() and injected_at:
+            for line in _EXECUTION_LOG.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                ts = str(row.get("ts", ""))
+                if ts < injected_at:
+                    continue
+                etype = str(row.get("event_type", ""))
+                decision = str(row.get("workflow_decision", ""))
+                if (
+                    "error" in etype.lower()
+                    or "error" in decision.lower()
+                    or "fail" in decision.lower()
+                ):
+                    had_error = True
+                    break
+
+        outcome = "applied_failure" if had_error else "applied_success"
+        from activity.log import emit_learning_outcome  # type: ignore[import]
+
+        for lc in learnings:
+            name = str(lc.get("name", "")).strip()
+            if not name:
+                result["skipped"].append(lc)
+                continue
+            emitted = emit_learning_outcome(
+                _REPO,
+                learning_name=name,
+                outcome=outcome,
+                rig_id="session_closeout",
+                error_category="session_error" if had_error else "",
+            )
+            if emitted:
+                result["emitted"].append({"name": name, "outcome": outcome})
+            else:
+                result["skipped"].append(
+                    {"name": name, "reason": "duplicate or invalid"}
+                )
+
+        result["ok"] = True
+        result["outcome"] = outcome
+        result["had_error"] = had_error
+    except Exception as exc:  # noqa: BLE001
+        result["error"] = str(exc)
+    return result
+
 
 def _default_epic_swot_policy_config() -> dict[str, Any]:
     return {
@@ -1556,6 +1631,8 @@ def main() -> int:
         )
     except Exception as exc:  # noqa: BLE001
         result["session_end_event"] = {"ok": False, "error": str(exc)}
+
+    result["learning_outcomes"] = _emit_injected_learning_outcomes()
 
     print(json.dumps(result, indent=2))
     return 0
