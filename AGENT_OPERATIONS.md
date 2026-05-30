@@ -34,6 +34,7 @@ python scripts/audit_mcp_context.py --profile harness_dev
 | Step | Doc |
 |------|-----|
 | Handoff + compact rules | [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) |
+| **Repo / rig map** | [docs/REPO_AND_RIG_INVENTORY.md](docs/REPO_AND_RIG_INVENTORY.md) — `scripts/audit_local_repos.ps1` |
 | **MCP disable / lean Claude** | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
 | **Do not trust / do not do** | [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) |
 | Tools / MCP / CRG baseline | [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) |
