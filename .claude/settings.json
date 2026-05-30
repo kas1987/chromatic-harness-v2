@@ -1,4 +1,7 @@
 {
+  "env": {
+    "ROUTER_CODEGRAPH_IMPACT": "true"
+  },
   "hooks": {
     "SessionStart": [
       {
