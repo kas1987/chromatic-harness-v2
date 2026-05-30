@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "sources": [
+    {
+      "id": "agent_run_log",
+      "path": "07_LOGS_AND_AUDIT/AGENT_RUN_LOG.jsonl",
+      "format": "jsonl",
+      "skip_rows_with_keys": ["_schema", "_fields", "_source", "_gate", "_comment"],
+      "outcome_rule": {
+        "field": "result",
+        "success_values": ["success", "pass", "ok", "done"],
+        "failure_values": ["fail", "error", "blocked", "timeout"]
+      },
+      "learning_ref": {
+        "strategy": "field",
+        "field": "learning_name",
+        "fallback_field": "task_id",
+        "fallback_prefix": "task:"
+      },
+      "canonical_fields": {
+        "timestamp_utc": "timestamp",
+        "rig_id": "task_id",
+        "notes": "agent_run_log_ingest"
+      }
+    },
+    {
+      "id": "workflow_run_log",
+      "path": "docs/workflows/WORKFLOW_RUN_LOG.jsonl",
+      "format": "jsonl",
+      "skip_rows_with_keys": ["_schema", "_fields", "_source", "_comment"],
+      "outcome_rule": {
+        "field": "result",
+        "success_values": ["success", "pass", "ok", "done"],
+        "failure_values": ["fail", "error", "blocked", "timeout"],
+        "confidence_field": "confidence_score",
+        "confidence_success_threshold": 75.0
+      },
+      "learning_ref": {
+        "strategy": "field",
+        "field": "learning_name",
+        "fallback_field": "task_id",
+        "fallback_prefix": "task:"
+      },
+      "canonical_fields": {
+        "timestamp_utc": "timestamp",
+        "rig_id": "workflow_id",
+        "notes": "workflow_run_log_ingest"
+      }
+    },
+    {
+      "id": "execution_log",
+      "path": "07_LOGS_AND_AUDIT/execution/execution.jsonl",
+      "format": "jsonl",
+      "skip_rows_with_keys": ["_comment"],
+      "outcome_rule": {
+        "field": "event_type",
+        "success_values": ["workflow.success", "task.success", "step.ok"],
+        "failure_values": ["workflow.failure", "task.failure", "step.error"]
+      },
+      "learning_ref": {
+        "strategy": "field",
+        "field": "learning_name",
+        "fallback_field": "task_id",
+        "fallback_prefix": "task:"
+      },
+      "canonical_fields": {
+        "timestamp_utc": "ts",
+        "rig_id": "mission_id",
+        "notes": "execution_log_ingest"
+      }
+    }
+  ]
+}
