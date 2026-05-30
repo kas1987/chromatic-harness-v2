@@ -38,10 +38,43 @@ def _make_exec(p: Path) -> None:
     p.chmod(p.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
+def _is_managed_dir(hooks_dir: Path) -> bool:
+    """True if the hooks dir is git-tracked or beads-managed (do not clobber it)."""
+    try:
+        tracked = (
+            subprocess.run(
+                ["git", "ls-files", "--error-unmatch", str(hooks_dir / "pre-commit")],
+                cwd=_REPO,
+                capture_output=True,
+                text=True,
+                check=False,
+            ).returncode
+            == 0
+        )
+    except OSError:
+        tracked = False
+    pc = hooks_dir / "pre-commit"
+    beads = pc.is_file() and "BEADS INTEGRATION" in pc.read_text(
+        encoding="utf-8", errors="ignore"
+    )
+    return tracked or beads
+
+
 def install(check: bool = False) -> dict[str, str]:
     hooks_dir = _git_hooks_dir()
     hooks_dir.mkdir(parents=True, exist_ok=True)
     report: dict[str, str] = {}
+
+    # Safety: never overwrite a git-tracked / beads-managed hooks dir (e.g. when
+    # core.hooksPath points at .beads/hooks). Doing so would shadow the secrets
+    # scrub. Advise manual wiring instead.
+    if _is_managed_dir(hooks_dir):
+        report["status"] = (
+            f"refused: {hooks_dir} is git-tracked/beads-managed. Run gates manually "
+            "(python scripts/ci_local.py --stage pre-commit) or append a ci_local call "
+            "after the beads-managed block."
+        )
+        return report
 
     for name in ("pre-commit", "pre-push"):
         src = _SRC / name
