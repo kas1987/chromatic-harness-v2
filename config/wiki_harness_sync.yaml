@@ -1,0 +1,190 @@
+# Wiki EPIC-0001 ↔ Harness sync map (machine-readable)
+# Validate: python scripts/check_wiki_harness_sync.py
+
+version: 1
+wiki_repo: kas1987/chromatic-wiki
+
+epic:
+  id: EPIC-0001
+  github_issue: 13
+  title: Build Chromatic Knowledge Operating System
+
+route_tasks:
+  - route: ROUTE-001
+    harness_bead: chromatic-harness-v2-15x.1
+    harness_status_expected: closed
+    tests:
+      - tests/test_context_detector.py
+  - route: ROUTE-002
+    harness_bead: chromatic-harness-v2-15x.2
+    harness_status_expected: closed
+    tests:
+      - tests/fixtures/complexity_cases.yaml
+  - route: ROUTE-003
+    harness_bead: chromatic-harness-v2-15x.3
+    harness_status_expected: closed
+    tests:
+      - tests/test_provider_matrix.py
+  - route: ROUTE-004
+    harness_bead: chromatic-harness-v2-15x.4
+    harness_status_expected: open
+  - route: ROUTE-005
+    harness_bead: chromatic-harness-v2-15x.5
+    harness_status_expected: closed
+    tests:
+      - tests/test_openrouter_broker_policy.py
+  - route: ROUTE-006
+    harness_bead: chromatic-harness-v2-15x.6
+    harness_status_expected: closed
+  - route: ROUTE-007
+    harness_bead: chromatic-harness-v2-15x.7
+    harness_status_expected: closed
+    artifacts:
+      - scripts/pre_session_manifest.py
+  - route: ROUTE-008
+    harness_bead: chromatic-harness-v2-15x.8
+    harness_status_expected: closed
+    tests:
+      - tests/test_audit_mcp_context.py
+
+wiki_tasks:
+  - wk: WK-002
+    github_issue: 2
+    title: Knowledge intake and promotion framework
+    harness_beads:
+      - chromatic-harness-v2-l8z
+    route_refs: []
+    artifacts:
+      - scripts/auto_intake.py
+      - docs/pdr/PDR_CHROMATIC_BEADS_OPENROUTER_PIPELINE.md
+  - wk: WK-003
+    github_issue: 3
+    title: Research public AI wiki and documentation standards
+    harness_beads: []
+    route_refs: []
+  - wk: WK-004
+    github_issue: 4
+    title: Design Agent Architect Knowledge Taxonomy
+    harness_beads: []
+    route_refs: []
+    artifacts:
+      - docs/beads/
+  - wk: WK-005
+    github_issue: 5
+    title: Create Canon vs Non-Canon Knowledge Standard
+    harness_beads:
+      - chromatic-harness-v2-ar7
+    route_refs: []
+    artifacts:
+      - scripts/promote_to_wiki.py
+  - wk: WK-006
+    github_issue: 6
+    title: Design Knowledge Promotion Pipeline
+    harness_beads:
+      - chromatic-harness-v2-ar7
+    route_refs: []
+    artifacts:
+      - scripts/harvest_rigs.py
+      - scripts/sync_wiki_mirror.py
+  - wk: WK-007
+    github_issue: 7
+    title: Define Agent Context Consumption Rules
+    harness_beads:
+      - chromatic-harness-v2-e0n
+    route_refs:
+      - ROUTE-007
+      - ROUTE-008
+    artifacts:
+      - docs/AGENT_ANTIPATTERNS.md
+      - docs/CURSOR_CONTEXT_HYGIENE.md
+      - scripts/audit_mcp_context.py
+  - wk: WK-008
+    github_issue: 8
+    title: Analyze Claude Certified Architect Guide
+    harness_beads: []
+    route_refs: []
+  - wk: WK-009
+    github_issue: 9
+    title: Analyze Anthropic Claude Code Patterns
+    harness_beads: []
+    route_refs: []
+    artifacts:
+      - .claude/workflows/
+  - wk: WK-010
+    github_issue: 10
+    title: Analyze OpenAI Agent Design Patterns
+    harness_beads: []
+    route_refs: []
+  - wk: WK-011
+    github_issue: 11
+    title: Create Knowledge Quality Scorecard
+    harness_beads: []
+    route_refs: []
+  - wk: WK-012
+    github_issue: 12
+    title: Create Knowledge Deprecation Process
+    harness_beads: []
+    route_refs: []
+  - wk: WK-013
+    github_issue: 15
+    title: Define Repository Folder Architecture
+    harness_beads:
+      - chromatic-harness-v2-j9o
+    route_refs: []
+    artifacts:
+      - docs/REPO_AND_RIG_INVENTORY.md
+  - wk: WK-014
+    github_issue: 14
+    title: Define Knowledge Object Schema
+    harness_beads: []
+    route_refs: []
+    artifacts:
+      - docs/BEADS_OBJECT_MODEL.md
+  - wk: WK-015
+    github_issue: 16
+    title: Create Agent Architect Competency Matrix
+    harness_beads: []
+    route_refs: []
+  - wk: WK-016
+    github_issue: 17
+    title: Build Model Routing Knowledge Base
+    harness_beads:
+      - chromatic-harness-v2-gh1
+    route_refs:
+      - ROUTE-001
+      - ROUTE-002
+      - ROUTE-003
+      - ROUTE-005
+      - ROUTE-006
+    artifacts:
+      - docs/beads/ROUTER_VALIDATION_BEADS.md
+      - 02_RUNTIME/router/
+  - wk: WK-017
+    github_issue: 18
+    title: Create Chromatic Canon Registry
+    harness_beads:
+      - chromatic-harness-v2-ar7
+    route_refs: []
+  - wk: WK-018
+    github_issue: 19
+    title: Create Research Intake Workflow
+    harness_beads: []
+    route_refs: []
+    artifacts:
+      - 07_LOGS_AND_AUDIT/intake_queue.jsonl
+      - scripts/auto_intake.py
+  - wk: WK-019
+    github_issue: 20
+    title: Build Source Reliability Framework
+    harness_beads: []
+    route_refs: []
+    artifacts:
+      - docs/pdr/PDR_CHROMATIC_BEADS_OPENROUTER_PIPELINE.md
+  - wk: WK-020
+    github_issue: 21
+    title: Create Agent Architect Learning Path
+    harness_beads: []
+    route_refs: []
+    artifacts:
+      - 04_PLAYBOOKS/
+      - .agents/learnings/
