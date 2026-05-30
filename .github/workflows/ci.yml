@@ -104,6 +104,10 @@ jobs:
 
       - name: PR governance metadata + artifact scope gate
         if: github.event_name == 'pull_request'
+        env:
+          CHROMATIC_PR_MAX_CHANGED_FILES: "25"
+          CHROMATIC_PR_MAX_INSERTIONS: "800"
+          CHROMATIC_PR_MAX_DELETIONS: "400"
         run: python scripts/validate_pr_governance.py
 
       - name: Upload git plan artifact
