@@ -11,7 +11,7 @@ import pytest
 
 from router.context_detector import ContextDetector, RuntimeContext
 from router.complexity_classifier import ComplexityClassifier
-from router.provider_selector import ProviderSelector
+from router.provider_selector import ProviderChoice, ProviderSelector
 
 
 OLLAMA_TAGS_RESPONSE = {
@@ -124,6 +124,57 @@ class TestConnectivity:
     )
     def test_probe_internet_unreachable(self, _mock):
         assert ContextDetector._probe_internet() is False
+
+
+class TestMemoryPressure:
+    def test_detect_memory_pressure_low(self, monkeypatch):
+        monkeypatch.setattr(
+            ContextDetector,
+            "_available_memory_ratio",
+            staticmethod(lambda: 0.80),
+        )
+        assert ContextDetector._detect_memory_pressure() == "low"
+
+    def test_detect_memory_pressure_medium(self, monkeypatch):
+        monkeypatch.setattr(
+            ContextDetector,
+            "_available_memory_ratio",
+            staticmethod(lambda: 0.30),
+        )
+        assert ContextDetector._detect_memory_pressure() == "medium"
+
+    def test_detect_memory_pressure_high(self, monkeypatch):
+        monkeypatch.setattr(
+            ContextDetector,
+            "_available_memory_ratio",
+            staticmethod(lambda: 0.10),
+        )
+        assert ContextDetector._detect_memory_pressure() == "high"
+
+    def test_detect_memory_pressure_falls_back_to_medium(self, monkeypatch):
+        monkeypatch.setattr(
+            ContextDetector,
+            "_available_memory_ratio",
+            staticmethod(lambda: None),
+        )
+        assert ContextDetector._detect_memory_pressure() == "medium"
+
+    @patch(
+        "router.context_detector.ContextDetector._probe_gpu", return_value=(None, None)
+    )
+    @patch(
+        "router.context_detector.ContextDetector._probe_ollama_local",
+        return_value=(False, []),
+    )
+    @patch("router.context_detector.ContextDetector._probe_internet", return_value=True)
+    @patch("router.context_detector.ContextDetector._probe_battery", return_value=False)
+    @patch(
+        "router.context_detector.ContextDetector._detect_memory_pressure",
+        return_value="low",
+    )
+    def test_detect_uses_computed_memory_pressure(self, *_mocks):
+        ctx = ContextDetector().detect()
+        assert ctx.memory_pressure == "low"
 
 
 class TestManifestSerialization:
@@ -303,3 +354,28 @@ class TestRemoteOllamaRouting:
         providers = [c.provider for c in sel.ranked_choices]
         assert "ollama_remote_desktop" not in providers
         assert sel.ranked_choices[0].provider == "ollama_local"
+
+
+class TestNativeClaudeAvailability:
+    def test_native_claude_filtered_without_runtime(self, selector, monkeypatch):
+        monkeypatch.setattr(ProviderSelector, "_native_claude_available", staticmethod(lambda: False))
+        ctx = _laptop_remote_ctx(remote_endpoints=[])
+        choices = [
+            ProviderChoice(provider="native_claude", model=None, tier=0, reason="test"),
+            ProviderChoice(provider="ollama_local", model="llama3.2:3b", tier=0, reason="test"),
+        ]
+
+        filtered = selector._filter_by_availability(choices, ctx)
+
+        assert [choice.provider for choice in filtered] == ["ollama_local"]
+
+    def test_native_claude_allowed_with_runtime(self, selector, monkeypatch):
+        monkeypatch.setattr(ProviderSelector, "_native_claude_available", staticmethod(lambda: True))
+        ctx = _laptop_remote_ctx(remote_endpoints=[])
+        choices = [
+            ProviderChoice(provider="native_claude", model=None, tier=0, reason="test"),
+        ]
+
+        filtered = selector._filter_by_availability(choices, ctx)
+
+        assert [choice.provider for choice in filtered] == ["native_claude"]

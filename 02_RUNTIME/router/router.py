@@ -107,6 +107,30 @@ class ChromaticRouter:
         if "mock" not in self.adapters:
             self.adapters["mock"] = MockAdapter()
 
+    @staticmethod
+    def _request_prompt_text(req: RouteRequest) -> str:
+        parts: list[str] = []
+
+        for message in req.input.messages:
+            content = message.get("content", "") if isinstance(message, dict) else ""
+            if isinstance(content, str):
+                text = content.strip()
+                if text:
+                    parts.append(text)
+                continue
+            if isinstance(content, list):
+                for item in content:
+                    if isinstance(item, dict):
+                        text = str(item.get("text", "")).strip()
+                        if text:
+                            parts.append(text)
+
+        metadata_prompt = req.input.metadata.get("prompt")
+        if isinstance(metadata_prompt, str) and metadata_prompt.strip():
+            parts.append(metadata_prompt.strip())
+
+        return "\n".join(parts)
+
     def _resolve_provider(self, req: RouteRequest) -> tuple[str, list[str], RouteLogs]:
         logs = RouteLogs()
         preferred = req.preferred_provider
@@ -117,7 +141,7 @@ class ChromaticRouter:
                 context = self.context_detector.detect()
                 complexity = self.complexity_classifier.classify(
                     description=req.objective,
-                    prompt="",  # TODO: expose full prompt on RouteRequest
+                    prompt=self._request_prompt_text(req),
                 )
                 selection = self.provider_selector.select(
                     complexity=complexity,
