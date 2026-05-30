@@ -183,3 +183,104 @@ def test_normalize_confidence_score_field_takes_precedence_over_confidence() -> 
 
     event = _normalize("workflow", row)
     assert event.confidence_score == 90.0
+
+
+def test_normalize_dict_confidence_unknown_keys_yields_none() -> None:
+    """Dict confidence with no recognized key should produce no score."""
+    row = {
+        "timestamp": "2026-05-30T00:00:00Z",
+        "task_id": "t-14",
+        "provider": "claude",
+        "model": "claude-sonnet-4",
+        "confidence": {"level": "high", "rationale": "lots of evidence"},
+        "execution_status": "execute",
+    }
+
+    event = _normalize("workflow", row)
+    assert event.confidence_score is None
+
+
+def test_normalize_string_confidence_coerced_to_float() -> None:
+    """confidence as a string '0.85' should coerce to 0.85."""
+    row = {
+        "timestamp": "2026-05-30T00:00:00Z",
+        "task_id": "t-15",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "confidence": "0.85",
+        "execution_status": "execute",
+    }
+
+    event = _normalize("workflow", row)
+    assert event.confidence_score == 0.85
+
+
+def test_normalize_zero_confidence_not_dropped() -> None:
+    """confidence_score of 0 is a valid payload value and must not be discarded."""
+    row = {
+        "timestamp": "2026-05-30T00:00:00Z",
+        "task_id": "t-16",
+        "provider": "openai",
+        "model": "gpt-4o",
+        "confidence_score": 0,
+        "execution_status": "execute",
+    }
+
+    event = _normalize("workflow", row)
+    assert event.confidence_score == 0.0
+
+
+def test_normalize_selected_provider_alias() -> None:
+    """selected_provider (routing log schema) maps to provider."""
+    row = {
+        "timestamp": "2026-05-30T00:00:00Z",
+        "task_id": "t-17",
+        "selected_provider": "ollama",
+        "selected_model": "llama3",
+        "execution_status": "execute",
+    }
+
+    event = _normalize("routing", row)
+    assert event.provider == "ollama"
+    assert event.model == "llama3"
+
+
+def test_normalize_estimated_cost_alias() -> None:
+    """estimated_cost maps to cost_usd when no higher-priority key present."""
+    row = {
+        "timestamp": "2026-05-30T00:00:00Z",
+        "task_id": "t-18",
+        "provider": "gemini",
+        "model": "gemini-2.5-pro",
+        "estimated_cost": 0.012,
+        "execution_status": "execute",
+    }
+
+    event = _normalize("workflow", row)
+    assert event.cost_usd == 0.012
+
+
+def test_normalize_bead_id_as_task_id_alias() -> None:
+    """bead_id maps to task_id when no task_id key is present."""
+    row = {
+        "timestamp": "2026-05-30T00:00:00Z",
+        "bead_id": "chromatic-harness-v2-abc1",
+        "provider": "claude",
+        "model": "claude-sonnet-4",
+        "execution_status": "execute",
+    }
+
+    event = _normalize("bead_hook", row)
+    assert event.task_id == "chromatic-harness-v2-abc1"
+
+
+def test_normalize_empty_row_all_none() -> None:
+    """An empty payload should produce a NormalizedEvent with all None fields."""
+    event = _normalize("manual", {})
+    assert event.provider is None
+    assert event.model is None
+    assert event.confidence_score is None
+    assert event.cost_usd is None
+    assert event.latency_ms is None
+    assert event.task_id is None
+    assert event.execution_status is None

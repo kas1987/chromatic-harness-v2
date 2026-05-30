@@ -1,0 +1,24 @@
+At C:\Users\kas41\chromatic-harness-v2\.tmp_codegraph_bulk_init.ps1:2 char:14
++ $roots = @(''C:\Users\kas41'',''C:\.01_Image Org'',''C:\.04_Prism'',' ...
++              ~~~~~~~~~~~~~~~~
+Unexpected token 'C:\Users\kas41''' in expression or statement.
+At C:\Users\kas41\chromatic-harness-v2\.tmp_codegraph_bulk_init.ps1:2 char:30
++ $roots = @(''C:\Users\kas41'',''C:\.01_Image Org'',''C:\.04_Prism'',' ...
++                              ~
+Missing argument in parameter list.
+At C:\Users\kas41\chromatic-harness-v2\.tmp_codegraph_bulk_init.ps1:3 char:25
++ $excludePatterns = @(''*\.worktrees\*'',''*\node_modules\*'',''*\AppD ...
++                         ~
+You must provide a value expression following the '*' operator.
+At C:\Users\kas41\chromatic-harness-v2\.tmp_codegraph_bulk_init.ps1:3 char:25
++ $excludePatterns = @(''*\.worktrees\*'',''*\node_modules\*'',''*\AppD ...
++                         ~~~~~~~~~~~~~~~
+Unexpected token '\.worktrees\*''' in expression or statement.
+At C:\Users\kas41\chromatic-harness-v2\.tmp_codegraph_bulk_init.ps1:3 char:40
++ $excludePatterns = @(''*\.worktrees\*'',''*\node_modules\*'',''*\AppD ...
++                                        ~
+Missing argument in parameter list.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordEx 
+   ception
+    + FullyQualifiedErrorId : UnexpectedToken
+ 

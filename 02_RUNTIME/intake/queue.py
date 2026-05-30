@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_QUEUE = REPO_ROOT / "07_LOGS_AND_AUDIT" / "intake_queue.jsonl"
 
 VALID_SOURCES = frozenset(
-    {"bead_hook", "closure", "inbox", "manual", "goal", "workflow"}
+    {"agent_lead", "bead_hook", "closure", "inbox", "manual", "goal", "workflow"}
 )
 VALID_KINDS = frozenset({"bead_dispatch", "goal", "follow_up"})
 VALID_STATUS = frozenset({"queued", "processing", "processed", "failed", "skipped"})
@@ -112,7 +112,10 @@ def validate_entry(data: dict[str, Any]) -> list[str]:
     kind = data.get("kind")
     if kind == "goal" and not str(data.get("goal", "")).strip():
         errors.append("kind=goal requires non-empty goal field")
-    if kind == "bead_dispatch" and not str(data.get("bead_id", data.get("id", ""))).strip():
+    if (
+        kind == "bead_dispatch"
+        and not str(data.get("bead_id", data.get("id", ""))).strip()
+    ):
         errors.append("kind=bead_dispatch requires bead_id or id")
     lane = data.get("lane") or (data.get("context") or {}).get("lane")
     if lane and lane not in VALID_LANES:

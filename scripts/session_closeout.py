@@ -605,6 +605,7 @@ def _load_swot_epic_history(
         "created_swot_rolling_window": 0,
         "open_pending_task": 0,
         "live_query_failed": False,
+        "newest_open_epic_age_hours": None,
     }
     # Live query first; fail-closed when bd is unavailable (stale JSONL caused duplicate spam)
     rows = _fetch_swot_rows_live()
@@ -617,6 +618,7 @@ def _load_swot_epic_history(
     stats["open_pending_task"] = len(pending_tasks) if pending_tasks is not None else 0
     start_recent = now_utc.timestamp() - max(1, int(recent_open_hours)) * 3600
     start_rolling = now_utc.timestamp() - max(1, int(rolling_days)) * 24 * 3600
+    newest_open_ts: datetime | None = None
     for row in rows:
         status = str(row.get("status") or "").lower()
         created = _parse_utc(str(row.get("created_at") or ""))
@@ -625,11 +627,18 @@ def _load_swot_epic_history(
             stats["open_swot_total"] += 1
             if created and created.timestamp() >= start_recent:
                 stats["open_swot_recent_window"] += 1
+            # Track the most recently created open epic for staleness detection
+            if created and (newest_open_ts is None or created > newest_open_ts):
+                newest_open_ts = created
         if created:
             if created.date() == now_utc.date():
                 stats["created_swot_today"] += 1
             if created.timestamp() >= start_rolling:
                 stats["created_swot_rolling_window"] += 1
+    if newest_open_ts is not None:
+        stats["newest_open_epic_age_hours"] = round(
+            (now_utc - newest_open_ts).total_seconds() / 3600, 2
+        )
     return stats
 
 
@@ -824,9 +833,17 @@ def evaluate_epic_swot_policy(
     open_total_cap = int(limits.get("open_swot_total_cap") or 3)
     created_today_cap = int(limits.get("created_swot_today_cap") or 3)
 
-    if history["open_swot_recent_window"] >= recent_open_cap:
+    staleness_override_hours = float(cfg.get("staleness_override_hours") or 48)
+    newest_age = history.get("newest_open_epic_age_hours")
+    epic_is_stale = newest_age is not None and newest_age >= staleness_override_hours
+
+    if history["open_swot_recent_window"] >= recent_open_cap and not epic_is_stale:
         block_reasons.append(f"recent open EPIC-SWOT exists ({recent_hours}h window)")
-    if history["open_swot_total"] >= open_total_cap:
+    elif epic_is_stale and history["open_swot_recent_window"] >= recent_open_cap:
+        reasons.append(
+            f"open EPIC-SWOT is stale ({newest_age:.1f}h old ≥ {staleness_override_hours:.0f}h override); allowing new creation"
+        )
+    if history["open_swot_total"] >= open_total_cap and not epic_is_stale:
         block_reasons.append("too many open EPIC-SWOT items")
     if history["created_swot_today"] >= created_today_cap:
         block_reasons.append("daily EPIC-SWOT cap reached")

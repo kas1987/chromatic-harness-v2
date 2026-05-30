@@ -2,6 +2,7 @@
   "confidence_threshold": 0.55,
   "block_penalty": 0.8,
   "halt_human_penalty": 0.5,
+  "staleness_override_hours": 48,
   "history_windows": {
     "recent_open_hours": 8,
     "rolling_days": 7

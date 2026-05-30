@@ -358,9 +358,13 @@ def test_main_passes_epic_policy_config_override(tmp_path: Path, monkeypatch):
     assert captured["policy_config_path"] == cfg
 
 
-def test_evaluate_epic_swot_policy_blocks_recent_open_epic(tmp_path: Path):
+def test_evaluate_epic_swot_policy_blocks_recent_open_epic(tmp_path: Path, monkeypatch):
     sys.path.insert(0, str(_REPO / "scripts"))
     import session_closeout  # noqa: E402
+
+    # Force live query to fail so the test uses the deterministic issues_path JSONL.
+    monkeypatch.setattr(session_closeout, "_fetch_swot_rows_live", lambda: None)
+    monkeypatch.setattr(session_closeout, "_fetch_pending_swot_tasks_live", lambda: [])
 
     now = datetime(2026, 5, 30, 9, 20, 0, tzinfo=timezone.utc)
     issues = tmp_path / "issues.jsonl"
@@ -1206,3 +1210,46 @@ def test_emit_outcomes_failure_path(tmp_path, monkeypatch):
     assert result["ok"] is True
     assert result["outcome"] == "applied_failure"
     assert result["had_error"] is True
+
+
+def test_evaluate_epic_swot_policy_staleness_override_allows_create(
+    tmp_path: Path, monkeypatch
+):
+    """When the only open EPIC-SWOT is older than staleness_override_hours, allow creation."""
+    import sys
+
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+
+    now = datetime(2026, 6, 2, 9, 0, 0, tzinfo=timezone.utc)
+    # 4 open EPIC-SWOTs all 72 h old: would normally block via open_swot_total_cap (3)
+    # but the staleness override (48h) should lift the cap and allow a new creation.
+    stale_rows = [
+        {
+            "id": f"chromatic-harness-v2-stale{i}",
+            "title": f"EPIC-SWOT NEXT [20260530T0900{i:02d}Z]: stale seed",
+            "issue_type": "epic",
+            "status": "open",
+            "created_at": "2026-05-30T09:00:00Z",
+        }
+        for i in range(4)
+    ]
+    monkeypatch.setattr(session_closeout, "_fetch_swot_rows_live", lambda: stale_rows)
+    monkeypatch.setattr(session_closeout, "_fetch_pending_swot_tasks_live", lambda: [])
+
+    issues = tmp_path / "issues.jsonl"
+    issues.write_text("\n".join(json.dumps(r) for r in stale_rows), encoding="utf-8")
+    gov = tmp_path / "gov.json"
+    gov.write_text(json.dumps({"event_count": 600}), encoding="utf-8")
+
+    snap = SimpleNamespace(session_est_tokens=130000, decision="spawn")
+    out = session_closeout.evaluate_epic_swot_policy(
+        snapshot=snap,
+        beads_ready=["a", "b", "c", "d", "e"],
+        git={"status_short": ["M " + str(i) for i in range(15)]},
+        issues_path=issues,
+        governance_path=gov,
+        now_utc=now,
+    )
+    assert out["allow_create"] is True, out["decision_reason"]
+    assert any("stale" in r.lower() for r in out.get("reasons", []))

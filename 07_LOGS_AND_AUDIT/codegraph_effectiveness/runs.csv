@@ -1,0 +1,3 @@
+timestamp_utc,task_id,task_type,mode,duration_sec,discovery_calls,tokens,cost_usd,impact_precision,impact_recall,notes
+2026-05-30T16:09:45Z,demo-001,,with,95.0,4,420000,0.42,,,
+2026-05-30T16:09:45Z,demo-001,,without,140.0,13,980000,0.79,,,
