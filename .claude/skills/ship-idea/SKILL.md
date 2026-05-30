@@ -209,6 +209,15 @@ Log: `[S10-LIVE] wired=<where>. proof=<log line or observation summary>`
 Definition of Done gate: check `08_PDRS/DEFINITION_OF_DONE.md` before marking complete.
 Path: `C:/Users/kas41/chromatic-harness-v2/08_PDRS/DEFINITION_OF_DONE.md`
 
+**Record the evidence durably** so session closeout can enforce it (Gap C). After
+Stages 8 and 10 pass for `$BEAD_ID`, persist the verdict — closeout reads this file
+and refuses to close a bead that is missing any gate:
+
+```bash
+python scripts/record_ship_evidence.py --bead-id $BEAD_ID --lean-ok --live-ok --dod-ok
+# (drop a flag, e.g. omit --live-ok or pass --no-live-ok, if that gate did not pass)
+```
+
 ---
 
 ### Stage 11 — Observe
