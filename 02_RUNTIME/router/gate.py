@@ -182,6 +182,129 @@ def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
         return None
 
 
+# ── Token-economy billing (bead B4 — TOKEN_ECONOMY_SPEC.md §2/§5) ────────────
+# At the route-log write point we backfill the previously-null cost_estimate_usd
+# and stamp the 3-axis billing_axis (P/D/F via billing_axis.py). Cost is derived
+# from budget-policy.yaml provider_cost_estimates (input/output per-1M USD); the
+# existing-but-unwired BudgetGate.estimate is invoked here advisory-only. Every
+# branch is FAIL-OPEN — telemetry must never block or alter a routing decision.
+#
+# Default token assumption when the gate has no per-request max_tokens (the
+# PreToolUse Agent blob does not carry one): mirror the CRG default budget.
+_BILLING_DEFAULT_TOKENS = int(
+    os.environ.get("ROUTER_BILLING_DEFAULT_TOKENS", str(CONTEXT_MAX_TOKENS // 2))
+)
+
+# Map selector/route-log provider ids → budget-policy.yaml cost-estimate keys.
+# (provider_selector emits e.g. native_claude / ollama_remote_desktop / claude_api;
+# the cost table is keyed by vendor.) Anything unmapped falls through to a direct
+# key lookup, then to 0.0 — never an exception.
+_COST_KEY_ALIASES: dict[str, str] = {
+    "claude_api": "anthropic",
+    "ollama_local": "ollama",
+    "ollama_remote_desktop": "ollama",
+    "gemini": "google",
+    "together": "openrouter",
+    "together_ai": "openrouter",
+}
+
+
+def _cost_estimate_usd(provider: str, tokens: int) -> float:
+    """Estimate marginal USD for ``provider`` over ``tokens`` (fail-open → 0.0).
+
+    Uses budget-policy.yaml ``provider_cost_estimates`` (``input``/``output`` per
+    1M tokens). Tokens are split 50/50 across the input/output rates as a flat
+    estimate (the gate has no realized split at PreToolUse time). Axis P
+    (native_claude) and Axis F (local) resolve to 0.0 marginal $ by their rates.
+    """
+    try:
+        from router.policy import PolicyLoader
+
+        costs = PolicyLoader().provider_costs() or {}
+        key = _COST_KEY_ALIASES.get(provider, provider)
+        rate = costs.get(key, costs.get(provider, 0.0))
+        if isinstance(rate, dict):
+            in_rate = float(rate.get("input", 0.0))
+            out_rate = float(rate.get("output", 0.0))
+        else:
+            in_rate = out_rate = float(rate or 0.0)
+        half = tokens / 2.0
+        usd = (half / 1_000_000.0) * in_rate + (half / 1_000_000.0) * out_rate
+        return round(usd, 6)
+    except Exception:  # noqa: BLE001 — telemetry never blocks routing
+        return 0.0
+
+
+def _billing_for_route(provider: str, tokens: int | None = None) -> dict:
+    """Compute {cost_estimate_usd, billing_axis} for the route log (fail-open).
+
+    Also invokes the existing-but-unwired ``BudgetGate.estimate`` advisory-only
+    (per spec §7); its value is recorded under ``budget_gate_estimate_usd`` but
+    NEVER used to block or change the routing decision.
+    """
+    tok = int(tokens if tokens is not None else _BILLING_DEFAULT_TOKENS)
+    out: dict[str, Any] = {
+        "cost_estimate_usd": 0.0,
+        "billing_axis": None,
+        "billing_tokens": tok,
+        "budget_gate_estimate_usd": None,
+    }
+    try:
+        _ba = _load_submodule("billing_axis", "billing_axis.py")
+        out["billing_axis"] = _ba.classify(provider)
+    except Exception:  # noqa: BLE001 — fail-open: axis stays None
+        pass
+    # Axis P (prepaid native) and Axis F (free local) are $0 marginal in-session
+    # by definition (spec §2); only Axis D books dollar cost.
+    if out["billing_axis"] in ("P", "F"):
+        out["cost_estimate_usd"] = 0.0
+    else:
+        out["cost_estimate_usd"] = _cost_estimate_usd(provider, tok)
+    # Advisory BudgetGate.estimate — fail-open, never blocks dispatch.
+    try:
+        from router.budget import BudgetGate
+
+        out["budget_gate_estimate_usd"] = BudgetGate().estimate(provider, tok)
+    except Exception:  # noqa: BLE001 — advisory only
+        pass
+    return out
+
+
+def _read_routing_overlay() -> dict | None:
+    """Read the control-plane routing_policy_overlay.json. Fail-open -> None.
+
+    Mirrors how this hook reads transfer_packet.json budget.decision: advisory
+    only (spec §7). The B7 controller writes dynamic C->T threshold knobs here;
+    the gate surfaces them so the dispatcher can spend the prepaid quota or spill
+    to local/API. NEVER blocks routing on the overlay.
+    """
+    overlay_path = (
+        _REPO / "07_LOGS_AND_AUDIT" / "control_plane" / "routing_policy_overlay.json"
+    )
+    if not overlay_path.is_file():
+        return None
+    try:
+        data = json.loads(overlay_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _overlay_advisory() -> str:
+    """Format the control-plane overlay knobs for the advisory string (fail-open)."""
+    try:
+        overlay = _read_routing_overlay()
+        if not overlay:
+            return ""
+        thr = overlay.get("c_to_t_threshold")
+        spill = overlay.get("allow_paid_spill")
+        if overlay.get("staleness_fallback"):
+            return f" | overlay STALE-FALLBACK: C->T>={thr} paid_spill={spill}"
+        return f" | overlay: C->T>={thr} paid_spill={spill}"
+    except Exception:  # noqa: BLE001 — advisory only, never blocks
+        return ""
+
+
 def _context_gate_advisory(description: str, prompt: str, complexity_level: str) -> str:
     """Append CRG resource-filtering note to PreToolUse advisory."""
     try:
@@ -235,9 +358,10 @@ def _context_gate_advisory(description: str, prompt: str, complexity_level: str)
                     budget_hint = f" | budget: {decision}"
             except Exception:
                 pass
+        overlay_hint = _overlay_advisory()
         return (
             f" | CRG {len(result.allowed_resources)} resources"
-            f"{handoff_hint}{budget_hint} | ops: AGENT_OPERATIONS.md"
+            f"{handoff_hint}{budget_hint}{overlay_hint} | ops: AGENT_OPERATIONS.md"
         )
     except Exception:
         return ""
@@ -408,11 +532,17 @@ def _audit_router_decision(entry: dict) -> None:
         routing_log.parent.mkdir(parents=True, exist_ok=True)
         import uuid as _uuid
 
+        # decision_id — the canonical join key (TOKEN_ECONOMY_SPEC §3): stamped
+        # here so ledger.jsonl ⇆ routes_*.jsonl ⇆ today.json reconcile. B3 joins
+        # on this. Reuse a precomputed id from the entry if present, else mint.
+        decision_id = entry.get("decision_id") or _uuid.uuid4().hex[:16]
+        _billing = _billing_for_route(entry.get("provider", ""))
         with routing_log.open("a", encoding="utf-8") as _fh:
             _fh.write(
                 json.dumps(
                     {
                         "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "decision_id": decision_id,
                         "request_id": _uuid.uuid4().hex[:16],
                         "task_id": entry.get("description", "")[:80],
                         "task_type": entry.get("subagent_type", ""),
@@ -424,7 +554,12 @@ def _audit_router_decision(entry: dict) -> None:
                         "fallback_used": False,
                         "confidence_score": entry.get("c_confidence"),
                         "privacy_class": None,
-                        "cost_estimate_usd": None,
+                        "cost_estimate_usd": _billing["cost_estimate_usd"],
+                        "billing_axis": _billing["billing_axis"],
+                        "billing_tokens": _billing["billing_tokens"],
+                        "budget_gate_estimate_usd": _billing[
+                            "budget_gate_estimate_usd"
+                        ],
                         "latency_ms": None,
                         "result_status": "blocked"
                         if entry.get("blocked")
