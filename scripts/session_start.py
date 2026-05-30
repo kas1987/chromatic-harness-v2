@@ -21,6 +21,47 @@ _OPS = _REPO / "AGENT_OPERATIONS.md"
 _MANIFEST = _REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
 _HEALTH = _REPO / "07_LOGS_AND_AUDIT" / "harness_health" / "latest.json"
 _BUDGET_FORECAST = _REPO / "scripts" / "budget_forecast_snapshot.py"
+_FORECAST_LATEST = _REPO / "07_LOGS_AND_AUDIT" / "budget" / "forecast_latest.json"
+_TOKEN_GOV_LATEST = _REPO / "07_LOGS_AND_AUDIT" / "token_governance" / "latest.json"
+
+
+def _lean_boot() -> bool:
+    """Opt-in leaner pre-session path (A/B). Default off preserves current behavior."""
+    return os.environ.get("CHROMATIC_LEAN_BOOT", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+
+
+def _is_fresh(path: Path, *, hours: float = 6.0) -> bool:
+    """True if `path` was modified within `hours` (used to skip redundant refreshes)."""
+    try:
+        import time
+
+        return path.is_file() and (time.time() - path.stat().st_mtime) < hours * 3600
+    except OSError:
+        return False
+
+
+def _forecast_line_from_cache() -> str | None:
+    """Format the budget line from the cached forecast_latest.json — no recompute.
+
+    The token-governance loop already wrote this file during boot, so re-running
+    budget_forecast_snapshot.py is pure duplication. Fail-open → None.
+    """
+    if not _FORECAST_LATEST.is_file():
+        return None
+    try:
+        import importlib.util
+
+        data = json.loads(_FORECAST_LATEST.read_text(encoding="utf-8"))
+        spec = importlib.util.spec_from_file_location("_bfs_fmt", _BUDGET_FORECAST)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+        return mod._statusline_line(data)
+    except Exception:  # noqa: BLE001 — never break session start
+        return None
 
 
 def _emit_boot(cold_start: bool) -> None:
@@ -139,15 +180,23 @@ def main() -> int:
     print("--- Automated pre-session boot ---")
     runtime = os.environ.get("CHROMATIC_RUNTIME", "claude")
     if _GUARD.is_file():
+        guard_cmd = [
+            sys.executable,
+            str(_GUARD),
+            "--surface",
+            "cli",
+            "--invoked-by",
+            runtime,
+        ]
+        # Lean boot (#2): skip the heavy token-governance loop on the synchronous
+        # path when its result is fresh (<6h). The daily scheduler / a forced boot
+        # still refreshes it; we just don't re-run it (incl. the slow strict audit)
+        # on every interactive session start.
+        if _lean_boot() and _is_fresh(_TOKEN_GOV_LATEST):
+            guard_cmd.append("--skip-token-loop")
+            print("  (lean boot: token-governance loop fresh <6h — skipped)")
         r = subprocess.run(
-            [
-                sys.executable,
-                str(_GUARD),
-                "--surface",
-                "cli",
-                "--invoked-by",
-                runtime,
-            ],
+            guard_cmd,
             cwd=_REPO,
             capture_output=True,
             text=True,
@@ -192,7 +241,17 @@ def main() -> int:
     else:
         print("  readiness_status: (not written yet)")
 
-    if _BUDGET_FORECAST.is_file():
+    # Budget forecast line (#1): the token-governance loop already wrote
+    # forecast_latest.json, so in lean boot we read+format that cache instead of
+    # re-running budget_forecast_snapshot.py (pure duplication). Fall back to the
+    # recompute if the cache is missing/unreadable.
+    printed_forecast = False
+    if _lean_boot():
+        line = _forecast_line_from_cache()
+        if line:
+            print(f"  budget_forecast: {line} [cached]")
+            printed_forecast = True
+    if not printed_forecast and _BUDGET_FORECAST.is_file():
         try:
             proc = subprocess.run(
                 [
