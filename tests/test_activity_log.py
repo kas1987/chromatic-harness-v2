@@ -137,7 +137,7 @@ def test_emit_learning_outcome_writes_applied_success(
     )
     assert emitted is True
     assert usage_log.is_file()
-    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    events = [json.loads(ln) for ln in usage_log.read_text().splitlines() if ln.strip()]
     assert len(events) == 1
     assert events[0]["event_type"] == "applied_success"
     assert events[0]["learning_name"] == "my-learning"
@@ -157,7 +157,7 @@ def test_emit_learning_outcome_writes_applied_failure_with_category(
         outcome="applied_failure",
         error_category="merge_conflict",
     )
-    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    events = [json.loads(ln) for ln in usage_log.read_text().splitlines() if ln.strip()]
     assert events[0]["event_type"] == "applied_failure"
     assert events[0]["error_category"] == "merge_conflict"
 
@@ -182,7 +182,7 @@ def test_emit_learning_outcome_deduplicates(
         timestamp_utc=ts,
     )
     assert second is False
-    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    events = [json.loads(ln) for ln in usage_log.read_text().splitlines() if ln.strip()]
     assert len(events) == 1
 
 
@@ -207,7 +207,7 @@ def test_log_activity_emits_applied_success_when_learning_provided(
         applied_learning="live-query-first-pattern",
     )
     assert usage_log.is_file()
-    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    events = [json.loads(ln) for ln in usage_log.read_text().splitlines() if ln.strip()]
     assert any(
         e["event_type"] == "applied_success"
         and e["learning_name"] == "live-query-first-pattern"
@@ -232,7 +232,7 @@ def test_log_activity_emits_applied_failure_on_error(
         applied_learning="safe-git-workflow-pattern",
         error_category="push_rejected",
     )
-    events = [json.loads(l) for l in usage_log.read_text().splitlines() if l.strip()]
+    events = [json.loads(ln) for ln in usage_log.read_text().splitlines() if ln.strip()]
     assert any(
         e["event_type"] == "applied_failure"
         and e["learning_name"] == "safe-git-workflow-pattern"

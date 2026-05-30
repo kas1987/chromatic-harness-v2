@@ -141,7 +141,13 @@ async def test_context_routing_uses_request_prompt_text(router, monkeypatch):
         return type(
             "ComplexityResultStub",
             (),
-            {"level": "C2", "name": "stub", "confidence": 1.0, "matched_keywords": [], "reasoning_depth": "medium"},
+            {
+                "level": "C2",
+                "name": "stub",
+                "confidence": 1.0,
+                "matched_keywords": [],
+                "reasoning_depth": "medium",
+            },
         )()
 
     def fake_detect():

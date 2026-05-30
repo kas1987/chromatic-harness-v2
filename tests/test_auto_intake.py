@@ -151,7 +151,9 @@ def test_validate_intake_loop_script():
     assert "Intake close-loop validation OK" in proc.stdout
 
 
-def test_process_epic_adds_timestamp_and_telemetry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_process_epic_adds_timestamp_and_telemetry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     import intake.queue as qmod
 
     q = tmp_path / "intake_queue.jsonl"

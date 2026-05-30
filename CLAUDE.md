@@ -1,6 +1,6 @@
 # Claude Instructions for Chromatic Harness v2
 
-> **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory for Claude, Pi, and all harness agents.
+> **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory for all harness agents. **Auto-mode** (T1–T3 never blocked; T4 only for force push / hard reset / secrets) lives in global `~/.claude/CLAUDE.md`. Proceed immediately; pick the best path and state the choice.
 
 ## Claude-specific rules
 
