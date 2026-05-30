@@ -12,6 +12,18 @@
         ]
       }
     ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/session_closeout.py --invoked-by claude_code",
+            "timeout": 180
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "matcher": "",

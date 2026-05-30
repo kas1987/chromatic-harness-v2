@@ -95,16 +95,28 @@ def audit(root: Path, strict: bool = False, run_tests: bool = False) -> dict[str
         command_results.append(run_cmd(root, cmd))
 
     # Run local audit scripts if available.
-    for script in ["scripts/audit_ide_parity.py", "scripts/audit_instruction_drift.py"]:
+    for script in [
+        "scripts/audit_ide_parity.py",
+        "scripts/audit_instruction_drift.py",
+        "scripts/validate_claude_harness.py",
+    ]:
         if (root / script).exists():
             result = run_cmd(root, ["python", script, "--root", str(root)])
             command_results.append(result)
-            if result["stdout"]:
+            if not result.get("ok") and script.endswith("validate_claude_harness.py"):
+                findings.append({
+                    "severity": "P1",
+                    "code": "claude_harness_not_production_ready",
+                    "file": script,
+                    "message": (result.get("stderr") or result.get("stdout") or "")[:400],
+                })
+            elif result["stdout"]:
                 try:
                     parsed = json.loads(result["stdout"])
                     findings.extend(parsed.get("findings", []))
                 except Exception:
-                    findings.append({"severity": "P3", "code": "audit_parse_warning", "file": script})
+                    if not script.endswith("validate_claude_harness.py"):
+                        findings.append({"severity": "P3", "code": "audit_parse_warning", "file": script})
 
     # Optional pre-session/context scripts. Warnings only if missing, because packs may be installed incrementally.
     optional_scripts = [
@@ -231,8 +243,10 @@ def main() -> int:
 
     root = Path(args.root).resolve()
     result = audit(root, strict=args.strict, run_tests=args.run_tests)
-    if args.report:
-        write_reports(root, result)
+    write_reports(root, result)
+    if not args.report:
+        # Keep JSON on stdout for piping; summary still written for agents reading .agents/audits/
+        pass
     print(json.dumps(result, indent=2))
     return 1 if args.strict and result["status"] == "red" else 0
 

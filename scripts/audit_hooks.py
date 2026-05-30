@@ -171,15 +171,32 @@ def _findings(rows: list[dict]) -> list[dict]:
         )
 
     session_starts = [r for r in rows if r.get("event") in ("SessionStart", "sessionStart")]
-    if len(session_starts) > 3:
+    if len(session_starts) > 2:
         findings.append(
             {
                 "severity": "MED",
                 "title": "Many SessionStart hooks",
-                "detail": f"{len(session_starts)} SessionStart hooks — additive latency at every session open.",
+                "detail": f"{len(session_starts)} SessionStart hooks — additive latency at every session open. Run slim_claude_global_hooks.py --apply when using Harness.",
                 "count": len(session_starts),
             }
         )
+
+    project_settings = REPO / ".claude" / "settings.json"
+    if project_settings.is_file():
+        doc = _load_json(project_settings) or {}
+        end_cmds = [
+            r["command"]
+            for r in _extract_claude_hooks(doc, str(project_settings))
+            if r.get("event") == "SessionEnd"
+        ]
+        if not any("session_closeout.py" in c for c in end_cmds):
+            findings.append(
+                {
+                    "severity": "HIGH",
+                    "title": "Harness SessionEnd not wired",
+                    "detail": "Add SessionEnd → python scripts/session_closeout.py --invoked-by claude_code in .claude/settings.json",
+                }
+            )
 
     cursor_boot = [r for r in rows if r.get("platform") == "cursor" and r.get("event") == "sessionStart"]
     if not cursor_boot:

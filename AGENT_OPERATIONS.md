@@ -129,7 +129,21 @@ Docs: [docs/governance/CONFIDENCE_GATE.md](docs/governance/CONFIDENCE_GATE.md), 
 
 **Workflows:** sync lite defaults — `powershell -File scripts/sync_claude_workflows.ps1`. Do **not** run heavy `/ship` (crank chain) or bulk-read `~/.claude/projects/**/*.jsonl`. See [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md).
 
-**Claude Code hooks** (`.claude/settings.json`): `session_start.py` prints handoff; `gate.py` on Agent dispatch for CRG advisory.
+**Claude Code production (repo + machine):**
+
+```powershell
+powershell -File scripts/claude_harness_production_ready.ps1
+python scripts/validate_claude_harness.py --machine
+```
+
+| Hook | Command |
+|------|---------|
+| SessionStart | `python scripts/session_start.py` (handoff + boot manifest) |
+| SessionEnd | `python scripts/session_closeout.py --invoked-by claude_code` |
+| PreCompact | `bd prime` |
+| PreToolUse / Agent | `python 02_RUNTIME/router/gate.py` |
+
+Global `~/.claude/settings.json` **stacks** with project hooks. Run `python scripts/slim_claude_global_hooks.py --apply` so Harness boot is not duplicated by four global SessionStart hooks. Restore: `--restore`.
 
 ---
 

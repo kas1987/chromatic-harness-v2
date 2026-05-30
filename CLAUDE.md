@@ -14,6 +14,14 @@ Claude must follow the same Harness v2 operating model as all agents. Do not use
 - Do not run unattended `GO SWARM` or chain `/crank`.
 - Compact session state at 50–65% context pressure or phase boundaries.
 
+## Production setup (one-time per machine)
+
+```powershell
+powershell -File scripts/claude_harness_production_ready.ps1
+```
+
+Validates: project `SessionStart`/`SessionEnd` hooks, lite workflows in `~/.claude/workflows`, global SessionStart slimmed. Re-check: `python scripts/validate_claude_harness.py --machine`.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
 ## Beads Issue Tracker
 
