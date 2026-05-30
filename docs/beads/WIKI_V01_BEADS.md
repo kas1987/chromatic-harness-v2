@@ -5,7 +5,7 @@ Epic and children for bootstrapping `kas1987/-Chromatic_Wiki`.
 ## Epic
 
 **Bead:** `chromatic-harness-v2-ar7` — Wiki v0.1 — scaffold, mirror, first canon  
-**Wiki branch:** `session/wiki-v0-1-initial` on `kas1987/-Chromatic_Wiki` (merge to `main` via PR)
+**Wiki branch:** `main` on `kas1987/-Chromatic_Wiki` (legacy session branch `session/wiki-v0-1-initial`)
 
 ## Children
 
