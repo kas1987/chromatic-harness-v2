@@ -23,6 +23,19 @@ _SRC = _REPO / "hooks"
 
 
 def _git_hooks_dir() -> Path:
+    # Resolve the ACTIVE hooks dir: core.hooksPath wins when set; only fall back to
+    # `git rev-parse --git-path hooks` otherwise (the latter does not honor
+    # core.hooksPath on older git).
+    cfg = subprocess.run(
+        ["git", "config", "--get", "core.hooksPath"],
+        cwd=_REPO,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.strip()
+    if cfg:
+        p = Path(cfg)
+        return p if p.is_absolute() else _REPO / p
     out = subprocess.run(
         ["git", "rev-parse", "--git-path", "hooks"],
         cwd=_REPO,
