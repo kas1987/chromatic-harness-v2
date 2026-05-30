@@ -852,3 +852,120 @@ def test_load_swot_epic_history_counts_in_progress(tmp_path: Path):
             issues_path=issues, now_utc=now
         )
     assert stats["open_swot_total"] == 1
+
+
+def test_write_auto_turn_post_mortem_creates_file(tmp_path: Path, monkeypatch):
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+
+    monkeypatch.setattr(session_closeout, "_REPO", tmp_path)
+    result = {
+        "invoked_by": "cli",
+        "budget": {"decision": "spawn"},
+        "epic_swot_policy": {
+            "allow_create": True,
+            "confidence_score": 0.82,
+            "decision_reason": "allow",
+        },
+        "auto_turn": {"harvest_mode": "session_end"},
+        "closeout_telemetry_path": ".agents/handoffs/closeout_telemetry_latest.json",
+        "closeout_telemetry_history_path": ".agents/handoffs/closeout_telemetry_20260530T120000Z.json",
+        "auto_start_ok": True,
+    }
+
+    rel = session_closeout._write_auto_turn_post_mortem(
+        result,
+        auto_turn_index=5,
+        auto_turn_threshold=5,
+    )
+    out = tmp_path / rel
+
+    assert out.is_file()
+    text = out.read_text(encoding="utf-8")
+    assert "Post-Mortem Council Report - Auto Turn Closeout" in text
+    assert "auto_turn_index: 5" in text
+    assert "harvest_mode: session_end" in text
+
+
+def test_main_auto_turn_threshold_triggers_post_mortem_and_session_end_harvest(
+    tmp_path: Path, monkeypatch
+):
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+
+    class FakeSnapshot:
+        session_est_tokens = 0
+        decision = "review"
+        reasons: list[str] = []
+
+        def to_budget_dict(self):
+            return {"decision": self.decision}
+
+    class FakeLedger:
+        def __init__(self, _repo):
+            pass
+
+        def snapshot(self):
+            return FakeSnapshot()
+
+    run_calls: list[list[str]] = []
+
+    def fake_run(cmd, *, timeout=120, cwd=None):
+        run_calls.append(cmd)
+        return 0, "ok"
+
+    monkeypatch.setattr(session_closeout, "_REPO", tmp_path)
+    monkeypatch.setattr(session_closeout, "BudgetLedger", FakeLedger)
+    monkeypatch.setattr(session_closeout, "git_snapshot", lambda: {"status_short": []})
+    monkeypatch.setattr(session_closeout, "beads_ready_ids", lambda: [])
+    monkeypatch.setattr(
+        session_closeout,
+        "write_handoff",
+        lambda *args, **kwargs: tmp_path / "12_HANDOFFS" / "handoff.md",
+    )
+    monkeypatch.setattr(
+        session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True}
+    )
+    monkeypatch.setattr(
+        session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(session_closeout, "log_activity", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        session_closeout,
+        "_write_closeout_telemetry_snapshot",
+        lambda result: {"latest": "latest.json", "history": "history.json"},
+    )
+    monkeypatch.setattr(session_closeout, "_run", fake_run)
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "session_closeout.py",
+            "--invoked-by",
+            "cli",
+            "--no-epic-swot",
+            "--no-auto-start-next-agent",
+            "--auto-turn-index",
+            "5",
+            "--auto-turn-threshold",
+            "5",
+        ],
+    )
+
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        rc = session_closeout.main()
+
+    assert rc == 0
+    payload = json.loads(stdout.getvalue())
+    assert payload["auto_turn"]["triggered_closeout"] is True
+    assert payload["auto_turn"]["harvest_mode"] == "session_end"
+    assert payload["auto_turn"]["post_mortem_path"]
+    assert (tmp_path / payload["auto_turn"]["post_mortem_path"]).is_file()
+
+    harvest_call = next(
+        call for call in run_calls if "harvest_rigs.py" in " ".join(str(x) for x in call)
+    )
+    assert "--execute" in harvest_call
+    assert "--session-end" in harvest_call
