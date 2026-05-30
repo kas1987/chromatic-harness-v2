@@ -147,10 +147,17 @@ def _sanitize_epic_swot_policy_config(
     history_limits = dict(defaults.get("history_limits") or {})
     history_limits.update(config.get("history_limits") or {})
     for key, default_value in (defaults.get("history_limits") or {}).items():
-        history_limits[key] = _coerce_int(history_limits.get(key), int(default_value), minimum=1)
+        history_limits[key] = _coerce_int(
+            history_limits.get(key), int(default_value), minimum=1
+        )
     sanitized["history_limits"] = history_limits
 
-    for section_name in ("session_tokens", "open_tasks", "changed_files", "event_count"):
+    for section_name in (
+        "session_tokens",
+        "open_tasks",
+        "changed_files",
+        "event_count",
+    ):
         section_defaults = defaults.get(section_name) or {}
         section = dict(section_defaults)
         section.update(config.get(section_name) or {})
@@ -159,9 +166,15 @@ def _sanitize_epic_swot_policy_config(
             bucket = dict(bucket_defaults)
             bucket.update((section.get(bucket_name) or {}))
             sanitized_section[bucket_name] = {
-                "min": _coerce_int(bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0),
-                "score": _coerce_float(bucket.get("score"), float(bucket_defaults.get("score") or 0.0)),
-                "reason": str(bucket.get("reason") or bucket_defaults.get("reason") or ""),
+                "min": _coerce_int(
+                    bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0
+                ),
+                "score": _coerce_float(
+                    bucket.get("score"), float(bucket_defaults.get("score") or 0.0)
+                ),
+                "reason": str(
+                    bucket.get("reason") or bucket_defaults.get("reason") or ""
+                ),
             }
         sanitized[section_name] = sanitized_section
 
@@ -169,7 +182,9 @@ def _sanitize_epic_swot_policy_config(
     coverage = dict(coverage_defaults)
     coverage.update(config.get("coverage") or {})
     fields = coverage.get("fields")
-    if not isinstance(fields, list) or not all(isinstance(field, str) and field for field in fields):
+    if not isinstance(fields, list) or not all(
+        isinstance(field, str) and field for field in fields
+    ):
         fields = list(coverage_defaults.get("fields") or [])
     sanitized["coverage"] = {
         "min_field_coverage": _coerce_float(
@@ -245,7 +260,9 @@ def _sanitize_auto_turn_policy_config(
         bucket.update(user_signals.get(key) or {})
         signals[key] = {
             "enabled": bool(bucket.get("enabled", True)),
-            "min": _coerce_int(bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0),
+            "min": _coerce_int(
+                bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0
+            ),
         }
     sanitized["signals"] = signals
     return sanitized
@@ -275,7 +292,9 @@ def _evaluate_auto_turn_trigger(
     policy_config: dict[str, Any],
 ) -> dict[str, Any]:
     loc_delta = _git_loc_delta()
-    loc_total = int(loc_delta.get("insertions") or 0) + int(loc_delta.get("deletions") or 0)
+    loc_total = int(loc_delta.get("insertions") or 0) + int(
+        loc_delta.get("deletions") or 0
+    )
     signal_cfg = policy_config.get("signals") or {}
 
     def cfg(key: str) -> dict[str, Any]:
@@ -296,8 +315,12 @@ def _evaluate_auto_turn_trigger(
     metric_values = {
         "loc_delta_total": loc_total,
         "policy_event_count": int(policy_signals.get("event_count") or 0),
-        "open_tasks": max(beads_ready_count, int(policy_signals.get("open_tasks") or 0)),
-        "changed_files": max(git_changed_files, int(policy_signals.get("changed_files") or 0)),
+        "open_tasks": max(
+            beads_ready_count, int(policy_signals.get("open_tasks") or 0)
+        ),
+        "changed_files": max(
+            git_changed_files, int(policy_signals.get("changed_files") or 0)
+        ),
     }
     hit_count = 0
     hit_signals: list[str] = []
@@ -349,6 +372,44 @@ def _run(
         return r.returncode, out.strip()
     except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
         return 1, str(exc)
+
+
+def _run_harness_health_snapshot() -> dict[str, Any]:
+    code, out = _run(
+        [
+            sys.executable,
+            str(_REPO / "scripts" / "harness_health_snapshot.py"),
+            "--write",
+        ],
+        timeout=180,
+    )
+    status = "unknown"
+    score = None
+    counts: dict[str, int] = {}
+    if out.strip():
+        try:
+            payload = json.loads(out)
+            status = str(payload.get("overall_status") or "unknown")
+            score = payload.get("readiness_score")
+            raw_counts = payload.get("counts") or {}
+            if isinstance(raw_counts, dict):
+                counts = {
+                    "pass": int(raw_counts.get("pass") or 0),
+                    "warn": int(raw_counts.get("warn") or 0),
+                    "fail": int(raw_counts.get("fail") or 0),
+                }
+        except Exception:
+            pass
+
+    return {
+        "exit": code,
+        "ok": code == 0,
+        "overall_status": status,
+        "readiness_score": score,
+        "counts": counts,
+        "path": "07_LOGS_AND_AUDIT/harness_health/latest.json",
+        "output": out[:2000],
+    }
 
 
 def _run_bd(args: list[str], *, timeout: int = 60) -> tuple[int, str]:
@@ -984,18 +1045,30 @@ def _append_auto_turn_observation(result: dict[str, Any]) -> str:
     auto_turn = result.get("auto_turn") or {}
     policy = result.get("epic_swot_policy") or {}
     policy_signals = policy.get("signals") or {}
-    loc_delta = (auto_turn.get("trigger_eval") or {}).get("loc_delta") or _git_loc_delta()
+    loc_delta = (auto_turn.get("trigger_eval") or {}).get(
+        "loc_delta"
+    ) or _git_loc_delta()
     observation = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "invoked_by": result.get("invoked_by") or "",
         "auto_turn_index": int(auto_turn.get("index") or 0),
         "auto_turn_threshold": int(auto_turn.get("threshold") or 0),
         "triggered_closeout": bool(auto_turn.get("triggered_closeout")),
-        "turn_threshold_hit": bool((auto_turn.get("trigger_eval") or {}).get("turn_threshold_hit")),
-        "multi_signal_hit": bool((auto_turn.get("trigger_eval") or {}).get("multi_signal_hit")),
-        "required_signal_hits": int((auto_turn.get("trigger_eval") or {}).get("required_signal_hits") or 0),
-        "signal_hit_count": int((auto_turn.get("trigger_eval") or {}).get("signal_hit_count") or 0),
-        "hit_signals": list((auto_turn.get("trigger_eval") or {}).get("hit_signals") or []),
+        "turn_threshold_hit": bool(
+            (auto_turn.get("trigger_eval") or {}).get("turn_threshold_hit")
+        ),
+        "multi_signal_hit": bool(
+            (auto_turn.get("trigger_eval") or {}).get("multi_signal_hit")
+        ),
+        "required_signal_hits": int(
+            (auto_turn.get("trigger_eval") or {}).get("required_signal_hits") or 0
+        ),
+        "signal_hit_count": int(
+            (auto_turn.get("trigger_eval") or {}).get("signal_hit_count") or 0
+        ),
+        "hit_signals": list(
+            (auto_turn.get("trigger_eval") or {}).get("hit_signals") or []
+        ),
         "artifact_kind": auto_turn.get("artifact_kind") or "none",
         "harvest_mode": auto_turn.get("harvest_mode") or "none",
         "beads_ready_count": len(result.get("beads_ready") or []),
@@ -1178,6 +1251,14 @@ def main() -> int:
             "confidence_score": 0.0,
             "threshold": 0.55,
             "decision_reason": "not evaluated",
+        },
+        "harness_health": {
+            "exit": None,
+            "ok": False,
+            "overall_status": "unknown",
+            "readiness_score": None,
+            "counts": {},
+            "path": "07_LOGS_AND_AUDIT/harness_health/latest.json",
         },
         "auto_start_ok": False,
         "auto_turn": {
@@ -1415,6 +1496,8 @@ def main() -> int:
     result["closeout_telemetry_path"] = telemetry_paths["latest"]
     result["closeout_telemetry_history_path"] = telemetry_paths["history"]
 
+    result["harness_health"] = _run_harness_health_snapshot()
+
     if auto_turn_triggered:
         artifact_kind = _select_auto_turn_artifact_kind(result)
         result["auto_turn"]["artifact_kind"] = artifact_kind
@@ -1427,6 +1510,17 @@ def main() -> int:
         result["auto_turn"]["post_mortem_path"] = post_mortem_path
 
     result["auto_turn"]["observation_log_path"] = _append_auto_turn_observation(result)
+
+    # Emit session.end telemetry to the two-log audit spine (fail-open).
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "02_RUNTIME"))
+        from audit.session_events import emit_session_end
+
+        result["session_end_event"] = emit_session_end(
+            Path(__file__).resolve().parents[1], invoked_by=args.invoked_by
+        )
+    except Exception as exc:  # noqa: BLE001
+        result["session_end_event"] = {"ok": False, "error": str(exc)}
 
     print(json.dumps(result, indent=2))
     return 0
