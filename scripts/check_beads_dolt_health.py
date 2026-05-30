@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,8 @@ EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 
 def _run(cmd: list[str], *, cwd: Path | None = None, timeout: int = 30) -> subprocess.CompletedProcess[str]:
+    if cmd and cmd[0] == "bd" and shutil.which("bd") is None:
+        return subprocess.CompletedProcess(cmd, returncode=127, stdout="", stderr="bd not on PATH")
     return subprocess.run(
         cmd,
         cwd=cwd or REPO,
@@ -78,7 +81,9 @@ def check(*, try_push: bool = False, push_timeout: int = 180) -> tuple[bool, lis
         messages.append("WARN: no git-remote-cache yet (first push may create it)")
 
     remote_list = _run(["bd", "dolt", "remote", "list"], timeout=30)
-    if remote_list.returncode != 0:
+    if remote_list.returncode == 127:
+        messages.append("WARN: bd not on PATH — skip remote list")
+    elif remote_list.returncode != 0:
         messages.append(f"FAIL: bd dolt remote list: {(remote_list.stderr or remote_list.stdout).strip()}")
         ok = False
     elif "origin" not in (remote_list.stdout or ""):
