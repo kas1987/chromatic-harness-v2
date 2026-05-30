@@ -31,7 +31,7 @@ def _parse_iso(raw: str) -> datetime:
 
 def _ensure_db() -> sqlite3.Connection:
     LOCK_DB.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(LOCK_DB)
+    conn = sqlite3.connect(LOCK_DB, timeout=30.0)
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS session_locks (
@@ -106,8 +106,8 @@ def acquire_lock(
                         stale_ts = now - timedelta(seconds=1)
                     if stale_ts <= now:
                         conn.execute(
-                            "DELETE FROM session_locks WHERE lock_name = ?",
-                            (lock_name,),
+                            "DELETE FROM session_locks WHERE lock_name = ? AND expires_at = ?",
+                            (lock_name, stale[0]),
                         )
 
                 try:

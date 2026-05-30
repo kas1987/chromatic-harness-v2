@@ -125,9 +125,11 @@ class ChromaticRouter:
                         if text:
                             parts.append(text)
 
-        metadata_prompt = req.input.metadata.get("prompt")
-        if isinstance(metadata_prompt, str) and metadata_prompt.strip():
-            parts.append(metadata_prompt.strip())
+        metadata = req.input.metadata
+        if isinstance(metadata, dict):
+            metadata_prompt = metadata.get("prompt")
+            if isinstance(metadata_prompt, str) and metadata_prompt.strip():
+                parts.append(metadata_prompt.strip())
 
         return "\n".join(parts)
 
@@ -203,7 +205,9 @@ class ChromaticRouter:
             return "mock", [], logs
         return filtered[0], filtered[1:], logs
 
-    def _provider_is_available(self, name: str, req: RouteRequest | None = None) -> bool:
+    def _provider_is_available(
+        self, name: str, req: RouteRequest | None = None
+    ) -> bool:
         adapter = self.adapters.get(name)
         if not adapter:
             return False
