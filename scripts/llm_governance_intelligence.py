@@ -134,8 +134,10 @@ def _normalize(source: str, row: dict[str, Any]) -> NormalizedEvent:
         conf_obj = row.get("confidence")
         if isinstance(conf_obj, dict):
             confidence = _pick(conf_obj, "score", "confidence_score")
+        else:
+            confidence = conf_obj
 
-    cost = _pick(row, "actual_cost", "estimated_cost", "cost_usd")
+    cost = _pick(row, "actual_cost", "estimated_cost", "cost_usd", "cost_estimate_usd")
     latency = _pick(row, "latency_ms", "duration_ms", "elapsed_ms")
 
     provider = _pick(row, "provider", "selected_provider")
@@ -151,7 +153,16 @@ def _normalize(source: str, row: dict[str, Any]) -> NormalizedEvent:
         provider=provider,
         model=model,
         task_type=_pick(row, "task_type", "mode", "event_type"),
-        execution_status=_pick(row, "result_status", "status", "result", "decision", "validation"),
+        execution_status=_pick(
+            row,
+            "execution_status",
+            "result_status",
+            "status",
+            "result",
+            "decision",
+            "validation",
+            "outcome",
+        ),
         confidence_score=_to_float(confidence),
         cost_usd=_to_float(cost),
         latency_ms=_to_float(latency),

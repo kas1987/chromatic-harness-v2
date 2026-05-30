@@ -1,6 +1,6 @@
 # Successor Agent Prompt
 
-**Transfer ID:** 7db38001-7cda-464c-915c-a639929a5c78
+**Transfer ID:** b1390166-4880-4737-a289-ab037cb0c0f8
 **Budget decision:** spawn
 
 ## Objective
@@ -9,7 +9,7 @@ Continue harness mission from handoff
 
 ## Summary
 
-Session closeout (claude_code). Budget decision: spawn.
+Session closeout (vscode). Budget decision: spawn.
 
 ## Next action
 

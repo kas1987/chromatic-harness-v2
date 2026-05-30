@@ -1,0 +1,89 @@
+{
+  "confidence_threshold": 0.55,
+  "block_penalty": 0.8,
+  "halt_human_penalty": 0.5,
+  "history_windows": {
+    "recent_open_hours": 8,
+    "rolling_days": 7
+  },
+  "history_limits": {
+    "open_swot_total_cap": 3,
+    "created_swot_today_cap": 3,
+    "recent_open_swot_cap": 1
+  },
+  "session_tokens": {
+    "high": {
+      "min": 120000,
+      "score": 0.24,
+      "reason": "high estimated token load"
+    },
+    "medium": {
+      "min": 60000,
+      "score": 0.16,
+      "reason": "moderate-high estimated token load"
+    },
+    "low": {
+      "min": 30000,
+      "score": 0.08,
+      "reason": "estimated token load"
+    }
+  },
+  "open_tasks": {
+    "high": {
+      "min": 8,
+      "score": 0.22,
+      "reason": "high open-task pressure"
+    },
+    "medium": {
+      "min": 4,
+      "score": 0.14,
+      "reason": "open-task pressure"
+    },
+    "low": {
+      "min": 2,
+      "score": 0.07,
+      "reason": "open-task pressure"
+    }
+  },
+  "changed_files": {
+    "high": {
+      "min": 25,
+      "score": 0.2,
+      "reason": "large session change surface"
+    },
+    "medium": {
+      "min": 12,
+      "score": 0.12,
+      "reason": "session change surface"
+    },
+    "low": {
+      "min": 6,
+      "score": 0.06,
+      "reason": "session change surface"
+    }
+  },
+  "event_count": {
+    "high": {
+      "min": 500,
+      "score": 0.16,
+      "reason": "high governance event volume"
+    },
+    "medium": {
+      "min": 200,
+      "score": 0.09,
+      "reason": "governance event volume"
+    }
+  },
+  "coverage": {
+    "min_field_coverage": 0.85,
+    "field_weight": 0.04,
+    "max_bonus": 0.14,
+    "fields": [
+      "provider",
+      "model",
+      "execution_status",
+      "task_id"
+    ],
+    "reason": "telemetry coverage gaps present"
+  }
+}
