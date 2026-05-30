@@ -32,12 +32,12 @@ Canonical map of Chromatic repos on this machine vs GitHub (`kas1987`), with har
 | Chromatic Harness v2 | `C:\Users\kas41\chromatic-harness-v2` | `kas1987/chromatic-harness-v2` | `session/chromatic-harness-v2-initial` | Primary harness | **Aligned** |
 | Fusion Computer | `C:\Users\kas41\fusion-computer` | `kas1987/fusion-computer` | `session/2026-05-28-harness-v2` | Templates & standards rig | Partial — beads N/A; no handoff |
 | Claude config | `C:\Users\kas41\.claude` | `kas1987/claude-config` | `session/mc-x1bi-governance-fixes` | Global Claude config | Partial — no handoff |
-| Chromatic stack | `C:\Users\kas41\chromatic-stack` | *(none — create repo)* | `master` | Docker local agent stack | Partial after normalize — see `chromatic-harness-v2-j9o` / `p2f` |
-| Design Studios | `C:\Users\kas41\chromatic-design-studios` | *(none — create repo)* | `master` | Design system rig | Partial after normalize |
+| Chromatic stack | `C:\Users\kas41\chromatic-stack` | `kas1987/chromatic-stack` | `session/repo-governance-20260530` | Docker local agent stack | **Partial** — beads + handoff; merge session branch to default when ready |
+| Design Studios | `C:\Users\kas41\chromatic-design-studios` | `kas1987/chromatic-design-studios` | `master` (+ session branch) | Design system rig | **Partial** — beads + handoff |
 | Claude Powerline | `C:\Users\kas41\claude-powerline` | `Owloops/claude-powerline` | `main` | Vendor statusline | Out of band |
 | Zelexdoll theme | `C:\Users\kas41\zelexdoll-theme` | *(none)* | `master` | Theme/assets | Out of band |
-| Global agents hub | `C:\Users\kas41\.agents` | *(none)* | `master` | Cross-rig learnings | **Misaligned** — should not be a git repo |
-| User home | `C:\Users\kas41` | *(none)* | — | Accidental git root | **P0 anti-pattern** — `chromatic-harness-v2-j9o` |
+| Global agents hub | `C:\Users\kas41\.agents` | *(none)* | — | Cross-rig learnings | **Fixed** — `.git` removed; plain directory hub |
+| User home | `C:\Users\kas41` | *(removed 2026-05-30)* | — | Was accidental git root | **Fixed** — `.git` → `.git.home-removed-20260530` |
 
 **Submodule (correct):** `chromatic-harness-v2/02_RUNTIME/runtime-engines/roach-pi` → `tmdgusya/roach-pi`
 
@@ -95,13 +95,13 @@ C:\Users\kas41\
 
 ---
 
-## Open beads (repo hygiene)
+## Repo hygiene beads (completed 2026-05-30)
 
-| ID | Priority | Title |
-|----|----------|-------|
-| `chromatic-harness-v2-j9o` | P0 | Remove git repo from user home directory |
-| `chromatic-harness-v2-p2f` | P1 | Create GitHub remotes for stack + design-studios |
-| `chromatic-harness-v2-qd3` | P1 | Align fusion-computer and claude-config with session compact |
+| ID | Status | Title |
+|----|--------|-------|
+| `chromatic-harness-v2-j9o` | closed | Remove git repo from user home directory |
+| `chromatic-harness-v2-p2f` | closed | Create GitHub remotes for stack + design-studios |
+| `chromatic-harness-v2-qd3` | closed | Align fusion-computer and claude-config with session compact |
 
 ---
 
