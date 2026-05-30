@@ -22,10 +22,25 @@ from typing import Any
 
 # ── Self-contained loader: works when run as a script or module ───────────
 _ROUTER_DIR = Path(__file__).resolve().parent
+_RUNTIME_DIR = _ROUTER_DIR.parent  # 02_RUNTIME — makes `router` an importable pkg
 _REPO = _ROUTER_DIR.parent.parent
 
-if str(_REPO) not in sys.path:
-    sys.path.insert(0, str(_REPO))
+# Put 02_RUNTIME first so `router` resolves as a real package. Without this,
+# running gate.py as a bare script (python 02_RUNTIME/router/gate.py — exactly
+# how the PreToolUse hook invokes it) leaves the `router` parent package
+# unregistered, so submodule relative imports (from .policy import ...) raise
+# ImportError and the gate silently fails to route.
+for _p in (str(_RUNTIME_DIR), str(_REPO)):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
+# Register the package up front so importlib-loaded submodules can resolve
+# their `from .x import y` relative imports regardless of invocation style.
+if "router" not in sys.modules:
+    try:
+        importlib.import_module("router")
+    except Exception:
+        pass
 
 
 def _load_submodule(name: str, fname: str):
