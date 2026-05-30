@@ -26,7 +26,12 @@ def test_audit_ide_parity_passes_in_repo():
 
 def test_audit_instruction_drift_passes_in_repo():
     proc = subprocess.run(
-        [PYTHON, str(REPO / "scripts" / "audit_instruction_drift.py"), "--root", str(REPO)],
+        [
+            PYTHON,
+            str(REPO / "scripts" / "audit_instruction_drift.py"),
+            "--root",
+            str(REPO),
+        ],
         cwd=REPO,
         capture_output=True,
         text=True,

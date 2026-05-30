@@ -18,6 +18,14 @@ python scripts/daily_harness_audit.py --root . --report --strict
 
 Use strict mode only after the repo has adopted all required files and wrappers.
 
+## Token Governance Closed Loop
+
+```bash
+python scripts/token_governance_closed_loop.py --enqueue-suggestions --drain-intake
+```
+
+This command ensures token usage controls are logged, analyzed, validated, and translated into intake suggestions that can become beads via `auto_intake`.
+
 ## Recommended Daily Sequence
 
 ```bash
@@ -40,6 +48,8 @@ powershell -NoProfile -File scripts/smoke_stack.ps1
 .agents/audits/latest_audit_summary.md
 .agents/audits/latest_audit.json
 .agents/audits/findings/open_findings.jsonl
+07_LOGS_AND_AUDIT/token_governance/latest.json
+07_LOGS_AND_AUDIT/token_governance/latest.md
 ```
 
 ## What to Do with Findings
@@ -72,3 +82,34 @@ If audit status is yellow:
 If audit status is green:
 
 - proceed normally
+
+## Bead Hygiene Threshold Governance
+
+The strict audit supports a temporary downgrade gate for bead hygiene red findings:
+
+```bash
+python scripts/daily_harness_audit.py --root . --report --strict --bead-hygiene-active-duplicate-threshold <N>
+```
+
+Environment-based automation override:
+
+```bash
+CHROMATIC_BEAD_HYGIENE_ACTIVE_DUPLICATE_THRESHOLD=<N>
+```
+
+Policy for threshold changes:
+
+- Default threshold is `0`.
+- Only raise threshold for active remediation windows with a linked bead and owner.
+- Every threshold increase must include:
+	- reason and expected end date
+	- current active duplicate count
+	- target duplicate count before reset
+- Reset threshold to `0` when remediation target is reached.
+- Do not use threshold changes to suppress unrelated P0/P1 findings.
+
+Operator accountability checklist:
+
+- Record threshold decisions in `.agents/audits/latest_audit_summary.md` notes or linked bead.
+- Regenerate remediation commands via `python scripts/bead_hygiene_remediation_commands.py --write` after each cleanup wave.
+- Re-run strict audit after cleanup and confirm finding code shifts from `bead_hygiene_red` to either `bead_hygiene_red_below_threshold` (temporary) or cleared.

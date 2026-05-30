@@ -222,6 +222,7 @@ def run_boot(
             decision="ok",
             summary=json.dumps(boot_summary)[:500],
             agent_role="session_boot",
+            lock_owner=os.environ.get("CHROMATIC_SESSION_ID", "").strip(),
         )
     except OSError:
         pass

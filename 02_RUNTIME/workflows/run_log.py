@@ -33,11 +33,60 @@ def read_log_path(repo_root: Path) -> Path:
     return runtime
 
 
+def _pick(entry: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        if key in entry and entry[key] not in (None, ""):
+            return entry[key]
+    return None
+
+
+def _to_float(value: Any) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _canonicalize_entry(entry: dict[str, Any]) -> dict[str, Any]:
+    confidence_obj = entry.get("confidence") if isinstance(entry.get("confidence"), dict) else {}
+    confidence_score = _pick(entry, "confidence_score")
+    if confidence_score is None and confidence_obj:
+        confidence_score = _pick(confidence_obj, "score", "confidence_score")
+
+    canonical: dict[str, Any] = {
+        "task_id": _pick(entry, "task_id", "bead_id", "workflow_id", "request_id") or "unknown",
+        "provider": _pick(entry, "provider", "selected_provider") or "unknown",
+        "model": _pick(entry, "model", "selected_model", "assigned_model") or "unknown",
+        "task_type": _pick(entry, "task_type", "mode", "event_type") or "unknown",
+        "execution_status": _pick(
+            entry,
+            "execution_status",
+            "result_status",
+            "status",
+            "result",
+            "decision",
+            "validation",
+        )
+        or "unknown",
+        "confidence_score": _to_float(confidence_score),
+        "cost_usd": _to_float(
+            _pick(entry, "cost_usd", "actual_cost", "estimated_cost", "cost_estimate_usd")
+        ),
+        "latency_ms": _to_float(_pick(entry, "latency_ms", "duration_ms", "elapsed_ms")),
+    }
+
+    return canonical
+
+
 def append_run_log(repo_root: Path, entry: dict[str, Any]) -> Path:
     path = default_log_path(repo_root)
     path.parent.mkdir(parents=True, exist_ok=True)
+    canonical = _canonicalize_entry(entry)
     record = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        **canonical,
         **entry,
     }
     with path.open("a", encoding="utf-8") as fh:

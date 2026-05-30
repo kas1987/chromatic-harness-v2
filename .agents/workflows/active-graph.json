@@ -1,7 +1,7 @@
 {
-  "workflow_id": "WF-pipeline",
-  "objective": "Re-decompose blocked task",
-  "created_at": "2026-05-30T03:17:43Z",
+  "workflow_id": "WF-chromatic-harness-v2-bpq",
+  "objective": "Owner: TwistKS \u00b7 Type: task",
+  "created_at": "2026-05-30T05:38:56Z",
   "risk_level": "low",
   "global_stop_conditions": [
     "confidence_below_threshold",
@@ -10,8 +10,8 @@
   ],
   "tasks": [
     {
-      "task_id": "task-scout",
-      "title": "Scout: Re-decompose blocked task",
+      "task_id": "chromatic-ha-scout",
+      "title": "Scout: Owner: TwistKS \u00b7 Type: task",
       "assigned_model": "sonnet",
       "role": "scout",
       "depends_on": [],
@@ -28,12 +28,12 @@
       "status": "pending"
     },
     {
-      "task_id": "task-build",
-      "title": "Build: Re-decompose blocked task",
+      "task_id": "chromatic-ha-build",
+      "title": "Build: Owner: TwistKS \u00b7 Type: task",
       "assigned_model": "kimi",
       "role": "worker",
       "depends_on": [
-        "task-scout"
+        "chromatic-ha-scout"
       ],
       "allowed_files": [],
       "forbidden_files": [],
@@ -48,12 +48,12 @@
       "status": "pending"
     },
     {
-      "task_id": "task-verify",
-      "title": "Verify: Re-decompose blocked task",
+      "task_id": "chromatic-ha-verify",
+      "title": "Verify: Owner: TwistKS \u00b7 Type: task",
       "assigned_model": "sonnet",
       "role": "verifier",
       "depends_on": [
-        "task-build"
+        "chromatic-ha-build"
       ],
       "allowed_files": [],
       "forbidden_files": [],
@@ -68,12 +68,12 @@
       "status": "pending"
     },
     {
-      "task_id": "task-scribe",
-      "title": "Log: Re-decompose blocked task",
+      "task_id": "chromatic-ha-scribe",
+      "title": "Log: Owner: TwistKS \u00b7 Type: task",
       "assigned_model": "kimi",
       "role": "scribe",
       "depends_on": [
-        "task-verify"
+        "chromatic-ha-verify"
       ],
       "allowed_files": [
         "docs/",

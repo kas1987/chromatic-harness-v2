@@ -22,6 +22,14 @@ Pre-session boot runs **without you running scripts daily**:
 
 Boot steps (fast path): doc guard → MCP audit → manifest → intake validation → **context trim audit** (rebuild + `BOOT_CONTEXT.md` when risk is orange/red). Skips rework if `latest.json` is fresh (under 6 hours). Output: `07_LOGS_AND_AUDIT/pre_session/latest.json`, `.agents/context/context_trim_audit.json`.
 
+Unified cross-surface guard (recommended default for IDE, CLI, MCP, and scheduler):
+
+```bash
+python scripts/session_unified_guard.py --surface auto --invoked-by automation
+```
+
+Receipt is written to `07_LOGS_AND_AUDIT/unified_guard/latest.json`.
+
 **Context rebuild (manual or red-zone):**
 
 ```bash
@@ -36,6 +44,12 @@ Policy: [docs/governance/CONTEXT_REBUILD_POLICY.md](docs/governance/CONTEXT_REBU
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/install_automation_tasks.ps1
+```
+
+Optional PowerShell terminal startup hook (runs unified guard once per new terminal):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install_session_guard_profile.ps1
 ```
 
 **Agents still do at session start:**
@@ -53,6 +67,28 @@ Read handoff if present: `.agents/handoffs/latest.json`
 powershell -File scripts/session_preflight.ps1 -Full    # deep: context report log + bd ready
 python scripts/session_boot_automation.py --force       # refresh manifest now
 ```
+
+**Before each major swarm phase:**
+
+```bash
+python scripts/session_boot_automation.py --force
+```
+
+**One-command pre-swarm gate (repeatable):**
+
+```bash
+python scripts/pre_swarm_gate.py
+```
+
+This runs: forced boot refresh, `check_agent_operations`, `validate_governance_stack`, and `context_trim_audit`.
+
+**Claude task delegation (router + T-level aware):**
+
+```bash
+python scripts/claude_delegate_gate.py --task "<objective>" --bead-id <id> --t-level T2 --privacy-class P1
+```
+
+Creates `.agents/handoffs/claude_delegate_packet.json` and `.agents/handoffs/claude_delegate_prompt.md` for repeatable Claude handoff.
 
 | Step | Doc |
 |------|-----|
@@ -103,8 +139,8 @@ Docs: [docs/governance/CONFIDENCE_GATE.md](docs/governance/CONFIDENCE_GATE.md), 
 | **Chromatic MCP (lite)** | [docs/CHROMATIC_MCP_SERVER.md](docs/CHROMATIC_MCP_SERVER.md) — one server vs 15 plugins |
 | **Two-log audit** | [docs/workflows/TWO_LOG_AUDIT.md](docs/workflows/TWO_LOG_AUDIT.md) — `07_LOGS_AND_AUDIT/execution/` + `traces/` |
 | **Activity log + dual backlog** | [docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md](docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md) — `python scripts/log_agent_activity.py log`; lanes: `python scripts/bd_ready_by_lane.py --lane human`; git triage: `python scripts/git_triage.py --from-log` |
-| **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff |
-| **Wiki (separate repo)** | [docs/WIKI_REPO_AND_PROMOTION.md](docs/WIKI_REPO_AND_PROMOTION.md) — `sync_wiki_mirror.py`, `promote_to_wiki.py`; beads [WIKI_V01](docs/beads/WIKI_V01_BEADS.md) |
+| **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff and after long-running loops |
+| **Wiki (separate repo)** | [docs/WIKI_REPO_AND_PROMOTION.md](docs/WIKI_REPO_AND_PROMOTION.md) — `sync_wiki_mirror.py`, `promote_to_wiki.py`; beads [WIKI_V01](docs/beads/WIKI_V01_BEADS.md). After loop/shell incidents: `promote_to_wiki.py --execute` |
 | **Session close-out / agent transfer** | `python scripts/session_closeout.py --invoked-by cursor` — [docs/SESSION_CLOSEOUT_CHECKLIST.md](docs/SESSION_CLOSEOUT_CHECKLIST.md), [docs/governance/AGENT_TRANSFER_POLICY.md](docs/governance/AGENT_TRANSFER_POLICY.md); auto-spawn: `CHROMATIC_AUTO_SPAWN=1` |
 | **roach-pi runtime** | `python scripts/roach_pi_status.py` — [docs/ROACH_PI_RUNTIME.md](docs/ROACH_PI_RUNTIME.md); init via `init_roach_pi_submodule.ps1` |
 

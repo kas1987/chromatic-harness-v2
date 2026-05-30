@@ -15,10 +15,14 @@ from router.context_detector import RuntimeContext
 from router.provider_selector import ProviderSelector
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_ROUTING_TABLE = _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
+_ROUTING_TABLE = (
+    _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
+)
 _OPENROUTER_MODELS = (
     _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
 )
+
+
 @pytest.fixture
 def selector(tmp_path):
     prefs = tmp_path / "prefs.yaml"
@@ -86,7 +90,9 @@ def test_p5_blocks_cloud_and_openrouter(selector, classifier, online_laptop_ctx)
         complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P5"
     )
     names = _providers(result)
-    assert not (set(names) & {"openrouter", "gemini", "openai", "claude_api", "together_ai"})
+    assert not (
+        set(names) & {"openrouter", "gemini", "openai", "claude_api", "together_ai"}
+    )
 
 
 def test_p3_blocks_all_cloud_routes(selector, classifier, online_laptop_ctx):
@@ -125,7 +131,9 @@ def test_p2_blocks_openrouter_keeps_frontier(selector, classifier, online_laptop
     assert "gemini" in names or "claude_api" in names
 
 
-def test_non_allowlisted_openrouter_model_removed(selector, classifier, online_laptop_ctx):
+def test_non_allowlisted_openrouter_model_removed(
+    selector, classifier, online_laptop_ctx
+):
     complexity = classifier.classify(
         "debug the failing request path", "root cause the 500 error"
     )

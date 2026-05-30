@@ -55,6 +55,7 @@ def log_activity(
     handoff: dict[str, Any] | None = None,
     confidence: dict[str, Any] | None = None,
     agent_role: str = "orchestrator",
+    lock_owner: str = "",
     intake_on_failure: bool = False,
     intake_context: dict[str, Any] | None = None,
     enqueue_intake: bool = False,
@@ -80,6 +81,8 @@ def log_activity(
         "summary": summary[:2000] if summary else "",
         "handoff": handoff or {},
     }
+    if lock_owner:
+        payload["lock_owner"] = lock_owner
     if error:
         payload["error"] = error[:4000]
     if confidence:
@@ -104,6 +107,8 @@ def log_activity(
         ctx.setdefault("error", error[:2000])
     if summary:
         ctx.setdefault("summary", summary[:500])
+    if lock_owner:
+        ctx.setdefault("lock_owner", lock_owner)
 
     title = summary[:120] if summary else f"Activity follow-up: {event_type}"
     if error and len(title) < 40:

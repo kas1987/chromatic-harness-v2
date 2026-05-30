@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -19,6 +20,50 @@ from intake.queue import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 _SKIP_ID_PREFIXES = ("example-",)
+
+
+def _normalize_title(title: str) -> str:
+    return " ".join((title or "").strip().lower().split())
+
+
+def _extract_rows(payload: str) -> list[dict]:
+    text = (payload or "").strip()
+    if not text:
+        return []
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return []
+    if isinstance(data, list):
+        return [row for row in data if isinstance(row, dict)]
+    if isinstance(data, dict):
+        for key in ("items", "results", "issues", "data"):
+            rows = data.get(key)
+            if isinstance(rows, list):
+                return [row for row in rows if isinstance(row, dict)]
+    return []
+
+
+def _existing_open_titles(
+    *,
+    cwd: Path,
+    runner: Callable[[list[str], Path], subprocess.CompletedProcess[str]] | None = None,
+) -> set[str]:
+    """Read existing OPEN beads and return a normalized title index.
+
+    Best effort only: if bd list fails, return empty set and continue processing.
+    """
+    titles: set[str] = set()
+    proc = _run_bd(["list", "--status", "open", "--limit", "0", "--json"], cwd=cwd, runner=runner)
+    if proc.returncode != 0:
+        return titles
+    rows = _extract_rows((proc.stdout or "") + (proc.stderr or ""))
+    for row in rows:
+        raw = str(row.get("title") or row.get("name") or row.get("summary") or "")
+        norm = _normalize_title(raw)
+        if norm:
+            titles.add(norm)
+    return titles
 
 
 @dataclass
@@ -151,6 +196,7 @@ def process_entry(
     runner=None,
     dry_run: bool = False,
     claim: bool = True,
+    existing_open_titles: set[str] | None = None,
 ) -> ProcessResult:
     """Process one intake entry into beads."""
     repo = repo_root or REPO_ROOT
@@ -188,6 +234,12 @@ def process_entry(
         entry_lane = _resolve_lane(entry)
         created: list[str] = []
         for task in tasks:
+            title_norm = _normalize_title(task["title"])
+            if title_norm and existing_open_titles is not None and title_norm in existing_open_titles:
+                message = f"prevented duplicate open-title: {task['title'][:120]}"
+                if not dry_run:
+                    record_status(entry, "skipped", path=qpath, repo_root=repo, error=message)
+                return ProcessResult(entry.id, entry.kind, "skipped", message=message)
             ok, bead_id, msg = _bd_create(
                 task["title"],
                 description=task.get("description", ""),
@@ -205,6 +257,8 @@ def process_entry(
             if claim and bead_id:
                 _bd_claim(bead_id, cwd=repo, runner=runner, dry_run=dry_run)
             created.append(bead_id)
+            if title_norm and existing_open_titles is not None:
+                existing_open_titles.add(title_norm)
 
         primary = created[0] if created else ""
         if not dry_run:
@@ -242,6 +296,7 @@ def drain_queue(
     qpath = queue_path or default_queue_path(repo)
     report = DrainReport()
     queued = list_queued(path=qpath, repo_root=repo)
+    existing_titles = _existing_open_titles(cwd=repo, runner=runner)
     if limit is not None:
         queued = queued[:limit]
 
@@ -253,6 +308,7 @@ def drain_queue(
             runner=runner,
             dry_run=dry_run,
             claim=claim,
+            existing_open_titles=existing_titles,
         )
         report.results.append(result)
         if result.status == "processed":

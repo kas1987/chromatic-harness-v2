@@ -1,0 +1,67 @@
+{
+  "audit": "token_governance_closed_loop",
+  "timestamp": "2026-05-30T06:15:40.979916+00:00",
+  "root": "C:\\Users\\kas41\\chromatic-harness-v2",
+  "status": "green",
+  "counts": {
+    "pass": 4,
+    "warn": 0,
+    "fail": 0
+  },
+  "checks": [
+    {
+      "name": "session_context_report",
+      "status": "pass",
+      "returncode": 0,
+      "message": "no warnings",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\session_context_report.py",
+        "--json",
+        "--log",
+        "--invoked-by",
+        "harness"
+      ]
+    },
+    {
+      "name": "audit_mcp_context",
+      "status": "pass",
+      "returncode": 0,
+      "message": "within threshold",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\audit_mcp_context.py",
+        "--profile",
+        "harness_dev",
+        "--json"
+      ]
+    },
+    {
+      "name": "validate_workflow_token_governance",
+      "status": "pass",
+      "returncode": 0,
+      "message": "workflow token governance OK",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\validate_workflow_token_governance.py"
+      ]
+    },
+    {
+      "name": "daily_harness_audit_strict",
+      "status": "pass",
+      "returncode": 0,
+      "message": "status=green",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\daily_harness_audit.py",
+        "--root",
+        "C:\\Users\\kas41\\chromatic-harness-v2",
+        "--report",
+        "--strict"
+      ]
+    }
+  ],
+  "suggestions": [],
+  "queue_actions": [],
+  "intake_result": null
+}
