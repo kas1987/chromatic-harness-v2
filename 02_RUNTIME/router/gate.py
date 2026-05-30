@@ -55,6 +55,7 @@ def _load_submodule(name: str, fname: str):
 _context = _load_submodule("context_detector", "context_detector.py")
 _complexity = _load_submodule("complexity_classifier", "complexity_classifier.py")
 _selector = _load_submodule("provider_selector", "provider_selector.py")
+_loop_guard = _load_submodule("loop_guard", "loop_guard.py")
 
 ContextDetector = _context.ContextDetector
 RuntimeContext = _context.RuntimeContext
@@ -318,12 +319,18 @@ def main() -> None:
         should_block = False
         override_note = ""
 
+    # ── Loop-iteration guard (runaway / cache-amplification vector) ──────
+    loop_verdict = _loop_guard.bump_and_check(description, sub_type)
+    loop_note = _loop_guard.advisory_note(loop_verdict)
+    if loop_verdict.get("level") == "block":
+        should_block = True  # hard stop regardless of speed mode
+
     # ── Format advisory (after all overrides) ───────────────────────────
     ctx_note = _context_gate_advisory(description, prompt, complexity.level)
     advisory = (
         f"ROUTER C={complexity.level} speed={selection.speed_mode} "
         f"provider={chosen.provider} model={chosen.model} — "
-        f"{chosen.reason}{override_note}{ctx_note}"
+        f"{chosen.reason}{override_note}{ctx_note}{loop_note}"
     )
 
     # ── Output to stdout ────────────────────────────────────────────────
@@ -347,8 +354,11 @@ def main() -> None:
         "tier": chosen.tier,
         "reason": chosen.reason,
         "blocked": should_block,
+        "loop_count": loop_verdict.get("count", 0),
+        "loop_level": loop_verdict.get("level", "ok"),
     }
     _log_entry(entry)
+    _audit_router_decision(entry)
     sys.exit(0)
 
 
