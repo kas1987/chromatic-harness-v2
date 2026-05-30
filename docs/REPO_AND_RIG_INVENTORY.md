@@ -57,13 +57,14 @@ Run `gh repo list kas1987 --limit 200` for live list. Only these are cloned unde
 | `fusion-computer` | `fusion-computer` |
 | `claude-config` | `.claude` |
 | `claude-powerline` | `claude-powerline` |
+| `-Chromatic_Wiki` | `C:\Users\kas41\-Chromatic_Wiki` |
 
 ### Families (cloud-only unless cloned)
 
 | Family | Repos |
 |--------|-------|
 | Harness / agent ops | `agentops`, `ai-project-management-harness`, `prism-autonomy-harness`, `ComftyUI-Harness`, `chromatic-devsecops` |
-| Chromatic platform | `ChromaticSystems`, `Chromatic_Brain`, `Chromatic_Skills`, `Command-Center`, `-Chromatic_Wiki` |
+| Chromatic platform | `ChromaticSystems`, `Chromatic_Brain`, `Chromatic_Skills`, `Command-Center`, `-Chromatic_Wiki` (**cloned** — see [WIKI_REPO_AND_PROMOTION.md](WIKI_REPO_AND_PROMOTION.md)) |
 | Claude toolchain | `claude-skills`, `claude-octopus`, `Claude_Master` |
 | Prism / image | `04-Prism`, `04-prism-LAP`, `Image-Prism`, `Image-Org` |
 | Creative | `The-Veil`, `Viel-Small-Town`, `3D_Meta` |

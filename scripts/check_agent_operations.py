@@ -103,6 +103,11 @@ REQUIRED_FILES = [
     "docs/INTAKE_QUEUE.md",
     "01_PROTOCOLS/INTAKE/intake_queue.schema.json",
     "07_LOGS_AND_AUDIT/intake_queue.jsonl",
+    "docs/WIKI_REPO_AND_PROMOTION.md",
+    "docs/WIKI_REPO_RENAME.md",
+    "docs/beads/WIKI_V01_BEADS.md",
+    "scripts/promote_to_wiki.py",
+    "scripts/sync_wiki_mirror.py",
 ]
 
 REQUIRED_STRINGS_IN_AGENTS = [
