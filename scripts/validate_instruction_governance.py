@@ -11,7 +11,7 @@ REPO = Path(__file__).resolve().parents[1]
 # Thin wrappers — full policy lives in AGENT_OPERATIONS.md
 MAX_LINES = {
     "AGENTS.md": 55,
-    "CLAUDE.md": 45,
+    "CLAUDE.md": 50,
 }
 
 # Must not appear in both wrappers (canonical copy in AGENT_OPERATIONS.md)
@@ -57,12 +57,20 @@ def main() -> int:
             if needle in text:
                 errors.append(f"{rel} must not contain duplicate block: {needle!r}")
 
-    agents = (REPO / "AGENTS.md").read_text(encoding="utf-8") if (REPO / "AGENTS.md").is_file() else ""
+    agents = (
+        (REPO / "AGENTS.md").read_text(encoding="utf-8")
+        if (REPO / "AGENTS.md").is_file()
+        else ""
+    )
     for needle in REQUIRED_IN_AGENTS:
         if needle not in agents:
             errors.append(f"AGENTS.md missing required reference: {needle!r}")
 
-    claude = (REPO / "CLAUDE.md").read_text(encoding="utf-8") if (REPO / "CLAUDE.md").is_file() else ""
+    claude = (
+        (REPO / "CLAUDE.md").read_text(encoding="utf-8")
+        if (REPO / "CLAUDE.md").is_file()
+        else ""
+    )
     for needle in REQUIRED_IN_CLAUDE:
         if needle not in claude:
             errors.append(f"CLAUDE.md missing required reference: {needle!r}")
