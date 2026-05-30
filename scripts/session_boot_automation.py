@@ -104,6 +104,7 @@ def run_boot(
             str(_SCRIPTS / "audit_mcp_context.py"),
             "--profile",
             "harness_dev",
+            "--strict",
             "--json",
         ]
         if mcps_path:

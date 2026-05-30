@@ -1,6 +1,6 @@
 # Pre-Session Tools, Resources, and MCP Inventory
 
-> **Generated:** `2026-05-30T01:49:37.139039+00:00`  
+> **Generated:** `2026-05-30T02:01:19.491874+00:00`  
 > **Regenerate:** `python scripts/generate_pre_session_inventory.py`  
 > **MCP path scanned:** `C:\Users\kas41\chromatic-harness-v2\tests\fixtures\mcp_minimal`
 

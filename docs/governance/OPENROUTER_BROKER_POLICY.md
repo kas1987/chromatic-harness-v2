@@ -190,15 +190,15 @@ If OpenRouter fails:
 | Concern | Location | Notes |
 |---------|----------|-------|
 | Provider registry | `config/routing/providers.yaml` | `openrouter` entry: `privacy_max: P1`, `cost_tier: low` |
-| Selection logic | `02_RUNTIME/router/provider_selector.py` | Matrix tests in `tests/test_complexity_and_routing.py` |
-| Privacy classes | `09_DEPLOYMENT/config/routing/privacy_policy.yaml` (if present) | P4/P5 hard blocks may be policy-only — verify in ROUTE-006 |
+| Selection logic | `02_RUNTIME/router/provider_selector.py` | `privacy_class` on `select()`; tests in `tests/test_openrouter_broker_policy.py` |
+| OpenRouter allowlist | `09_DEPLOYMENT/config/routing/openrouter-models.yaml` | Non-listed models dropped at selection time |
+| Privacy classes | `config/routing/privacy-policy.yaml` | P4/P5 cloud block in `provider_selector._filter_by_privacy` |
 | Context / pre-session | `scripts/session_context_report.py`, `scripts/audit_mcp_context.py` | Not OpenRouter-specific |
 
-**Gaps (track in beads epic `chromatic-harness-v2-gh1`, child `15x.5`):**
+**Remaining gaps (epic `chromatic-harness-v2-gh1`):**
 
-- `openrouter-models.yaml` allowlist not yet in repo
-- Dedicated `test_openrouter_broker_policy.py` not present
-- P4/P5 cloud block enforcement vs policy-only — audit ROUTE-005 / ROUTE-006
+- Cost cap enforcement and OpenRouter audit logging (adapter layer)
+- `privacy_gate.py` P5 enum + ChromaticRouter name mapping (`gemini` → `google`)
 
 ---
 

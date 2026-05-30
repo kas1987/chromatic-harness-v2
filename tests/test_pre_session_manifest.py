@@ -95,3 +95,4 @@ def test_build_manifest_import():
     )
     assert m["context_tier"] == "P0"
     assert REQUIRED_KEYS <= set(m.keys())
+    assert "device_type" in m["routing_context"]

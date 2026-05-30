@@ -122,6 +122,7 @@ class ChromaticRouter:
                 selection = self.provider_selector.select(
                     complexity=complexity,
                     context=context,
+                    privacy_class=req.constraints.privacy_class.value,
                 )
                 ranked = selection.ranked_choices
                 if ranked:
