@@ -21,6 +21,8 @@ _RUNTIME = REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
+from intake.bd_runner import resolve_bd_argv  # noqa: E402
+
 from workflows.confidence import mutation_allowed, score_task  # noqa: E402
 from workflows.go_modes import mode_allows_mutation, mode_requires_swarm_approval, parse_go_mode  # noqa: E402
 from workflows.models import GoMode, WorkflowDecision  # noqa: E402
@@ -36,10 +38,12 @@ HANDOFF = REPO / ".agents" / "handoffs" / "latest.json"
 def _run_bd(args: list[str]) -> str:
     try:
         proc = subprocess.run(
-            ["bd", *args],
+            [*resolve_bd_argv(), *args],
             cwd=REPO,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=30,
             check=False,
         )
