@@ -46,6 +46,7 @@
 - [ ] Use **TodoWrite** or markdown TODO lists instead of **`bd`**
 - [ ] Start a **new RPI epic** without reading `.agents/rpi/execution-packet.json`
 - [ ] Treat **compaction** as optional on long sessions
+- [ ] End a long session **without** `python scripts/session_closeout.py` when `CHROMATIC_AUTO_SPAWN=1` (successor gets no transfer packet)
 - [ ] Say **“ready to push when you are”** — **you push** per AGENTS.md
 
 ---
@@ -57,9 +58,11 @@
 | Start session | `session_context_report.py --log`, `bd ready`, read handoff | Low |
 | Plan feature | **`/ship-lite`** or `/plan` only → beads issues | ~50–150k |
 | Close one issue | **`/close-issue`** (repo workflow) or `/implement` + pytest | ~30–80k |
+| Implement a fix | Karpathy discipline: read files first, surgical diff, state success criteria → `pytest` | ~30–80k |
 | Quality check | **`pytest` + `ruff`**; optional `/vibe --quick` on changed files | ~20–50k |
 | Hotfix | **`/hotfix`** (lite) or `/bug-hunt` then minimal patch | ~40–100k |
 | Epic execution | **`bd ready`** → one issue at a time → **`/close-issue <id>`** | Bounded |
+| End session / hand off | **`session_closeout.py`** → read `transfer_packet.json` | Low |
 | Next safest task | **`python scripts/workflow_go.py GO`** or lite **`/go`** | ~30–80k |
 | Full autonomous epic | Explicit human gate; never unattended **`/crank`** | — |
 

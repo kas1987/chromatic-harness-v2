@@ -1,0 +1,43 @@
+{
+  "transfer_id": "00000000-0000-4000-8000-000000000001",
+  "updated_at": "2026-05-30T12:00:00Z",
+  "source_runtime": "cursor",
+  "objective": "Complete next ready bead with bounded scope",
+  "decision": "review",
+  "summary": "Session closed via session_closeout.py. Read handoff markdown and transfer_packet before new work.",
+  "evidence_refs": ["12_HANDOFFS/sessions/CHR-EXAMPLE.md"],
+  "files_touched": [],
+  "risks": ["Verify budget.decision before auto-spawn"],
+  "blockers": [],
+  "next_action": "bd ready",
+  "confidence": 70,
+  "budget_used": {
+    "tool_calls": 0,
+    "files_read": 0,
+    "approx_tokens": 0
+  },
+  "successor": {
+    "runtime": "cursor",
+    "model_hint": "",
+    "spawn_mode": "manual",
+    "prompt_path": ".agents/handoffs/successor_prompt.md"
+  },
+  "budget": {
+    "session_est_tokens": 45000,
+    "session_cap_tokens": 200000,
+    "daily_spent_usd": 3.5,
+    "daily_cap_usd": 25.0,
+    "monthly_spent_usd": 42.0,
+    "monthly_cap_usd": 400.0,
+    "decision": "handoff_only",
+    "reasons": ["session below spawn threshold example"]
+  },
+  "beads_ready": [],
+  "boot_commands": [
+    "python scripts/new_session_bootstrap.py --root .",
+    "bd ready"
+  ],
+  "forbidden": ["full_transcript", "bulk_jsonl_scan"],
+  "handoff_path": "12_HANDOFFS/sessions/CHR-EXAMPLE.md",
+  "latest_pointer": ".agents/handoffs/latest.json"
+}

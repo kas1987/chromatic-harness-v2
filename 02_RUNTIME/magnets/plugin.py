@@ -91,6 +91,7 @@ def default_registry() -> MagnetRegistry:
     from .memory_magnet import MemoryMagnet
     from .plugins.pyramid_plugin import PyramidCheckPlugin
     from .plugins.secrets_plugin import SecretsSurfacePlugin
+    from .discipline_magnet import DisciplineMagnet
     from .scope_magnet import ScopeMagnet
     from .security_magnet import SecurityMagnet
     from .validation_magnet import ValidationMagnet
@@ -100,6 +101,7 @@ def default_registry() -> MagnetRegistry:
         IntakeMagnet(),
         IntentMagnet(),
         ScopeMagnet(),
+        DisciplineMagnet(),
         ExecutionMagnet(),
         CostMagnet(),
         ConfidenceMagnet(),

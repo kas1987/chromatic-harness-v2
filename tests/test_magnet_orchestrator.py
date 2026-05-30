@@ -64,6 +64,7 @@ class TestMagnetOrchestrator:
         orch = MagnetOrchestrator()
         assert "intake_magnet" in orch.registered_magnets()
         assert "closure_magnet" in orch.registered_magnets()
+        assert "discipline_magnet" in orch.registered_magnets()
 
     def test_observe_intake_short_objective(self):
         orch = MagnetOrchestrator()

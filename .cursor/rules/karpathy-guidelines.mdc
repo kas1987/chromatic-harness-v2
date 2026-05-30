@@ -1,0 +1,34 @@
+---
+description: Karpathy 4-pillar discipline — canonical with Pi discipline.ts and discipline_magnet
+alwaysApply: true
+---
+
+# Karpathy discipline (Chromatic Harness v2)
+
+**Canonical policy:** [docs/governance/KARPATHY_DISCIPLINE.md](../docs/governance/KARPATHY_DISCIPLINE.md)
+
+## Four pillars (mandatory for implementation)
+
+1. **Think before coding** — assumptions explicit; ask if unclear; surface tradeoffs.
+2. **Simplicity first** — minimum code; no speculative abstractions or config.
+3. **Surgical changes** — read before write; scope to request; match conventions; no drive-by edits.
+4. **Goal-driven execution** — verifiable done criteria before coding; run checks before claiming complete.
+
+## Pre-implementation (state in chat before editing)
+
+```text
+Assumptions: [...]
+Done when: [ ] check  [ ] check
+Files in scope: [...]
+```
+
+## Runtime enforcement
+
+| Layer | Mechanism |
+|-------|-----------|
+| Cursor | This rule |
+| Pi | `discipline.ts` on `plan-worker` / `worker` |
+| Magnets | `discipline_magnet` (read/modify paths, criteria, verification) |
+| CI | `python scripts/validate_karpathy_discipline.py` |
+
+Pairs with [AGENT_ANTIPATTERNS.md](../docs/AGENT_ANTIPATTERNS.md) (token/scope) and [harness-audit.mdc](harness-audit.mdc) (pre-session gates).

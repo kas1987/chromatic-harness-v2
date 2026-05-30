@@ -60,6 +60,7 @@ python scripts/session_boot_automation.py --force       # refresh manifest now
 | **Repo / rig map** | [docs/REPO_AND_RIG_INVENTORY.md](docs/REPO_AND_RIG_INVENTORY.md) — `scripts/audit_local_repos.ps1` |
 | **MCP disable / lean Claude** | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
 | **Do not trust / do not do** | [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) |
+| **Implementation discipline** | [docs/governance/KARPATHY_DISCIPLINE.md](docs/governance/KARPATHY_DISCIPLINE.md) |
 | Tools / MCP / CRG baseline | [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) |
 | **Execution flow (canonical)** | [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md) |
 | **Context tiers (P0–P4)** | [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md) |
@@ -103,6 +104,7 @@ Docs: [docs/governance/CONFIDENCE_GATE.md](docs/governance/CONFIDENCE_GATE.md), 
 | **Activity log + dual backlog** | [docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md](docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md) — `python scripts/log_agent_activity.py log`; lanes: `python scripts/bd_ready_by_lane.py --lane human`; git triage: `python scripts/git_triage.py --from-log` |
 | **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff |
 | **Wiki (separate repo)** | [docs/WIKI_REPO_AND_PROMOTION.md](docs/WIKI_REPO_AND_PROMOTION.md) — `sync_wiki_mirror.py`, `promote_to_wiki.py`; beads [WIKI_V01](docs/beads/WIKI_V01_BEADS.md) |
+| **Session close-out / agent transfer** | `python scripts/session_closeout.py --invoked-by cursor` — [docs/SESSION_CLOSEOUT_CHECKLIST.md](docs/SESSION_CLOSEOUT_CHECKLIST.md), [docs/governance/AGENT_TRANSFER_POLICY.md](docs/governance/AGENT_TRANSFER_POLICY.md); auto-spawn: `CHROMATIC_AUTO_SPAWN=1` |
 | **roach-pi runtime** | `python scripts/roach_pi_status.py` — [docs/ROACH_PI_RUNTIME.md](docs/ROACH_PI_RUNTIME.md); init via `init_roach_pi_submodule.ps1` |
 
 **Brownfield:** Do not start a new RPI epic on top of in-flight work without reading the execution packet and checking the branch.

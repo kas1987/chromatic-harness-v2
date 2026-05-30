@@ -1,0 +1,33 @@
+# Agent transfer and cross-runtime budget caps (source of truth for closeout + router daily cap).
+# See docs/governance/AGENT_TRANSFER_POLICY.md
+
+caps:
+  session_tokens: 200000
+  daily_usd: 25.0
+  monthly_usd: 400.0
+
+thresholds:
+  spawn_min_daily_remaining_pct: 15
+  spawn_min_monthly_remaining_pct: 10
+  handoff_only_below_session_pct: 80
+
+# Estimated cost reserved for one successor spawn (subtracted before spawn decision)
+successor_reserve_usd: 2.0
+
+default_successor_runtime: cursor
+
+runtimes:
+  cursor:
+    spawn_adapter: cursor_sdk
+  claude_code:
+    spawn_adapter: claude_cli
+  vscode:
+    spawn_adapter: manual
+  cli:
+    spawn_adapter: manual
+  codex:
+    spawn_adapter: manual
+
+boot_commands:
+  - python scripts/new_session_bootstrap.py --root .
+  - bd ready

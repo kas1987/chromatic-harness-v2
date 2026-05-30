@@ -122,9 +122,13 @@ git status
   "mission_id": "CHR-ABC123",
   "handoff_path": "12_HANDOFFS/sessions/CHR-ABC123.md",
   "beads_ready": ["chromatic-harness-v2-xxx"],
-  "next_command": "bd show chromatic-harness-v2-xxx"
+  "next_command": "bd show chromatic-harness-v2-xxx",
+  "transfer_packet_path": ".agents/handoffs/transfer_packet.json",
+  "budget_decision": "spawn|handoff_only|halt_human"
 }
 ```
+
+See [docs/governance/AGENT_TRANSFER_PACKET_SCHEMA.md](../docs/governance/AGENT_TRANSFER_PACKET_SCHEMA.md) and [config/agent_budget.yaml](../config/agent_budget.yaml).
 
 ---
 
