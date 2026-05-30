@@ -21,6 +21,8 @@ _OPS = _REPO / "AGENT_OPERATIONS.md"
 _MANIFEST = _REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
 _HEALTH = _REPO / "07_LOGS_AND_AUDIT" / "harness_health" / "latest.json"
 _BUDGET_FORECAST = _REPO / "scripts" / "budget_forecast_snapshot.py"
+_INJECTED_LEARNINGS = _REPO / ".agents" / "context" / "injected_learnings.json"
+_LEARNING_USAGE_LOG = _REPO / ".agents" / "metrics" / "learning_usage.jsonl"
 
 
 def _emit_boot(cold_start: bool) -> None:
@@ -66,11 +68,38 @@ def _inject_learnings() -> None:
             terms = [t for t in re.split(r"[/_-]", br) if len(t) > 2]
         except Exception:
             pass
-        top = select_top(n=3, terms=terms)
+        usage_log = _LEARNING_USAGE_LOG if _LEARNING_USAGE_LOG.exists() else None
+        top = select_top(n=3, terms=terms, usage_log=usage_log)
         if top:
             print("--- Prior learnings (apply where relevant) ---")
             print(format_for_injection(top))
             print()
+            # Record injected names so session_closeout can emit applied_success/failure
+            try:
+                _INJECTED_LEARNINGS.parent.mkdir(parents=True, exist_ok=True)
+                _INJECTED_LEARNINGS.write_text(
+                    json.dumps(
+                        {
+                            "injected_at": __import__("datetime")
+                            .datetime.now(__import__("datetime").timezone.utc)
+                            .isoformat(),
+                            "terms": terms,
+                            "learnings": [
+                                {
+                                    "name": Path(lc.get("path", "")).stem
+                                    or lc.get("title", ""),
+                                    "path": lc.get("path", ""),
+                                    "title": lc.get("title", ""),
+                                }
+                                for lc in top
+                            ],
+                        },
+                        ensure_ascii=False,
+                    ),
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass
     except Exception as exc:  # noqa: BLE001
         print(f"  learnings: injection skipped ({exc})", file=sys.stderr)
 
@@ -163,6 +192,38 @@ def main() -> int:
             )
             if proc.returncode == 0 and proc.stdout.strip():
                 print(f"  budget_forecast: {proc.stdout.strip()}")
+                try:
+                    latest = (
+                        _REPO / "07_LOGS_AND_AUDIT" / "budget" / "forecast_latest.json"
+                    )
+                    snap = (
+                        json.loads(latest.read_text(encoding="utf-8"))
+                        if latest.is_file()
+                        else {}
+                    )
+                    channels = (
+                        snap.get("channels")
+                        if isinstance(snap.get("channels"), dict)
+                        else {}
+                    )
+                    ranked: list[tuple[str, float, float, float]] = []
+                    for name, row in channels.items():
+                        if not isinstance(row, dict):
+                            continue
+                        gap = float(row.get("forecast_gap_to_target_usd", 0.0) or 0.0)
+                        current = float(row.get("weekly_spent_usd", 0.0) or 0.0)
+                        cap = float(row.get("cap_weekly_usd", 0.0) or 0.0)
+                        ranked.append((str(name), gap, current, cap))
+                    ranked.sort(key=lambda item: item[1], reverse=True)
+                    top = ranked[:2]
+                    if top:
+                        summary = " | ".join(
+                            f"{name} ${current:.2f}/${cap:.2f} gap:${gap:.2f}"
+                            for name, gap, current, cap in top
+                        )
+                        print(f"  budget_channels: {summary}")
+                except Exception:
+                    pass
             elif proc.stderr.strip():
                 print(f"  budget_forecast: unavailable ({proc.stderr.strip()})")
         except (subprocess.SubprocessError, OSError):
