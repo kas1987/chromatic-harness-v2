@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Fast local CI gate (ruff check + format) — mirrors .github/workflows/ci.yml.
+# Keeps commits snappy; the fuller suite runs at pre-push. Bypass: git commit --no-verify.
+exec python scripts/ci_local.py --stage pre-commit
