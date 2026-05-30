@@ -213,8 +213,8 @@ pytest tests/test_router_*.py tests/test_provider_selector*.py tests/test_comple
 - [x] `OPENROUTER_BROKER_POLICY.md` exists and defines privacy/cost/model restrictions.
 - [x] Router validation beads are created or imported (epic `chromatic-harness-v2-15x`, children `15x.1`–`15x.8`).
 - [x] `AGENTS.md` and `CLAUDE.md` are hybrid wrappers (Beads block preserved).
-- [ ] CI guard still passes (run `check_agent_operations.py` + pytest).
-- [ ] Pre-session context can be summarized into a small manifest (`15x.7`).
+- [x] CI guard still passes (run `check_agent_operations.py` + pytest).
+- [x] Pre-session context can be summarized into a small manifest (`15x.7`).
 
 ---
 

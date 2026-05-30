@@ -69,6 +69,35 @@ def test_boot_writes_manifest_with_force(tmp_path):
     assert data["context_tier"] == "P0"
 
 
+def test_boot_fails_strict_on_heavy_mcps(tmp_path):
+    out = tmp_path / "pre_session"
+    env = {
+        **os.environ,
+        "CHROMATIC_PRE_SESSION_DIR": str(out),
+        "CHROMATIC_REPO": str(REPO),
+    }
+    heavy = REPO / "tests" / "fixtures" / "mcp_heavy"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(BOOT_SCRIPT),
+            "--invoked-by",
+            "automation",
+            "--force",
+            "--mcps-path",
+            str(heavy),
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=120,
+        check=False,
+    )
+    assert r.returncode == 1, r.stderr or r.stdout
+    assert "audit_mcp_context failed" in (r.stderr or "")
+
+
 def test_boot_skips_when_fresh(tmp_path):
     out = tmp_path / "pre_session"
     out.mkdir(parents=True)

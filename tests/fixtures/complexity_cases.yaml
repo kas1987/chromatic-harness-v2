@@ -1,0 +1,268 @@
+# ROUTE-002: 50-case complexity classifier validation matrix (C1–C4)
+# Run via tests/test_complexity_and_routing.py
+
+version: 1
+
+distribution:
+  C1: 10
+  C2: 15
+  C3: 15
+  C4: 10
+
+cases:
+  # ── C1: Mechanical (10) ───────────────────────────────────────────────────
+  - id: c1-json-table
+    description: json-to-table converter
+    prompt: format the json-to-table output
+    expected: C1
+
+  - id: c1-frontmatter
+    description: parse frontmatter fields
+    prompt: extract frontmatter from this file
+    expected: C1
+
+  - id: c1-csv-md
+    description: convert csv to markdown table
+    prompt: format csv columns
+    expected: C1
+
+  - id: c1-summarize
+    description: summarize release notes
+    prompt: extract key bullets
+    expected: C1
+
+  - id: c1-regex
+    description: regex extract email addresses
+    prompt: parse log file
+    expected: C1
+
+  - id: c1-format-yaml
+    description: format yaml indentation
+    prompt: convert tabs to spaces
+    expected: C1
+
+  - id: c1-pdf-table
+    description: extract table from pdf
+    prompt: convert to markdown table
+    expected: C1
+
+  - id: c1-readme-boilerplate
+    description: boilerplate readme template
+    prompt: scaffold directory layout
+    expected: C1
+
+  - id: c1-json-keys
+    description: parse json config keys
+    prompt: extract nested fields
+    expected: C1
+
+  - id: c1-md-to-csv
+    description: convert markdown table to csv
+    prompt: format for spreadsheet
+    expected: C1
+
+  # ── C2: Structured (15) ───────────────────────────────────────────────────
+  - id: c2-scaffold-module
+    description: scaffold a new module
+    prompt: scaffold the directory layout
+    expected: C2
+
+  - id: c2-boilerplate
+    description: generate boilerplate code
+    prompt: boilerplate for new plugin
+    expected: C2
+
+  - id: c2-smoke-test
+    description: run smoke test against endpoint
+    prompt: smoke test the login flow
+    expected: C2
+
+  - id: c2-pr-review
+    description: "PR #42 single-file code quality review"
+    prompt: ""
+    expected: C2
+
+  - id: c2-lint
+    description: lint the auth helper
+    prompt: fix style warnings
+    expected: C2
+
+  - id: c2-refactor
+    description: refactor login handler
+    prompt: single-file cleanup
+    expected: C2
+
+  - id: c2-unit-test
+    description: unit test for parser
+    prompt: fix failing assertion
+    expected: C2
+
+  - id: c2-code-review
+    description: review code in utils.py
+    prompt: code review pass
+    expected: C2
+
+  - id: c2-scaffold-plugin
+    description: scaffold module for intake
+    prompt: scaffold the plugin stub
+    expected: C2
+
+  - id: c2-debug-import
+    description: debug import error
+    prompt: fix module path
+    expected: C2
+    notes: false-positive guard — generic 'debug' without 'debug the' stays C2
+
+  - id: c2-smoke-lint
+    description: smoke test deploy script
+    prompt: lint shell steps
+    expected: C2
+
+  - id: c2-cli-boilerplate
+    description: generate boilerplate for CLI
+    prompt: scaffold module entrypoint
+    expected: C2
+
+  - id: c2-pr-typo
+    description: PR review for typo fix
+    prompt: review code diff
+    expected: C2
+
+  - id: c2-constants
+    description: refactor constants file
+    prompt: single-file rename
+    expected: C2
+
+  - id: c2-off-by-one
+    description: fix off-by-one in loop
+    prompt: unit test edge case
+    expected: C2
+
+  # ── C3: Reasoning (15) ──────────────────────────────────────────────────
+  - id: c3-root-cause
+    description: debug the failing request path
+    prompt: root cause the 500 error
+    expected: C3
+
+  - id: c3-multi-file
+    description: multi-file integration review
+    prompt: trace cross-file dependencies
+    expected: C3
+
+  - id: c3-arch-review
+    description: review architecture for intake
+    prompt: design service boundaries
+    expected: C3
+
+  - id: c3-flaky-ci
+    description: investigate flaky CI job
+    prompt: analyze test logs
+    expected: C3
+
+  - id: c3-memory-leak
+    description: root-cause memory leak
+    prompt: debug the worker crash
+    expected: C3
+
+  - id: c3-migration
+    description: plan migration to new router
+    prompt: architecture decision record
+    expected: C3
+
+  - id: c3-refactor-across
+    description: refactor across packages
+    prompt: integration test update
+    expected: C3
+
+  - id: c3-trace-deps
+    description: trace dependencies in graph
+    prompt: multi-file impact analysis
+    expected: C3
+
+  - id: c3-latency
+    description: analyze latency regression
+    prompt: investigate p99 spike
+    expected: C3
+
+  - id: c3-auth-design
+    description: design auth flow changes
+    prompt: review architecture options
+    expected: C3
+
+  - id: c3-race
+    description: debug the race in scheduler
+    prompt: root cause timing bug
+    expected: C3
+
+  - id: c3-webhook
+    description: integration test for webhook
+    prompt: plan rollout steps
+    expected: C3
+
+  - id: c3-schema-drift
+    description: investigate schema drift
+    prompt: analyze migration risk
+    expected: C3
+
+  - id: c3-rename-impact
+    description: multi-file rename impact
+    prompt: trace cross-file imports
+    expected: C3
+
+  - id: c3-arch-doc
+    description: review architecture doc
+    prompt: design trade-offs section
+    expected: C3
+
+  # ── C4: Creative / default fallback (10) ──────────────────────────────────
+  - id: c4-brainstorm
+    description: brainstorm architecture options
+    prompt: brainstorm design tradeoffs
+    expected: C4
+
+  - id: c4-no-keywords-haiku
+    description: write a haiku about documentation
+    prompt: ""
+    expected: C4
+    notes: edge case — zero keyword matches default to C4
+
+  - id: c4-no-keywords-random
+    description: random task with zero pattern matches xyz123
+    prompt: ""
+    expected: C4
+    notes: edge case — default fallback
+
+  - id: c4-novel
+    description: novel algorithm for scheduling
+    prompt: creative heuristic design
+    expected: C4
+
+  - id: c4-research
+    description: research competitor routing models
+    prompt: synthesize findings
+    expected: C4
+
+  - id: c4-strategy
+    description: explore strategy for cost caps
+    prompt: recommend approach
+    expected: C4
+
+  - id: c4-invent
+    description: invent naming scheme for beads
+    prompt: creative taxonomy
+    expected: C4
+
+  - id: c4-greenfield
+    description: architect greenfield platform
+    prompt: strategy memo draft
+    expected: C4
+
+  - id: c4-synthesize
+    description: synthesize user interview themes
+    prompt: research summary
+    expected: C4
+
+  - id: c4-roadmap
+    description: plan the product roadmap
+    prompt: creative positioning
+    expected: C4

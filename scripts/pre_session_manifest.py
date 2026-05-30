@@ -158,6 +158,32 @@ def _mcp_audit_summary(mcps_path: Path, profile_name: str) -> dict:
     }
 
 
+def _routing_context() -> dict:
+    """Runtime routing signals from ContextDetector (best-effort, no network in CI)."""
+    try:
+        runtime_dir = _repo_root() / "02_RUNTIME"
+        if str(runtime_dir) not in sys.path:
+            sys.path.insert(0, str(runtime_dir))
+        from router.context_detector import ContextDetector  # noqa: E402
+
+        ctx = ContextDetector().detect()
+        return {
+            "device_type": ctx.device_type,
+            "gpu_available": ctx.gpu_available,
+            "ollama_local_reachable": ctx.ollama_local_reachable,
+            "internet_reachable": ctx.internet_reachable,
+            "connectivity": ctx.connectivity,
+            "is_battery": ctx.is_battery,
+            "speed_mode": os.environ.get("CHROMATIC_SPEED_MODE", "balance"),
+        }
+    except Exception:
+        return {
+            "device_type": os.environ.get("CHROMATIC_DEVICE", "unknown"),
+            "connectivity": os.environ.get("CHROMATIC_CONNECTIVITY", "unknown"),
+            "speed_mode": os.environ.get("CHROMATIC_SPEED_MODE", "balance"),
+        }
+
+
 def _read_handoff(repo: Path) -> dict:
     latest = repo / ".agents" / "handoffs" / "latest.json"
     if not latest.is_file():
@@ -199,11 +225,7 @@ def build_manifest(
         "context_tier": "P0",
         "loaded_docs": loaded_docs,
         "blocked_bulk_sources": list(BLOCKED_BULK_SOURCES),
-        "routing_context": {
-            "device": os.environ.get("CHROMATIC_DEVICE", "unknown"),
-            "connectivity": os.environ.get("CHROMATIC_CONNECTIVITY", "unknown"),
-            "speed_mode": os.environ.get("CHROMATIC_SPEED_MODE", "balance"),
-        },
+        "routing_context": _routing_context(),
         "mcp_audit": _mcp_audit_summary(mcps_path, profile_name),
         "pack_version": _pack_version(repo),
     }
