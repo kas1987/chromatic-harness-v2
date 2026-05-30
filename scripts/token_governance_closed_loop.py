@@ -19,8 +19,9 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 RUNTIME = REPO / "02_RUNTIME"
-if str(RUNTIME) not in sys.path:
-    sys.path.insert(0, str(RUNTIME))
+for _p in (REPO, RUNTIME):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 from intake.queue import append_entry, list_entries  # noqa: E402
 
@@ -70,9 +71,18 @@ def _check_session_context() -> CheckResult:
     data = _parse_json(out) or {}
     warnings = (data.get("summary") or {}).get("warnings") or []
     if code != 0:
-        return CheckResult("session_context_report", cmd, "fail", code, err.strip() or "command failed", data)
+        return CheckResult(
+            "session_context_report",
+            cmd,
+            "fail",
+            code,
+            err.strip() or "command failed",
+            data,
+        )
     if warnings:
-        return CheckResult("session_context_report", cmd, "warn", code, "; ".join(warnings), data)
+        return CheckResult(
+            "session_context_report", cmd, "warn", code, "; ".join(warnings), data
+        )
     return CheckResult("session_context_report", cmd, "pass", code, "no warnings", data)
 
 
@@ -87,7 +97,14 @@ def _check_mcp_audit(profile: str) -> CheckResult:
     code, out, err = _run(cmd, timeout=120)
     data = _parse_json(out) or {}
     if code != 0:
-        return CheckResult("audit_mcp_context", cmd, "fail", code, err.strip() or "command failed", data)
+        return CheckResult(
+            "audit_mcp_context",
+            cmd,
+            "fail",
+            code,
+            err.strip() or "command failed",
+            data,
+        )
 
     total = int(data.get("total_tokens_est", 0))
     warn = int(data.get("warn_threshold_tokens", 12000))
@@ -121,8 +138,17 @@ def _check_workflow_token_governance() -> CheckResult:
     code, out, err = _run(cmd, timeout=120)
     msg = (err or out).strip()
     if code != 0:
-        return CheckResult("validate_workflow_token_governance", cmd, "fail", code, msg or "failed", {})
-    return CheckResult("validate_workflow_token_governance", cmd, "pass", code, "workflow token governance OK", {})
+        return CheckResult(
+            "validate_workflow_token_governance", cmd, "fail", code, msg or "failed", {}
+        )
+    return CheckResult(
+        "validate_workflow_token_governance",
+        cmd,
+        "pass",
+        code,
+        "workflow token governance OK",
+        {},
+    )
 
 
 def _check_daily_strict() -> CheckResult:
@@ -138,10 +164,120 @@ def _check_daily_strict() -> CheckResult:
     data = _parse_json(out) or {}
     status = str(data.get("status", "unknown"))
     if code != 0:
-        return CheckResult("daily_harness_audit_strict", cmd, "fail", code, err.strip() or f"status={status}", data)
+        return CheckResult(
+            "daily_harness_audit_strict",
+            cmd,
+            "fail",
+            code,
+            err.strip() or f"status={status}",
+            data,
+        )
     if status != "green":
-        return CheckResult("daily_harness_audit_strict", cmd, "warn", code, f"status={status}", data)
-    return CheckResult("daily_harness_audit_strict", cmd, "pass", code, "status=green", data)
+        return CheckResult(
+            "daily_harness_audit_strict", cmd, "warn", code, f"status={status}", data
+        )
+    return CheckResult(
+        "daily_harness_audit_strict", cmd, "pass", code, "status=green", data
+    )
+
+
+def _refresh_step(name: str, fn) -> dict[str, Any]:
+    """Run one control-plane refresh step fail-open, capturing status + detail.
+
+    Each step never raises: on exception it records status="fail" and the
+    error message, so the periodic chain always advances to the next step
+    (spec §10: never block the API path; staleness/down is non-fatal).
+    """
+    started = datetime.now(timezone.utc).isoformat()
+    try:
+        detail = fn() or {}
+        return {
+            "name": name,
+            "status": "ok",
+            "started_at": started,
+            "detail": detail,
+        }
+    except Exception as exc:  # noqa: BLE001 — fail-open by design
+        return {
+            "name": name,
+            "status": "fail",
+            "started_at": started,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+
+
+def _refresh_control_plane() -> list[dict[str, Any]]:
+    """Chain the full periodic refresh (spec §4–§8, bead B9).
+
+    quota_proxy read -> portfolio_token_telemetry (post ledger) ->
+    portfolio_token_forecast (axis_prepaid) -> controller (overlay) ->
+    token_economy_exporter (metrics).
+
+    Reuses existing component entry points in-process; does NOT rebuild
+    aggregation. Every step is fail-open and logged independently so a
+    stale/down proxy or a missing artifact degrades gracefully.
+    """
+    import importlib
+
+    steps: list[dict[str, Any]] = []
+
+    # 1. Capture layer — read the verified weekly % from quota_state.json
+    #    (source-abstracted reader; the proxy is the long-running producer).
+    def _read_quota() -> dict[str, Any]:
+        quota_state = importlib.import_module("budget.quota_state")
+        state = quota_state.read_quota_state()
+        return {
+            "weekly_pct": getattr(state, "weekly_pct", None),
+            "stale": getattr(state, "stale", None),
+            "status": getattr(state, "status", None),
+        }
+
+    steps.append(_refresh_step("quota_proxy_read", _read_quota))
+
+    # 2. Posting engine — bridge today->daily, build + post ledger.jsonl.
+    def _post_ledger() -> dict[str, Any]:
+        telemetry = importlib.import_module("tools.portfolio_token_telemetry")
+        return telemetry.run()
+
+    steps.append(_refresh_step("portfolio_token_telemetry", _post_ledger))
+
+    # 3. Forecast layer — extend forecast_latest.json with axis_prepaid.
+    def _forecast() -> dict[str, Any]:
+        forecast = importlib.import_module("tools.portfolio_token_forecast")
+        report = forecast.build_report()
+        out = forecast.DEFAULT_OUT
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        return {
+            "out": str(out),
+            "axis_prepaid": report.get("axis_prepaid"),
+        }
+
+    steps.append(_refresh_step("portfolio_token_forecast", _forecast))
+
+    # 4. Control loop — recompute the routing policy overlay.
+    def _controller() -> dict[str, Any]:
+        controller = importlib.import_module("control_plane.controller")
+        decision = controller.run_once()
+        return {
+            "c_to_t_threshold": getattr(decision, "c_to_t_threshold", None),
+            "previous_threshold": getattr(decision, "previous_threshold", None),
+            "direction": getattr(decision, "direction", None),
+            "allow_paid_spill": getattr(decision, "allow_paid_spill", None),
+            "staleness_fallback": getattr(decision, "staleness_fallback", None),
+        }
+
+    steps.append(_refresh_step("controller", _controller))
+
+    # 5. Dashboard & metrics — emit the chromatic_* series.
+    def _exporter() -> dict[str, Any]:
+        exporter = importlib.import_module("dashboards.exporter.token_economy_exporter")
+        rendered = exporter.export(fmt="json")
+        return {"bytes": len(rendered)}
+
+    steps.append(_refresh_step("token_economy_exporter", _exporter))
+
+    return steps
 
 
 def _build_suggestions(checks: list[CheckResult]) -> list[dict[str, Any]]:
@@ -231,18 +367,22 @@ def _build_suggestions(checks: list[CheckResult]) -> list[dict[str, Any]]:
     return unique
 
 
-def _enqueue_suggestions(suggestions: list[dict[str, Any]], dry_run: bool) -> list[dict[str, Any]]:
+def _enqueue_suggestions(
+    suggestions: list[dict[str, Any]], dry_run: bool
+) -> list[dict[str, Any]]:
     existing = {e.id: e for e in list_entries(repo_root=REPO)}
     queued: list[dict[str, Any]] = []
 
     for s in suggestions:
         sid = s["id"]
         if sid in existing:
-            queued.append({
-                "id": sid,
-                "status": "skipped_existing",
-                "reason": existing[sid].status,
-            })
+            queued.append(
+                {
+                    "id": sid,
+                    "status": "skipped_existing",
+                    "reason": existing[sid].status,
+                }
+            )
             continue
 
         payload = {
@@ -299,6 +439,15 @@ def _write_reports(report: dict[str, Any]) -> tuple[Path, Path, Path]:
     ]
     for c in report["checks"]:
         lines.append(f"- {c['status'].upper()} {c['name']}: {c['message']}")
+    lines += ["", "## Refresh Chain", ""]
+    if report.get("refresh_steps"):
+        for r in report["refresh_steps"]:
+            extra = r.get("error", "")
+            lines.append(
+                f"- {r['status'].upper()} {r['name']}" + (f": {extra}" if extra else "")
+            )
+    else:
+        lines.append("- Refresh chain skipped.")
     lines += ["", "## Suggestions", ""]
     if report["suggestions"]:
         for s in report["suggestions"]:
@@ -336,11 +485,32 @@ def _drain_intake(limit: int, dry_run: bool) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Token governance closed loop audit + suggestions")
-    parser.add_argument("--profile", default="harness_dev", help="MCP profile for audit_mcp_context")
-    parser.add_argument("--enqueue-suggestions", action="store_true", help="Append generated suggestions to intake queue")
-    parser.add_argument("--drain-intake", action="store_true", help="Run auto_intake after enqueueing suggestions")
-    parser.add_argument("--dry-run", action="store_true", help="Do not mutate intake queue; only simulate")
+    parser = argparse.ArgumentParser(
+        description="Token governance closed loop audit + suggestions"
+    )
+    parser.add_argument(
+        "--profile", default="harness_dev", help="MCP profile for audit_mcp_context"
+    )
+    parser.add_argument(
+        "--enqueue-suggestions",
+        action="store_true",
+        help="Append generated suggestions to intake queue",
+    )
+    parser.add_argument(
+        "--drain-intake",
+        action="store_true",
+        help="Run auto_intake after enqueueing suggestions",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Do not mutate intake queue; only simulate",
+    )
+    parser.add_argument(
+        "--skip-refresh",
+        action="store_true",
+        help="Skip the control-plane refresh chain (proxy->telemetry->forecast->controller->exporter)",
+    )
     parser.add_argument("extras", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
@@ -366,6 +536,10 @@ def main() -> int:
     elif counts["warn"]:
         status = "yellow"
 
+    refresh_steps: list[dict[str, Any]] = []
+    if not args.skip_refresh:
+        refresh_steps = _refresh_control_plane()
+
     suggestions = _build_suggestions(checks)
     queue_actions: list[dict[str, Any]] = []
 
@@ -375,7 +549,9 @@ def main() -> int:
     intake_result: dict[str, Any] | None = None
     if args.drain_intake and args.enqueue_suggestions:
         # Use number of generated suggestions as a practical processing cap.
-        intake_result = _drain_intake(limit=max(len(suggestions), 1), dry_run=args.dry_run)
+        intake_result = _drain_intake(
+            limit=max(len(suggestions), 1), dry_run=args.dry_run
+        )
 
     report = {
         "audit": "token_governance_closed_loop",
@@ -393,6 +569,7 @@ def main() -> int:
             }
             for c in checks
         ],
+        "refresh_steps": refresh_steps,
         "suggestions": suggestions,
         "queue_actions": queue_actions,
         "intake_result": intake_result,
@@ -400,14 +577,21 @@ def main() -> int:
 
     run_path, latest_path, summary_md = _write_reports(report)
 
-    print(json.dumps({
-        **report,
-        "artifacts": {
-            "run_json": str(run_path.relative_to(REPO)).replace("\\", "/"),
-            "latest_json": str(latest_path.relative_to(REPO)).replace("\\", "/"),
-            "latest_md": str(summary_md.relative_to(REPO)).replace("\\", "/"),
-        },
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                **report,
+                "artifacts": {
+                    "run_json": str(run_path.relative_to(REPO)).replace("\\", "/"),
+                    "latest_json": str(latest_path.relative_to(REPO)).replace(
+                        "\\", "/"
+                    ),
+                    "latest_md": str(summary_md.relative_to(REPO)).replace("\\", "/"),
+                },
+            },
+            indent=2,
+        )
+    )
 
     return 1 if status == "red" else 0
 

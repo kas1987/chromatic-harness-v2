@@ -31,6 +31,81 @@ from budget.transfer_packet import (  # noqa: E402
 )
 from orchestrator.session_compact import write_handoff  # noqa: E402
 
+_INJECTED_LEARNINGS = _REPO / ".agents" / "context" / "injected_learnings.json"
+_EXECUTION_LOG = _REPO / "07_LOGS_AND_AUDIT" / "execution" / "execution.jsonl"
+
+
+def _emit_injected_learning_outcomes() -> dict[str, Any]:
+    """Emit applied_success or applied_failure for learnings injected at session start.
+
+    Heuristic: scan execution.jsonl for error events after the injection timestamp.
+    Any error → applied_failure for all injected learnings; clean close → applied_success.
+    Fail-open: never raises, returns a summary dict.
+    """
+    result: dict[str, Any] = {"ok": False, "emitted": [], "skipped": []}
+    try:
+        if not _INJECTED_LEARNINGS.exists():
+            result["skip_reason"] = "no injected_learnings.json"
+            return result
+        rec = json.loads(_INJECTED_LEARNINGS.read_text(encoding="utf-8"))
+        learnings = rec.get("learnings") or []
+        if not learnings:
+            result["skip_reason"] = "empty learnings list"
+            return result
+        injected_at = rec.get("injected_at", "")
+
+        # Detect errors in execution.jsonl after the injection timestamp
+        had_error = False
+        if _EXECUTION_LOG.exists() and injected_at:
+            for line in _EXECUTION_LOG.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                except Exception:
+                    continue
+                ts = str(row.get("ts", ""))
+                if ts < injected_at:
+                    continue
+                etype = str(row.get("event_type", ""))
+                decision = str(row.get("workflow_decision", ""))
+                if (
+                    "error" in etype.lower()
+                    or "error" in decision.lower()
+                    or "fail" in decision.lower()
+                ):
+                    had_error = True
+                    break
+
+        outcome = "applied_failure" if had_error else "applied_success"
+        from activity.log import emit_learning_outcome  # type: ignore[import]
+
+        for lc in learnings:
+            name = str(lc.get("name", "")).strip()
+            if not name:
+                result["skipped"].append(lc)
+                continue
+            emitted = emit_learning_outcome(
+                _REPO,
+                learning_name=name,
+                outcome=outcome,
+                rig_id="session_closeout",
+                error_category="session_error" if had_error else "",
+            )
+            if emitted:
+                result["emitted"].append({"name": name, "outcome": outcome})
+            else:
+                result["skipped"].append(
+                    {"name": name, "reason": "duplicate or invalid"}
+                )
+
+        result["ok"] = True
+        result["outcome"] = outcome
+        result["had_error"] = had_error
+    except Exception as exc:  # noqa: BLE001
+        result["error"] = str(exc)
+    return result
+
 
 def _default_epic_swot_policy_config() -> dict[str, Any]:
     return {
@@ -494,23 +569,52 @@ def _load_issue_rows_jsonl(issues_path: Path) -> list[dict]:
     return result
 
 
+def _fetch_pending_swot_tasks_live() -> list[dict] | None:
+    """Query open 'Generate next EPIC-SWOT' task beads. Returns None on failure."""
+    try:
+        code, out = _run_bd(
+            ["list", "--type", "task", "--limit", "0", "--json"], timeout=15
+        )
+        if code != 0 or not out.strip():
+            return None
+        rows = json.loads(out)
+        if not isinstance(rows, list):
+            return None
+        return [
+            r
+            for r in rows
+            if isinstance(r, dict)
+            and "generate next epic-swot" in str(r.get("title") or "").lower()
+            and str(r.get("status") or "").lower() in ("open", "in_progress")
+        ]
+    except Exception:
+        return None
+
+
 def _load_swot_epic_history(
     *,
     issues_path: Path,
     now_utc: datetime,
     recent_open_hours: int = 8,
     rolling_days: int = 7,
-) -> dict[str, int]:
-    stats = {
+) -> dict:
+    stats: dict = {
         "open_swot_total": 0,
         "open_swot_recent_window": 0,
         "created_swot_today": 0,
         "created_swot_rolling_window": 0,
+        "open_pending_task": 0,
+        "live_query_failed": False,
     }
-    # Live query first; fall back to stale JSONL when bd is unavailable
+    # Live query first; fail-closed when bd is unavailable (stale JSONL caused duplicate spam)
     rows = _fetch_swot_rows_live()
     if rows is None:
+        stats["live_query_failed"] = True
         rows = _fetch_swot_rows_jsonl(issues_path)
+
+    # Also count open "Generate next EPIC-SWOT" task beads — if any exist, block creation
+    pending_tasks = _fetch_pending_swot_tasks_live()
+    stats["open_pending_task"] = len(pending_tasks) if pending_tasks is not None else 0
     start_recent = now_utc.timestamp() - max(1, int(recent_open_hours)) * 3600
     start_rolling = now_utc.timestamp() - max(1, int(rolling_days)) * 24 * 3600
     for row in rows:
@@ -726,6 +830,12 @@ def evaluate_epic_swot_policy(
         block_reasons.append("too many open EPIC-SWOT items")
     if history["created_swot_today"] >= created_today_cap:
         block_reasons.append("daily EPIC-SWOT cap reached")
+    if history.get("open_pending_task", 0) >= 1:
+        block_reasons.append("open 'Generate next EPIC-SWOT' task already exists")
+    if history.get("live_query_failed"):
+        block_reasons.append(
+            "bd live query failed — blocking to prevent duplicate creation"
+        )
 
     if block_reasons:
         score -= float(cfg.get("block_penalty") or 0.8)
@@ -1521,6 +1631,8 @@ def main() -> int:
         )
     except Exception as exc:  # noqa: BLE001
         result["session_end_event"] = {"ok": False, "error": str(exc)}
+
+    result["learning_outcomes"] = _emit_injected_learning_outcomes()
 
     print(json.dumps(result, indent=2))
     return 0

@@ -22,10 +22,14 @@ class MagnetPlugin(ABC):
     ) -> MagnetEvent:
         """Handle one inflection-point signal."""
 
-    def on_mission_start(self, mission_id: str, context: dict[str, Any] | None = None) -> None:
+    def on_mission_start(
+        self, mission_id: str, context: dict[str, Any] | None = None
+    ) -> None:
         """Optional hook when a mission begins."""
 
-    def on_mission_end(self, mission_id: str, context: dict[str, Any] | None = None) -> None:
+    def on_mission_end(
+        self, mission_id: str, context: dict[str, Any] | None = None
+    ) -> None:
         """Optional hook when a mission completes."""
 
 
@@ -92,6 +96,7 @@ def default_registry() -> MagnetRegistry:
     from .plugins.pyramid_plugin import PyramidCheckPlugin
     from .plugins.secrets_plugin import SecretsSurfacePlugin
     from .discipline_magnet import DisciplineMagnet
+    from .quota_magnet import QuotaMagnet
     from .scope_magnet import ScopeMagnet
     from .security_magnet import SecurityMagnet
     from .validation_magnet import ValidationMagnet
@@ -108,6 +113,7 @@ def default_registry() -> MagnetRegistry:
         ValidationMagnet(),
         MemoryMagnet(),
         SecurityMagnet(),
+        QuotaMagnet(),
         ClosureMagnet(),
         PyramidCheckPlugin(),
         SecretsSurfacePlugin(),
