@@ -4,18 +4,23 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+_RUNTIME = REPO / "02_RUNTIME"
+if str(_RUNTIME) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME))
+
+from intake.bd_runner import resolve_bd_argv  # noqa: E402
+
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 
 def _run(cmd: list[str], *, cwd: Path | None = None, timeout: int = 30) -> subprocess.CompletedProcess[str]:
-    if cmd and cmd[0] == "bd" and shutil.which("bd") is None:
-        return subprocess.CompletedProcess(cmd, returncode=127, stdout="", stderr="bd not on PATH")
+    if cmd and cmd[0] == "bd":
+        cmd = resolve_bd_argv() + cmd[1:]
     return subprocess.run(
         cmd,
         cwd=cwd or REPO,
