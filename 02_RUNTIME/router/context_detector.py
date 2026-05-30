@@ -51,11 +51,78 @@ class ContextDetector:
             remote_ollama_endpoints=[],  # populated by caller after reading prefs
             internet_reachable=internet,
             connectivity="full" if internet else "offline",
-            memory_pressure="medium",  # TODO: parse /proc/meminfo or WMI
+            memory_pressure=self._detect_memory_pressure(),
             os_family=platform.system().lower(),
             cpu_count=os.cpu_count() or 1,
             is_battery=battery,
         )
+
+    @classmethod
+    def _detect_memory_pressure(cls) -> str:
+        available_ratio = cls._available_memory_ratio()
+        if available_ratio is None:
+            return "medium"
+        if available_ratio < 0.20:
+            return "high"
+        if available_ratio < 0.45:
+            return "medium"
+        return "low"
+
+    @classmethod
+    def _available_memory_ratio(cls) -> float | None:
+        system = platform.system().lower()
+        if system == "windows":
+            return cls._windows_available_memory_ratio()
+        if system == "linux":
+            return cls._linux_available_memory_ratio()
+        return None
+
+    @staticmethod
+    def _windows_available_memory_ratio() -> float | None:
+        try:
+            import ctypes
+
+            class MEMORYSTATUSEX(ctypes.Structure):
+                _fields_ = [
+                    ("dwLength", ctypes.c_ulong),
+                    ("dwMemoryLoad", ctypes.c_ulong),
+                    ("ullTotalPhys", ctypes.c_ulonglong),
+                    ("ullAvailPhys", ctypes.c_ulonglong),
+                    ("ullTotalPageFile", ctypes.c_ulonglong),
+                    ("ullAvailPageFile", ctypes.c_ulonglong),
+                    ("ullTotalVirtual", ctypes.c_ulonglong),
+                    ("ullAvailVirtual", ctypes.c_ulonglong),
+                    ("sullAvailExtendedVirtual", ctypes.c_ulonglong),
+                ]
+
+            status = MEMORYSTATUSEX()
+            status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+            if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+                return None
+            if not status.ullTotalPhys:
+                return None
+            return status.ullAvailPhys / status.ullTotalPhys
+        except Exception:
+            return None
+
+    @staticmethod
+    def _linux_available_memory_ratio() -> float | None:
+        try:
+            meminfo: dict[str, int] = {}
+            for line in Path("/proc/meminfo").read_text(encoding="utf-8").splitlines():
+                key, _, value = line.partition(":")
+                parts = value.strip().split()
+                if not parts:
+                    continue
+                meminfo[key] = int(parts[0])
+
+            total = meminfo.get("MemTotal", 0)
+            available = meminfo.get("MemAvailable", meminfo.get("MemFree", 0))
+            if total <= 0:
+                return None
+            return available / total
+        except Exception:
+            return None
 
     # ── GPU detection ────────────────────────────────────────────────────────
 

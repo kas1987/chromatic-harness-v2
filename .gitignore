@@ -14,6 +14,11 @@ build/
 .coverage
 htmlcov/
 
+# Timestamped per-run audit dumps (ephemeral; latest.json/history.jsonl are tracked)
+07_LOGS_AND_AUDIT/token_governance/token_governance_[0-9]*_[0-9]*.json
+07_LOGS_AND_AUDIT/unified_guard/session_guard_[0-9]*_[0-9]*.json
+07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_[0-9]*_[0-9]*.json
+
 # Router observability logs
 07_LOGS_AND_AUDIT/routing/*.jsonl
 

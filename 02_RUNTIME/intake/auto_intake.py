@@ -21,6 +21,7 @@ from intake.queue import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 _SKIP_ID_PREFIXES = ("example-",)
+_SKIP_TITLE_PREFIXES = ("[agent]",)
 
 
 def _normalize_title(title: str) -> str:
@@ -120,6 +121,9 @@ class DrainReport:
 
 def _should_skip(entry: IntakeEntry) -> bool:
     if any(entry.id.startswith(p) for p in _SKIP_ID_PREFIXES):
+        return True
+    title_lower = (entry.title or "").strip().lower()
+    if any(title_lower.startswith(prefix.lower()) for prefix in _SKIP_TITLE_PREFIXES):
         return True
     if entry.status != "queued":
         return True

@@ -32,6 +32,7 @@ from router.contracts import (  # noqa: E402
 )
 from router.router import ChromaticRouter  # noqa: E402
 from router.confidence import ConfidenceGate  # noqa: E402
+from router.context_detector import RuntimeContext  # noqa: E402
 
 
 @pytest.fixture
@@ -128,6 +129,66 @@ async def test_preferred_provider_respected_if_allowed(router):
     req = make_req(preferred_provider="mock", confidence_score=90.0)
     resp = await router.route(req)
     assert resp.selected_provider == "mock"
+
+
+@pytest.mark.asyncio
+async def test_context_routing_uses_request_prompt_text(router, monkeypatch):
+    captured: dict[str, str] = {}
+
+    def fake_classify(description: str, prompt: str = "", max_files_hint=None):
+        captured["description"] = description
+        captured["prompt"] = prompt
+        return type(
+            "ComplexityResultStub",
+            (),
+            {"level": "C2", "name": "stub", "confidence": 1.0, "matched_keywords": [], "reasoning_depth": "medium"},
+        )()
+
+    def fake_detect():
+        return RuntimeContext(
+            device_type="laptop",
+            gpu_model=None,
+            gpu_vram_gb=None,
+            gpu_available=False,
+            ollama_local_reachable=True,
+            ollama_local_models=["llama3.2:3b"],
+            remote_ollama_endpoints=[],
+            internet_reachable=True,
+            connectivity="full",
+            memory_pressure="medium",
+            os_family="windows",
+            cpu_count=8,
+            is_battery=False,
+        )
+
+    def fake_select(complexity, context, privacy_class):
+        choice = type("ChoiceStub", (), {"provider": "mock"})()
+        return type(
+            "SelectionResultStub",
+            (),
+            {"ranked_choices": [choice], "speed_mode": "balance"},
+        )()
+
+    monkeypatch.setattr(router.complexity_classifier, "classify", fake_classify)
+    monkeypatch.setattr(router.context_detector, "detect", fake_detect)
+    monkeypatch.setattr(router.provider_selector, "select", fake_select)
+
+    req = make_req(confidence_score=90.0)
+    req.input = RouteInput(
+        messages=[
+            {"role": "system", "content": "Use careful reasoning."},
+            {"role": "user", "content": "Please refactor the auth flow."},
+        ],
+        metadata={"prompt": "Consider integration risk."},
+    )
+
+    resp = await router.route(req)
+
+    assert resp.selected_provider == "mock"
+    assert captured["description"] == "test objective"
+    assert "Use careful reasoning." in captured["prompt"]
+    assert "Please refactor the auth flow." in captured["prompt"]
+    assert "Consider integration risk." in captured["prompt"]
 
 
 @pytest.mark.asyncio
