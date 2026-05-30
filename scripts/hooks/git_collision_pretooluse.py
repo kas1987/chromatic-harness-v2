@@ -78,6 +78,21 @@ def main() -> int:
     if not (is_pr or is_push):
         return 0
 
+    # The probe reasons about _REPO (this repo). A command that `cd`s into a
+    # *different* repo (e.g. the wiki) would be judged against the wrong repo, so
+    # fail-open rather than false-block. Detect a leading `cd <path>` outside _REPO.
+    m = re.match(r"\s*cd\s+(['\"]?)([^'\"&|;]+)\1\s*&&", command)
+    if m:
+        target = m.group(2).strip()
+        try:
+            if (
+                Path(target).resolve() != _REPO
+                and _REPO not in Path(target).resolve().parents
+            ):
+                return 0
+        except (OSError, ValueError):
+            return 0
+
     try:
         from concurrency.github_collision import OPEN_PR, PUSH, check_github_collision
 
