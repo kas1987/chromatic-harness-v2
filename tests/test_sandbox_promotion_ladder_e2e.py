@@ -8,11 +8,9 @@ This prevents silent drift when TypeScript gate thresholds change.
 import json
 import shutil
 import subprocess
-import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
 
 _CLI_PATH = (
     Path(__file__).resolve().parents[1]

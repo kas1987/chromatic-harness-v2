@@ -13,7 +13,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO / "scripts") not in sys.path:

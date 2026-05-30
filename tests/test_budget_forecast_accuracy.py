@@ -28,8 +28,16 @@ def test_build_accuracy_scores_known_predictions(tmp_path: Path, monkeypatch):
                 "end_of_month_usd": 150.0,
             },
             "channels": {
-                "vscode": {"end_of_day_usd": 10.0, "end_of_week_usd": 10.0, "end_of_month_usd": 10.0},
-                "cursor": {"end_of_day_usd": 0.0, "end_of_week_usd": 0.0, "end_of_month_usd": 0.0},
+                "vscode": {
+                    "end_of_day_usd": 10.0,
+                    "end_of_week_usd": 10.0,
+                    "end_of_month_usd": 10.0,
+                },
+                "cursor": {
+                    "end_of_day_usd": 0.0,
+                    "end_of_week_usd": 0.0,
+                    "end_of_month_usd": 0.0,
+                },
             },
         },
         {
@@ -40,8 +48,16 @@ def test_build_accuracy_scores_known_predictions(tmp_path: Path, monkeypatch):
                 "end_of_month_usd": 160.0,
             },
             "channels": {
-                "vscode": {"end_of_day_usd": 0.0, "end_of_week_usd": 0.0, "end_of_month_usd": 0.0},
-                "cursor": {"end_of_day_usd": 20.0, "end_of_week_usd": 20.0, "end_of_month_usd": 20.0},
+                "vscode": {
+                    "end_of_day_usd": 0.0,
+                    "end_of_week_usd": 0.0,
+                    "end_of_month_usd": 0.0,
+                },
+                "cursor": {
+                    "end_of_day_usd": 20.0,
+                    "end_of_week_usd": 20.0,
+                    "end_of_month_usd": 20.0,
+                },
             },
         },
     ]
@@ -50,9 +66,21 @@ def test_build_accuracy_scores_known_predictions(tmp_path: Path, monkeypatch):
             fh.write(json.dumps(row) + "\n")
 
     daily_rows = [
-        {"timestamp": "2026-05-28T01:00:00+00:00", "amount_usd": 10.0, "source": "vscode"},
-        {"timestamp": "2026-05-29T01:00:00+00:00", "amount_usd": 20.0, "source": "cursor"},
-        {"timestamp": "2026-05-30T01:00:00+00:00", "amount_usd": 5.0, "source": "vscode"},
+        {
+            "timestamp": "2026-05-28T01:00:00+00:00",
+            "amount_usd": 10.0,
+            "source": "vscode",
+        },
+        {
+            "timestamp": "2026-05-29T01:00:00+00:00",
+            "amount_usd": 20.0,
+            "source": "cursor",
+        },
+        {
+            "timestamp": "2026-05-30T01:00:00+00:00",
+            "amount_usd": 5.0,
+            "source": "vscode",
+        },
     ]
     with (budget_dir / "daily.jsonl").open("w", encoding="utf-8") as fh:
         for row in daily_rows:

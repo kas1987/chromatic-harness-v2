@@ -14,7 +14,9 @@ def _load_module(repo_root: Path):
     return module
 
 
-def test_build_snapshot_has_forecast_risk_and_provider_breakdown(tmp_path: Path, monkeypatch):
+def test_build_snapshot_has_forecast_risk_and_provider_breakdown(
+    tmp_path: Path, monkeypatch
+):
     (tmp_path / "config").mkdir(parents=True)
     (tmp_path / "07_LOGS_AND_AUDIT" / "pre_session").mkdir(parents=True)
     (tmp_path / "07_LOGS_AND_AUDIT" / "budget").mkdir(parents=True)
@@ -45,7 +47,9 @@ def test_build_snapshot_has_forecast_risk_and_provider_breakdown(tmp_path: Path,
         encoding="utf-8",
     )
 
-    (tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json").write_text(
+    (
+        tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json"
+    ).write_text(
         '{"provider_model_rollup":{"providers":{"workflow":{"events":3,"success":2},"openai":{"events":1,"success":1}},"models":{"workflow:default":{"events":3,"success":2}}}}\n',
         encoding="utf-8",
     )
@@ -77,7 +81,9 @@ def test_build_snapshot_has_forecast_risk_and_provider_breakdown(tmp_path: Path,
     assert "other" in snapshot["channels"]
 
 
-def test_build_snapshot_marks_red_when_projection_exceeds_cap(tmp_path: Path, monkeypatch):
+def test_build_snapshot_marks_red_when_projection_exceeds_cap(
+    tmp_path: Path, monkeypatch
+):
     (tmp_path / "config").mkdir(parents=True)
     (tmp_path / "07_LOGS_AND_AUDIT" / "pre_session").mkdir(parents=True)
     (tmp_path / "07_LOGS_AND_AUDIT" / "budget").mkdir(parents=True)
@@ -99,7 +105,9 @@ def test_build_snapshot_marks_red_when_projection_exceeds_cap(tmp_path: Path, mo
         '{"timestamp":"2026-05-30T00:00:00+00:00","amount_usd":30.0}\n',
         encoding="utf-8",
     )
-    (tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json").write_text(
+    (
+        tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json"
+    ).write_text(
         '{"provider_model_rollup":{"providers":{"workflow":{"events":2,"success":1}},"models":{"workflow:default":{"events":2,"success":1}}}}\n',
         encoding="utf-8",
     )
@@ -139,7 +147,9 @@ def test_unknown_usage_warning_when_unknown_dominates(tmp_path: Path, monkeypatc
         '{"timestamp":"2026-05-30T00:00:00+00:00","amount_usd":1.0}\n',
         encoding="utf-8",
     )
-    (tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json").write_text(
+    (
+        tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json"
+    ).write_text(
         '{"provider_model_rollup":{"providers":{"unknown":{"events":60,"success":20},"workflow":{"events":10,"success":7}},"models":{"unknown":{"events":60,"success":20}}}}\n',
         encoding="utf-8",
     )
@@ -155,7 +165,9 @@ def test_unknown_usage_warning_when_unknown_dominates(tmp_path: Path, monkeypatc
     assert unknown_usage["warning"] is True
 
 
-def test_weekly_gap_to_90_is_zero_when_forecast_already_above_target(tmp_path: Path, monkeypatch):
+def test_weekly_gap_to_90_is_zero_when_forecast_already_above_target(
+    tmp_path: Path, monkeypatch
+):
     (tmp_path / "config").mkdir(parents=True)
     (tmp_path / "07_LOGS_AND_AUDIT" / "pre_session").mkdir(parents=True)
     (tmp_path / "07_LOGS_AND_AUDIT" / "budget").mkdir(parents=True)
@@ -187,7 +199,9 @@ def test_weekly_gap_to_90_is_zero_when_forecast_already_above_target(tmp_path: P
         + "\n",
         encoding="utf-8",
     )
-    (tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json").write_text(
+    (
+        tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json"
+    ).write_text(
         '{"provider_model_rollup":{"providers":{"workflow":{"events":4,"success":4}},"models":{"workflow:default":{"events":4,"success":4}}}}\n',
         encoding="utf-8",
     )
@@ -232,7 +246,9 @@ def test_dynamic_target_deterministic_lowering(tmp_path: Path, monkeypatch):
         encoding="utf-8",
     )
     # Unknown warning (>=50 events and >=50% unknown) triggers deterministic lowering.
-    (tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json").write_text(
+    (
+        tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json"
+    ).write_text(
         '{"provider_model_rollup":{"providers":{"unknown":{"events":80,"success":20},"workflow":{"events":20,"success":10}},"models":{"unknown":{"events":80,"success":20}}}}\n',
         encoding="utf-8",
     )
@@ -245,7 +261,7 @@ def test_dynamic_target_deterministic_lowering(tmp_path: Path, monkeypatch):
     weekly = snapshot["limits"]["weekly"]
     assert weekly["target_utilization_pct"] == 75.0
     assert weekly["target_utilization_usd"] == 75.0
-    reasons = ((weekly.get("target_policy") or {}).get("reasons") or [])
+    reasons = (weekly.get("target_policy") or {}).get("reasons") or []
     assert any("unknown_warning" in r for r in reasons)
 
 
@@ -276,7 +292,9 @@ def test_channel_caps_and_risk_are_applied(tmp_path: Path, monkeypatch):
         '{"timestamp":"2026-05-30T00:00:00+00:00","amount_usd":8.0,"source":"vscode"}\n',
         encoding="utf-8",
     )
-    (tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json").write_text(
+    (
+        tmp_path / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json"
+    ).write_text(
         '{"provider_model_rollup":{"providers":{"workflow":{"events":1,"success":1}},"models":{"workflow:default":{"events":1,"success":1}}}}\n',
         encoding="utf-8",
     )
