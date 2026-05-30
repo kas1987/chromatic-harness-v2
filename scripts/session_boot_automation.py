@@ -47,13 +47,33 @@ def manifest_is_fresh(max_age_hours: float) -> bool:
     manifest = _manifest_path()
     if not manifest.is_file():
         return False
+
+    # BOOT_CONTEXT.md must exist; if absent the context is stale/unbuilt.
+    boot_ctx = _repo_root() / ".agents" / "context" / "BOOT_CONTEXT.md"
+    if not boot_ctx.is_file():
+        return False
+
     try:
         data = json.loads(manifest.read_text(encoding="utf-8"))
         ts = _parse_ts(data.get("generated_at", ""))
         if not ts:
             return False
         age = datetime.now(timezone.utc) - ts.astimezone(timezone.utc)
-        return age.total_seconds() < max_age_hours * 3600
+        if age.total_seconds() >= max_age_hours * 3600:
+            return False
+
+        # If any MCP descriptor file is newer than the manifest, MCPs may have
+        # changed since the last audit — force a re-run.
+        mcps_path = (data.get("mcp_audit") or {}).get("mcps_path")
+        if mcps_path:
+            manifest_mtime = manifest.stat().st_mtime
+            mcps_dir = Path(mcps_path)
+            if mcps_dir.is_dir():
+                for f in mcps_dir.rglob("*.json"):
+                    if f.stat().st_mtime > manifest_mtime:
+                        return False
+
+        return True
     except (json.JSONDecodeError, OSError):
         return False
 
@@ -72,7 +92,14 @@ def _read_audit_risk(root: Path) -> str:
 def _run_context_pipeline(*, force: bool) -> int:
     """Trim audit; rebuild + bootstrap when risk is orange/red or --force."""
     root = _repo_root()
-    if _run([str(_SCRIPTS / "context_trim_audit.py"), "--root", str(root)], timeout=90, quiet=True) != 0:
+    if (
+        _run(
+            [str(_SCRIPTS / "context_trim_audit.py"), "--root", str(root)],
+            timeout=90,
+            quiet=True,
+        )
+        != 0
+    ):
         return 1
 
     risk = _read_audit_risk(root)
@@ -184,8 +211,20 @@ def run_boot(
                 errors.append(
                     "mcp_token_budget_exceeded: disable heavy MCPs (see CURSOR_CONTEXT_HYGIENE.md)"
                 )
+            generated_at = data.get("generated_at", "")
+            manifest_age_h: float | None = None
+            ts = _parse_ts(generated_at)
+            if ts:
+                manifest_age_h = round(
+                    (
+                        datetime.now(timezone.utc) - ts.astimezone(timezone.utc)
+                    ).total_seconds()
+                    / 3600,
+                    2,
+                )
             summary = {
-                "generated_at": data.get("generated_at"),
+                "generated_at": generated_at,
+                "manifest_age_hours": manifest_age_h,
                 "branch": data.get("branch"),
                 "context_tier": data.get("context_tier"),
                 "mcp_tokens": mcp_audit.get("estimated_tokens_if_enabled"),
@@ -237,7 +276,9 @@ def main() -> int:
         default=os.environ.get("CHROMATIC_RUNTIME", "automation"),
         choices=["cursor", "claude", "scheduler", "preflight", "automation"],
     )
-    parser.add_argument("--force", action="store_true", help="Ignore manifest freshness")
+    parser.add_argument(
+        "--force", action="store_true", help="Ignore manifest freshness"
+    )
     parser.add_argument(
         "--full",
         action="store_true",
