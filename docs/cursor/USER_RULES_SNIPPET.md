@@ -26,7 +26,8 @@ For other repos: commit when implementation is complete or user asked; push when
 - Start: [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md), `bd ready`, handoff pointer.
 - Track work in **beads** (`bd`), not TodoWrite or chat TODO lists.
 - Use lite workflows; do not chain `/crank` unattended.
-- Session end: tests → `workflow_git.py plan` → push if allowed → handoff.
+- **MCP hygiene (manual):** Cursor Settings → MCP — keep harness_dev lean; disable Resend, Playwright, Opsera unless the task needs them ([docs/CURSOR_CONTEXT_HYGIENE.md](../../docs/CURSOR_CONTEXT_HYGIENE.md)).
+- Session end: tests → `workflow_git.py plan` → push if allowed → `bd dolt push` → handoff.
 
 ---
 

@@ -11,6 +11,15 @@
 
 set -euo pipefail
 
+# Beads/Dolt sync pushes refs/dolt/data from a bare cache on master — never block those.
+if [ ! -t 0 ]; then
+  while read -r local_ref _local_sha remote_ref _remote_sha; do
+    [ -z "${local_ref:-}" ] && continue
+    case "$local_ref" in refs/dolt/*) exit 0 ;; esac
+    case "$remote_ref" in refs/dolt/*) exit 0 ;; esac
+  done
+fi
+
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "main" ]; then

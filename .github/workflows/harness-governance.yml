@@ -1,0 +1,39 @@
+name: Harness governance
+
+on:
+  pull_request:
+    paths:
+      - "AGENT_OPERATIONS.md"
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - ".cursor/**"
+      - ".claude/**"
+      - "scripts/**"
+      - "docs/**"
+      - "02_RUNTIME/**"
+      - "tests/**"
+  workflow_dispatch:
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Governance stack
+        run: python scripts/validate_governance_stack.py
+
+      - name: Daily audit (strict)
+        run: python scripts/daily_harness_audit.py --root . --strict
+
+      - name: Workflow token governance
+        run: python scripts/validate_workflow_token_governance.py
+
+      - name: Router and workflow tests
+        run: |
+          pytest tests/test_workflow_guardrails.py tests/test_self_heal_cycle.py -q
+          pytest tests/test_complexity_and_routing.py tests/test_openrouter_broker_policy.py tests/test_context_detector.py tests/test_provider_matrix.py -q

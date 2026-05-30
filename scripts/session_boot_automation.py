@@ -179,13 +179,17 @@ def run_boot(
     if manifest.is_file():
         try:
             data = json.loads(manifest.read_text(encoding="utf-8"))
+            mcp_audit = data.get("mcp_audit") or {}
+            if mcp_audit.get("over_warn_threshold"):
+                errors.append(
+                    "mcp_token_budget_exceeded: disable heavy MCPs (see CURSOR_CONTEXT_HYGIENE.md)"
+                )
             summary = {
                 "generated_at": data.get("generated_at"),
                 "branch": data.get("branch"),
                 "context_tier": data.get("context_tier"),
-                "mcp_tokens": data.get("mcp_audit", {}).get(
-                    "estimated_tokens_if_enabled"
-                ),
+                "mcp_tokens": mcp_audit.get("estimated_tokens_if_enabled"),
+                "mcp_over_budget": mcp_audit.get("over_warn_threshold", False),
                 "pack_version": data.get("pack_version"),
                 "invoked_by": invoked_by,
                 "boot_mode": "fresh_skip" if fresh else ("full" if full else "fast"),
