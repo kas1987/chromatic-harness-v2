@@ -402,6 +402,40 @@ def _audit_router_decision(entry: dict) -> None:
                 },
             }
         )
+        # Mirror to daily routing log (07_LOGS_AND_AUDIT/routing/routes_YYYYMMDD.jsonl)
+        today = datetime.now(timezone.utc).strftime("%Y%m%d")
+        routing_log = _REPO / "07_LOGS_AND_AUDIT" / "routing" / f"routes_{today}.jsonl"
+        routing_log.parent.mkdir(parents=True, exist_ok=True)
+        import uuid as _uuid
+
+        with routing_log.open("a", encoding="utf-8") as _fh:
+            _fh.write(
+                json.dumps(
+                    {
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "request_id": _uuid.uuid4().hex[:16],
+                        "task_id": entry.get("description", "")[:80],
+                        "task_type": entry.get("subagent_type", ""),
+                        "caller": "gate.py",
+                        "repo": str(_REPO),
+                        "selected_provider": entry.get("provider", ""),
+                        "selected_model": entry.get("target_model", ""),
+                        "route_reason": entry.get("reason", ""),
+                        "fallback_used": False,
+                        "confidence_score": entry.get("c_confidence"),
+                        "privacy_class": None,
+                        "cost_estimate_usd": None,
+                        "latency_ms": None,
+                        "result_status": "blocked"
+                        if entry.get("blocked")
+                        else "allowed",
+                        "warnings": [],
+                        "errors": [],
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
     except Exception:  # noqa: BLE001 — telemetry never blocks routing
         pass
 
