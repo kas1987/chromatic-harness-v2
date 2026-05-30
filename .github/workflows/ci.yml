@@ -108,6 +108,7 @@ jobs:
           CHROMATIC_PR_MAX_CHANGED_FILES: "25"
           CHROMATIC_PR_MAX_INSERTIONS: "800"
           CHROMATIC_PR_MAX_DELETIONS: "400"
+          CHROMATIC_PR_SIZE_WARN_RATIO: "0.70"
         run: python scripts/validate_pr_governance.py
 
       - name: Upload git plan artifact
