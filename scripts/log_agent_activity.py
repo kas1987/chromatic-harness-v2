@@ -22,6 +22,7 @@ from activity.log import log_activity  # noqa: E402
 
 
 def cmd_log(args: argparse.Namespace) -> int:
+    lock_owner = args.lock_owner or args.session_id or ""
     result = log_activity(
         REPO,
         event_type=args.event,
@@ -31,6 +32,7 @@ def cmd_log(args: argparse.Namespace) -> int:
         summary=args.summary or "",
         error=args.error or "",
         agent_role=args.agent_role,
+        lock_owner=lock_owner,
         intake_on_failure=args.intake,
         enqueue_intake=args.enqueue_intake,
     )
@@ -50,6 +52,16 @@ def main() -> int:
     log_p.add_argument("--error", default="")
     log_p.add_argument("--agent-role", default="orchestrator")
     log_p.add_argument(
+        "--lock-owner",
+        default="",
+        help="Lock/session owner id for concurrency traceability",
+    )
+    log_p.add_argument(
+        "--session-id",
+        default="",
+        help="Session id alias for --lock-owner",
+    )
+    log_p.add_argument(
         "--intake",
         action="store_true",
         help="Enqueue intake on failure (error required)",
@@ -60,6 +72,11 @@ def main() -> int:
         help="Always enqueue intake follow_up",
     )
     args = parser.parse_args()
+    if not args.lock_owner:
+        args.lock_owner = (
+            args.session_id
+            or __import__("os").environ.get("CHROMATIC_SESSION_ID", "").strip()
+        )
     if args.command == "log":
         return cmd_log(args)
     return 2

@@ -1,0 +1,34 @@
+{
+  "ok": true,
+  "timestamp": "2026-05-30T06:21:43.087516+00:00",
+  "surface": "cli",
+  "invoked_by": "automation",
+  "steps": [
+    {
+      "name": "session_boot_automation",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\session_boot_automation.py",
+        "--invoked-by",
+        "automation"
+      ],
+      "exit_code": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"generated_at\": \"2026-05-30T05:58:51.426416+00:00\",\n  \"branch\": \"cursor/close-all-harness-gaps\",\n  \"context_tier\": \"P0\",\n  \"mcp_tokens\": 1447,\n  \"mcp_over_budget\": false,\n  \"pack_version\": \"a787172018266315\",\n  \"invoked_by\": \"automation\",\n  \"boot_mode\": \"fresh_skip\"\n}\n",
+      "stderr_tail": "Pre-session manifest fresh (<6.0h); skipping heavy boot steps.\n"
+    },
+    {
+      "name": "token_governance_closed_loop",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\token_governance_closed_loop.py",
+        "--enqueue-suggestions",
+        "--drain-intake"
+      ],
+      "exit_code": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"audit\": \"token_governance_closed_loop\",\n  \"timestamp\": \"2026-05-30T06:21:43.076492+00:00\",\n  \"root\": \"C:\\\\Users\\\\kas41\\\\chromatic-harness-v2\",\n  \"status\": \"green\",\n  \"counts\": {\n    \"pass\": 4,\n    \"warn\": 0,\n    \"fail\": 0\n  },\n  \"checks\": [\n    {\n      \"name\": \"session_context_report\",\n      \"status\": \"pass\",\n      \"returncode\": 0,\n      \"message\": \"no warnings\",\n      \"command\": [\n        \"C:\\\\Users\\\\kas41\\\\.pyenv\\\\pyenv-win\\\\versions\\\\3.12.3\\\\python.exe\",\n        \"C:\\\\Users\\\\kas41\\\\chromatic-harness-v2\\\\scripts\\\\session_context_report.py\",\n        \"--json\",\n        \"--log\",\n        \"--invoked-by\",\n        \"harness\"\n      ]\n    },\n    {\n      \"name\": \"audit_mcp_context\",\n      \"status\": \"pass\",\n      \"returncode\": 0,\n      \"message\": \"within threshold\",\n      \"command\": [\n        \"C:\\\\Users\\\\kas41\\\\.pyenv\\\\pyenv-win\\\\versions\\\\3.12.3\\\\python.exe\",\n        \"C:\\\\Users\\\\kas41\\\\chromatic-harness-v2\\\\scripts\\\\audit_mcp_context.py\",\n        \"--profile\",\n        \"harness_dev\",\n        \"--json\"\n      ]\n    },\n    {\n      \"name\": \"validate_workflow_token_governance\",\n      \"status\": \"pass\",\n      \"returncode\": 0,\n      \"message\": \"workflow token governance OK\",\n      \"command\": [\n        \"C:\\\\Users\\\\kas41\\\\.pyenv\\\\pyenv-win\\\\versions\\\\3.12.3\\\\python.exe\",\n        \"C:\\\\Users\\\\kas41\\\\chromatic-harness-v2\\\\scripts\\\\validate_workflow_token_governance.py\"\n      ]\n    },\n    {\n      \"name\": \"daily_harness_audit_strict\",\n      \"status\": \"pass\",\n      \"returncode\": 0,\n      \"message\": \"status=green\",\n      \"command\": [\n        \"C:\\\\Users\\\\kas41\\\\.pyenv\\\\pyenv-win\\\\versions\\\\3.12.3\\\\python.exe\",\n        \"C:\\\\Users\\\\kas41\\\\chromatic-harness-v2\\\\scripts\\\\daily_harness_audit.py\",\n        \"--root\",\n        \"C:\\\\Users\\\\kas41\\\\chromatic-harness-v2\",\n        \"--report\",\n        \"--strict\"\n      ]\n    }\n  ],\n  \"suggestions\": [],\n  \"queue_actions\": [],\n  \"intake_result\": {\n    \"ok\": true,\n    \"returncode\": 0,\n    \"stderr\": \"\",\n    \"result\": {\n      \"processed\": 0,\n      \"failed\": 0,\n      \"skipped\": 0,\n      \"results\": []\n    }\n  },\n  \"artifacts\": {\n    \"run_json\": \"07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_062143.json\",\n    \"latest_json\": \"07_LOGS_AND_AUDIT/token_governance/latest.json\",\n    \"latest_md\": \"07_LOGS_AND_AUDIT/token_governance/latest.md\"\n  }\n}\n",
+      "stderr_tail": ""
+    }
+  ]
+}

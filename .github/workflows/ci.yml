@@ -55,9 +55,37 @@ jobs:
           mypy 02_RUNTIME/router/ 02_RUNTIME/memory/ 02_RUNTIME/api/ --config-file mypy.ini
 
       - name: Run tests with coverage
-        run: pytest tests/ -v --tb=short --cov --cov-report=term
+        run: pytest tests/ -v --tb=short --cov=src/chromatic_router --cov-report=term --cov-fail-under=50
         env:
           CHROMATIC_DB_PATH: ":memory:"
+
+      - name: Concurrency regression suite
+        run: |
+          pytest tests/test_parallel_sessions_e2e.py tests/test_lock_contention.py tests/test_chromatic_mcp_handlers.py -q
+
+      - name: Generate lock metrics rollup
+        env:
+          CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD: "0.05"
+          CHROMATIC_LOCK_WAIT_P95_THRESHOLD_MS: "500"
+          CHROMATIC_LOCK_MIN_SAMPLE_SIZE: "20"
+        run: python scripts/lock_metrics_rollup.py --lookback-days 7 --write
+
+      - name: Print lock metrics summary
+        run: python -c "import json; from pathlib import Path; d=json.loads(Path('.agents/audits/locks/latest_lock_metrics.json').read_text(encoding='utf-8')); print(f\"LOCK_METRICS_SUMMARY timeout_rate={d.get('timeout_rate',0)} p95_ms={d.get('wait_ms',{}).get('p95',0)} total={d.get('event_counts',{}).get('total',0)}\")"
+
+      - name: Enforce lock timeout gate (sample-aware)
+        env:
+          CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD: "0.05"
+          CHROMATIC_LOCK_MIN_SAMPLE_SIZE: "20"
+        run: python -c "import json, os, sys; from pathlib import Path; d=json.loads(Path('.agents/audits/locks/latest_lock_metrics.json').read_text(encoding='utf-8')); r=float(d.get('timeout_rate',0.0)); n=int((d.get('event_counts') or {}).get('total',0)); thr=float(os.environ.get('CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD','0.05')); min_n=int(os.environ.get('CHROMATIC_LOCK_MIN_SAMPLE_SIZE','20')); print(f'LOCK_GATE timeout_rate={r} total={n} threshold={thr} min_sample={min_n}'); sys.exit(1 if (n>=min_n and r>thr) else 0)"
+
+      - name: Upload lock metrics artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lock-metrics-linux
+          path: .agents/audits/locks/
+          if-no-files-found: error
 
       - name: Upload coverage report
         if: github.event_name == 'pull_request'
@@ -80,4 +108,52 @@ jobs:
         with:
           name: workflow-git-plan
           path: workflow_git_plan.json
+          if-no-files-found: error
+
+  concurrency-windows-matrix:
+    name: Concurrency Suite (Windows, py${{ matrix.python-version }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run concurrency suite
+        run: |
+          python -m pytest tests/test_parallel_sessions_e2e.py tests/test_lock_contention.py tests/test_chromatic_mcp_handlers.py -q
+
+      - name: Generate lock metrics rollup
+        env:
+          CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD: "0.05"
+          CHROMATIC_LOCK_WAIT_P95_THRESHOLD_MS: "500"
+          CHROMATIC_LOCK_MIN_SAMPLE_SIZE: "20"
+        run: python scripts/lock_metrics_rollup.py --lookback-days 7 --write
+
+      - name: Print lock metrics summary
+        run: python -c "import json; from pathlib import Path; d=json.loads(Path('.agents/audits/locks/latest_lock_metrics.json').read_text(encoding='utf-8')); print(f\"LOCK_METRICS_SUMMARY timeout_rate={d.get('timeout_rate',0)} p95_ms={d.get('wait_ms',{}).get('p95',0)} total={d.get('event_counts',{}).get('total',0)}\")"
+
+      - name: Enforce lock timeout gate (sample-aware)
+        env:
+          CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD: "0.05"
+          CHROMATIC_LOCK_MIN_SAMPLE_SIZE: "20"
+        run: python -c "import json, os, sys; from pathlib import Path; d=json.loads(Path('.agents/audits/locks/latest_lock_metrics.json').read_text(encoding='utf-8')); r=float(d.get('timeout_rate',0.0)); n=int((d.get('event_counts') or {}).get('total',0)); thr=float(os.environ.get('CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD','0.05')); min_n=int(os.environ.get('CHROMATIC_LOCK_MIN_SAMPLE_SIZE','20')); print(f'LOCK_GATE timeout_rate={r} total={n} threshold={thr} min_sample={min_n}'); sys.exit(1 if (n>=min_n and r>thr) else 0)"
+
+      - name: Upload lock metrics artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lock-metrics-windows-py${{ matrix.python-version }}
+          path: .agents/audits/locks/
           if-no-files-found: error

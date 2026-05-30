@@ -1,0 +1,26 @@
+name: Visual Control Plane Validation
+
+on:
+  pull_request:
+    paths:
+      - 'visual_node_registry.json'
+      - 'schemas/**'
+      - 'scripts/generate_harness_mermaid.py'
+      - 'scripts/validate_visual_registry.py'
+      - 'docs/visuals/**'
+  workflow_dispatch:
+
+jobs:
+  validate-visual-control-plane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate visual registry
+        run: python scripts/validate_visual_registry.py
+      - name: Generate Mermaid visuals
+        run: python scripts/generate_harness_mermaid.py
+      - name: Check generated files are committed
+        run: git diff --exit-code

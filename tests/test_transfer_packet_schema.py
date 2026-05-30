@@ -22,7 +22,12 @@ REQUIRED = {
 
 
 def test_example_packet_has_required_fields():
-    path = Path(__file__).resolve().parents[1] / "docs" / "handoffs" / "transfer_packet.example.json"
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "docs"
+        / "handoffs"
+        / "transfer_packet.example.json"
+    )
     data = json.loads(path.read_text(encoding="utf-8"))
     missing = REQUIRED - set(data.keys())
     assert not missing, f"missing keys: {missing}"

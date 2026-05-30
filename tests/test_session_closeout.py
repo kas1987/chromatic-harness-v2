@@ -6,14 +6,19 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
 _REPO = Path(__file__).resolve().parents[1]
 
 
 def test_session_closeout_dry_run():
     r = subprocess.run(
-        [sys.executable, str(_REPO / "scripts" / "session_closeout.py"), "--dry-run", "--invoked-by", "cli"],
+        [
+            sys.executable,
+            str(_REPO / "scripts" / "session_closeout.py"),
+            "--dry-run",
+            "--invoked-by",
+            "cli",
+        ],
         cwd=_REPO,
         capture_output=True,
         text=True,
@@ -30,7 +35,10 @@ def test_session_closeout_dry_run():
 def test_spawn_blocked_without_spawn_decision(tmp_path):
     packet = {
         "budget": {"decision": "handoff_only"},
-        "successor": {"runtime": "cursor", "prompt_path": ".agents/handoffs/successor_prompt.md"},
+        "successor": {
+            "runtime": "cursor",
+            "prompt_path": ".agents/handoffs/successor_prompt.md",
+        },
         "summary": "test",
         "handoff_path": "12_HANDOFFS/sessions/x.md",
     }

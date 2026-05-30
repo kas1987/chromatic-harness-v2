@@ -78,6 +78,7 @@ def beads_ready_ids() -> list[str]:
 
 
 def log_activity(summary: str, *, bead_id: str = "", decision: str = "ok") -> None:
+    lock_owner = os.environ.get("CHROMATIC_SESSION_ID", "").strip()
     _run(
         [
             sys.executable,
@@ -91,6 +92,8 @@ def log_activity(summary: str, *, bead_id: str = "", decision: str = "ok") -> No
             summary[:500],
             "--decision",
             decision,
+            "--lock-owner",
+            lock_owner,
         ],
         timeout=60,
     )

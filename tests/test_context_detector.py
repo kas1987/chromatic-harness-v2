@@ -65,8 +65,13 @@ class TestDeviceClassification:
     def test_desktop_with_gpu(self):
         assert ContextDetector._classify_device(gpu_available=True) == "desktop"
 
-    @patch("router.context_detector.ContextDetector._probe_gpu", return_value=(None, None))
-    @patch("router.context_detector.ContextDetector._probe_ollama_local", return_value=(False, []))
+    @patch(
+        "router.context_detector.ContextDetector._probe_gpu", return_value=(None, None)
+    )
+    @patch(
+        "router.context_detector.ContextDetector._probe_ollama_local",
+        return_value=(False, []),
+    )
     @patch("router.context_detector.ContextDetector._probe_internet", return_value=True)
     @patch("router.context_detector.ContextDetector._probe_battery", return_value=False)
     def test_detect_laptop_no_gpu(self, *_mocks):
@@ -94,9 +99,16 @@ class TestDeviceClassification:
 
 
 class TestConnectivity:
-    @patch("router.context_detector.ContextDetector._probe_gpu", return_value=(None, None))
-    @patch("router.context_detector.ContextDetector._probe_ollama_local", return_value=(False, []))
-    @patch("router.context_detector.ContextDetector._probe_internet", return_value=False)
+    @patch(
+        "router.context_detector.ContextDetector._probe_gpu", return_value=(None, None)
+    )
+    @patch(
+        "router.context_detector.ContextDetector._probe_ollama_local",
+        return_value=(False, []),
+    )
+    @patch(
+        "router.context_detector.ContextDetector._probe_internet", return_value=False
+    )
     @patch("router.context_detector.ContextDetector._probe_battery", return_value=False)
     def test_offline_connectivity(self, *_mocks):
         ctx = ContextDetector().detect()
@@ -107,7 +119,9 @@ class TestConnectivity:
     def test_probe_internet_reachable(self, _mock):
         assert ContextDetector._probe_internet() is True
 
-    @patch("router.context_detector.ContextDetector._probe_internet", return_value=False)
+    @patch(
+        "router.context_detector.ContextDetector._probe_internet", return_value=False
+    )
     def test_probe_internet_unreachable(self, _mock):
         assert ContextDetector._probe_internet() is False
 
@@ -249,10 +263,13 @@ def _laptop_remote_ctx(*, remote_endpoints: list[dict]) -> RuntimeContext:
 
 
 class TestRemoteOllamaRouting:
-    @pytest.mark.parametrize("c_level,task_desc,prompt", [
-        ("C2", "scaffold a new module", "scaffold the directory layout"),
-        ("C3", "debug the failing request path", "root cause the 500 error"),
-    ])
+    @pytest.mark.parametrize(
+        "c_level,task_desc,prompt",
+        [
+            ("C2", "scaffold a new module", "scaffold the directory layout"),
+            ("C3", "debug the failing request path", "root cause the 500 error"),
+        ],
+    )
     def test_prefers_remote_ollama_when_reachable(
         self, selector, classifier, c_level, task_desc, prompt, monkeypatch
     ):
