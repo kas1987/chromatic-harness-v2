@@ -42,6 +42,12 @@ TS_MARKERS = (
 def main() -> int:
     errors: list[str] = []
 
+    sync_script = REPO / "scripts" / "sync_pi_karpathy_overlay.py"
+    if sync_script.is_file():
+        import subprocess
+
+        subprocess.run([sys.executable, str(sync_script), "--quiet"], check=False)
+
     if not CANON.is_file():
         errors.append(f"Missing canonical doc: {CANON}")
     else:

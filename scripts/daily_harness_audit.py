@@ -9,9 +9,17 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+_REPO = Path(__file__).resolve().parents[1]
+_RUNTIME = _REPO / "02_RUNTIME"
+if str(_RUNTIME) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME))
+
+from intake.bd_runner import resolve_bd_argv  # noqa: E402
 
 CORE_FILES = [
     "AGENT_OPERATIONS.md",
@@ -36,7 +44,14 @@ OPTIONAL_COMMANDS = [
 ]
 
 
+def _resolve_cmd(cmd: list[str]) -> list[str]:
+    if cmd and cmd[0] == "bd":
+        return resolve_bd_argv() + cmd[1:]
+    return cmd
+
+
 def run_cmd(root: Path, cmd: list[str], timeout: int = 45) -> dict[str, Any]:
+    cmd = _resolve_cmd(cmd)
     try:
         proc = subprocess.run(
             cmd,
@@ -108,6 +123,8 @@ def audit(root: Path, strict: bool = False, run_tests: bool = False) -> dict[str
             if script.endswith("audit_mcp_context.py"):
                 args += ["--profile", "harness_dev"]
             elif script.endswith("check_agent_operations.py"):
+                pass
+            elif script.endswith("generate_pre_session_inventory.py"):
                 pass
             elif script.endswith("validate_governance_stack.py") or script.endswith(
                 "validate_instruction_governance.py"

@@ -1,29 +1,14 @@
 {
-  "generated_at": "2026-05-29T04:35:34.643596+00:00",
+  "generated_at": "2026-05-30T03:00:47.257558+00:00",
   "rigs_scanned": [
     "chromatic-harness-v2"
   ],
-  "artifacts_found": 7,
+  "artifacts_found": 9,
   "unique_count": 7,
-  "duplicate_count": 0,
-  "promoted": [
-    {
-      "from": ".agents\\research\\2026-05-28\\AI_INFRASTRUCTURE_RESEARCH_COMPENDIUM.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\AI_INFRASTRUCTURE_RESEARCH_COMPENDIUM.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "763d4d885e0b2f2a4a8bd43814ee986124e22e2d9d15922c6d8bf9d2d0062965"
-    },
-    {
-      "from": ".agents\\research\\2026-05-28\\CLI_CODING_AGENTS_QUICKREF.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\CLI_CODING_AGENTS_QUICKREF.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "ee342fe298ff0ea9b01b496a9ed3412afeedad89b67e4a4370172dd85090cf81"
-    }
-  ],
+  "duplicate_count": 2,
+  "promoted": [],
   "skipped": [],
-  "dry_run": true,
-  "min_confidence": 0.5,
+  "dry_run": false,
+  "min_confidence": 0.6,
   "global_hub": false
 }
