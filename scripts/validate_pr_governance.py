@@ -28,6 +28,9 @@ REQUIRED_STACK_FIELDS = (
     "Merge after",
     "Tracking",
 )
+DEFAULT_MAX_CHANGED_FILES = 25
+DEFAULT_MAX_INSERTIONS = 800
+DEFAULT_MAX_DELETIONS = 400
 BLOCKED_GENERATED_PREFIXES = (
     ".agents/",
     ".beads/",
@@ -110,6 +113,12 @@ def validate_pr(
     head_ref: str,
     base_ref: str,
     changed_files: list[str],
+    changed_files_count: int | None = None,
+    insertions: int | None = None,
+    deletions: int | None = None,
+    max_changed_files: int = DEFAULT_MAX_CHANGED_FILES,
+    max_insertions: int = DEFAULT_MAX_INSERTIONS,
+    max_deletions: int = DEFAULT_MAX_DELETIONS,
 ) -> list[str]:
     if not head_ref.startswith(STACKED_PR_PREFIX):
         return []
@@ -166,11 +175,41 @@ def validate_pr(
     elif artifact_override.lower() not in {"none", "approved"}:
         errors.append("Artifact override must be either 'none' or 'approved'")
 
+    size_override = _find_field(overrides_section, "Size override")
+    if not size_override:
+        errors.append(
+            "Governance Overrides section must declare '- Size override: none|approved'"
+        )
+    elif size_override.lower() not in {"none", "approved"}:
+        errors.append("Size override must be either 'none' or 'approved'")
+
     blocked_changed = [path for path in changed_files if _is_generated_path(path)]
     if blocked_changed and artifact_override.lower() != "approved":
         joined = ", ".join(blocked_changed[:5])
         errors.append(
             "Generated/runtime artifact paths changed without approved override: " + joined
+        )
+
+    effective_changed_files = (
+        changed_files_count if changed_files_count is not None else len(changed_files)
+    )
+    effective_insertions = 0 if insertions is None else insertions
+    effective_deletions = 0 if deletions is None else deletions
+    size_violations: list[str] = []
+    if effective_changed_files > max_changed_files:
+        size_violations.append(
+            f"files={effective_changed_files}>{max_changed_files}"
+        )
+    if effective_insertions > max_insertions:
+        size_violations.append(
+            f"insertions={effective_insertions}>{max_insertions}"
+        )
+    if effective_deletions > max_deletions:
+        size_violations.append(f"deletions={effective_deletions}>{max_deletions}")
+    if size_violations and size_override.lower() != "approved":
+        errors.append(
+            "PR size thresholds exceeded without approved size override: "
+            + ", ".join(size_violations)
         )
 
     if not title.strip():
@@ -221,6 +260,41 @@ def _git_changed_files(repo: Path, event: dict[str, object]) -> list[str]:
     return [line.strip() for line in proc.stdout.splitlines() if line.strip()]
 
 
+def _git_diff_stats(repo: Path, event: dict[str, object]) -> tuple[int, int, int]:
+    pr = event.get("pull_request")
+    if not isinstance(pr, dict):
+        return 0, 0, 0
+    base = pr.get("base") if isinstance(pr.get("base"), dict) else {}
+    head = pr.get("head") if isinstance(pr.get("head"), dict) else {}
+    base_sha = str((base or {}).get("sha") or "")
+    head_sha = str((head or {}).get("sha") or "")
+    if not base_sha or not head_sha:
+        return 0, 0, 0
+    proc = subprocess.run(
+        ["git", "diff", "--numstat", f"{base_sha}...{head_sha}"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return 0, 0, 0
+    files = 0
+    insertions = 0
+    deletions = 0
+    for line in proc.stdout.splitlines():
+        parts = line.strip().split("\t")
+        if len(parts) < 3:
+            continue
+        files += 1
+        add_raw, del_raw = parts[0], parts[1]
+        if add_raw.isdigit():
+            insertions += int(add_raw)
+        if del_raw.isdigit():
+            deletions += int(del_raw)
+    return files, insertions, deletions
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate stacked PR governance metadata")
     parser.add_argument("--repo", default=str(REPO))
@@ -230,6 +304,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--head-ref", default=os.environ.get("GITHUB_HEAD_REF", ""))
     parser.add_argument("--base-ref", default=os.environ.get("GITHUB_BASE_REF", ""))
     parser.add_argument("--changed-file", action="append", default=[])
+    parser.add_argument("--changed-files-count", type=int, default=None)
+    parser.add_argument("--insertions", type=int, default=None)
+    parser.add_argument("--deletions", type=int, default=None)
+    parser.add_argument(
+        "--max-changed-files",
+        type=int,
+        default=int(os.environ.get("CHROMATIC_PR_MAX_CHANGED_FILES", str(DEFAULT_MAX_CHANGED_FILES))),
+    )
+    parser.add_argument(
+        "--max-insertions",
+        type=int,
+        default=int(os.environ.get("CHROMATIC_PR_MAX_INSERTIONS", str(DEFAULT_MAX_INSERTIONS))),
+    )
+    parser.add_argument(
+        "--max-deletions",
+        type=int,
+        default=int(os.environ.get("CHROMATIC_PR_MAX_DELETIONS", str(DEFAULT_MAX_DELETIONS))),
+    )
     args = parser.parse_args(_sanitize_argv(argv or sys.argv[1:]))
 
     event = _read_event(Path(args.event_path)) if args.event_path else {}
@@ -245,12 +337,31 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     changed_files = list(args.changed_file) or _git_changed_files(Path(args.repo), event)
+    files_count = args.changed_files_count
+    insertions = args.insertions
+    deletions = args.deletions
+    if files_count is None or insertions is None or deletions is None:
+        auto_files_count, auto_insertions, auto_deletions = _git_diff_stats(
+            Path(args.repo), event
+        )
+        if files_count is None:
+            files_count = auto_files_count
+        if insertions is None:
+            insertions = auto_insertions
+        if deletions is None:
+            deletions = auto_deletions
     errors = validate_pr(
         title=title,
         body=body,
         head_ref=head_ref,
         base_ref=base_ref,
         changed_files=changed_files,
+        changed_files_count=files_count,
+        insertions=insertions,
+        deletions=deletions,
+        max_changed_files=args.max_changed_files,
+        max_insertions=args.max_insertions,
+        max_deletions=args.max_deletions,
     )
     if errors:
         print("PR GOVERNANCE FAILED", file=sys.stderr)
