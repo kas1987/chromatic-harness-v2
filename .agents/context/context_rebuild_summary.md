@@ -1,6 +1,6 @@
 # Context Rebuild Summary
 
-Generated: 2026-05-30T08:00:09.803308+00:00
+Generated: 2026-05-30T08:08:57.950083+00:00
 Mode: soft
 Risk Level: green
 
@@ -9,12 +9,13 @@ Risk Level: green
 Branch: `cursor/close-all-harness-gaps`
 
 ```text
-M .agents/context/context_rebuild_summary.md
+M .agents/ao/last-processed
+ M .agents/context/context_rebuild_summary.md
  M .agents/handoffs/claude_delegate_packet.json
  M .agents/handoffs/claude_delegate_prompt.md
  M .agents/harvest/latest.json
  M .agents/locks/session_locks.sqlite3
- M .beads/interactions.jsonl
+ M .agents/rpi/next-work.jsonl
  M .beads/issues.jsonl
  m 02_RUNTIME/runtime-engines/roach-pi
  M 07_LOGS_AND_AUDIT/governance_intelligence/history.jsonl
@@ -29,38 +30,35 @@ M .agents/context/context_rebuild_summary.md
  M docs/PRE_SESSION_AND_TOOLS.md
  M docs/workflows/WORKFLOW_RUN_LOG.jsonl
  M scripts/bead_hygiene_autoloop.py
- M scripts/claude_delegate_gate.py
- M scripts/llm_governance_intelligence.py
- M tests/test_claude_delegate_gate_guards.py
-?? 0))
-?? 02_RUNTIME/10_RUNTIME/
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_075132.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_075154.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_075340.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075157.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075222.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075322.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075459.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075527.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075528.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075722.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075801.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075828.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075923.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_075959.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075157.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075222.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075322.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075459.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075527.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075528.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075722.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075801.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075828.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075923.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_075959.json
-?? tests/test_bead_hygiene_autoloop_canary.py
-?? tests/test_llm_governance_intelligence_normalization.py
+ M tests/test_bead_hygiene_autoloop_canary.py
+?? .agents/council/2026-05-30-post-mortem-bpq.md
+?? .agents/learnings/2026-05-30-integration-testing-patterns.md
+?? 07_LOGS_AND_AUDIT/governance_intelligence/canary_snapshot_latest.json
+?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_080545.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080106.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080133.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080141.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080308.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080331.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080355.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080418.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080500.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080524.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080652.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080714.json
+?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080719.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080106.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080133.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080141.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080308.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080331.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080355.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080418.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080500.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080524.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080652.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080714.json
+?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080719.json
 ```
 
 ## Handoff
