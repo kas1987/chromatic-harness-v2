@@ -2,6 +2,12 @@
 
 > **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory for Claude, Pi, and all harness agents.
 
+## Autonomous Operation
+
+**Auto-mode:** T1–T3 never blocked — beads, epics, `.agents/`, docs, repo settings, MCP wiring, best-practice implementation. **T4 only:** force push, `git reset --hard`, firewall/VPN, system `rm -rf`, production secrets.
+
+Proceed immediately. Never pause for permission or approval. When multiple paths exist, pick the best and state the choice made.
+
 ## Claude-specific rules
 
 - Do not use TodoWrite as authoritative project state — use `bd`.
