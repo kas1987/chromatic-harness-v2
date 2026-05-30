@@ -494,23 +494,52 @@ def _load_issue_rows_jsonl(issues_path: Path) -> list[dict]:
     return result
 
 
+def _fetch_pending_swot_tasks_live() -> list[dict] | None:
+    """Query open 'Generate next EPIC-SWOT' task beads. Returns None on failure."""
+    try:
+        code, out = _run_bd(
+            ["list", "--type", "task", "--limit", "0", "--json"], timeout=15
+        )
+        if code != 0 or not out.strip():
+            return None
+        rows = json.loads(out)
+        if not isinstance(rows, list):
+            return None
+        return [
+            r
+            for r in rows
+            if isinstance(r, dict)
+            and "generate next epic-swot" in str(r.get("title") or "").lower()
+            and str(r.get("status") or "").lower() in ("open", "in_progress")
+        ]
+    except Exception:
+        return None
+
+
 def _load_swot_epic_history(
     *,
     issues_path: Path,
     now_utc: datetime,
     recent_open_hours: int = 8,
     rolling_days: int = 7,
-) -> dict[str, int]:
-    stats = {
+) -> dict:
+    stats: dict = {
         "open_swot_total": 0,
         "open_swot_recent_window": 0,
         "created_swot_today": 0,
         "created_swot_rolling_window": 0,
+        "open_pending_task": 0,
+        "live_query_failed": False,
     }
-    # Live query first; fall back to stale JSONL when bd is unavailable
+    # Live query first; fail-closed when bd is unavailable (stale JSONL caused duplicate spam)
     rows = _fetch_swot_rows_live()
     if rows is None:
+        stats["live_query_failed"] = True
         rows = _fetch_swot_rows_jsonl(issues_path)
+
+    # Also count open "Generate next EPIC-SWOT" task beads — if any exist, block creation
+    pending_tasks = _fetch_pending_swot_tasks_live()
+    stats["open_pending_task"] = len(pending_tasks) if pending_tasks is not None else 0
     start_recent = now_utc.timestamp() - max(1, int(recent_open_hours)) * 3600
     start_rolling = now_utc.timestamp() - max(1, int(rolling_days)) * 24 * 3600
     for row in rows:
@@ -726,6 +755,12 @@ def evaluate_epic_swot_policy(
         block_reasons.append("too many open EPIC-SWOT items")
     if history["created_swot_today"] >= created_today_cap:
         block_reasons.append("daily EPIC-SWOT cap reached")
+    if history.get("open_pending_task", 0) >= 1:
+        block_reasons.append("open 'Generate next EPIC-SWOT' task already exists")
+    if history.get("live_query_failed"):
+        block_reasons.append(
+            "bd live query failed — blocking to prevent duplicate creation"
+        )
 
     if block_reasons:
         score -= float(cfg.get("block_penalty") or 0.8)
