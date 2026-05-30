@@ -18,10 +18,33 @@ _GUARD = _REPO / "scripts" / "session_unified_guard.py"
 _HANDOFF = _REPO / ".agents" / "handoffs" / "latest.json"
 _OPS = _REPO / "AGENT_OPERATIONS.md"
 _MANIFEST = _REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
+_HEALTH = _REPO / "07_LOGS_AND_AUDIT" / "harness_health" / "latest.json"
+
+
+def _emit_boot(cold_start: bool) -> None:
+    """Emit session.boot telemetry immediately — closes the cold-start gap.
+
+    Fail-open: never let telemetry break session start.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "02_RUNTIME"))
+        from audit.session_events import emit_session_boot
+
+        runtime = os.environ.get("CHROMATIC_RUNTIME", "claude")
+        res = emit_session_boot(_REPO, cold_start=cold_start, invoked_by=runtime)
+        if res.get("ok"):
+            print(
+                f"  telemetry: session.boot emitted (session {res['session_id'][:8]})"
+            )
+    except Exception as exc:  # noqa: BLE001
+        print(f"  telemetry: session.boot skipped ({exc})", file=sys.stderr)
 
 
 def main() -> int:
     print("=== Chromatic Harness session start ===\n")
+
+    cold_start = not _HANDOFF.is_file()
+    _emit_boot(cold_start)
 
     if _HANDOFF.is_file():
         print("--- Handoff (.agents/handoffs/latest.json) ---")
@@ -69,6 +92,22 @@ def main() -> int:
             print(f"  Manifest: {_MANIFEST.relative_to(_REPO)}")
     else:
         print("  Manifest: (not written yet)")
+
+    if _HEALTH.is_file():
+        try:
+            h = json.loads(_HEALTH.read_text(encoding="utf-8"))
+            print(f"  readiness_status: {h.get('overall_status', 'unknown')}")
+            print(f"  readiness_score: {h.get('readiness_score', 0)}/100")
+            counts = h.get("counts") or {}
+            print(
+                "  checks(pass/warn/fail): "
+                f"{counts.get('pass', 0)}/{counts.get('warn', 0)}/{counts.get('fail', 0)}"
+            )
+        except (json.JSONDecodeError, OSError):
+            print("  readiness_status: unknown")
+            print("  readiness_score: n/a")
+    else:
+        print("  readiness_status: (not written yet)")
     print()
 
     try:
