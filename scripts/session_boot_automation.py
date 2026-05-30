@@ -58,6 +58,38 @@ def manifest_is_fresh(max_age_hours: float) -> bool:
         return False
 
 
+def _read_audit_risk(root: Path) -> str:
+    audit_path = root / ".agents" / "context" / "context_trim_audit.json"
+    if not audit_path.is_file():
+        return "unknown"
+    try:
+        data = json.loads(audit_path.read_text(encoding="utf-8"))
+        return str(data.get("risk_level", "unknown"))
+    except (json.JSONDecodeError, OSError):
+        return "unknown"
+
+
+def _run_context_pipeline(*, force: bool) -> int:
+    """Trim audit; rebuild + bootstrap when risk is orange/red or --force."""
+    root = _repo_root()
+    if _run([str(_SCRIPTS / "context_trim_audit.py"), "--root", str(root)], timeout=90, quiet=True) != 0:
+        return 1
+
+    risk = _read_audit_risk(root)
+    if risk not in ("red", "orange") and not force:
+        return 0
+
+    mode = "hard" if risk == "red" else "soft"
+    steps = [
+        [str(_SCRIPTS / "context_rebuild.py"), "--root", str(root), "--mode", mode],
+        [str(_SCRIPTS / "new_session_bootstrap.py"), "--root", str(root)],
+    ]
+    for step in steps:
+        if _run(step, timeout=120, quiet=True) != 0:
+            return 1
+    return 0
+
+
 def _run(
     args: list[str],
     *,
@@ -125,6 +157,10 @@ def run_boot(
 
     if _run([str(_SCRIPTS / "validate_intake_loop.py")], timeout=60, quiet=True) != 0:
         errors.append("validate_intake_loop failed")
+
+    if not fresh or force:
+        if _run_context_pipeline(force=force) != 0:
+            errors.append("context_rebuild_pipeline failed")
 
     if full and not fresh:
         ctx_args = [

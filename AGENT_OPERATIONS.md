@@ -18,7 +18,17 @@ Pre-session boot runs **without you running scripts daily**:
 | **Windows** daily 07:55 | Task `ChromaticSessionBoot` — `scripts/run_session_boot.ps1` |
 | **CI** | `check_agent_operations.py` + `test_pre_session_activation.py` |
 
-Boot steps (fast path): doc guard → MCP audit → manifest → intake validation. Skips rework if `latest.json` is fresh (under 6 hours). Output: `07_LOGS_AND_AUDIT/pre_session/latest.json`.
+Boot steps (fast path): doc guard → MCP audit → manifest → intake validation → **context trim audit** (rebuild + `BOOT_CONTEXT.md` when risk is orange/red). Skips rework if `latest.json` is fresh (under 6 hours). Output: `07_LOGS_AND_AUDIT/pre_session/latest.json`, `.agents/context/context_trim_audit.json`.
+
+**Context rebuild (manual or red-zone):**
+
+```bash
+python scripts/context_trim_audit.py
+python scripts/context_rebuild.py --mode hard    # soft | hard | nuclear
+python scripts/new_session_bootstrap.py
+```
+
+Policy: [docs/governance/CONTEXT_REBUILD_POLICY.md](docs/governance/CONTEXT_REBUILD_POLICY.md)
 
 **One-time install (Task Scheduler):**
 
