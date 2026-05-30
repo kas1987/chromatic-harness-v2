@@ -837,14 +837,20 @@ def evaluate_epic_swot_policy(
     newest_age = history.get("newest_open_epic_age_hours")
     epic_is_stale = newest_age is not None and newest_age >= staleness_override_hours
 
+    stale_override_fired = False
     if history["open_swot_recent_window"] >= recent_open_cap and not epic_is_stale:
         block_reasons.append(f"recent open EPIC-SWOT exists ({recent_hours}h window)")
     elif epic_is_stale and history["open_swot_recent_window"] >= recent_open_cap:
-        reasons.append(
-            f"open EPIC-SWOT is stale ({newest_age:.1f}h old ≥ {staleness_override_hours:.0f}h override); allowing new creation"
-        )
+        stale_override_fired = True
     if history["open_swot_total"] >= open_total_cap and not epic_is_stale:
         block_reasons.append("too many open EPIC-SWOT items")
+    elif epic_is_stale and history["open_swot_total"] >= open_total_cap:
+        stale_override_fired = True
+    if stale_override_fired:
+        reasons.append(
+            f"open EPIC-SWOT is stale ({newest_age:.1f}h old"
+            f" ≥ {staleness_override_hours:.0f}h override); allowing new creation"
+        )
     if history["created_swot_today"] >= created_today_cap:
         block_reasons.append("daily EPIC-SWOT cap reached")
     if history.get("open_pending_task", 0) >= 1:
