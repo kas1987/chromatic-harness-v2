@@ -3,7 +3,12 @@ from __future__ import annotations
 from scripts import validate_pr_governance as validator
 
 
-def _stacked_body(*, base_branch: str = "pr/base", artifact_override: str = "none") -> str:
+def _stacked_body(
+    *,
+    base_branch: str = "pr/base",
+    artifact_override: str = "none",
+    size_override: str = "none",
+) -> str:
     return f"""## Stack
 - Stack position: 2 of 3
 - Base branch: {base_branch}
@@ -25,6 +30,7 @@ def _stacked_body(*, base_branch: str = "pr/base", artifact_override: str = "non
 
 ## Governance Overrides
 - Artifact override: {artifact_override}
+- Size override: {size_override}
 """
 
 
@@ -89,6 +95,44 @@ def test_validate_pr_allows_generated_artifacts_with_override() -> None:
         head_ref="pr/closeout-policy-tests",
         base_ref="pr/closeout-telemetry-policy",
         changed_files=["07_LOGS_AND_AUDIT/token_governance/latest.json"],
+    )
+
+    assert errors == []
+
+
+def test_validate_pr_blocks_large_pr_without_size_override() -> None:
+    errors = validator.validate_pr(
+        title="Large PR",
+        body=_stacked_body(base_branch="pr/closeout-telemetry-policy"),
+        head_ref="pr/closeout-policy-tests",
+        base_ref="pr/closeout-telemetry-policy",
+        changed_files=["src/foo.py"],
+        changed_files_count=30,
+        insertions=1200,
+        deletions=50,
+        max_changed_files=25,
+        max_insertions=800,
+        max_deletions=400,
+    )
+
+    assert any("PR size thresholds exceeded" in error for error in errors)
+
+
+def test_validate_pr_allows_large_pr_with_size_override() -> None:
+    errors = validator.validate_pr(
+        title="Large PR",
+        body=_stacked_body(
+            base_branch="pr/closeout-telemetry-policy", size_override="approved"
+        ),
+        head_ref="pr/closeout-policy-tests",
+        base_ref="pr/closeout-telemetry-policy",
+        changed_files=["src/foo.py"],
+        changed_files_count=30,
+        insertions=1200,
+        deletions=50,
+        max_changed_files=25,
+        max_insertions=800,
+        max_deletions=400,
     )
 
     assert errors == []

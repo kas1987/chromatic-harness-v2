@@ -20,3 +20,4 @@
 
 ## Governance Overrides
 - Artifact override: none
+- Size override: none
