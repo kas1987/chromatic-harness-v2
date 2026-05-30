@@ -19,6 +19,7 @@ VALID_KINDS = frozenset({"bead_dispatch", "goal", "follow_up"})
 VALID_STATUS = frozenset({"queued", "processing", "processed", "failed", "skipped"})
 VALID_PRIORITIES = frozenset({"P0", "P1", "P2", "P3"})
 VALID_TYPES = frozenset({"task", "bug", "epic", "chore"})
+VALID_LANES = frozenset({"agent", "human", "review"})
 
 
 @dataclass
@@ -34,6 +35,7 @@ class IntakeEntry:
     type: str = "task"
     tier: int = 3
     bead_id: str = ""
+    lane: str = ""
     context: dict[str, Any] = field(default_factory=dict)
     processed_at: str = ""
     error: str = ""
@@ -54,6 +56,8 @@ class IntakeEntry:
             data["goal"] = self.goal
         if self.bead_id:
             data["bead_id"] = self.bead_id
+        if self.lane:
+            data["lane"] = self.lane
         if self.context:
             data["context"] = self.context
         if self.processed_at:
@@ -76,6 +80,7 @@ class IntakeEntry:
             type=data.get("type", "task"),
             tier=int(data.get("tier", 3)),
             bead_id=data.get("bead_id", ""),
+            lane=data.get("lane", "") or str(data.get("context", {}).get("lane", "")),
             context=dict(data.get("context", {})),
             processed_at=data.get("processed_at", ""),
             error=data.get("error", ""),
@@ -109,6 +114,9 @@ def validate_entry(data: dict[str, Any]) -> list[str]:
         errors.append("kind=goal requires non-empty goal field")
     if kind == "bead_dispatch" and not str(data.get("bead_id", data.get("id", ""))).strip():
         errors.append("kind=bead_dispatch requires bead_id or id")
+    lane = data.get("lane") or (data.get("context") or {}).get("lane")
+    if lane and lane not in VALID_LANES:
+        errors.append(f"invalid lane: {lane}")
     return errors
 
 

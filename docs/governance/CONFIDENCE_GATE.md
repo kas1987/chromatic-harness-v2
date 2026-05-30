@@ -1,6 +1,7 @@
 # Confidence Gate — Sonnet + Kimi Governance
 
-> **See also:** `docs/routing/API_ROUTING_POLICY.md` — the canonical confidence gate thresholds that apply to all providers, not just Sonnet/Kimi.
+> **See also:** `docs/routing/API_ROUTING_POLICY.md` — provider routing.  
+> **Runtime GO:** [docs/workflows/GO_MODES.md](../workflows/GO_MODES.md) — self-heal band and `workflow_go.py`.
 
 ## Purpose
 
@@ -17,23 +18,25 @@ Before any mutation, the active model must produce and log this JSON:
   "scope_clarity": 0,
   "evidence_quality": 0,
   "reversibility": "yes | partial | no",
-  "decision": "execute | plan_only | halt"
+  "decision": "execute | plan_only | halt | self_heal"
 }
 ```
 
 Append this block to `07_LOGS_AND_AUDIT/AGENT_RUN_LOG.jsonl` as part of every run record.
 
-## Thresholds
+## Canonical bands (GO + CMP)
 
-| Confidence | Band | Allowed Action |
-|---:|---|---|
-| 90–100 | Very High | Execute scoped task |
-| 75–89 | High | Execute with logging |
-| 60–74 | Medium | Only reversible low-risk changes |
-| 40–59 | Low | Plan only — no mutations |
-| 0–39 | Blocked | Halt and escalate |
+Aligned with `02_RUNTIME/orchestrator/confidence_engine.py` and `02_RUNTIME/workflows/self_heal.py`:
 
-These thresholds align exactly with `API_ROUTING_POLICY.md §Confidence Gate`.
+| Score | Workflow decision | Agent action |
+|------:|-------------------|--------------|
+| 0–49 | `halt` | Stop; escalate |
+| 50–69 | `plan_only` + **`self_heal`** | Auto task graph + intake enqueue; run `workflow_self_heal_cycle.py` or `/go` |
+| 70–74 | `plan_only` | Human review or manual `GO DEEP` — no auto mutation |
+| 75–89 | `execute` (reversible) | Scoped work with logging |
+| 90–100 | `execute` | Scoped task |
+
+`mutation_allowed()` requires `execute` and score ≥ 75.
 
 ## Stop Rule
 

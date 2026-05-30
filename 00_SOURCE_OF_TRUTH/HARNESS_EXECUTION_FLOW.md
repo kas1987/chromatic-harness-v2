@@ -116,6 +116,18 @@ If any gate fails, the mission does not execute. It is updated as blocked or req
 
 ---
 
+## 4b. Activity Log and Dual Backlog
+
+At phase boundaries (session boot, epic slice, subagent wave, git ship):
+
+1. **Log** — `python scripts/log_agent_activity.py log --event phase.complete --bead-id <id> --lane agent --summary "…"`
+2. **On failure** — execution + workflow log; git failures call `git_triage` → digest under `12_HANDOFFS/sessions/` + intake `follow_up`
+3. **Lanes** — `agent` (automation), `human` (MCP, secrets, policy), `review` (merge approval); filter with `python scripts/bd_ready_by_lane.py --lane human`
+
+Policy: [docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md](../docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md)
+
+---
+
 ## 5. Complexity Classification
 
 Classify the task before routing.

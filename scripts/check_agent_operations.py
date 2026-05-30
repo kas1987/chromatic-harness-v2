@@ -41,6 +41,10 @@ REQUIRED_FILES = [
     "scripts/chromatic_mcp_server.py",
     "docs/CHROMATIC_MCP_SERVER.md",
     "scripts/validate_intake_loop.py",
+    "scripts/validate_instruction_governance.py",
+    "scripts/validate_governance_stack.py",
+    "scripts/workflow_self_heal_cycle.py",
+    ".claude/workflows/_budget.js",
     "scripts/run_intake_cycle.ps1",
     "scripts/run_intake_cycle.sh",
     "scripts/smoke_stack.ps1",
@@ -63,6 +67,8 @@ REQUIRED_FILES = [
     "docs/pdr/PDR-CHV2-001_PRE_SESSION_CONTEXT_AND_EXECUTION_FLOW_CONSOLIDATION.md",
     "00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md",
     "docs/governance/PRE_SESSION_CONTEXT_POLICY.md",
+    "docs/governance/GIT_AUTONOMY_POLICY.md",
+    ".cursor/rules/git-autonomy.mdc",
     "docs/governance/OPENROUTER_BROKER_POLICY.md",
     "docs/BEADS_OBJECT_MODEL.md",
     "docs/beads/ROUTER_VALIDATION_BEADS.md",
@@ -81,7 +87,14 @@ REQUIRED_FILES = [
     "docs/workflows/PERMISSION_GATE.md",
     "docs/workflows/VERIFIER_GATE.md",
     "docs/workflows/TASK_GRAPH_SCHEMA.json",
-    "docs/workflows/WORKFLOW_RUN_LOG.jsonl",
+    "docs/workflows/WORKFLOW_RUN_LOG.seed.jsonl",
+    "docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md",
+    "scripts/log_agent_activity.py",
+    "scripts/git_triage.py",
+    "scripts/bd_ready_by_lane.py",
+    "02_RUNTIME/activity/log.py",
+    "02_RUNTIME/activity/lanes.py",
+    "02_RUNTIME/activity/git_triage.py",
     "docs/workflows/GIT_CONFIDENCE_PIPELINE.md",
     "docs/workflows/TWO_LOG_AUDIT.md",
     "07_LOGS_AND_AUDIT/execution/execution.jsonl",
@@ -94,15 +107,10 @@ REQUIRED_FILES = [
 
 REQUIRED_STRINGS_IN_AGENTS = [
     "SESSION_COMPACT",
-    "PRE_SESSION_AND_TOOLS",
-    "CURSOR_CONTEXT_HYGIENE",
-    "AGENT_ANTIPATTERNS",
-    "generate_pre_session_inventory",
-    "audit_mcp_context",
-    "check_agent_operations",
     "AGENT_OPERATIONS",
     "HARNESS_EXECUTION_FLOW",
-    "PRE_SESSION_CONTEXT_POLICY",
+    "bd ready",
+    "bd prime",
 ]
 
 REQUIRED_SNAPSHOT_KEYS = [
@@ -159,6 +167,8 @@ def main() -> int:
             errors.append("AGENT_OPERATIONS.md missing audit_mcp_context reference")
         if "AGENT_ANTIPATTERNS" not in text:
             errors.append("AGENT_OPERATIONS.md missing AGENT_ANTIPATTERNS reference")
+        if "log_agent_activity" not in text:
+            errors.append("AGENT_OPERATIONS.md missing log_agent_activity reference")
 
     for wf in ("ship.js", "qa.js", "close-issue.js", "go.js"):
         wf_path = REPO / ".claude/workflows" / wf
@@ -166,6 +176,23 @@ def main() -> int:
             wf_text = wf_path.read_text(encoding="utf-8").lower()
             if "label:" in wf_text and "crank" in wf_text and "do not run /crank" not in wf_text:
                 errors.append(f".claude/workflows/{wf} must not invoke /crank")
+
+    gov_script = REPO / "scripts" / "validate_instruction_governance.py"
+    if gov_script.is_file():
+        import subprocess
+
+        proc = subprocess.run(
+            [sys.executable, str(gov_script)],
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if proc.returncode != 0:
+            errors.append(
+                "validate_instruction_governance.py failed: "
+                + (proc.stderr or proc.stdout)[:500]
+            )
 
     if errors:
         print("AGENT OPERATIONS CHECK FAILED", file=sys.stderr)

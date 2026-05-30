@@ -9,7 +9,9 @@ Zylos-style dual logging for harness workflows: **execution** (deterministic, ne
 | Execution | `07_LOGS_AND_AUDIT/execution/execution.jsonl` | Recovery, idempotency, side-effect receipts |
 | Trace stub | `07_LOGS_AND_AUDIT/traces/traces.jsonl` | OTel-like spans (`gen_ai.*` attributes) without requiring OTLP |
 | Decision | `07_LOGS_AND_AUDIT/decisions/decision_log.jsonl` | Confidence gates, bands, actions |
-| Workflow (existing) | `docs/workflows/WORKFLOW_RUN_LOG.jsonl` | Human/agent-facing GO mode history |
+| Workflow (existing) | `docs/workflows/WORKFLOW_RUN_LOG.jsonl` (local; seed: `WORKFLOW_RUN_LOG.seed.jsonl`) | Human/agent-facing GO / activity history |
+
+Activity events from `log_activity()` set `event_type` (e.g. `session.boot`, `phase.complete`, `git.failed`) and map to execution rows as `activity.<event_type>`.
 
 ## Wiring
 

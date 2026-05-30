@@ -34,8 +34,6 @@ def decision_from_score(score: float, human_gate_required: bool = False) -> str:
         return "proceed"
     if score >= 75:
         return "proceed_reversible_only"
-    if score >= 60:
+    if score >= 50:
         return "replan"
-    if score >= 40:
-        return "review"
     return "halt"

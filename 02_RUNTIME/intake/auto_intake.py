@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
+from activity.lanes import apply_lane_to_bead_fields, normalize_lane
 from intake.queue import (
     IntakeEntry,
     default_queue_path,
@@ -102,18 +103,24 @@ def _parse_bead_id(output: str) -> str:
     return m.group(0) if m else ""
 
 
+def _resolve_lane(entry: IntakeEntry) -> str:
+    return normalize_lane(entry.lane or entry.context.get("lane"))
+
+
 def _bd_create(
     title: str,
     *,
     description: str = "",
     priority: str = "P2",
     issue_type: str = "task",
+    lane: str = "",
     cwd: Path,
     runner=None,
     dry_run: bool = False,
 ) -> tuple[bool, str, str]:
     if dry_run:
         return True, "dry-run-bead", "dry-run"
+    title, description = apply_lane_to_bead_fields(title, description, lane=lane)
     args = ["create", title, "--type", issue_type, "--priority", priority]
     if description:
         args.extend(["--description", description[:4000]])
@@ -175,6 +182,7 @@ def process_entry(
             else [{"title": entry.title[:200], "description": entry.goal or entry.title}]
         )
 
+        entry_lane = _resolve_lane(entry)
         created: list[str] = []
         for task in tasks:
             ok, bead_id, msg = _bd_create(
@@ -182,6 +190,7 @@ def process_entry(
                 description=task.get("description", ""),
                 priority=entry.priority,
                 issue_type=entry.type,
+                lane=entry_lane,
                 cwd=repo,
                 runner=runner,
                 dry_run=dry_run,

@@ -199,6 +199,29 @@ def run_boot(
     if errors:
         print("Session boot completed with errors:", ", ".join(errors), file=sys.stderr)
         return 1
+
+    try:
+        runtime = _repo_root() / "02_RUNTIME"
+        if str(runtime) not in sys.path:
+            sys.path.insert(0, str(runtime))
+        from activity.log import log_activity  # noqa: E402
+
+        boot_summary = {
+            "invoked_by": invoked_by,
+            "boot_mode": "fresh_skip" if fresh else ("full" if full else "fast"),
+            "errors": errors,
+        }
+        log_activity(
+            _repo_root(),
+            event_type="session.boot",
+            lane="agent",
+            decision="ok",
+            summary=json.dumps(boot_summary)[:500],
+            agent_role="session_boot",
+        )
+    except OSError:
+        pass
+
     return 0
 
 

@@ -98,6 +98,20 @@ def test_confidence_halt_below_threshold():
     assert not mutation_allowed(record)
 
 
+def test_confidence_halt_below_50():
+    record = score_task(
+        objective_clarity=45,
+        scope_clarity=45,
+        evidence_quality=45,
+        reversibility=45,
+        tool_fit=45,
+        risk_awareness=45,
+        testability=45,
+    )
+    assert record.confidence_score < 50
+    assert record.workflow_decision == WorkflowDecision.HALT
+
+
 def test_self_heal_band_boundaries():
     assert in_self_heal_band(50)
     assert in_self_heal_band(69)
@@ -288,6 +302,26 @@ def test_git_permission_push_requires_tests():
         confidence=90,
         verifier_approved=True,
         tests_passed=True,
+    ).allowed
+
+
+def test_push_merge_deploy_tiered_autonomy_when_push_gate_passes():
+    assert check_permission(
+        Action.PUSH_MERGE_DEPLOY,
+        confidence=90,
+        risk_level="low",
+        verifier_approved=True,
+        tests_passed=True,
+    ).allowed
+
+
+def test_push_merge_deploy_blocked_without_tests():
+    assert not check_permission(
+        Action.PUSH_MERGE_DEPLOY,
+        confidence=90,
+        risk_level="low",
+        verifier_approved=True,
+        tests_passed=False,
     ).allowed
 
 

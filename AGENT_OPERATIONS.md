@@ -5,6 +5,8 @@
 
 This is the single entry point. Sub-docs go deeper; this page is the checklist nothing is allowed to skip.
 
+**Rules map (all layers):** [docs/RULES_INVENTORY.md](docs/RULES_INVENTORY.md) — project vs global vs User Rules.
+
 ---
 
 ## Session start (automated — hands-off)
@@ -69,13 +71,38 @@ python scripts/session_boot_automation.py --force       # refresh manifest now
 | In-flight RPI | `.agents/rpi/execution-packet.json` (if exists) |
 | Lite Claude workflows | `.claude/workflows/` → `scripts/sync_claude_workflows.ps1` |
 | **GO modes (bounded runtime)** | `python scripts/workflow_go.py GO` or `/go` — [docs/workflows/GO_MODES.md](docs/workflows/GO_MODES.md); **no** unattended `GO SWARM` ([AGENT_ANTIPATTERNS](docs/AGENT_ANTIPATTERNS.md)) |
-| **Git ship (confidence-gated)** | `python scripts/workflow_git.py plan` → `ship --execute` — [docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md) |
+
+### Governance / GO (confidence + self-heal)
+
+| Score | Decision | Action |
+|------:|----------|--------|
+| 0–49 | `halt` | Escalate |
+| 50–69 | `self_heal` | `python scripts/workflow_self_heal_cycle.py` — GO → intake drain → GO again |
+| 70–74 | `plan_only` | Manual `GO DEEP` or improve handoff |
+| 75+ | `execute` | `/close-issue` or scoped implement (permission gate) |
+
+Docs: [docs/governance/CONFIDENCE_GATE.md](docs/governance/CONFIDENCE_GATE.md), [docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md), [docs/governance/WORKFLOW_BUDGET_CONTRACT.md](docs/governance/WORKFLOW_BUDGET_CONTRACT.md). Validate: `python scripts/validate_governance_stack.py`.
+
+### Git autonomy (tiered — no extra “please push” when gates pass)
+
+| Step | Min confidence | Risk cap | Autonomous? |
+|------|---------------|----------|-------------|
+| Commit | 75 | not critical | Yes, via `workflow_git.py` |
+| Push | 88 | not high/critical | Yes, after tests pass |
+| Open PR | 85 | not high/critical | Yes, off main/master |
+| Merge | 95 | low only + CI | Yes |
+
+**Policy:** [docs/governance/GIT_AUTONOMY_POLICY.md](docs/governance/GIT_AUTONOMY_POLICY.md). **Always** `plan` before `ship --execute`. Cursor rule: `.cursor/rules/git-autonomy.mdc`.
+
+| **Git ship (confidence-gated)** | `python scripts/workflow_git.py plan` → `ship --execute` — [docs/workflows/GIT_CONFIDENCE_PIPELINE.md](docs/workflows/GIT_CONFIDENCE_PIPELINE.md) |
 | **Intake queue (close loop)** | [docs/INTAKE_QUEUE.md](docs/INTAKE_QUEUE.md) — `python scripts/auto_intake.py` |
 | **Automation / ops** | [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](docs/ops/HARNESS_AUTOMATION_RUNBOOK.md) — `run_intake_cycle`, `smoke_stack`, Task Scheduler |
 | **Hook architecture** | [docs/audit/HOOK_ARCHITECTURE.md](docs/audit/HOOK_ARCHITECTURE.md) — `python scripts/audit_hooks.py` |
 | **Chromatic MCP (lite)** | [docs/CHROMATIC_MCP_SERVER.md](docs/CHROMATIC_MCP_SERVER.md) — one server vs 15 plugins |
 | **Two-log audit** | [docs/workflows/TWO_LOG_AUDIT.md](docs/workflows/TWO_LOG_AUDIT.md) — `07_LOGS_AND_AUDIT/execution/` + `traces/` |
+| **Activity log + dual backlog** | [docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md](docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md) — `python scripts/log_agent_activity.py log`; lanes: `python scripts/bd_ready_by_lane.py --lane human`; git triage: `python scripts/git_triage.py --from-log` |
 | **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff |
+| **Wiki (separate repo)** | [docs/WIKI_REPO_AND_PROMOTION.md](docs/WIKI_REPO_AND_PROMOTION.md) — `kas1987/-Chromatic_Wiki`; `python scripts/promote_to_wiki.py --dry-run` |
 | **roach-pi runtime** | `python scripts/roach_pi_status.py` — [docs/ROACH_PI_RUNTIME.md](docs/ROACH_PI_RUNTIME.md); init via `init_roach_pi_submodule.ps1` |
 
 **Brownfield:** Do not start a new RPI epic on top of in-flight work without reading the execution packet and checking the branch.
@@ -135,12 +162,10 @@ Run: `pytest tests/test_context_*.py tests/test_pre_session_inventory_script.py`
 
 ## Session end (required)
 
-Per [AGENTS.md → Session Completion](AGENTS.md#session-completion):
-
 1. File/close beads issues  
 2. Quality gates (`pytest`, `ruff` if code changed)  
-3. **Commit** (when appropriate)  
-4. **Push** — work is not done until push succeeds  
+3. **Git** — run `workflow_git.py plan`; if push allowed (conf ≥ 88, tests green, risk not high/critical), `ship --execute` **without waiting for a separate “please push”** ([GIT_AUTONOMY_POLICY](docs/governance/GIT_AUTONOMY_POLICY.md))  
+4. If gates block push, hand off with staged commits and explicit next command  
 5. **Hand off** — [SESSION_COMPACT](12_HANDOFFS/SESSION_COMPACT.md) + `.agents/handoffs/latest.json`
 
 Agent Lead synthesis (missions with magnet events):

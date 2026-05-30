@@ -2,6 +2,8 @@
 
 Automated commit, review (PR), and merge gated by workflow confidence scores.
 
+**Agent autonomy:** [docs/governance/GIT_AUTONOMY_POLICY.md](../governance/GIT_AUTONOMY_POLICY.md) — agents may run this pipeline without a separate user commit/push request when the plan allows each step.
+
 ## Thresholds
 
 | Step | Min score | Requirements |

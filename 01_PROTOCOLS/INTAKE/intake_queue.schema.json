@@ -38,7 +38,15 @@
       "type": "string",
       "description": "Set when kind=bead_dispatch and bead already exists"
     },
-    "context": { "type": "object" },
+    "lane": {
+      "type": "string",
+      "enum": ["agent", "human", "review"],
+      "description": "Dual-backlog responsibility lane (also encoded in bead title prefix)"
+    },
+    "context": {
+      "type": "object",
+      "description": "Optional metadata: failure_class, digest_path, parent_bead_id, event_type, self_heal"
+    },
     "queued_at": { "type": "string", "format": "date-time" },
     "processed_at": { "type": "string", "format": "date-time" },
     "error": { "type": "string" }

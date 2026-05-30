@@ -64,6 +64,7 @@ class TwoLogAudit:
     def record_workflow_run(self, workflow_entry: dict[str, Any]) -> dict[str, str]:
         """Mirror a workflow run log row into execution + trace + decision logs."""
         mode = workflow_entry.get("mode", "WORKFLOW")
+        raw_event = workflow_entry.get("event_type", "")
         bead_id = workflow_entry.get("bead_id") or workflow_entry.get("task_id", "")
         handoff = workflow_entry.get("handoff") or {}
         mission_id = handoff.get("mission_id") or workflow_entry.get("mission_id", "")
@@ -86,7 +87,11 @@ class TwoLogAudit:
                 "mission_id": mission_id,
                 "task_id": bead_id or "unknown",
                 "agent_role": workflow_entry.get("agent_role", "orchestrator"),
-                "event_type": f"workflow.{mode.replace(' ', '_').lower()}",
+                "event_type": (
+                    raw_event
+                    if raw_event.startswith(("activity.", "workflow."))
+                    else (f"activity.{raw_event}" if raw_event else f"workflow.{mode.replace(' ', '_').lower()}")
+                ),
                 "idempotency_key": idem,
                 "model": workflow_entry.get("model", ""),
                 "input_hash": _hash_payload({"mode": mode, "bead_id": bead_id}),
