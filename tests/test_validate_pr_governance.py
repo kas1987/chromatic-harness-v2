@@ -136,3 +136,33 @@ def test_validate_pr_allows_large_pr_with_size_override() -> None:
     )
 
     assert errors == []
+
+
+def test_size_warnings_emit_at_warn_threshold() -> None:
+    warnings = validator.size_warnings(
+        changed_files_count=18,
+        insertions=560,
+        deletions=280,
+        max_changed_files=25,
+        max_insertions=800,
+        max_deletions=400,
+        warn_ratio=0.70,
+    )
+
+    assert any("files" in warning for warning in warnings)
+    assert any("insertions" in warning for warning in warnings)
+    assert any("deletions" in warning for warning in warnings)
+
+
+def test_size_warnings_not_emitted_below_warn_threshold() -> None:
+    warnings = validator.size_warnings(
+        changed_files_count=10,
+        insertions=300,
+        deletions=100,
+        max_changed_files=25,
+        max_insertions=800,
+        max_deletions=400,
+        warn_ratio=0.70,
+    )
+
+    assert warnings == []

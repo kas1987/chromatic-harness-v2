@@ -31,6 +31,7 @@ REQUIRED_STACK_FIELDS = (
 DEFAULT_MAX_CHANGED_FILES = 25
 DEFAULT_MAX_INSERTIONS = 800
 DEFAULT_MAX_DELETIONS = 400
+DEFAULT_WARN_RATIO = 0.70
 BLOCKED_GENERATED_PREFIXES = (
     ".agents/",
     ".beads/",
@@ -119,6 +120,7 @@ def validate_pr(
     max_changed_files: int = DEFAULT_MAX_CHANGED_FILES,
     max_insertions: int = DEFAULT_MAX_INSERTIONS,
     max_deletions: int = DEFAULT_MAX_DELETIONS,
+    warn_ratio: float = DEFAULT_WARN_RATIO,
 ) -> list[str]:
     if not head_ref.startswith(STACKED_PR_PREFIX):
         return []
@@ -195,6 +197,7 @@ def validate_pr(
     )
     effective_insertions = 0 if insertions is None else insertions
     effective_deletions = 0 if deletions is None else deletions
+    warn_ratio = max(0.0, min(1.0, warn_ratio))
     size_violations: list[str] = []
     if effective_changed_files > max_changed_files:
         size_violations.append(
@@ -216,6 +219,35 @@ def validate_pr(
         errors.append("PR title must not be empty")
 
     return errors
+
+
+def size_warnings(
+    *,
+    changed_files_count: int,
+    insertions: int,
+    deletions: int,
+    max_changed_files: int = DEFAULT_MAX_CHANGED_FILES,
+    max_insertions: int = DEFAULT_MAX_INSERTIONS,
+    max_deletions: int = DEFAULT_MAX_DELETIONS,
+    warn_ratio: float = DEFAULT_WARN_RATIO,
+) -> list[str]:
+    warn_ratio = max(0.0, min(1.0, warn_ratio))
+    warnings: list[str] = []
+
+    def maybe_warn(metric_name: str, current: int, maximum: int) -> None:
+        if maximum <= 0:
+            return
+        threshold = int(maximum * warn_ratio)
+        if current >= threshold and current <= maximum:
+            pct = (current / maximum) * 100.0
+            warnings.append(
+                f"PR size warning: {metric_name} at {current}/{maximum} ({pct:.1f}%)"
+            )
+
+    maybe_warn("files", changed_files_count, max_changed_files)
+    maybe_warn("insertions", insertions, max_insertions)
+    maybe_warn("deletions", deletions, max_deletions)
+    return warnings
 
 
 def _read_event(path: Path) -> dict[str, object]:
@@ -322,6 +354,11 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=int(os.environ.get("CHROMATIC_PR_MAX_DELETIONS", str(DEFAULT_MAX_DELETIONS))),
     )
+    parser.add_argument(
+        "--warn-ratio",
+        type=float,
+        default=float(os.environ.get("CHROMATIC_PR_SIZE_WARN_RATIO", str(DEFAULT_WARN_RATIO))),
+    )
     args = parser.parse_args(_sanitize_argv(argv or sys.argv[1:]))
 
     event = _read_event(Path(args.event_path)) if args.event_path else {}
@@ -362,7 +399,20 @@ def main(argv: list[str] | None = None) -> int:
         max_changed_files=args.max_changed_files,
         max_insertions=args.max_insertions,
         max_deletions=args.max_deletions,
+        warn_ratio=args.warn_ratio,
     )
+    warnings = size_warnings(
+        changed_files_count=0 if files_count is None else files_count,
+        insertions=0 if insertions is None else insertions,
+        deletions=0 if deletions is None else deletions,
+        max_changed_files=args.max_changed_files,
+        max_insertions=args.max_insertions,
+        max_deletions=args.max_deletions,
+        warn_ratio=args.warn_ratio,
+    )
+    for warning in warnings:
+        print(warning)
+
     if errors:
         print("PR GOVERNANCE FAILED", file=sys.stderr)
         for error in errors:
