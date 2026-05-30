@@ -102,7 +102,7 @@ Docs: [docs/governance/CONFIDENCE_GATE.md](docs/governance/CONFIDENCE_GATE.md), 
 | **Two-log audit** | [docs/workflows/TWO_LOG_AUDIT.md](docs/workflows/TWO_LOG_AUDIT.md) — `07_LOGS_AND_AUDIT/execution/` + `traces/` |
 | **Activity log + dual backlog** | [docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md](docs/governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md) — `python scripts/log_agent_activity.py log`; lanes: `python scripts/bd_ready_by_lane.py --lane human`; git triage: `python scripts/git_triage.py --from-log` |
 | **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff |
-| **Wiki (separate repo)** | [docs/WIKI_REPO_AND_PROMOTION.md](docs/WIKI_REPO_AND_PROMOTION.md) — `kas1987/-Chromatic_Wiki`; `python scripts/promote_to_wiki.py --dry-run` |
+| **Wiki (separate repo)** | [docs/WIKI_REPO_AND_PROMOTION.md](docs/WIKI_REPO_AND_PROMOTION.md) — `sync_wiki_mirror.py`, `promote_to_wiki.py`; beads [WIKI_V01](docs/beads/WIKI_V01_BEADS.md) |
 | **roach-pi runtime** | `python scripts/roach_pi_status.py` — [docs/ROACH_PI_RUNTIME.md](docs/ROACH_PI_RUNTIME.md); init via `init_roach_pi_submodule.ps1` |
 
 **Brownfield:** Do not start a new RPI epic on top of in-flight work without reading the execution packet and checking the branch.
