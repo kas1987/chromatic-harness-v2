@@ -23,6 +23,10 @@ GATES: list[tuple[str, list[str]]] = [
     ),
     ("pytest_guardrails", [PYTHON, "-m", "pytest", "tests/test_workflow_guardrails.py", "-q"]),
     ("karpathy_discipline", [PYTHON, str(REPO / "scripts" / "validate_karpathy_discipline.py")]),
+    (
+        "claude_harness",
+        [PYTHON, str(REPO / "scripts" / "validate_claude_harness.py"), "--root", str(REPO), "--repo-only"],
+    ),
 ]
 
 

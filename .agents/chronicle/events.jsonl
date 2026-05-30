@@ -1,2 +1,1 @@
-{"event":"rpi_start","goal":"Review entire repo: harness health, gaps, fix priorities","epic_id":null,"complexity":"full","timestamp":"2026-05-28T00:00:00Z"}
-{"event":"discovery_complete","epic_id":"chromatic-harness-v2-review-2026-05-28","plan_path":".agents/rpi/execution-packet.json","pre_mortem_verdict":"PASS","timestamp":"2026-05-28T00:00:00Z"}
+{"event":"rpi_start","goal":"governance guards: prevent orphaned agent bead proliferation from session_closeout + auto_intake","epic_id":null,"complexity":"standard","timestamp":"2026-05-30T09:34:08Z"}

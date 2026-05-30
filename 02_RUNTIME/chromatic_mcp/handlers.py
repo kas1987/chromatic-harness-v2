@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,6 +14,19 @@ PYTHON = sys.executable
 _RUNTIME = REPO_ROOT / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+
+
+def _session_id(raw: str | None) -> str:
+    sid = (raw or "").strip()
+    if sid:
+        return sid
+    session_file = REPO_ROOT / ".agents" / "handoffs" / "cursor_session_id.txt"
+    if session_file.is_file():
+        try:
+            return session_file.read_text(encoding="utf-8").strip()
+        except Exception:
+            pass
+    return "anonymous-session"
 
 
 def _run_script(script: str, *args: str, timeout: int = 120) -> dict[str, Any]:
@@ -36,26 +50,41 @@ def workflow_go(mode: str = "GO") -> dict[str, Any]:
     return _run_script("workflow_go.py", mode)
 
 
-def workflow_git_ship(*, dry_run: bool = True) -> dict[str, Any]:
+def workflow_git_ship(
+    *, dry_run: bool = True, session_id: str | None = None
+) -> dict[str, Any]:
     args = ["ship", "--from-log", "--verifier", "approve", "--run-tests"]
     if not dry_run:
         args.append("--execute")
+    args.extend(["--session-id", _session_id(session_id), "--lock-timeout", "30"])
     return _run_script("workflow_git.py", *args, timeout=300)
 
 
-def auto_intake(*, dry_run: bool = False, limit: int | None = None) -> dict[str, Any]:
+def auto_intake(
+    *,
+    dry_run: bool = False,
+    limit: int | None = None,
+    session_id: str | None = None,
+) -> dict[str, Any]:
     args: list[str] = []
     if dry_run:
         args.append("--dry-run")
     if limit is not None:
         args.extend(["--limit", str(limit)])
+    args.extend(["--session-id", _session_id(session_id), "--lock-timeout", "30"])
     return _run_script("auto_intake.py", *args)
 
 
-def poll_inbox(*, dry_run: bool = False, limit: int = 20) -> dict[str, Any]:
+def poll_inbox(
+    *,
+    dry_run: bool = False,
+    limit: int = 20,
+    session_id: str | None = None,
+) -> dict[str, Any]:
     args = ["--limit", str(limit)]
     if dry_run:
         args.append("--dry-run")
+    args.extend(["--session-id", _session_id(session_id), "--lock-timeout", "30"])
     return _run_script("poll_inbox.py", *args)
 
 
@@ -71,8 +100,10 @@ def intake_queue_list() -> dict[str, Any]:
 
 
 def beads_ready() -> dict[str, Any]:
+    bd_exec = shutil.which("bd")
+    cmd = [bd_exec, "ready"] if bd_exec else [PYTHON, "-m", "beads", "ready"]
     proc = subprocess.run(
-        ["bd", "ready"],
+        cmd,
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -81,6 +112,7 @@ def beads_ready() -> dict[str, Any]:
     )
     return {
         "ok": proc.returncode == 0,
+        "command": " ".join(cmd),
         "stdout": proc.stdout or "",
         "stderr": proc.stderr or "",
     }
@@ -94,21 +126,59 @@ def validate_intake_loop() -> dict[str, Any]:
     return _run_script("validate_intake_loop.py")
 
 
+def parallel_health(*, prune: bool = False) -> dict[str, Any]:
+    args: list[str] = []
+    if prune:
+        args.append("--prune")
+    return _run_script("parallel_health.py", *args)
+
+
+def session_guard(
+    *,
+    surface: str = "mcp",
+    invoked_by: str = "automation",
+    force: bool = False,
+    full: bool = False,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    args: list[str] = ["--surface", surface, "--invoked-by", invoked_by]
+    if force:
+        args.append("--force")
+    if full:
+        args.append("--full")
+    if dry_run:
+        args.append("--dry-run")
+    return _run_script("session_unified_guard.py", *args, timeout=900)
+
+
 HANDLERS: dict[str, Any] = {
     "workflow_go": lambda args: workflow_go(args.get("mode", "GO")),
-    "workflow_git_ship": lambda args: workflow_git_ship(dry_run=args.get("dry_run", True)),
+    "workflow_git_ship": lambda args: workflow_git_ship(
+        dry_run=args.get("dry_run", True),
+        session_id=args.get("session_id"),
+    ),
     "auto_intake": lambda args: auto_intake(
         dry_run=args.get("dry_run", False),
         limit=args.get("limit"),
+        session_id=args.get("session_id"),
     ),
     "poll_inbox": lambda args: poll_inbox(
         dry_run=args.get("dry_run", False),
         limit=int(args.get("limit", 20)),
+        session_id=args.get("session_id"),
     ),
     "intake_queue_list": lambda _args: intake_queue_list(),
     "beads_ready": lambda _args: beads_ready(),
     "check_agent_operations": lambda _args: check_operations(),
     "validate_intake_loop": lambda _args: validate_intake_loop(),
+    "parallel_health": lambda args: parallel_health(prune=args.get("prune", False)),
+    "session_guard": lambda args: session_guard(
+        surface=str(args.get("surface", "mcp")),
+        invoked_by=str(args.get("invoked_by", "automation")),
+        force=bool(args.get("force", False)),
+        full=bool(args.get("full", False)),
+        dry_run=bool(args.get("dry_run", False)),
+    ),
 }
 
 
@@ -137,7 +207,10 @@ def list_tool_specs() -> list[dict[str, Any]]:
             "description": "Confidence-gated git ship pipeline (dry-run by default)",
             "inputSchema": {
                 "type": "object",
-                "properties": {"dry_run": {"type": "boolean", "default": True}},
+                "properties": {
+                    "dry_run": {"type": "boolean", "default": True},
+                    "session_id": {"type": "string"},
+                },
             },
         },
         {
@@ -148,6 +221,7 @@ def list_tool_specs() -> list[dict[str, Any]]:
                 "properties": {
                     "dry_run": {"type": "boolean", "default": False},
                     "limit": {"type": "integer"},
+                    "session_id": {"type": "string"},
                 },
             },
         },
@@ -159,6 +233,7 @@ def list_tool_specs() -> list[dict[str, Any]]:
                 "properties": {
                     "dry_run": {"type": "boolean", "default": False},
                     "limit": {"type": "integer", "default": 20},
+                    "session_id": {"type": "string"},
                 },
             },
         },
@@ -181,5 +256,29 @@ def list_tool_specs() -> list[dict[str, Any]]:
             "name": "validate_intake_loop",
             "description": "Validate P0 intake close-loop contract",
             "inputSchema": {"type": "object", "properties": {}},
+        },
+        {
+            "name": "parallel_health",
+            "description": "Report concurrent session health (sessions, locks, orphaned worktrees)",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "prune": {"type": "boolean", "default": False},
+                },
+            },
+        },
+        {
+            "name": "session_guard",
+            "description": "Run unified cross-surface session automation (boot + token governance)",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "surface": {"type": "string", "default": "mcp"},
+                    "invoked_by": {"type": "string", "default": "automation"},
+                    "force": {"type": "boolean", "default": False},
+                    "full": {"type": "boolean", "default": False},
+                    "dry_run": {"type": "boolean", "default": False},
+                },
+            },
         },
     ]

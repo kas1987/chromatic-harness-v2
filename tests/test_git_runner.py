@@ -14,7 +14,13 @@ def test_git_argv_starts_with_git_or_gk():
     assert len(cmd) >= 2
     assert cmd[-2:] == ["status", "--short"]
     exe = cmd[0].replace("\\", "/").lower()
-    assert exe.endswith("/git") or exe.endswith("/git.exe") or exe.endswith("/gk") or exe.endswith("/gk.exe") or exe in ("git", "gk")
+    assert (
+        exe.endswith("/git")
+        or exe.endswith("/git.exe")
+        or exe.endswith("/gk")
+        or exe.endswith("/gk.exe")
+        or exe in ("git", "gk")
+    )
 
 
 def test_active_git_backend_is_known():

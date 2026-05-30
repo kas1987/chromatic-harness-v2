@@ -5,6 +5,11 @@
 
 ## Role Assignment
 
+See also:
+
+- `docs/governance/LLM_GOVERNANCE_INTELLIGENCE_LOOP.md`
+- `docs/governance/OFFICIAL_LLM_RESOURCE_WATCHLIST.md`
+
 | Role | Model | Primary Function |
 |---|---|---|
 | Architect / Reviewer | Sonnet | Planning, synthesis, critique, documentation, risk review, governance checks |

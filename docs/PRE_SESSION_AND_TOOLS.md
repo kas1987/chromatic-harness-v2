@@ -1,8 +1,8 @@
 # Pre-Session Tools, Resources, and MCP Inventory
 
-> **Generated:** `2026-05-30T02:42:29.769017+00:00`  
+> **Generated:** `2026-05-30T09:41:04.997155+00:00`  
 > **Regenerate:** `python scripts/generate_pre_session_inventory.py`  
-> **MCP path scanned:** `C:\Users\kas41\chromatic-harness-v2\tests\fixtures\mcp_minimal`
+> **MCP path scanned:** `C:\Users\kas41\.cursor\projects\c-Users-kas41-chromatic-harness-v2\mcps`
 
 Baseline documentation before changing tool exposure, MCP plugins, or CRG policy.
 See also: [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)
@@ -16,8 +16,8 @@ See also: [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)
 | --- | --- |
 | Native Cursor tools | 15 |
 | Subagent types | 9 |
-| MCP servers (registered) | 1 |
-| MCP tools (descriptors) | 1 |
+| MCP servers (registered) | 2 |
+| MCP tools (descriptors) | 5 |
 | CRG manifest resources | 15 |
 
 ---
@@ -62,9 +62,13 @@ See also: [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)
 
 ## MCP servers (Cursor workspace)
 
-### `plugin-test-server` (test-server) — 1 tools
+### `cursor-app-control` (cursor-app-control) — 5 tools
 
-`sample_tool`
+`create_project`, `move_agent_to_cloned_root`, `move_agent_to_root`, `open_automation`, `rename_chat`
+
+### `cursor-backend-control` (cursor-backend-control) — 0 tools
+
+*Registered but no tool descriptors — likely needs authentication or plugin not connected.*
 
 ---
 

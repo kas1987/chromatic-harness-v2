@@ -9,7 +9,11 @@ import scripts.workflow_self_heal_cycle as cycle
 
 
 def test_self_heal_cycle_shape_when_not_self_heal(monkeypatch):
-    first = {"decision": "execute", "bead_id": "chromatic-harness-v2-abc", "_returncode": 0}
+    first = {
+        "decision": "execute",
+        "bead_id": "chromatic-harness-v2-abc",
+        "_returncode": 0,
+    }
     monkeypatch.setattr(cycle, "_run_go", lambda: first)
     intake = patch.object(cycle, "_run_auto_intake")
     with intake as mock_intake:

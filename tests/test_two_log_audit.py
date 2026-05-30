@@ -84,3 +84,25 @@ def test_append_run_log_mirrors_two_log(
     last = read_last_entry(tmp_path)
     assert last is not None
     assert last["mode"] == "GO AUDIT"
+
+
+def test_record_workflow_run_accepts_scalar_confidence(tmp_path: Path):
+    audit = TwoLogAudit(tmp_path)
+    audit.record_workflow_run(
+        {
+            "mode": "GO VERIFY",
+            "bead_id": "chromatic-harness-v2-scalar",
+            "decision": "execute",
+            "confidence": 77,
+            "handoff": {"mission_id": "CHR-SCALAR"},
+        }
+    )
+
+    decision_lines = [
+        json.loads(ln)
+        for ln in audit.decision_path.read_text(encoding="utf-8").splitlines()
+        if ln.strip() and "_comment" not in ln
+    ]
+    assert decision_lines
+    assert decision_lines[-1]["input_score"] == 77
+    assert decision_lines[-1]["band"] == "high"

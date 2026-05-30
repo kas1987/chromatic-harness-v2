@@ -12,6 +12,18 @@ Session-end and on-demand promotion of learnings, patterns, and research from ri
 | Cross-rig sweep | `python scripts/harvest_rigs.py --roots ~/gt/other-rig --execute` |
 | Global hub (optional) | `python scripts/harvest_rigs.py --execute --global-hub` |
 
+## After long-running agent batches
+
+After any high-duration autonomous run (loops/swarms/background agents), run:
+
+```bash
+python scripts/harvest_rigs.py --execute
+python scripts/promote_to_wiki.py --dry-run
+python scripts/promote_to_wiki.py --execute
+```
+
+This ensures real-world incidents (command failures, telemetry gaps, reroute behaviors) are retained beyond ephemeral session output.
+
 ## Behavior
 
 1. Discover rigs with `.agents/{learnings,patterns,research}/`

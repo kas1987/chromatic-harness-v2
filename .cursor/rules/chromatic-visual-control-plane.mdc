@@ -1,0 +1,25 @@
+---
+description: Chromatic Harness Visual Control Plane rules
+alwaysApply: true
+---
+
+# Cursor Rule: Chromatic Visual Control Plane
+
+Cursor agents must treat this as a bridge file, not the source of truth.
+
+Before editing harness architecture, workflow, visual, or agent files, read in this order:
+
+1. `CHROMATIC_TREES.md`
+2. `docs/pdr/PDR_VISUAL_CONTROL_PLANE.md`
+3. `docs/playbooks/VISUAL_CONTROL_PLANE_PLAYBOOK.md`
+4. `visual_node_registry.json`
+5. `AGENT_HANDOFF_QUEUE.md` if present
+
+Rules:
+
+- Do not duplicate governance inside Cursor rules.
+- Do not change source-of-truth hierarchy without human approval.
+- Generate Mermaid using `python scripts/generate_harness_mermaid.py` after registry changes.
+- Validate registry using `python scripts/validate_visual_registry.py` before declaring success.
+- If confidence is below 60, plan only and do not mutate files.
+- Stop if a task requires deleting files, changing secrets, or editing outside assigned scope.

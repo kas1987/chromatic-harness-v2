@@ -27,6 +27,9 @@ REQUIRED_FILES = [
     "scripts/generate_pre_session_inventory.py",
     "scripts/audit_mcp_context.py",
     "scripts/session_start.py",
+    "scripts/validate_claude_harness.py",
+    "scripts/slim_claude_global_hooks.py",
+    "scripts/claude_harness_production_ready.ps1",
     "scripts/session_context_report.py",
     "scripts/pre_session_common.py",
     ".claude/settings.json",
@@ -209,6 +212,23 @@ def main() -> int:
             wf_text = wf_path.read_text(encoding="utf-8").lower()
             if "label:" in wf_text and "crank" in wf_text and "do not run /crank" not in wf_text:
                 errors.append(f".claude/workflows/{wf} must not invoke /crank")
+
+    claude_settings = REPO / ".claude" / "settings.json"
+    if claude_settings.is_file():
+        try:
+            cs = json.loads(claude_settings.read_text(encoding="utf-8"))
+            end_cmds = []
+            for block in cs.get("hooks", {}).get("SessionEnd", []) or []:
+                if isinstance(block, dict):
+                    for h in block.get("hooks", []):
+                        if isinstance(h, dict) and h.get("command"):
+                            end_cmds.append(str(h["command"]))
+            if not any("session_closeout.py" in c for c in end_cmds):
+                errors.append(
+                    ".claude/settings.json: SessionEnd must run session_closeout.py --invoked-by claude_code"
+                )
+        except json.JSONDecodeError as exc:
+            errors.append(f".claude/settings.json invalid JSON: {exc}")
 
     gov_script = REPO / "scripts" / "validate_instruction_governance.py"
     if gov_script.is_file():

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -19,6 +21,68 @@ from intake.queue import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 _SKIP_ID_PREFIXES = ("example-",)
+_SKIP_TITLE_PREFIXES = ("[agent]",)
+
+
+def _normalize_title(title: str) -> str:
+    # Ignore telemetry timestamp token so duplicate detection remains stable.
+    cleaned = re.sub(r"\[\d{8}T\d{6}Z\]", "", title or "")
+    return " ".join(cleaned.strip().lower().split())
+
+
+def _epic_telemetry_fields(title: str, description: str) -> tuple[str, str, str, str]:
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if re.search(r"\[\d{8}T\d{6}Z\]", title or ""):
+        title_out = title
+    else:
+        title_out = f"{(title or '').strip()} [{ts}]".strip()
+    key = f"EPIC-AUTO-{ts}"
+    desc = (description or "").strip()
+    if "telemetry_key:" not in desc.lower():
+        desc = f"{desc}\n\ntelemetry_key: {key}\ntimestamp_utc: {ts}".strip()
+    return title_out, desc, key, ts
+
+
+def _extract_rows(payload: str) -> list[dict]:
+    text = (payload or "").strip()
+    if not text:
+        return []
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return []
+    if isinstance(data, list):
+        return [row for row in data if isinstance(row, dict)]
+    if isinstance(data, dict):
+        for key in ("items", "results", "issues", "data"):
+            rows = data.get(key)
+            if isinstance(rows, list):
+                return [row for row in rows if isinstance(row, dict)]
+    return []
+
+
+def _existing_open_titles(
+    *,
+    cwd: Path,
+    runner: Callable[[list[str], Path], subprocess.CompletedProcess[str]] | None = None,
+) -> set[str]:
+    """Read existing OPEN beads and return a normalized title index.
+
+    Best effort only: if bd list fails, return empty set and continue processing.
+    """
+    titles: set[str] = set()
+    proc = _run_bd(
+        ["list", "--status", "open", "--limit", "0", "--json"], cwd=cwd, runner=runner
+    )
+    if proc.returncode != 0:
+        return titles
+    rows = _extract_rows(proc.stdout or "")
+    for row in rows:
+        raw = str(row.get("title") or row.get("name") or row.get("summary") or "")
+        norm = _normalize_title(raw)
+        if norm:
+            titles.add(norm)
+    return titles
 
 
 @dataclass
@@ -57,6 +121,9 @@ class DrainReport:
 
 def _should_skip(entry: IntakeEntry) -> bool:
     if any(entry.id.startswith(p) for p in _SKIP_ID_PREFIXES):
+        return True
+    title_lower = (entry.title or "").strip().lower()
+    if any(title_lower.startswith(prefix.lower()) for prefix in _SKIP_TITLE_PREFIXES):
         return True
     if entry.status != "queued":
         return True
@@ -123,6 +190,10 @@ def _bd_create(
 ) -> tuple[bool, str, str]:
     if dry_run:
         return True, "dry-run-bead", "dry-run"
+    if issue_type == "epic":
+        title, description, _telemetry_key, _timestamp_utc = _epic_telemetry_fields(
+            title, description
+        )
     title, description = apply_lane_to_bead_fields(title, description, lane=lane)
     args = ["create", title, "--type", issue_type, "--priority", priority]
     if description:
@@ -135,7 +206,9 @@ def _bd_create(
     return bool(bead_id), bead_id, out.strip()[:200]
 
 
-def _bd_claim(bead_id: str, *, cwd: Path, runner=None, dry_run: bool = False) -> tuple[bool, str]:
+def _bd_claim(
+    bead_id: str, *, cwd: Path, runner=None, dry_run: bool = False
+) -> tuple[bool, str]:
     if dry_run:
         return True, "dry-run-claim"
     proc = _run_bd(["update", bead_id, "--claim"], cwd=cwd, runner=runner)
@@ -151,6 +224,7 @@ def process_entry(
     runner=None,
     dry_run: bool = False,
     claim: bool = True,
+    existing_open_titles: set[str] | None = None,
 ) -> ProcessResult:
     """Process one intake entry into beads."""
     repo = repo_root or REPO_ROOT
@@ -158,7 +232,9 @@ def process_entry(
 
     if _should_skip(entry):
         if not dry_run:
-            record_status(entry, "skipped", path=qpath, repo_root=repo, error="skip rule")
+            record_status(
+                entry, "skipped", path=qpath, repo_root=repo, error="skip rule"
+            )
         return ProcessResult(entry.id, entry.kind, "skipped", message="skip rule")
 
     if not dry_run:
@@ -171,23 +247,49 @@ def process_entry(
                 ok, msg = _bd_claim(bead_id, cwd=repo, runner=runner, dry_run=dry_run)
                 if not ok:
                     if not dry_run:
-                        record_status(entry, "failed", path=qpath, repo_root=repo, error=msg)
-                    return ProcessResult(entry.id, entry.kind, "failed", bead_id=bead_id, message=msg)
+                        record_status(
+                            entry, "failed", path=qpath, repo_root=repo, error=msg
+                        )
+                    return ProcessResult(
+                        entry.id, entry.kind, "failed", bead_id=bead_id, message=msg
+                    )
             if not dry_run:
-                record_status(entry, "processed", path=qpath, repo_root=repo, bead_id=bead_id)
+                record_status(
+                    entry, "processed", path=qpath, repo_root=repo, bead_id=bead_id
+                )
             return ProcessResult(
-                entry.id, entry.kind, "processed", bead_id=bead_id, message="dispatch claimed"
+                entry.id,
+                entry.kind,
+                "processed",
+                bead_id=bead_id,
+                message="dispatch claimed",
             )
 
         tasks = (
             simple_decompose(entry.goal or entry.title)
             if entry.kind == "goal"
-            else [{"title": entry.title[:200], "description": entry.goal or entry.title}]
+            else [
+                {"title": entry.title[:200], "description": entry.goal or entry.title}
+            ]
         )
+
+        if existing_open_titles is not None:
+            for task in tasks:
+                title_norm = _normalize_title(task["title"])
+                if title_norm and title_norm in existing_open_titles:
+                    message = f"prevented duplicate open-title: {task['title'][:120]}"
+                    if not dry_run:
+                        record_status(
+                            entry, "skipped", path=qpath, repo_root=repo, error=message
+                        )
+                    return ProcessResult(
+                        entry.id, entry.kind, "skipped", message=message
+                    )
 
         entry_lane = _resolve_lane(entry)
         created: list[str] = []
         for task in tasks:
+            title_norm = _normalize_title(task["title"])
             ok, bead_id, msg = _bd_create(
                 task["title"],
                 description=task.get("description", ""),
@@ -200,11 +302,15 @@ def process_entry(
             )
             if not ok:
                 if not dry_run:
-                    record_status(entry, "failed", path=qpath, repo_root=repo, error=msg)
+                    record_status(
+                        entry, "failed", path=qpath, repo_root=repo, error=msg
+                    )
                 return ProcessResult(entry.id, entry.kind, "failed", message=msg)
             if claim and bead_id:
                 _bd_claim(bead_id, cwd=repo, runner=runner, dry_run=dry_run)
             created.append(bead_id)
+            if title_norm and existing_open_titles is not None:
+                existing_open_titles.add(title_norm)
 
         primary = created[0] if created else ""
         if not dry_run:
@@ -242,6 +348,7 @@ def drain_queue(
     qpath = queue_path or default_queue_path(repo)
     report = DrainReport()
     queued = list_queued(path=qpath, repo_root=repo)
+    existing_titles = _existing_open_titles(cwd=repo, runner=runner)
     if limit is not None:
         queued = queued[:limit]
 
@@ -253,6 +360,7 @@ def drain_queue(
             runner=runner,
             dry_run=dry_run,
             claim=claim,
+            existing_open_titles=existing_titles,
         )
         report.results.append(result)
         if result.status == "processed":

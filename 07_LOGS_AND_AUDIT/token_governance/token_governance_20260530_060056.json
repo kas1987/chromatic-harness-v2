@@ -1,0 +1,130 @@
+{
+  "audit": "token_governance_closed_loop",
+  "timestamp": "2026-05-30T06:00:56.682962+00:00",
+  "root": "C:\\Users\\kas41\\chromatic-harness-v2",
+  "status": "red",
+  "counts": {
+    "pass": 2,
+    "warn": 0,
+    "fail": 2
+  },
+  "checks": [
+    {
+      "name": "session_context_report",
+      "status": "pass",
+      "returncode": 0,
+      "message": "no warnings",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\session_context_report.py",
+        "--json",
+        "--log",
+        "--invoked-by",
+        "harness"
+      ]
+    },
+    {
+      "name": "audit_mcp_context",
+      "status": "pass",
+      "returncode": 0,
+      "message": "within threshold",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\audit_mcp_context.py",
+        "--profile",
+        "harness_dev",
+        "--json"
+      ]
+    },
+    {
+      "name": "validate_workflow_token_governance",
+      "status": "fail",
+      "returncode": 1,
+      "message": "Workflow token governance FAILED\n  - hotfix.js: must import _budget.js and use assertBudgetAllows",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\validate_workflow_token_governance.py"
+      ]
+    },
+    {
+      "name": "daily_harness_audit_strict",
+      "status": "fail",
+      "returncode": 1,
+      "message": "status=red",
+      "command": [
+        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
+        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\daily_harness_audit.py",
+        "--root",
+        "C:\\Users\\kas41\\chromatic-harness-v2",
+        "--report",
+        "--strict"
+      ]
+    }
+  ],
+  "suggestions": [
+    {
+      "id": "token-gov-workflow-guardrails",
+      "title": "Fix workflow token governance violations",
+      "goal": "Bring .claude/workflows and governance docs back into compliance with validate_workflow_token_governance.py",
+      "priority": "P1",
+      "tier": 1,
+      "type": "task",
+      "context": {
+        "category": "token_governance",
+        "source_check": "validate_workflow_token_governance",
+        "message": "Workflow token governance FAILED\n  - hotfix.js: must import _budget.js and use assertBudgetAllows"
+      }
+    },
+    {
+      "id": "token-gov-daily-audit-remediation",
+      "title": "Remediate strict daily audit findings affecting token governance",
+      "goal": "Resolve red/yellow strict daily audit findings and enforce green baseline",
+      "priority": "P1",
+      "tier": 2,
+      "type": "task",
+      "context": {
+        "category": "token_governance",
+        "source_check": "daily_harness_audit_strict",
+        "message": "status=red"
+      }
+    }
+  ],
+  "queue_actions": [
+    {
+      "id": "token-gov-workflow-guardrails",
+      "status": "queued",
+      "queued_at": "2026-05-30T06:00:53Z"
+    },
+    {
+      "id": "token-gov-daily-audit-remediation",
+      "status": "queued",
+      "queued_at": "2026-05-30T06:00:53Z"
+    }
+  ],
+  "intake_result": {
+    "ok": true,
+    "returncode": 0,
+    "stderr": "",
+    "result": {
+      "processed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "results": [
+        {
+          "entry_id": "token-gov-workflow-guardrails",
+          "kind": "goal",
+          "status": "processed",
+          "bead_id": "chromatic-harness-v2-33f",
+          "message": "created 1 bead(s)"
+        },
+        {
+          "entry_id": "token-gov-daily-audit-remediation",
+          "kind": "goal",
+          "status": "processed",
+          "bead_id": "chromatic-harness-v2-8pb",
+          "message": "created 1 bead(s)"
+        }
+      ]
+    }
+  }
+}

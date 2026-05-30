@@ -2,8 +2,6 @@
 
 > **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory for Claude, Pi, and all harness agents.
 
-Claude must follow the same Harness v2 operating model as all agents. Do not use chat as the system of record.
-
 ## Claude-specific rules
 
 - Do not use TodoWrite as authoritative project state — use `bd`.
@@ -13,6 +11,15 @@ Claude must follow the same Harness v2 operating model as all agents. Do not use
 - Respect permission gates ([docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md)).
 - Do not run unattended `GO SWARM` or chain `/crank`.
 - Compact session state at 50–65% context pressure or phase boundaries.
+- Delegate tasks through `python scripts/claude_delegate_gate.py ...` (see [docs/workflows/CLAUDE_DELEGATION_GATE.md](docs/workflows/CLAUDE_DELEGATION_GATE.md)).
+
+## Production setup (one-time per machine)
+
+```powershell
+powershell -File scripts/claude_harness_production_ready.ps1
+```
+
+Validates: project `SessionStart`/`SessionEnd` hooks, lite workflows in `~/.claude/workflows`, global SessionStart slimmed. Re-check: `python scripts/validate_claude_harness.py --machine`.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
 ## Beads Issue Tracker

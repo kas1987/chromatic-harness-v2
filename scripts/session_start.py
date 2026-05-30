@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
-_BOOT = _REPO / "scripts" / "session_boot_automation.py"
+_GUARD = _REPO / "scripts" / "session_unified_guard.py"
 _HANDOFF = _REPO / ".agents" / "handoffs" / "latest.json"
 _OPS = _REPO / "AGENT_OPERATIONS.md"
 _MANIFEST = _REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
@@ -32,13 +32,20 @@ def main() -> int:
 
     print("--- Automated pre-session boot ---")
     runtime = os.environ.get("CHROMATIC_RUNTIME", "claude")
-    if _BOOT.is_file():
+    if _GUARD.is_file():
         r = subprocess.run(
-            [sys.executable, str(_BOOT), "--invoked-by", runtime],
+            [
+                sys.executable,
+                str(_GUARD),
+                "--surface",
+                "cli",
+                "--invoked-by",
+                runtime,
+            ],
             cwd=_REPO,
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=300,
             check=False,
         )
         if r.stdout.strip():
@@ -46,7 +53,7 @@ def main() -> int:
         if r.returncode != 0 and r.stderr:
             print(r.stderr.strip(), file=sys.stderr)
     else:
-        print("  (session_boot_automation.py not found — skip)")
+        print("  (session_unified_guard.py not found — skip)")
 
     print(f"\n--- Operations: {_OPS.relative_to(_REPO)} ---")
     if _MANIFEST.is_file():

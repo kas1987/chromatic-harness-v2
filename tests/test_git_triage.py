@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 
@@ -21,7 +20,11 @@ import workflows.run_log as run_log_mod  # noqa: E402
 @pytest.mark.parametrize(
     "stderr,step,expected",
     [
-        ("error: cannot pull with rebase: You have unstaged changes", "git pull", "rebase_blocked"),
+        (
+            "error: cannot pull with rebase: You have unstaged changes",
+            "git pull",
+            "rebase_blocked",
+        ),
         (".beads/issues.jsonl modified", "rebase", "unstaged_generated"),
         ("remote rejected", "git push", "push_rejected"),
         ("pre-commit hook failed", "commit", "commit_hook"),
@@ -32,7 +35,9 @@ def test_classify_git_failure(stderr: str, step: str, expected: str):
     assert classify_git_failure(stderr, step) == expected
 
 
-def test_triage_writes_digest_and_intake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_triage_writes_digest_and_intake(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)

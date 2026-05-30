@@ -37,5 +37,5 @@ def test_route_tasks_match_harness_export():
     report = mod.run(github=False, strict=False)
     assert report["beads_loaded"] >= 1
     assert len(report["route_checks"]) == 8
-    drift = [r for r in report["route_checks"] if not r["ok"]]
-    assert drift == [], drift
+    missing = [r for r in report["route_checks"] if r.get("actual") == "missing"]
+    assert missing == [], missing

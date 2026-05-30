@@ -42,8 +42,12 @@ def test_lite_workflows_use_budget_contract():
     for name in ("ship.js", "go.js", "qa.js", "close-issue.js"):
         text = (WF / name).read_text(encoding="utf-8")
         assert "assertBudgetAllows" in text, f"{name} missing assertBudgetAllows"
-        assert "compressToHandoff" in text or "_budget.js" in text, f"{name} missing handoff compression"
-        assert "discovery.slice(4000)" not in text, f"{name} still uses unbounded discovery.slice"
+        assert "compressToHandoff" in text or "_budget.js" in text, (
+            f"{name} missing handoff compression"
+        )
+        assert "discovery.slice(4000)" not in text, (
+            f"{name} still uses unbounded discovery.slice"
+        )
 
 
 def test_go_self_heal_cycle_wired():

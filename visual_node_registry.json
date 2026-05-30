@@ -1,0 +1,27 @@
+{
+  "version": "0.1.0",
+  "project": "Chromatic Harness Visual Control Plane",
+  "nodes": [
+    {"id": "human_intent", "label": "Human Intent / GO", "type": "input", "layer": 0},
+    {"id": "project_state", "label": "Project State", "type": "state", "layer": 1},
+    {"id": "chromatic_trees", "label": "CHROMATIC_TREES.md", "type": "governance", "layer": 2},
+    {"id": "playbooks", "label": "Playbooks", "type": "governance", "layer": 3},
+    {"id": "agent_router", "label": "Agent Router", "type": "router", "layer": 4},
+    {"id": "confidence_gate", "label": "Confidence Gate", "type": "gate", "layer": 5},
+    {"id": "agent_execution", "label": "Agent Execution", "type": "execution", "layer": 6},
+    {"id": "validation", "label": "Validation", "type": "validation", "layer": 7},
+    {"id": "events", "label": "Harness Events", "type": "observability", "layer": 8},
+    {"id": "visual_surfaces", "label": "Visual Surfaces", "type": "visualization", "layer": 9}
+  ],
+  "edges": [
+    ["human_intent", "project_state"],
+    ["project_state", "chromatic_trees"],
+    ["chromatic_trees", "playbooks"],
+    ["playbooks", "agent_router"],
+    ["agent_router", "confidence_gate"],
+    ["confidence_gate", "agent_execution"],
+    ["agent_execution", "validation"],
+    ["validation", "events"],
+    ["events", "visual_surfaces"]
+  ]
+}

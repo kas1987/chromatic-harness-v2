@@ -48,7 +48,10 @@ def test_complexity_fixture_has_fifty_cases(complexity_matrix):
 
 @pytest.mark.parametrize(
     "case_id",
-    [c["id"] for c in yaml.safe_load(COMPLEXITY_CASES.read_text(encoding="utf-8"))["cases"]],
+    [
+        c["id"]
+        for c in yaml.safe_load(COMPLEXITY_CASES.read_text(encoding="utf-8"))["cases"]
+    ],
     ids=lambda cid: cid,
 )
 def test_classify_matrix_case(classifier, complexity_matrix, case_id):

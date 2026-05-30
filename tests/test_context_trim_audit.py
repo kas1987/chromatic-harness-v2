@@ -15,7 +15,9 @@ def test_context_trim_audit_writes_json(tmp_path):
     # Minimal fake repo with one large file pattern
     (tmp_path / "AGENTS.md").write_text("x\n" * 1000, encoding="utf-8")
     (tmp_path / "CLAUDE.md").write_text("Beads Issue Tracker\n" * 2, encoding="utf-8")
-    (tmp_path / "AGENT_OPERATIONS.md").write_text("Beads Issue Tracker\n", encoding="utf-8")
+    (tmp_path / "AGENT_OPERATIONS.md").write_text(
+        "Beads Issue Tracker\n", encoding="utf-8"
+    )
 
     out = tmp_path / ".agents" / "context" / "audit.json"
     proc = subprocess.run(

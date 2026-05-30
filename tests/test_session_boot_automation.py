@@ -9,7 +9,6 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 BOOT_SCRIPT = REPO / "scripts" / "session_boot_automation.py"
