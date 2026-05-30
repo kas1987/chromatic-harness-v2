@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 import yaml
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,6 +17,10 @@ class ComplexityResult:
     confidence: float  # 0.0–1.0
     matched_keywords: list[str]
     reasoning_depth: str
+    # How the file-fan-out bump was sourced: "none" (no bump), "keyword"
+    # (caller-supplied max_files_hint), or "codegraph_impact" (real graph
+    # impact fan-out). Lets observability distinguish guesses from evidence.
+    evidence_source: str = "none"
 
 
 class ComplexityClassifier:
@@ -89,9 +92,22 @@ class ComplexityClassifier:
     # ── Core classify ───────────────────────────────────────────────────────
 
     def classify(
-        self, description: str, prompt: str = "", max_files_hint: int | None = None
+        self,
+        description: str,
+        prompt: str = "",
+        max_files_hint: int | None = None,
+        impact_fan_out: int | None = None,
     ) -> ComplexityResult:
-        """Return C-level for a task."""
+        """Return C-level for a task.
+
+        ``impact_fan_out`` is the real number of files affected, as measured by
+        codegraph_impact on the symbols/files the task touches. When provided it
+        is treated as evidence and takes precedence over the caller-supplied
+        ``max_files_hint`` guess for the file-count bump. When omitted, behavior
+        is identical to the keyword-only path (zero regression). The classifier
+        itself has no codegraph dependency — the caller (router gate) computes
+        the fan-out and passes it in, keeping this unit pure and testable.
+        """
         haystack = f"{description}\n{prompt}".lower()
 
         scores: dict[str, int] = {}
@@ -134,10 +150,25 @@ class ComplexityClassifier:
         total_patterns = len(self._levels.get(best_level, {}).get("keywords", []))
         confidence = min(best_score / max(total_patterns, 1), 1.0)
 
-        # File-count bump: many files → bump up one level
-        if max_files_hint and max_files_hint > 5 and best_level in ("C1", "C2"):
+        # File-count bump: many files → bump up one level. Prefer real
+        # codegraph impact fan-out over the caller-supplied guess.
+        evidence_source = "none"
+        if impact_fan_out is not None:
+            effective_files = impact_fan_out
+            bump_source = "codegraph_impact"
+        else:
+            effective_files = max_files_hint or 0
+            bump_source = "keyword"
+        if effective_files > 5 and best_level in ("C1", "C2"):
             bump_map = {"C1": "C2", "C2": "C3"}
-            best_level = bump_map.get(best_level, best_level)
+            bumped = bump_map.get(best_level, best_level)
+            if bumped != best_level:
+                best_level = bumped
+                evidence_source = bump_source
+            # Very large blast radius reaches reasoning tier even from C1.
+            if effective_files > 15 and best_level == "C2":
+                best_level = "C3"
+                evidence_source = bump_source
 
         cfg = self._levels.get(best_level, {})
         return ComplexityResult(
@@ -146,6 +177,7 @@ class ComplexityClassifier:
             confidence=round(confidence, 2),
             matched_keywords=matched.get(best_level, []),
             reasoning_depth=cfg.get("reasoning_depth", "medium"),
+            evidence_source=evidence_source,
         )
 
     # ── Batch utility for validation ────────────────────────────────────────
@@ -159,6 +191,7 @@ class ComplexityClassifier:
                     description=t.get("description", ""),
                     prompt=t.get("prompt", ""),
                     max_files_hint=t.get("max_files"),
+                    impact_fan_out=t.get("impact_fan_out"),
                 )
             )
         return out
