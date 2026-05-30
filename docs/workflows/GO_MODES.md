@@ -39,3 +39,11 @@ When confidence is **50–69** and the CMP decision is `replan` or `review` (`pl
 Below 50: `halt`. **70–74:** `plan_only` without auto self-heal (manual `GO DEEP`). **75+:** `execute` when permission gate passes. Manual `GO DEEP` still works anytime.
 
 Canonical matrix: [docs/governance/CONFIDENCE_GATE.md](../governance/CONFIDENCE_GATE.md). Closed loop: `python scripts/workflow_self_heal_cycle.py`.
+
+**Verify self-heal cycle (mocked):**
+
+```bash
+pytest tests/test_self_heal_cycle.py -q
+```
+
+**Live recipe (score 50–69 + ready bead + handoff):** run `workflow_go GO` → if `decision: self_heal`, run `auto_intake` then `GO` again; or use `python scripts/workflow_self_heal_cycle.py`.

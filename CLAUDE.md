@@ -8,7 +8,7 @@ Claude must follow the same Harness v2 operating model as all agents. Do not use
 
 - Do not use TodoWrite as authoritative project state — use `bd`.
 - Do not bulk-read old Claude JSONL project logs.
-- Use lite workflows by default (`.claude/workflows/`; see [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md)).
+- Use lite workflows by default (`.claude/workflows/`; antipatterns: [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md)).
 - Run `python scripts/audit_mcp_context.py --profile harness_dev` before long sessions.
 - Respect permission gates ([docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md)).
 - Do not run unattended `GO SWARM` or chain `/crank`.

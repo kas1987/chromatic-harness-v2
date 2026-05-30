@@ -84,8 +84,11 @@ Update pointer:
 
 ```bash
 python scripts/context_trim_audit.py --root .
-python scripts/daily_harness_audit.py --root . --report
+python scripts/daily_harness_audit.py --root . --report --strict
+python scripts/audit_mcp_context.py --profile harness_dev
 ```
+
+**Manual:** Cursor Settings → Rules — paste [docs/cursor/USER_RULES_SNIPPET.md](cursor/USER_RULES_SNIPPET.md); disable unused MCPs per [CURSOR_CONTEXT_HYGIENE.md](CURSOR_CONTEXT_HYGIENE.md).
 
 Read `.agents/context/BOOT_CONTEXT.md` and `.agents/audits/latest_audit_summary.md` if audit is red/yellow.
 

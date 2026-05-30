@@ -179,11 +179,23 @@ class ChromaticRouter:
             return "mock", [], logs
         return filtered[0], filtered[1:], logs
 
-    def _provider_is_available(self, name: str) -> bool:
+    def _provider_is_available(self, name: str, req: RouteRequest | None = None) -> bool:
         adapter = self.adapters.get(name)
         if not adapter:
             return False
-        return adapter.enabled
+        if not adapter.enabled:
+            return False
+        if name == "openhuman":
+            import os
+
+            if os.environ.get("OPENHUMAN_ENABLED", "false").lower() != "true":
+                return False
+            if req is not None:
+                if not req.constraints.allow_openhuman:
+                    return False
+                if req.constraints.privacy_class.value in ("P3", "P4", "P5"):
+                    return False
+        return True
 
     async def route(
         self, req: RouteRequest | None = None, **kwargs: Any
@@ -292,7 +304,7 @@ class ChromaticRouter:
         fallback_used = False
         resp: RouteResponse | None = None  # type: ignore[no-redef]
         for cand in [chosen, *fallbacks]:
-            if not self._provider_is_available(cand):
+            if not self._provider_is_available(cand, req):
                 logs.warnings.append(f"Provider {cand} not available or disabled.")
                 continue
             adapter = self.adapters.get(cand)

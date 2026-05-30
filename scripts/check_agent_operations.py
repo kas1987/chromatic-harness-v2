@@ -86,6 +86,8 @@ REQUIRED_FILES = [
     "docs/governance/OPENROUTER_BROKER_POLICY.md",
     "docs/BEADS_OBJECT_MODEL.md",
     "docs/beads/ROUTER_VALIDATION_BEADS.md",
+    "docs/beads/DOLT_SYNC_TROUBLESHOOTING.md",
+    "scripts/check_beads_dolt_health.py",
     "scripts/pre_session_manifest.py",
     "scripts/session_boot_automation.py",
     "scripts/audit_hooks.py",
@@ -224,6 +226,24 @@ def main() -> int:
                 "validate_instruction_governance.py failed: "
                 + (proc.stderr or proc.stdout)[:500]
             )
+
+    dolt_health = REPO / "scripts" / "check_beads_dolt_health.py"
+    if dolt_health.is_file():
+        import subprocess
+
+        proc = subprocess.run(
+            [sys.executable, str(dolt_health)],
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if proc.returncode != 0 or any(
+            line.startswith("FAIL:") for line in (proc.stdout or "").splitlines()
+        ):
+            print("WARN: beads Dolt health check reported issues:", file=sys.stderr)
+            print((proc.stdout or proc.stderr)[:600], file=sys.stderr)
+            print("See docs/beads/DOLT_SYNC_TROUBLESHOOTING.md", file=sys.stderr)
 
     if errors:
         print("AGENT OPERATIONS CHECK FAILED", file=sys.stderr)
