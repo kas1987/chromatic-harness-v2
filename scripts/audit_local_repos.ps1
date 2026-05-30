@@ -20,7 +20,6 @@ param(
         'chromatic-design-studios',
         'fusion-computer',
         'claude-powerline',
-        'zelexdoll-theme',
         '.claude',
         '.agents'
     ),
