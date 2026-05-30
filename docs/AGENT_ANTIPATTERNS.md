@@ -74,7 +74,7 @@ Repo workflows: [`.claude/workflows/README.md`](../.claude/workflows/README.md)
 
 | Workflow | Chain | Risk |
 |----------|-------|------|
-| **ship.HEAVY** (archived) | discovery → plan → **crank** → vibe → release + post-mortem | **500k–2M+** |
+| **ship.HEAVY** (archived as `*.HEAVY.js.bak` only) | discovery → plan → **crank** → vibe → release + post-mortem | **500k–2M+** |
 | **ship** (lite, default) | discovery → plan → handoff pointer | ~50–150k |
 | **qa.HEAVY** (archived) | complexity ∥ security ∥ perf → vibe | ~200–500k |
 | **qa** (lite) | pytest + ruff summary | ~10–30k |

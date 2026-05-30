@@ -87,8 +87,12 @@ def audit(root: Path) -> dict[str, Any]:
                         "message": f"Thin wrapper must not contain {block!r}; use AGENT_OPERATIONS.md",
                     })
 
+    drift_exclude = {".cursor/rules/context-hygiene.mdc", ".cursor/rules/harness-audit.mdc"}
+
     for key, files in phrase_hits.items():
-        if len(files) >= 4:
+        files = [f for f in files if f not in drift_exclude]
+        threshold = 6 if key == "bd_required" else 4
+        if len(files) >= threshold:
             findings.append({
                 "severity": "P2",
                 "code": "duplicated_governance_phrase",

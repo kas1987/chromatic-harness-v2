@@ -228,7 +228,24 @@ def build_manifest(
         "routing_context": _routing_context(),
         "mcp_audit": _mcp_audit_summary(mcps_path, profile_name),
         "pack_version": _pack_version(repo),
+        "governance": _governance_snapshot(repo),
     }
+
+
+def _governance_snapshot(repo: Path) -> dict:
+    """ROUTE-007 extended manifest fields for session boot audits."""
+    snap: dict = {
+        "context_trim_risk": "unknown",
+        "instruction_drift_status": "unknown",
+    }
+    trim_path = repo / ".agents" / "context" / "context_trim_audit.json"
+    if trim_path.is_file():
+        try:
+            data = json.loads(trim_path.read_text(encoding="utf-8"))
+            snap["context_trim_risk"] = data.get("risk_level", "unknown")
+        except (json.JSONDecodeError, OSError):
+            pass
+    return snap
 
 
 def write_manifest(manifest: dict, out_dir: Path) -> tuple[Path, Path | None]:
