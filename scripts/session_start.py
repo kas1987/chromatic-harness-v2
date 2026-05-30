@@ -75,12 +75,59 @@ def _inject_learnings() -> None:
         print(f"  learnings: injection skipped ({exc})", file=sys.stderr)
 
 
+def _bd(args: list[str], *, timeout: int = 20) -> tuple[int, str]:
+    """Run bd with a Windows-safe PATH fallback (mirrors session_closeout)."""
+    try:
+        r = subprocess.run(
+            ["bd", *args],
+            cwd=_REPO,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except FileNotFoundError:
+        try:
+            r = subprocess.run(
+                ["cmd", "/c", "bd", *args],
+                cwd=_REPO,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                check=False,
+            )
+        except (FileNotFoundError, subprocess.SubprocessError):
+            return 127, ""
+    except subprocess.SubprocessError:
+        return 1, ""
+    return r.returncode, (r.stdout or "").strip()
+
+
+def _inject_ready_queue(limit: int = 8) -> None:
+    """Surface the bd ready queue so work is picked from beads, not chat (Gap A).
+
+    Deterministic CLI read injected into SessionStart context; the *judgment*
+    (which bead to claim) stays with the agent. Fail-open.
+    """
+    code, out = _bd(["ready"])
+    if code != 0 or not out:
+        return
+    lines = [ln for ln in out.splitlines() if ln.strip()][:limit]
+    if not lines:
+        return
+    print("--- Ready beads (pick work from here, not chat) ---")
+    for ln in lines:
+        print(f"  {ln.strip()}")
+    print()
+
+
 def main() -> int:
     print("=== Chromatic Harness session start ===\n")
 
     cold_start = not _HANDOFF.is_file()
     _emit_boot(cold_start)
     _inject_learnings()
+    _inject_ready_queue()
 
     if _HANDOFF.is_file():
         print("--- Handoff (.agents/handoffs/latest.json) ---")
