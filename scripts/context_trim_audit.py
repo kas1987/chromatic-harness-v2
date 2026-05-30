@@ -44,6 +44,11 @@ DUPLICATE_PATTERNS = [
     "Work is NOT complete until",
 ]
 
+# Link-only mentions in thin wrappers are intentional pointers, not duplicate blocks.
+LINK_ONLY_ALLOWED = {
+    "AGENT_ANTIPATTERNS": {"CLAUDE.md", "AGENTS.md"},
+}
+
 
 @dataclass
 class FileFinding:
@@ -126,13 +131,18 @@ def audit_duplicate_patterns(root: Path, paths: Iterable[str]) -> list[FileFindi
 
     findings: list[FileFinding] = []
     for pattern, files in occurrences.items():
-        if len(files) >= 2:
-            findings.append(FileFinding(
-                path=", ".join(files),
-                kind="duplicate_governance_pattern",
-                severity="medium" if len(files) == 2 else "high",
-                message=f"Pattern appears in multiple files: {pattern!r}. Prefer one canonical source plus wrappers.",
-            ))
+        if len(files) < 2:
+            continue
+        allowed = LINK_ONLY_ALLOWED.get(pattern, set())
+        substantive = [f for f in files if f not in allowed]
+        if len(substantive) < 2:
+            continue
+        findings.append(FileFinding(
+            path=", ".join(substantive),
+            kind="duplicate_governance_pattern",
+            severity="medium" if len(substantive) == 2 else "high",
+            message=f"Pattern appears in multiple files: {pattern!r}. Prefer one canonical source plus wrappers.",
+        ))
     return findings
 
 
@@ -156,7 +166,8 @@ def audit_risky_dirs(root: Path) -> list[FileFinding]:
                 if name.endswith(".jsonl"):
                     jsonl_count += 1
         if file_count:
-            severity = "high" if jsonl_count or total_size > 1_000_000 else "medium"
+            # Known ops dirs are informational (listed in RISKY_DIRS); not duplicate-governance.
+            severity = "low"
             findings.append(FileFinding(
                 path=rel,
                 kind="risky_auto_load_directory",
@@ -170,11 +181,12 @@ def audit_risky_dirs(root: Path) -> list[FileFinding]:
 def determine_risk(findings: list[FileFinding]) -> str:
     high = sum(1 for f in findings if f.severity == "high")
     medium = sum(1 for f in findings if f.severity == "medium")
+    dup = sum(1 for f in findings if f.kind == "duplicate_governance_pattern")
     if high >= 3 or (high >= 1 and medium >= 3):
         return "red"
-    if high >= 1 or medium >= 3:
+    if high >= 1 or medium >= 3 or dup >= 1:
         return "orange"
-    if medium >= 1 or findings:
+    if medium >= 1:
         return "yellow"
     return "green"
 

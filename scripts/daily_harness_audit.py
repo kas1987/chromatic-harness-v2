@@ -122,6 +122,25 @@ def audit(root: Path, strict: bool = False, run_tests: bool = False) -> dict[str
     if run_tests and (root / "tests").exists():
         command_results.append(run_cmd(root, ["pytest", "tests", "-q"], timeout=120))
 
+    pre_session = root / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
+    if pre_session.is_file():
+        try:
+            ps = json.loads(pre_session.read_text(encoding="utf-8"))
+            mcp = ps.get("mcp_audit") or {}
+            if mcp.get("over_warn_threshold"):
+                findings.append({
+                    "severity": "P1",
+                    "code": "mcp_token_budget_exceeded",
+                    "file": str(pre_session.relative_to(root)),
+                    "message": (
+                        f"MCP estimated tokens {mcp.get('estimated_tokens_if_enabled')} "
+                        f"exceeds warn threshold {mcp.get('warn_threshold')}; "
+                        "disable heavy MCPs per docs/CURSOR_CONTEXT_HYGIENE.md"
+                    ),
+                })
+        except (json.JSONDecodeError, OSError):
+            pass
+
     counts: dict[str, int] = {"P0": 0, "P1": 0, "P2": 0, "P3": 0}
     for f in findings:
         counts[f.get("severity", "P3")] = counts.get(f.get("severity", "P3"), 0) + 1
