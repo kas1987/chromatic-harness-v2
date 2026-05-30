@@ -122,10 +122,20 @@ _patterns="${HOME}/.claude/config/router-patterns.json"
 _tiers="${HOME}/.claude/config/provider-tiers.json"
 _hook="${HOME}/.claude/hooks/model-router.sh"
 _settings="${HOME}/.claude/settings.json"
+
+# Translate Windows paths to WSL POSIX paths so bash -n works cross-environment.
+# If the path starts with a drive letter (C:\...), convert via wslpath; fall back
+# to the original value if wslpath is unavailable.
+if [[ "${_hook}" =~ ^[A-Za-z]:\\ ]]; then
+  _hook=$(wslpath -u "${_hook}" 2>/dev/null || echo "${_hook}")
+fi
+
 if ! jq -e '.tier_patterns' "${_patterns}" >/dev/null 2>&1; then
   router_status="patterns_invalid"
 elif ! jq -e '.tiers' "${_tiers}" >/dev/null 2>&1; then
   router_status="tiers_invalid"
+elif [[ ! -f "${_hook}" ]]; then
+  router_status="hook_not_found"
 elif ! bash -n "${_hook}" 2>/dev/null; then
   router_status="hook_syntax_error"
 elif ! jq -e '.hooks.PreToolUse[]? | select(.matcher=="Agent") | .hooks[]? | select(.command | test("model-router"))' \

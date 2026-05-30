@@ -1,6 +1,6 @@
 {
   "audit": "token_governance_closed_loop",
-  "timestamp": "2026-05-30T09:41:19.874133+00:00",
+  "timestamp": "2026-05-30T21:22:27.057149+00:00",
   "root": "C:\\Users\\kas41\\chromatic-harness-v2",
   "status": "red",
   "counts": {
@@ -59,6 +59,79 @@
         "--report",
         "--strict"
       ]
+    }
+  ],
+  "refresh_steps": [
+    {
+      "name": "quota_proxy_read",
+      "status": "ok",
+      "started_at": "2026-05-30T21:22:22.713826+00:00",
+      "detail": {
+        "weekly_pct": null,
+        "stale": null,
+        "status": null
+      }
+    },
+    {
+      "name": "portfolio_token_telemetry",
+      "status": "ok",
+      "started_at": "2026-05-30T21:22:22.735832+00:00",
+      "detail": {
+        "ledger_path": "C:\\Users\\kas41\\chromatic-harness-v2\\07_LOGS_AND_AUDIT\\budget\\ledger.jsonl",
+        "rows": 3553,
+        "bridged_usd": 251.208013,
+        "confidence_band": {
+          "total_events": 3553,
+          "known_events": 1874,
+          "unknown_events": 1679,
+          "total_usd": 254.088013,
+          "unknown_usd": 199.327393,
+          "by_axis": {
+            "P": 251.208042,
+            "D": 2.88,
+            "F": 0.0
+          }
+        },
+        "unknown_pct": 47.26
+      }
+    },
+    {
+      "name": "portfolio_token_forecast",
+      "status": "ok",
+      "started_at": "2026-05-30T21:22:23.955515+00:00",
+      "detail": {
+        "out": "C:\\Users\\kas41\\chromatic-harness-v2\\07_LOGS_AND_AUDIT\\budget\\forecast_latest.json",
+        "axis_prepaid": {
+          "weekly_quota_pct": null,
+          "target_pct": 90.0,
+          "pace_needed": null,
+          "projected_close_pct": null,
+          "reset_at": null,
+          "status": "stale",
+          "fresh": false,
+          "source": "absent"
+        }
+      }
+    },
+    {
+      "name": "controller",
+      "status": "ok",
+      "started_at": "2026-05-30T21:22:25.054494+00:00",
+      "detail": {
+        "c_to_t_threshold": 4,
+        "previous_threshold": 4,
+        "direction": 0,
+        "allow_paid_spill": false,
+        "staleness_fallback": true
+      }
+    },
+    {
+      "name": "token_economy_exporter",
+      "status": "ok",
+      "started_at": "2026-05-30T21:22:25.078699+00:00",
+      "detail": {
+        "bytes": 4106
+      }
     }
   ],
   "suggestions": [

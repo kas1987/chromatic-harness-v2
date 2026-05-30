@@ -1,0 +1,51 @@
+{
+  "generated_at": "2026-05-30T20:57:31.559174+00:00",
+  "status": "green",
+  "coverage": {
+    "history_rows": 70
+  },
+  "channels": {
+    "vscode": {
+      "points": 0,
+      "week_mape_latest": 0.0,
+      "week_mape_prev_avg": 0.0,
+      "week_mape_delta": 0.0,
+      "trend": "flat"
+    },
+    "cursor": {
+      "points": 0,
+      "week_mape_latest": 0.0,
+      "week_mape_prev_avg": 0.0,
+      "week_mape_delta": 0.0,
+      "trend": "flat"
+    },
+    "claude_code": {
+      "points": 0,
+      "week_mape_latest": 0.0,
+      "week_mape_prev_avg": 0.0,
+      "week_mape_delta": 0.0,
+      "trend": "flat"
+    },
+    "codex": {
+      "points": 0,
+      "week_mape_latest": 0.0,
+      "week_mape_prev_avg": 0.0,
+      "week_mape_delta": 0.0,
+      "trend": "flat"
+    },
+    "cli": {
+      "points": 0,
+      "week_mape_latest": 0.0,
+      "week_mape_prev_avg": 0.0,
+      "week_mape_delta": 0.0,
+      "trend": "flat"
+    },
+    "other": {
+      "points": 0,
+      "week_mape_latest": 0.0,
+      "week_mape_prev_avg": 0.0,
+      "week_mape_delta": 0.0,
+      "trend": "flat"
+    }
+  }
+}
