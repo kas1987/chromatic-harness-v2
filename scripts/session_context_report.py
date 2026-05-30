@@ -253,6 +253,11 @@ def main() -> int:
         action="store_true",
         help=f"Append summary to {LOG_FILE.relative_to(REPO)}",
     )
+    parser.add_argument(
+        "--manifest",
+        action="store_true",
+        help="Print pre-session manifest path if latest.json exists",
+    )
     args = parser.parse_args()
 
     mcps_path = resolve_mcps_path(args.mcps_path)
@@ -284,6 +289,20 @@ def main() -> int:
     if args.log:
         path = append_log(report)
         print(f"\nAppended log: {path.relative_to(REPO)}", file=sys.stderr)
+
+    if args.manifest:
+        manifest_path = REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
+        if manifest_path.is_file():
+            print(
+                f"Pre-session manifest: {manifest_path.relative_to(REPO)}",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "Pre-session manifest: (not written — run "
+                "python scripts/pre_session_manifest.py --write)",
+                file=sys.stderr,
+            )
 
     return 0
 

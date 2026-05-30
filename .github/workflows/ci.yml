@@ -26,6 +26,11 @@ jobs:
       - name: Agent operations guard (mandatory docs)
         run: python scripts/check_agent_operations.py
 
+      - name: Hook audit (no HIGH findings)
+        run: |
+          python scripts/audit_hooks.py --json > hook_audit.json
+          python -c "import json; d=json.load(open('hook_audit.json')); high=[f for f in d.get('findings',[]) if f.get('severity')=='HIGH']; assert not high, high"
+
       - name: Intake close-loop validation (dry-run)
         run: python scripts/validate_intake_loop.py
 

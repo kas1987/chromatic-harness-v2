@@ -7,28 +7,39 @@ This is the single entry point. Sub-docs go deeper; this page is the checklist n
 
 ---
 
-## Session start (every agent, every session)
+## Session start (automated — hands-off)
+
+Pre-session boot runs **without you running scripts daily**:
+
+| Trigger | What runs |
+|---------|-----------|
+| **Cursor** new chat | `.cursor/hooks.json` → `session_boot_automation.py` |
+| **Claude Code** session | `.claude/settings.json` → `session_start.py` → same boot |
+| **Windows** daily 07:55 | Task `ChromaticSessionBoot` — `scripts/run_session_boot.ps1` |
+| **CI** | `check_agent_operations.py` + `test_pre_session_activation.py` |
+
+Boot steps (fast path): doc guard → MCP audit → manifest → intake validation. Skips rework if `latest.json` is fresh (under 6 hours). Output: `07_LOGS_AND_AUDIT/pre_session/latest.json`.
+
+**One-time install (Task Scheduler):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install_automation_tasks.ps1
+```
+
+**Agents still do at session start:**
 
 ```bash
-# 1. Resume context (if prior session)
-cat .agents/handoffs/latest.json 2>/dev/null && type .agents/handoffs/latest.json
-
-# 2. Issue tracker
 bd prime
-bd ready
+bd ready   # pick work from beads, not chat
+```
 
-# 3. Git reality
-git branch --show-current
-git status --short
+Read handoff if present: `.agents/handoffs/latest.json`
 
-# 4. Log what enters context (Cursor + Claude + Harness)
-python scripts/session_context_report.py --log --invoked-by cursor
+**Manual only when debugging or MCP plugins changed:**
 
-# 5. Trim MCP context (Cursor / Claude — even without harness API)
-python scripts/audit_mcp_context.py --profile harness_dev
-
-# 6. Know your tool surface (again after MCP plugin changes)
-#    docs/PRE_SESSION_AND_TOOLS.md
+```powershell
+powershell -File scripts/session_preflight.ps1 -Full    # deep: context report log + bd ready
+python scripts/session_boot_automation.py --force       # refresh manifest now
 ```
 
 | Step | Doc |
@@ -38,6 +49,12 @@ python scripts/audit_mcp_context.py --profile harness_dev
 | **MCP disable / lean Claude** | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
 | **Do not trust / do not do** | [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) |
 | Tools / MCP / CRG baseline | [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) |
+| **Execution flow (canonical)** | [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md) |
+| **Context tiers (P0–P4)** | [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md) |
+| **Beads object model** | [docs/BEADS_OBJECT_MODEL.md](docs/BEADS_OBJECT_MODEL.md) |
+| **OpenRouter broker** | [docs/governance/OPENROUTER_BROKER_POLICY.md](docs/governance/OPENROUTER_BROKER_POLICY.md) |
+| **Pre-session manifest** | `07_LOGS_AND_AUDIT/pre_session/latest.json` — `scripts/pre_session_manifest.py --write` |
+| **Router validation backlog** | [docs/beads/ROUTER_VALIDATION_BEADS.md](docs/beads/ROUTER_VALIDATION_BEADS.md) — `chromatic-harness-v2-gh1` (P1), `chromatic-harness-v2-uum` (P2) |
 | Issue tracking | [AGENTS.md](AGENTS.md) (beads — not TodoWrite) |
 | In-flight RPI | `.agents/rpi/execution-packet.json` (if exists) |
 | Lite Claude workflows | `.claude/workflows/` → `scripts/sync_claude_workflows.ps1` |
@@ -45,6 +62,7 @@ python scripts/audit_mcp_context.py --profile harness_dev
 | **Git ship (confidence-gated)** | `python scripts/workflow_git.py plan` → `ship --execute` — [docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md) |
 | **Intake queue (close loop)** | [docs/INTAKE_QUEUE.md](docs/INTAKE_QUEUE.md) — `python scripts/auto_intake.py` |
 | **Automation / ops** | [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](docs/ops/HARNESS_AUTOMATION_RUNBOOK.md) — `run_intake_cycle`, `smoke_stack`, Task Scheduler |
+| **Hook architecture** | [docs/audit/HOOK_ARCHITECTURE.md](docs/audit/HOOK_ARCHITECTURE.md) — `python scripts/audit_hooks.py` |
 | **Chromatic MCP (lite)** | [docs/CHROMATIC_MCP_SERVER.md](docs/CHROMATIC_MCP_SERVER.md) — one server vs 15 plugins |
 | **Two-log audit** | [docs/workflows/TWO_LOG_AUDIT.md](docs/workflows/TWO_LOG_AUDIT.md) — `07_LOGS_AND_AUDIT/execution/` + `traces/` |
 | **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff |
@@ -139,8 +157,23 @@ POST /missions/{mission_id}/synthesize?create_bead=true
 
 `scripts/check_agent_operations.py` runs in GitHub Actions. PRs fail if mandatory docs or cross-links are removed.
 
+`pytest tests/test_pre_session_activation.py` enforces manifest + intake contract.
+
+---
+
+## Is pre-session active? (checklist)
+
+| Check | Evidence |
+|-------|----------|
+| Automation installed | `schtasks /Query /TN ChromaticSessionBoot` or Cursor hooks present |
+| Boot ran recently | `07_LOGS_AND_AUDIT/pre_session/latest.json` `generated_at` within 6h (or new Cursor chat) |
+| Doc pack intact | CI / `check_agent_operations.py` exits 0 |
+| MCP cost reviewed | `mcp_audit` in manifest; heavy MCPs off in Cursor Settings |
+| Work from beads | `bd ready` / claimed issue — not chat TODOs |
+| Agent used P0 docs | Cites `AGENT_OPERATIONS` + `HARNESS_EXECUTION_FLOW`; no bulk load of `GOVERNANCE_AND_ROUTING_ARCHITECTURE` unless routing work |
+
 ---
 
 ## One-line summary
 
-**Start:** handoff → bd → git → audit MCPs. **Change tools:** regenerate inventory + check script. **End:** test → beads → push → handoff.
+**Start:** handoff → bd → git → audit MCPs → **manifest**. **Change tools:** regenerate inventory + check script. **End:** test → beads → push → handoff.

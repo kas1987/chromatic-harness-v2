@@ -1,8 +1,24 @@
-# Project Instructions for AI Agents
+# Claude Instructions for Chromatic Harness v2
 
 > **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory for Claude, Pi, and all harness agents.
 
-This file provides instructions and context for AI coding agents working on this project.
+Claude must follow the same Harness v2 operating model as all agents. Do not use chat as the system of record.
+
+**Canonical map:** [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md)  
+**Context tiers:** [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md)  
+**Bead types:** [docs/BEADS_OBJECT_MODEL.md](docs/BEADS_OBJECT_MODEL.md)  
+**Intake loop:** [docs/INTAKE_QUEUE.md](docs/INTAKE_QUEUE.md)  
+**Automation:** [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](docs/ops/HARNESS_AUTOMATION_RUNBOOK.md)
+
+## Claude-specific rules
+
+- Do not use TodoWrite as authoritative project state — use `bd`.
+- Do not bulk-read old Claude JSONL project logs.
+- Use lite workflows by default (`.claude/workflows/`; see [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md)).
+- Run `python scripts/audit_mcp_context.py --profile harness_dev` before long sessions.
+- Respect permission gates and stop conditions ([docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md)).
+- Do not run unattended `GO SWARM` or chain `/crank`.
+- Compact session state at 50–65% context pressure or phase boundaries.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
 ## Beads Issue Tracker
@@ -69,21 +85,6 @@ Canonical protocol: [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT
 - If push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
 
+## After beads: session end
 
-## Build & Test
-
-_Add your build and test commands here_
-
-```bash
-# Example:
-# npm install
-# npm test
-```
-
-## Architecture Overview
-
-_Add a brief overview of your project architecture_
-
-## Conventions & Patterns
-
-_Add your project-specific conventions here_
+Full checklist: [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md). Include `bd dolt push` when beads data changed.

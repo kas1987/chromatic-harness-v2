@@ -13,6 +13,8 @@ RULE_FILES = [
     "AGENT_OPERATIONS.md",
     ".cursor/rules/context-hygiene.mdc",
     "12_HANDOFFS/SESSION_COMPACT.md",
+    "00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md",
+    "docs/governance/PRE_SESSION_CONTEXT_POLICY.md",
 ]
 
 RUNTIME_DOCS = {
