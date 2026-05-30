@@ -87,8 +87,113 @@ def _default_epic_swot_policy_config() -> dict[str, Any]:
     }
 
 
+def _coerce_float(
+    value: Any,
+    default: float,
+    *,
+    minimum: float = 0.0,
+    maximum: float | None = 1.0,
+) -> float:
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return default
+    if result < minimum:
+        return default
+    if maximum is not None and result > maximum:
+        return default
+    return result
+
+
+def _coerce_int(value: Any, default: int, *, minimum: int = 0) -> int:
+    try:
+        result = int(value)
+    except (TypeError, ValueError):
+        return default
+    if result < minimum:
+        return default
+    return result
+
+
+def _sanitize_epic_swot_policy_config(
+    config: dict[str, Any], defaults: dict[str, Any]
+) -> dict[str, Any]:
+    sanitized = dict(config)
+    sanitized["confidence_threshold"] = _coerce_float(
+        config.get("confidence_threshold"),
+        float(defaults["confidence_threshold"]),
+    )
+    sanitized["block_penalty"] = _coerce_float(
+        config.get("block_penalty"), float(defaults["block_penalty"])
+    )
+    sanitized["halt_human_penalty"] = _coerce_float(
+        config.get("halt_human_penalty"), float(defaults["halt_human_penalty"])
+    )
+
+    history_windows = dict(defaults.get("history_windows") or {})
+    history_windows.update(config.get("history_windows") or {})
+    history_windows["recent_open_hours"] = _coerce_int(
+        history_windows.get("recent_open_hours"),
+        int((defaults.get("history_windows") or {}).get("recent_open_hours") or 8),
+        minimum=1,
+    )
+    history_windows["rolling_days"] = _coerce_int(
+        history_windows.get("rolling_days"),
+        int((defaults.get("history_windows") or {}).get("rolling_days") or 7),
+        minimum=1,
+    )
+    sanitized["history_windows"] = history_windows
+
+    history_limits = dict(defaults.get("history_limits") or {})
+    history_limits.update(config.get("history_limits") or {})
+    for key, default_value in (defaults.get("history_limits") or {}).items():
+        history_limits[key] = _coerce_int(history_limits.get(key), int(default_value), minimum=1)
+    sanitized["history_limits"] = history_limits
+
+    for section_name in ("session_tokens", "open_tasks", "changed_files", "event_count"):
+        section_defaults = defaults.get(section_name) or {}
+        section = dict(section_defaults)
+        section.update(config.get(section_name) or {})
+        sanitized_section: dict[str, Any] = {}
+        for bucket_name, bucket_defaults in section_defaults.items():
+            bucket = dict(bucket_defaults)
+            bucket.update((section.get(bucket_name) or {}))
+            sanitized_section[bucket_name] = {
+                "min": _coerce_int(bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0),
+                "score": _coerce_float(bucket.get("score"), float(bucket_defaults.get("score") or 0.0)),
+                "reason": str(bucket.get("reason") or bucket_defaults.get("reason") or ""),
+            }
+        sanitized[section_name] = sanitized_section
+
+    coverage_defaults = defaults.get("coverage") or {}
+    coverage = dict(coverage_defaults)
+    coverage.update(config.get("coverage") or {})
+    fields = coverage.get("fields")
+    if not isinstance(fields, list) or not all(isinstance(field, str) and field for field in fields):
+        fields = list(coverage_defaults.get("fields") or [])
+    sanitized["coverage"] = {
+        "min_field_coverage": _coerce_float(
+            coverage.get("min_field_coverage"),
+            float(coverage_defaults.get("min_field_coverage") or 0.85),
+        ),
+        "field_weight": _coerce_float(
+            coverage.get("field_weight"),
+            float(coverage_defaults.get("field_weight") or 0.04),
+        ),
+        "max_bonus": _coerce_float(
+            coverage.get("max_bonus"),
+            float(coverage_defaults.get("max_bonus") or 0.14),
+        ),
+        "fields": fields,
+        "reason": str(coverage.get("reason") or coverage_defaults.get("reason") or ""),
+    }
+
+    return sanitized
+
+
 def _load_epic_swot_policy_config(path: Path | None = None) -> dict[str, Any]:
-    config = _default_epic_swot_policy_config()
+    defaults = _default_epic_swot_policy_config()
+    config = defaults
     cfg_path = path or (_REPO / "config" / "epic_swot_policy.json")
     if not cfg_path.is_file():
         return config
@@ -108,7 +213,7 @@ def _load_epic_swot_policy_config(path: Path | None = None) -> dict[str, Any]:
                 out[k] = v
         return out
 
-    return merge(config, user)
+    return _sanitize_epic_swot_policy_config(merge(config, user), defaults)
 
 
 def _run(
@@ -635,6 +740,73 @@ def _write_closeout_telemetry_snapshot(result: dict[str, Any]) -> dict[str, str]
     }
 
 
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return value
+
+
+def _sanitize_argv(argv: list[str]) -> list[str]:
+    # Guard against accidental placeholder args passed by wrappers.
+    return [arg for arg in argv if arg != "."]
+
+
+def _post_mortem_stamp(now: datetime | None = None) -> tuple[str, str]:
+    ts = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    return ts.strftime("%Y-%m-%d"), ts.strftime("%Y%m%dT%H%M%SZ")
+
+
+def _write_auto_turn_post_mortem(
+    result: dict[str, Any], *, auto_turn_index: int, auto_turn_threshold: int
+) -> str:
+    date_part, ts_part = _post_mortem_stamp()
+    rel = (
+        Path(".agents")
+        / "council"
+        / f"{date_part}-post-mortem-auto-turn-{auto_turn_index:02d}.md"
+    )
+    out = _REPO / rel
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    budget = result.get("budget") or {}
+    policy = result.get("epic_swot_policy") or {}
+    auto_turn = result.get("auto_turn") or {}
+    content = "\n".join(
+        [
+            "# Post-Mortem Council Report - Auto Turn Closeout",
+            "",
+            f"- generated_at_utc: {ts_part}",
+            f"- auto_turn_index: {auto_turn_index}",
+            f"- auto_turn_threshold: {auto_turn_threshold}",
+            f"- invoked_by: {result.get('invoked_by', '')}",
+            "",
+            "## Outcome",
+            f"- budget_decision: {budget.get('decision', '')}",
+            f"- epic_policy_allow_create: {policy.get('allow_create', False)}",
+            f"- epic_policy_confidence: {policy.get('confidence_score', 0.0)}",
+            f"- epic_policy_reason: {policy.get('decision_reason', '')}",
+            f"- harvest_mode: {auto_turn.get('harvest_mode', 'none')}",
+            f"- auto_start_ok: {result.get('auto_start_ok', False)}",
+            "",
+            "## Artifacts",
+            f"- closeout_telemetry_latest: {result.get('closeout_telemetry_path', '')}",
+            f"- closeout_telemetry_history: {result.get('closeout_telemetry_history_path', '')}",
+            "",
+            "## Notes",
+            "- Generated automatically because auto-turn threshold was reached.",
+            "- Run harvest/session compaction and review governance recommendations next cycle.",
+            "",
+        ]
+    )
+    out.write_text(content, encoding="utf-8")
+    return rel.as_posix()
+
+
 def git_snapshot() -> dict[str, Any]:
     snap: dict[str, Any] = {}
     for key, args in [
@@ -737,7 +909,19 @@ def main() -> int:
         default=True,
         help="After closeout, trigger successor spawn attempt and pre-session boot",
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        "--auto-turn-index",
+        type=int,
+        default=_env_int("CHROMATIC_AUTO_TURN_INDEX", 0),
+        help="Current autonomous turn count in the active cycle",
+    )
+    parser.add_argument(
+        "--auto-turn-threshold",
+        type=int,
+        default=_env_int("CHROMATIC_AUTO_TURN_THRESHOLD", 5),
+        help="Turn threshold that triggers auto post-mortem + session-end harvest",
+    )
+    args = parser.parse_args(_sanitize_argv(sys.argv[1:]))
 
     source = args.invoked_by
     if source == "claude":
@@ -788,7 +972,19 @@ def main() -> int:
             "decision_reason": "not evaluated",
         },
         "auto_start_ok": False,
+        "auto_turn": {
+            "index": max(0, args.auto_turn_index),
+            "threshold": max(1, args.auto_turn_threshold),
+            "triggered_closeout": False,
+            "harvest_mode": "none",
+            "post_mortem_path": "",
+        },
     }
+
+    auto_turn_index = max(0, args.auto_turn_index)
+    auto_turn_threshold = max(1, args.auto_turn_threshold)
+    auto_turn_triggered = auto_turn_index >= auto_turn_threshold
+    result["auto_turn"]["triggered_closeout"] = auto_turn_triggered
 
     if args.dry_run:
         packet = build_transfer_packet(
@@ -861,11 +1057,27 @@ def main() -> int:
                 result["epic_swot"]["parent_update"] = {"ok": False}
                 _apply_epic_swot_aliases(result, result.get("epic_swot"))
 
+    harvest_mode = "none"
     if args.harvest:
-        _run(
-            [sys.executable, str(_REPO / "scripts" / "harvest_rigs.py"), "--execute"],
-            timeout=180,
-        )
+        harvest_mode = "full"
+    elif auto_turn_triggered:
+        harvest_mode = "session_end"
+    result["auto_turn"]["harvest_mode"] = harvest_mode
+    if harvest_mode != "none":
+        harvest_cmd = [
+            sys.executable,
+            str(_REPO / "scripts" / "harvest_rigs.py"),
+            "--execute",
+        ]
+        if harvest_mode == "session_end":
+            harvest_cmd.append("--session-end")
+        harvest_code, harvest_out = _run(harvest_cmd, timeout=180)
+        result["harvest"] = {
+            "mode": harvest_mode,
+            "exit": harvest_code,
+            "ok": harvest_code == 0,
+            "output": harvest_out[:2000],
+        }
 
     if args.wiki_dry_run:
         _run(
@@ -963,6 +1175,14 @@ def main() -> int:
     telemetry_paths = _write_closeout_telemetry_snapshot(result)
     result["closeout_telemetry_path"] = telemetry_paths["latest"]
     result["closeout_telemetry_history_path"] = telemetry_paths["history"]
+
+    if auto_turn_triggered:
+        post_mortem_path = _write_auto_turn_post_mortem(
+            result,
+            auto_turn_index=auto_turn_index,
+            auto_turn_threshold=auto_turn_threshold,
+        )
+        result["auto_turn"]["post_mortem_path"] = post_mortem_path
 
     print(json.dumps(result, indent=2))
     return 0
