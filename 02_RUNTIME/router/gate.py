@@ -95,6 +95,77 @@ def _has_tool_use(haystack: str) -> bool:
     return bool(re.search(TOOL_USE_PATTERN, haystack, re.IGNORECASE))
 
 
+# ── codegraph impact fan-out (bead chromatic-harness-v2-gy7x) ────────────────
+# Turn a task prompt into a real blast-radius count via codegraph, fed to the
+# complexity classifier as evidence. Env-gated OFF by default to protect the
+# PreToolUse hot path; fully fail-open (any error/timeout → None → keyword path).
+IMPACT_ENABLED = os.environ.get("ROUTER_CODEGRAPH_IMPACT", "false").lower() == "true"
+IMPACT_TIMEOUT = float(os.environ.get("ROUTER_CODEGRAPH_IMPACT_TIMEOUT", "3"))
+_FILE_REF = r"[\w./\\-]+\.(?:py|ts|tsx|js|jsx|yaml|yml|json|md|sh|ps1)"
+
+
+def _extract_file_refs(text: str) -> list[str]:
+    """Extract repo-relative file references that actually exist on disk."""
+    import re
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for raw in re.findall(_FILE_REF, text or ""):
+        ref = raw.strip("`\"'()[],")
+        norm = ref.replace("\\", "/")
+        if norm in seen:
+            continue
+        if (_REPO / norm).is_file():
+            seen.add(norm)
+            out.append(norm)
+    return out
+
+
+def _count_impacted(stdout: str) -> int:
+    """Count distinct path-like lines in codegraph affected/impact output."""
+    paths = {
+        ln.strip()
+        for ln in (stdout or "").splitlines()
+        if ln.strip() and ("/" in ln or "\\" in ln or "." in ln)
+    }
+    return len(paths)
+
+
+def _default_impact_runner(files: list[str]) -> str:
+    import subprocess
+
+    proc = subprocess.run(
+        ["codegraph", "impact", "--stdin"],
+        cwd=str(_REPO),
+        input="\n".join(files),
+        capture_output=True,
+        text=True,
+        timeout=IMPACT_TIMEOUT,
+        check=False,
+    )
+    return proc.stdout or ""
+
+
+def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
+    """Real codegraph blast radius for files the task references, else None.
+
+    None means "no evidence" — the classifier then uses its keyword path
+    unchanged. Gated by ROUTER_CODEGRAPH_IMPACT; never raises.
+    """
+    if not IMPACT_ENABLED:
+        return None
+    try:
+        refs = _extract_file_refs(f"{description}\n{prompt}")
+        if not refs:
+            return None
+        run = runner or _default_impact_runner
+        count = _count_impacted(run(refs))
+        # Fan-out is at least the referenced files themselves.
+        return max(count, len(refs))
+    except Exception:
+        return None
+
+
 def _context_gate_advisory(description: str, prompt: str, complexity_level: str) -> str:
     """Append CRG resource-filtering note to PreToolUse advisory."""
     try:
@@ -129,9 +200,7 @@ def _context_gate_advisory(description: str, prompt: str, complexity_level: str)
         )
         result = ContextGate().check(req, complexity_level=complexity_level)
         if not result.ok:
-            return (
-                f" | CRG BLOCKED ({result.estimated_context_tokens} tok budget)"
-            )
+            return f" | CRG BLOCKED ({result.estimated_context_tokens} tok budget)"
         handoff_hint = ""
         handoff_path = _REPO / ".agents" / "handoffs" / "latest.json"
         if handoff_path.is_file():
@@ -177,7 +246,9 @@ def main() -> None:
     context = ContextDetector().detect()
     selector = ProviderSelector()
 
-    complexity = classifier.classify(description, prompt)
+    complexity = classifier.classify(
+        description, prompt, impact_fan_out=_impact_fan_out(description, prompt)
+    )
     selection = selector.select(complexity, context)
 
     ranked: list[Any] = selection.ranked_choices
