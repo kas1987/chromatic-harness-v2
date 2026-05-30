@@ -45,11 +45,23 @@ def _parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     return meta, body
 
 
+_CATEGORICAL_CONFIDENCE = {"high": 0.9, "medium": 0.6, "low": 0.3}
+
+
 def _confidence(meta: dict[str, str]) -> float:
-    try:
-        return float(meta.get("confidence", "0"))
-    except ValueError:
+    raw = meta.get("confidence", "0")
+    if raw is None:
         return 0.0
+    key = str(raw).strip().lower()
+    if key in _CATEGORICAL_CONFIDENCE:
+        return _CATEGORICAL_CONFIDENCE[key]
+    try:
+        val = float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+    if val > 1.0:
+        val = val / 100.0
+    return max(0.0, min(1.0, val))
 
 
 def _slug(name: str) -> str:
