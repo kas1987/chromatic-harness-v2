@@ -20,6 +20,8 @@ htmlcov/
 # Intake / workflow / WS runtime logs (local only)
 .tmp_ingest/
 .tmp_pre_session_pack/
+.agents/context/*.json
+.agents/context/BOOT_CONTEXT.md
 
 07_LOGS_AND_AUDIT/intake_queue.jsonl
 07_LOGS_AND_AUDIT/intake_cycle/*.jsonl
