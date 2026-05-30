@@ -6,10 +6,104 @@ caps:
   daily_usd: 25.0
   monthly_usd: 400.0
 
+# Separate budget channels for editor/runtime surfaces.
+# These are intentionally independent from global caps so each surface can be
+# monitored and tuned with its own forecast/risk envelope.
+channel_caps:
+  vscode:
+    daily_usd: 10.0
+    weekly_usd: 40.0
+    monthly_usd: 160.0
+  cursor:
+    daily_usd: 10.0
+    weekly_usd: 40.0
+    monthly_usd: 160.0
+  claude_code:
+    daily_usd: 5.0
+    weekly_usd: 20.0
+    monthly_usd: 80.0
+  codex:
+    daily_usd: 5.0
+    weekly_usd: 20.0
+    monthly_usd: 80.0
+  cli:
+    daily_usd: 5.0
+    weekly_usd: 20.0
+    monthly_usd: 80.0
+  other:
+    daily_usd: 5.0
+    weekly_usd: 20.0
+    monthly_usd: 80.0
+
 thresholds:
   spawn_min_daily_remaining_pct: 15
   spawn_min_monthly_remaining_pct: 10
   handoff_only_below_session_pct: 80
+
+# Deterministic weekly utilization targeting for budget optimization.
+# The chosen target is computed from default and lowered by rule penalties,
+# then clamped to [min, max].
+optimization:
+  weekly_target_utilization_pct_default: 90
+  weekly_target_utilization_pct_min: 70
+  weekly_target_utilization_pct_max: 95
+  lower_target_when_unknown_usage_warning_pct: 10
+  lower_target_when_risk_red_pct: 5
+  lower_target_when_risk_yellow_pct: 2
+
+# Per-provider billing-axis flags (TOKEN_ECONOMY_SPEC §2 three-axis chart of accounts).
+# axis P = prepaid weekly Claude quota (primary setpoint), D = dollar-billed API
+# (hard ceiling via caps above), F = free local (quota-neutral, tracked for offload).
+# Prepaid providers are booked against the weekly % target, NOT the USD ledger.
+provider_billing:
+  native_claude:
+    axis: P
+    type: native
+    prepaid: true
+    cost_per_token_usd: 0.0
+  claude_api:
+    axis: D
+    type: cloud
+    prepaid: false
+  gemini:
+    axis: D
+    type: cloud
+    prepaid: false
+  openai:
+    axis: D
+    type: cloud
+    prepaid: false
+  openrouter:
+    axis: D
+    type: cloud
+    prepaid: false
+  together:
+    axis: D
+    type: cloud
+    prepaid: false
+  ollama:
+    axis: F
+    type: local
+    prepaid: false
+    cost_per_token_usd: 0.0
+  lmstudio:
+    axis: F
+    type: local
+    prepaid: false
+    cost_per_token_usd: 0.0
+
+# Quota reset binding: anchor weekly (axis P) accounting to the prepaid plan's
+# unified 7-day reset window rather than a fixed calendar week. The reset_at value
+# is sourced at runtime from the anthropic-ratelimit-unified-7d-reset header
+# captured into quota_state.json (TOKEN_ECONOMY_SPEC §4). Reuses the existing
+# optimization.weekly_target_utilization_pct_default (90) as the axis-P setpoint.
+quota_reset_binding:
+  axis: P
+  window: unified-7d
+  source: quota_state.json
+  reset_header: anthropic-ratelimit-unified-7d-reset
+  anchor_weekly_accounting_to_reset: true
+  target_utilization_pct_ref: optimization.weekly_target_utilization_pct_default
 
 # Estimated cost reserved for one successor spawn (subtracted before spawn decision)
 successor_reserve_usd: 2.0
