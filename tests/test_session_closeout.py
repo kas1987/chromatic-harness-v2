@@ -961,11 +961,99 @@ def test_main_auto_turn_threshold_triggers_post_mortem_and_session_end_harvest(
     payload = json.loads(stdout.getvalue())
     assert payload["auto_turn"]["triggered_closeout"] is True
     assert payload["auto_turn"]["harvest_mode"] == "session_end"
+    assert payload["auto_turn"]["artifact_kind"] == "post_mortem"
     assert payload["auto_turn"]["post_mortem_path"]
     assert (tmp_path / payload["auto_turn"]["post_mortem_path"]).is_file()
+    assert payload["auto_turn"]["observation_log_path"]
+    assert (tmp_path / payload["auto_turn"]["observation_log_path"]).is_file()
 
     harvest_call = next(
         call for call in run_calls if "harvest_rigs.py" in " ".join(str(x) for x in call)
     )
     assert "--execute" in harvest_call
     assert "--session-end" in harvest_call
+
+
+def test_main_auto_turn_uses_checkpoint_when_tasks_open(tmp_path: Path, monkeypatch):
+    sys.path.insert(0, str(_REPO / "scripts"))
+    import session_closeout  # noqa: E402
+
+    class FakeSnapshot:
+        session_est_tokens = 0
+        decision = "review"
+        reasons: list[str] = []
+
+        def to_budget_dict(self):
+            return {"decision": self.decision}
+
+    class FakeLedger:
+        def __init__(self, _repo):
+            pass
+
+        def snapshot(self):
+            return FakeSnapshot()
+
+    def fake_run(cmd, *, timeout=120, cwd=None):
+        return 0, "1\t2\tfoo.py" if cmd[:4] == ["git", "diff", "--numstat", "HEAD"] else "ok"
+
+    monkeypatch.setattr(session_closeout, "_REPO", tmp_path)
+    monkeypatch.setattr(session_closeout, "BudgetLedger", FakeLedger)
+    monkeypatch.setattr(session_closeout, "git_snapshot", lambda: {"status_short": [" M foo.py"]})
+    monkeypatch.setattr(session_closeout, "beads_ready_ids", lambda: ["bead-1"])
+    monkeypatch.setattr(
+        session_closeout,
+        "write_handoff",
+        lambda *args, **kwargs: tmp_path / "12_HANDOFFS" / "handoff.md",
+    )
+    monkeypatch.setattr(
+        session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True}
+    )
+    monkeypatch.setattr(
+        session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None
+    )
+    monkeypatch.setattr(session_closeout, "log_activity", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        session_closeout,
+        "_write_closeout_telemetry_snapshot",
+        lambda result: {"latest": "latest.json", "history": "history.json"},
+    )
+    monkeypatch.setattr(session_closeout, "_run", fake_run)
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "session_closeout.py",
+            "--invoked-by",
+            "cli",
+            "--no-epic-swot",
+            "--no-auto-start-next-agent",
+            "--auto-turn-index",
+            "5",
+            "--auto-turn-threshold",
+            "5",
+        ],
+    )
+
+    stdout = StringIO()
+    with redirect_stdout(stdout):
+        rc = session_closeout.main()
+
+    assert rc == 0
+    payload = json.loads(stdout.getvalue())
+    assert payload["auto_turn"]["triggered_closeout"] is True
+    assert payload["auto_turn"]["artifact_kind"] == "checkpoint"
+
+    artifact = tmp_path / payload["auto_turn"]["post_mortem_path"]
+    assert artifact.is_file()
+    text = artifact.read_text(encoding="utf-8")
+    assert "Learning Checkpoint Report - Auto Turn Closeout" in text
+    assert "artifact_kind: checkpoint" in text
+
+    obs = tmp_path / payload["auto_turn"]["observation_log_path"]
+    assert obs.is_file()
+    line = obs.read_text(encoding="utf-8").strip().splitlines()[-1]
+    row = json.loads(line)
+    assert row["artifact_kind"] == "checkpoint"
+    assert row["loc_insertions"] == 1
+    assert row["loc_deletions"] == 2

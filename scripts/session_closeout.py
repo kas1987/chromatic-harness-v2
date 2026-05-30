@@ -216,6 +216,123 @@ def _load_epic_swot_policy_config(path: Path | None = None) -> dict[str, Any]:
     return _sanitize_epic_swot_policy_config(merge(config, user), defaults)
 
 
+def _default_auto_turn_policy_config() -> dict[str, Any]:
+    return {
+        "required_signal_hits": 2,
+        "signals": {
+            "loc_delta_total": {"enabled": True, "min": 400},
+            "policy_event_count": {"enabled": True, "min": 200},
+            "open_tasks": {"enabled": True, "min": 4},
+            "changed_files": {"enabled": True, "min": 12},
+        },
+    }
+
+
+def _sanitize_auto_turn_policy_config(
+    config: dict[str, Any], defaults: dict[str, Any]
+) -> dict[str, Any]:
+    sanitized = dict(defaults)
+    sanitized["required_signal_hits"] = _coerce_int(
+        config.get("required_signal_hits"),
+        int(defaults.get("required_signal_hits") or 2),
+        minimum=1,
+    )
+    default_signals = defaults.get("signals") or {}
+    user_signals = config.get("signals") or {}
+    signals: dict[str, Any] = {}
+    for key, bucket_defaults in default_signals.items():
+        bucket = dict(bucket_defaults)
+        bucket.update(user_signals.get(key) or {})
+        signals[key] = {
+            "enabled": bool(bucket.get("enabled", True)),
+            "min": _coerce_int(bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0),
+        }
+    sanitized["signals"] = signals
+    return sanitized
+
+
+def _load_auto_turn_policy_config(path: Path | None = None) -> dict[str, Any]:
+    defaults = _default_auto_turn_policy_config()
+    cfg_path = path or (_REPO / "config" / "auto_turn_policy.json")
+    if not cfg_path.is_file():
+        return defaults
+    try:
+        user = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return defaults
+    if not isinstance(user, dict):
+        return defaults
+    return _sanitize_auto_turn_policy_config(user, defaults)
+
+
+def _evaluate_auto_turn_trigger(
+    *,
+    auto_turn_index: int,
+    auto_turn_threshold: int,
+    beads_ready_count: int,
+    git_changed_files: int,
+    policy_signals: dict[str, Any],
+    policy_config: dict[str, Any],
+) -> dict[str, Any]:
+    loc_delta = _git_loc_delta()
+    loc_total = int(loc_delta.get("insertions") or 0) + int(loc_delta.get("deletions") or 0)
+    signal_cfg = policy_config.get("signals") or {}
+
+    def cfg(key: str) -> dict[str, Any]:
+        bucket = signal_cfg.get(key) or {}
+        return {
+            "enabled": bool(bucket.get("enabled", True)),
+            "min": int(bucket.get("min") or 0),
+        }
+
+    evaluations: dict[str, Any] = {
+        "turn_threshold": {
+            "enabled": True,
+            "min": auto_turn_threshold,
+            "value": auto_turn_index,
+            "hit": auto_turn_index >= auto_turn_threshold,
+        }
+    }
+    metric_values = {
+        "loc_delta_total": loc_total,
+        "policy_event_count": int(policy_signals.get("event_count") or 0),
+        "open_tasks": max(beads_ready_count, int(policy_signals.get("open_tasks") or 0)),
+        "changed_files": max(git_changed_files, int(policy_signals.get("changed_files") or 0)),
+    }
+    hit_count = 0
+    hit_signals: list[str] = []
+    for key, value in metric_values.items():
+        bucket = cfg(key)
+        hit = bool(bucket["enabled"] and value >= bucket["min"])
+        evaluations[key] = {
+            "enabled": bucket["enabled"],
+            "min": bucket["min"],
+            "value": value,
+            "hit": hit,
+        }
+        if hit:
+            hit_count += 1
+            hit_signals.append(key)
+
+    required_hits = _coerce_int(
+        policy_config.get("required_signal_hits"),
+        2,
+        minimum=1,
+    )
+    turn_hit = bool(evaluations["turn_threshold"]["hit"])
+    multi_signal_hit = hit_count >= required_hits
+    return {
+        "triggered": turn_hit or multi_signal_hit,
+        "turn_threshold_hit": turn_hit,
+        "multi_signal_hit": multi_signal_hit,
+        "required_signal_hits": required_hits,
+        "signal_hit_count": hit_count,
+        "hit_signals": hit_signals,
+        "signals": evaluations,
+        "loc_delta": loc_delta,
+    }
+
+
 def _run(
     cmd: list[str], *, timeout: int = 120, cwd: Path | None = None
 ) -> tuple[int, str]:
@@ -761,14 +878,50 @@ def _post_mortem_stamp(now: datetime | None = None) -> tuple[str, str]:
     return ts.strftime("%Y-%m-%d"), ts.strftime("%Y%m%dT%H%M%SZ")
 
 
+def _git_loc_delta() -> dict[str, int]:
+    code, out = _run(["git", "diff", "--numstat", "HEAD"], timeout=30)
+    if code != 0 or not out:
+        return {"insertions": 0, "deletions": 0, "changed_files": 0}
+    insertions = 0
+    deletions = 0
+    changed_files = 0
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) < 3:
+            continue
+        add_raw, del_raw = parts[0], parts[1]
+        if add_raw.isdigit():
+            insertions += int(add_raw)
+        if del_raw.isdigit():
+            deletions += int(del_raw)
+        changed_files += 1
+    return {
+        "insertions": insertions,
+        "deletions": deletions,
+        "changed_files": changed_files,
+    }
+
+
+def _select_auto_turn_artifact_kind(result: dict[str, Any]) -> str:
+    # Open beads imply in-flight work, so emit a learning checkpoint rather than a full post-mortem.
+    if result.get("beads_ready"):
+        return "checkpoint"
+    return "post_mortem"
+
+
 def _write_auto_turn_post_mortem(
-    result: dict[str, Any], *, auto_turn_index: int, auto_turn_threshold: int
+    result: dict[str, Any],
+    *,
+    auto_turn_index: int,
+    auto_turn_threshold: int,
+    artifact_kind: str = "post_mortem",
 ) -> str:
     date_part, ts_part = _post_mortem_stamp()
+    safe_kind = "checkpoint" if artifact_kind == "checkpoint" else "post_mortem"
     rel = (
         Path(".agents")
         / "council"
-        / f"{date_part}-post-mortem-auto-turn-{auto_turn_index:02d}.md"
+        / f"{date_part}-{safe_kind.replace('_', '-')}-auto-turn-{auto_turn_index:02d}.md"
     )
     out = _REPO / rel
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -776,13 +929,29 @@ def _write_auto_turn_post_mortem(
     budget = result.get("budget") or {}
     policy = result.get("epic_swot_policy") or {}
     auto_turn = result.get("auto_turn") or {}
+    title = (
+        "# Learning Checkpoint Report - Auto Turn Closeout"
+        if safe_kind == "checkpoint"
+        else "# Post-Mortem Council Report - Auto Turn Closeout"
+    )
+    notes = (
+        "- Generated automatically to capture learnings mid-stream because auto-turn threshold was reached.",
+        "- Continue active tasks, then run a final post-mortem at completion/session boundary.",
+    )
+    if safe_kind == "post_mortem":
+        notes = (
+            "- Generated automatically because auto-turn threshold was reached.",
+            "- Run harvest/session compaction and review governance recommendations next cycle.",
+        )
+
     content = "\n".join(
         [
-            "# Post-Mortem Council Report - Auto Turn Closeout",
+            title,
             "",
             f"- generated_at_utc: {ts_part}",
             f"- auto_turn_index: {auto_turn_index}",
             f"- auto_turn_threshold: {auto_turn_threshold}",
+            f"- artifact_kind: {safe_kind}",
             f"- invoked_by: {result.get('invoked_by', '')}",
             "",
             "## Outcome",
@@ -798,12 +967,51 @@ def _write_auto_turn_post_mortem(
             f"- closeout_telemetry_history: {result.get('closeout_telemetry_history_path', '')}",
             "",
             "## Notes",
-            "- Generated automatically because auto-turn threshold was reached.",
-            "- Run harvest/session compaction and review governance recommendations next cycle.",
+            notes[0],
+            notes[1],
             "",
         ]
     )
     out.write_text(content, encoding="utf-8")
+    return rel.as_posix()
+
+
+def _append_auto_turn_observation(result: dict[str, Any]) -> str:
+    rel = Path(".agents") / "handoffs" / "auto_turn_observations.jsonl"
+    out = _REPO / rel
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    auto_turn = result.get("auto_turn") or {}
+    policy = result.get("epic_swot_policy") or {}
+    policy_signals = policy.get("signals") or {}
+    loc_delta = (auto_turn.get("trigger_eval") or {}).get("loc_delta") or _git_loc_delta()
+    observation = {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "invoked_by": result.get("invoked_by") or "",
+        "auto_turn_index": int(auto_turn.get("index") or 0),
+        "auto_turn_threshold": int(auto_turn.get("threshold") or 0),
+        "triggered_closeout": bool(auto_turn.get("triggered_closeout")),
+        "turn_threshold_hit": bool((auto_turn.get("trigger_eval") or {}).get("turn_threshold_hit")),
+        "multi_signal_hit": bool((auto_turn.get("trigger_eval") or {}).get("multi_signal_hit")),
+        "required_signal_hits": int((auto_turn.get("trigger_eval") or {}).get("required_signal_hits") or 0),
+        "signal_hit_count": int((auto_turn.get("trigger_eval") or {}).get("signal_hit_count") or 0),
+        "hit_signals": list((auto_turn.get("trigger_eval") or {}).get("hit_signals") or []),
+        "artifact_kind": auto_turn.get("artifact_kind") or "none",
+        "harvest_mode": auto_turn.get("harvest_mode") or "none",
+        "beads_ready_count": len(result.get("beads_ready") or []),
+        "git_changed_files": len((result.get("git") or {}).get("status_short") or []),
+        "loc_insertions": int(loc_delta.get("insertions") or 0),
+        "loc_deletions": int(loc_delta.get("deletions") or 0),
+        "policy_confidence": float(policy.get("confidence_score") or 0.0),
+        "policy_threshold": float(policy.get("threshold") or 0.0),
+        "policy_allow_create": bool(policy.get("allow_create", False)),
+        "policy_open_tasks": int(policy_signals.get("open_tasks") or 0),
+        "policy_changed_files": int(policy_signals.get("changed_files") or 0),
+        "policy_event_count": int(policy_signals.get("event_count") or 0),
+        "policy_budget_decision": str(policy_signals.get("budget_decision") or ""),
+    }
+    with out.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(observation) + "\n")
     return rel.as_posix()
 
 
@@ -977,14 +1185,24 @@ def main() -> int:
             "threshold": max(1, args.auto_turn_threshold),
             "triggered_closeout": False,
             "harvest_mode": "none",
+            "artifact_kind": "none",
             "post_mortem_path": "",
+            "observation_log_path": "",
+            "trigger_eval": {
+                "triggered": False,
+                "turn_threshold_hit": False,
+                "multi_signal_hit": False,
+                "required_signal_hits": 0,
+                "signal_hit_count": 0,
+                "hit_signals": [],
+                "signals": {},
+                "loc_delta": {"insertions": 0, "deletions": 0, "changed_files": 0},
+            },
         },
     }
 
     auto_turn_index = max(0, args.auto_turn_index)
     auto_turn_threshold = max(1, args.auto_turn_threshold)
-    auto_turn_triggered = auto_turn_index >= auto_turn_threshold
-    result["auto_turn"]["triggered_closeout"] = auto_turn_triggered
 
     if args.dry_run:
         packet = build_transfer_packet(
@@ -1057,6 +1275,19 @@ def main() -> int:
                 result["epic_swot"]["parent_update"] = {"ok": False}
                 _apply_epic_swot_aliases(result, result.get("epic_swot"))
 
+    auto_turn_policy = _load_auto_turn_policy_config()
+    trigger_eval = _evaluate_auto_turn_trigger(
+        auto_turn_index=auto_turn_index,
+        auto_turn_threshold=auto_turn_threshold,
+        beads_ready_count=len(beads),
+        git_changed_files=len((git or {}).get("status_short") or []),
+        policy_signals=(result.get("epic_swot_policy") or {}).get("signals") or {},
+        policy_config=auto_turn_policy,
+    )
+    result["auto_turn"]["trigger_eval"] = trigger_eval
+    auto_turn_triggered = bool(trigger_eval.get("triggered"))
+    result["auto_turn"]["triggered_closeout"] = auto_turn_triggered
+
     harvest_mode = "none"
     if args.harvest:
         harvest_mode = "full"
@@ -1080,6 +1311,14 @@ def main() -> int:
         }
 
     if args.wiki_dry_run:
+        _run(
+            [
+                sys.executable,
+                str(_REPO / "scripts" / "analyze_auto_turn_observations.py"),
+                "--write",
+            ],
+            timeout=120,
+        )
         _run(
             [
                 sys.executable,
@@ -1177,12 +1416,17 @@ def main() -> int:
     result["closeout_telemetry_history_path"] = telemetry_paths["history"]
 
     if auto_turn_triggered:
+        artifact_kind = _select_auto_turn_artifact_kind(result)
+        result["auto_turn"]["artifact_kind"] = artifact_kind
         post_mortem_path = _write_auto_turn_post_mortem(
             result,
             auto_turn_index=auto_turn_index,
             auto_turn_threshold=auto_turn_threshold,
+            artifact_kind=artifact_kind,
         )
         result["auto_turn"]["post_mortem_path"] = post_mortem_path
+
+    result["auto_turn"]["observation_log_path"] = _append_auto_turn_observation(result)
 
     print(json.dumps(result, indent=2))
     return 0
