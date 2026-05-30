@@ -8,8 +8,29 @@ from pathlib import Path
 from typing import Any
 
 
-def default_log_path(repo_root: Path) -> Path:
+def runtime_log_path(repo_root: Path) -> Path:
+    """Local append target (gitignored at repo root)."""
     return repo_root / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
+
+
+def seed_log_path(repo_root: Path) -> Path:
+    return repo_root / "docs" / "workflows" / "WORKFLOW_RUN_LOG.seed.jsonl"
+
+
+def default_log_path(repo_root: Path) -> Path:
+    """Write path: always runtime log."""
+    return runtime_log_path(repo_root)
+
+
+def read_log_path(repo_root: Path) -> Path:
+    """Read path: runtime if present, else tracked seed."""
+    runtime = runtime_log_path(repo_root)
+    if runtime.is_file():
+        return runtime
+    seed = seed_log_path(repo_root)
+    if seed.is_file():
+        return seed
+    return runtime
 
 
 def append_run_log(repo_root: Path, entry: dict[str, Any]) -> Path:
@@ -42,6 +63,8 @@ def _mirror_two_log(repo_root: Path, record: dict[str, Any]) -> None:
 
 def read_last_entry(repo_root: Path) -> dict[str, Any] | None:
     path = default_log_path(repo_root)
+    if not path.is_file():
+        path = read_log_path(repo_root)
     if not path.is_file():
         return None
     lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()]

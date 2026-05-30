@@ -1,6 +1,8 @@
+import { BUDGET, assertBudgetAllows, compressToHandoff } from './_budget.js'
+
 export const meta = {
   name: 'close-issue',
-  description: 'Lite close: implement one bead → pytest → push. (~30-80k tok)',
+  description: 'Lite close: implement one bead → pytest → push. Budget-gated.',
   phases: [
     { title: 'Implement', detail: 'Single beads issue' },
     { title: 'Verify', detail: 'pytest subset or full' },
@@ -15,17 +17,32 @@ const issueId = args
 if (!issueId) throw new Error('Usage: /close-issue <bead-id>')
 
 phase('Implement')
+assertBudgetAllows({
+  phase: 'implement',
+  estimatedTokens: 30000,
+  estimatedToolCalls: 8,
+  estimatedFilesRead: 10,
+  touchesTranscripts: false,
+})
 const impl = await agent(
   `Run /implement for beads issue ${issueId} only.
 Claim, implement, commit. Output: commit hash + files changed (list, not full diff).`,
   { label: `implement:${issueId}`, phase: 'Implement' }
 )
+const implPacket = compressToHandoff('implement', { summary: impl })
 
 phase('Verify')
+assertBudgetAllows({
+  phase: 'verify',
+  estimatedTokens: 18000,
+  estimatedToolCalls: 4,
+  estimatedFilesRead: 6,
+  touchesTranscripts: false,
+})
 const tests = await agent(
   `Run: python -m pytest tests/ -q --tb=line
 Issue context: ${issueId}
-Prior summary: ${impl.slice(0, 1500)}`,
+Prior handoff: ${JSON.stringify(implPacket)}`,
   { label: 'verify', phase: 'Verify' }
 )
 
@@ -45,8 +62,15 @@ if (ship.pipeline && ship.pipeline.commit) {
     `python scripts/workflow_git.py ship --execute --confidence 90 --verifier approve --tests-passed --bead-id ${issueId} --message "feat: close ${issueId}"`
   )
 } else {
+  assertBudgetAllows({
+    phase: 'ship-blocked',
+    estimatedTokens: 8000,
+    estimatedToolCalls: 2,
+    estimatedFilesRead: 2,
+    touchesTranscripts: false,
+  })
   await agent(
-    `Confidence gate blocked auto-ship. Summary: ${shipPlan.slice(0, 1200)}
+    `Confidence gate blocked auto-ship. Summary packet: ${JSON.stringify(compressToHandoff('ship', { summary: shipPlan }))}
 Human must review and push manually if appropriate.`,
     { label: 'ship-blocked', phase: 'Ship' }
   )
@@ -54,4 +78,4 @@ Human must review and push manually if appropriate.`,
 
 await bash(`bd close ${issueId}`)
 
-return { issueId, status: 'closed-lite' }
+return { issueId, status: 'closed-lite', verify: compressToHandoff('verify', { summary: tests }), budget: BUDGET.class }

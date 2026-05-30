@@ -143,12 +143,31 @@ def check_permission(
             return PermissionResult(False, f"risk {risk_level} blocks auto-merge", True)
         return PermissionResult(True, "merge allowed")
 
+    if action == Action.PUSH_MERGE_DEPLOY:
+        push = check_permission(
+            Action.GIT_PUSH,
+            confidence=confidence,
+            risk_level=risk_level,
+            verifier_approved=verifier_approved,
+            tests_passed=tests_passed,
+            ci_passed=ci_passed,
+        )
+        if push.allowed:
+            return PermissionResult(
+                True,
+                "push/merge/deploy allowed via git pipeline (see GIT_AUTONOMY_POLICY)",
+            )
+        return PermissionResult(
+            False,
+            "push/merge/deploy blocked: use workflow_git.py plan or escalate to human",
+            True,
+        )
+
     if action in (
         Action.DELETE,
         Action.RENAME_MAJOR,
         Action.CHANGE_CONFIG,
         Action.INSTALL_PACKAGES,
-        Action.PUSH_MERGE_DEPLOY,
     ):
         return PermissionResult(False, f"{action.value} requires human approval", True)
 

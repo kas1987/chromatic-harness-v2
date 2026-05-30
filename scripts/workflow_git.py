@@ -112,6 +112,18 @@ def cmd_ship(args: argparse.Namespace) -> int:
 
     failed = any(s.get("status") == "failed" for s in out.get("steps", []))
     if failed:
+        try:
+            from activity.git_triage import triage_git_failure  # noqa: E402
+
+            triage_git_failure(
+                REPO,
+                steps=out.get("steps", []),
+                bead_id=args.bead_id or ctx.get("bead_id", ""),
+                lane="human",
+                stderr=out.get("error", ""),
+            )
+        except OSError:
+            pass
         return 1
     if not any(
         out["pipeline"].get(k)

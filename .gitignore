@@ -17,6 +17,9 @@ htmlcov/
 # Router observability logs
 07_LOGS_AND_AUDIT/routing/*.jsonl
 
+# Workflow run log (local append; seed tracked)
+docs/workflows/WORKFLOW_RUN_LOG.jsonl
+
 # Intake / workflow / WS runtime logs (local only)
 .tmp_ingest/
 .tmp_pre_session_pack/

@@ -58,6 +58,7 @@ def enqueue_graph_subtasks(
                 "priority": "P2",
                 "type": "task",
                 "tier": 2,
+                "lane": "agent",
                 "bead_id": bead_id,
                 "context": {
                     "self_heal": True,

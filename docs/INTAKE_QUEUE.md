@@ -34,6 +34,19 @@ Producer append (status=queued)
 | `bead_dispatch` | Bead already exists (`bead_id`) | Classify tier, optional claim, hand to router |
 | `follow_up` | Discovered work from closure magnet | `bd create` (+ optional claim) |
 
+## Dual backlog lanes
+
+Optional field `lane`: `agent` | `human` | `review`. When `auto_intake` creates beads:
+
+- Title prefix: `[agent]`, `[human]`, or `[review]`
+- Description first line: `lane: <lane>`
+
+Git triage and activity logging enqueue `follow_up` entries with `lane` and `context.failure_class` / `context.digest_path`. See [ACTIVITY_LOG_AND_DUAL_BACKLOG.md](governance/ACTIVITY_LOG_AND_DUAL_BACKLOG.md).
+
+```bash
+python scripts/bd_ready_by_lane.py --lane human
+```
+
 ## Drain queue
 
 ```bash

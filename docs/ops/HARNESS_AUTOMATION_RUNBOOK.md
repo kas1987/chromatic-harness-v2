@@ -66,6 +66,19 @@ bd ready
 python scripts/workflow_go.py "GO VERIFY"
 ```
 
+### Self-heal closed loop (optional)
+
+When `workflow_go GO` returns `decision: self_heal` (confidence 50–69), drain intake and re-score:
+
+```bash
+python scripts/workflow_self_heal_cycle.py
+python scripts/workflow_self_heal_cycle.py --limit 20
+```
+
+`/go` in Claude Code runs this cycle automatically. After `run_intake_cycle.ps1`, run the self-heal cycle if the last workflow log shows `self_heal`.
+
+Full governance gates: `python scripts/validate_governance_stack.py`
+
 ---
 
 ## Stack smoke (bounded timeouts)

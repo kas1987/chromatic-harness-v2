@@ -32,3 +32,21 @@ def test_heavy_archive_not_synced_by_script():
     ps1 = (REPO / "scripts/sync_claude_workflows.ps1").read_text(encoding="utf-8")
     assert "HEAVY" in ps1
     assert "*.js" in ps1
+
+
+def test_budget_module_exists():
+    assert (WF / "_budget.js").is_file()
+
+
+def test_lite_workflows_use_budget_contract():
+    for name in ("ship.js", "go.js", "qa.js", "close-issue.js"):
+        text = (WF / name).read_text(encoding="utf-8")
+        assert "assertBudgetAllows" in text, f"{name} missing assertBudgetAllows"
+        assert "compressToHandoff" in text or "_budget.js" in text, f"{name} missing handoff compression"
+        assert "discovery.slice(4000)" not in text, f"{name} still uses unbounded discovery.slice"
+
+
+def test_go_self_heal_cycle_wired():
+    text = (WF / "go.js").read_text(encoding="utf-8")
+    assert "workflow_self_heal_cycle.py" in text
+    assert "self_heal" in text

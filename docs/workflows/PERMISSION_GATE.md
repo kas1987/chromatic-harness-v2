@@ -18,11 +18,13 @@ Prevent dynamic workflows from turning into unbounded or unsafe autonomy.
 | Touch secrets/env/auth | Halt |
 | Run tests | Allowed |
 | Install packages | Human approval required |
-| Push/merge/deploy | Human approval required unless confidence gates pass (see below) |
+| Push/merge/deploy | Tiered autonomy via git pipeline (see [GIT_AUTONOMY_POLICY.md](../governance/GIT_AUTONOMY_POLICY.md)) |
 
-## Confidence-gated git (auto commit / review / merge)
+## Confidence-gated git (tiered agent autonomy)
 
-When `workflow_git.py` is used, push/merge may proceed **without manual approval** only if all gates pass:
+Agents in this repo **may** commit/push/merge **without a separate user “please commit”** when `workflow_git.py plan` shows the step allowed. Default path: plan (dry-run) → `ship --execute`.
+
+Push/merge proceed automatically only if all gates pass:
 
 | Step | Min confidence | Other gates |
 |------|---------------|-------------|

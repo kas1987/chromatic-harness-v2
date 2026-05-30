@@ -1,0 +1,31 @@
+---
+description: Tiered git commit/push/merge autonomy for Chromatic Harness agents
+alwaysApply: true
+---
+
+# Git autonomy (this repo)
+
+For **chromatic-harness-v2**, git actions are **not** “wait for the user to say commit/push” when confidence and risk gates pass.
+
+## Before any commit or push
+
+1. Run `python scripts/workflow_git.py plan` (or `plan --from-log` after GO VERIFY).
+2. Only run `ship --execute` if the plan JSON allows the step.
+3. Record confidence score, risk level, and verifier outcome in the run log or bead note.
+
+## You MAY autonomously
+
+| Action | When |
+|--------|------|
+| **Commit** | confidence ≥ 75, risk ≠ critical, verifier approve, staged changes |
+| **Push** | commit gate + confidence ≥ 88, tests passed, risk not high/critical |
+| **Open PR** | push gate + confidence ≥ 85, not on main/master |
+| **Merge** | PR gate + confidence ≥ 95, CI green, risk **low** only |
+
+## You MUST NOT
+
+- Force-push `main`/`master` or run destructive git without explicit user request
+- Commit secrets (`.env`, keys) or skip hooks unless user explicitly asks
+- Push/merge when plan says false — leave handoff for human instead
+
+Full policy: [docs/governance/GIT_AUTONOMY_POLICY.md](docs/governance/GIT_AUTONOMY_POLICY.md)

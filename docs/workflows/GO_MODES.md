@@ -36,4 +36,6 @@ When confidence is **50–69** and the CMP decision is `replan` or `review` (`pl
 3. Enqueue scout + build follow-ups on `07_LOGS_AND_AUDIT/intake_queue.jsonl` (`source: workflow`).
 4. Return `decision: self_heal` with `next: auto_intake && workflow_go GO`.
 
-Below 50: `halt`. At 70+: normal execute/plan routing. Manual `GO DEEP` still works anytime.
+Below 50: `halt`. **70–74:** `plan_only` without auto self-heal (manual `GO DEEP`). **75+:** `execute` when permission gate passes. Manual `GO DEEP` still works anytime.
+
+Canonical matrix: [docs/governance/CONFIDENCE_GATE.md](../governance/CONFIDENCE_GATE.md). Closed loop: `python scripts/workflow_self_heal_cycle.py`.

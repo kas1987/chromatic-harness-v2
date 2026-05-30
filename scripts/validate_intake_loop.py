@@ -149,6 +149,40 @@ def check_two_log_audit(verbose: bool) -> list[str]:
     return errors
 
 
+def check_self_heal_dry_run(verbose: bool) -> list[str]:
+    """Monkeypatch intake queue; assert self-heal enqueues workflow follow-ups."""
+    errors: list[str] = []
+    import intake.queue as queue_mod
+    from workflows.confidence import score_task
+    from workflows.self_heal import apply_self_heal
+
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        queue_path = repo / "07_LOGS_AND_AUDIT" / "intake_queue.jsonl"
+        queue_path.parent.mkdir(parents=True, exist_ok=True)
+        monkeypatch_queue = queue_mod.default_queue_path
+        queue_mod.default_queue_path = lambda _root=None: queue_path  # type: ignore[assignment]
+
+        record = score_task(objective_clarity=62, scope_clarity=62, evidence_quality=62)
+        bead = {"bead_id": "chromatic-harness-v2-validate-sh", "title": "Self-heal validate"}
+        try:
+            result = apply_self_heal(repo, bead, record)
+        finally:
+            queue_mod.default_queue_path = monkeypatch_queue
+
+        if not result.get("self_heal"):
+            errors.append("apply_self_heal did not set self_heal flag")
+        if not (repo / ".agents" / "workflows" / "active-graph.json").is_file():
+            errors.append("self-heal dry-run missing active-graph.json")
+        lines = queue_path.read_text(encoding="utf-8").strip().splitlines()
+        if len(lines) < 2:
+            errors.append("self-heal expected >=2 intake lines")
+        if not any('"source": "workflow"' in ln for ln in lines):
+            errors.append("self-heal intake missing workflow source")
+    _log("self-heal dry-run ok", verbose=verbose)
+    return errors
+
+
 def check_auto_intake_cli(verbose: bool) -> list[str]:
     errors: list[str] = []
     proc = subprocess.run(
@@ -175,6 +209,7 @@ def main() -> int:
 
     all_errors: list[str] = []
     all_errors.extend(check_schema_and_decompose(args.verbose))
+    all_errors.extend(check_self_heal_dry_run(args.verbose))
     all_errors.extend(check_two_log_audit(args.verbose))
     all_errors.extend(check_auto_intake_cli(args.verbose))
     all_errors.extend(check_workflow_go_audit(args.verbose))
