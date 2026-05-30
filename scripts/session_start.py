@@ -23,6 +23,8 @@ _HEALTH = _REPO / "07_LOGS_AND_AUDIT" / "harness_health" / "latest.json"
 _BUDGET_FORECAST = _REPO / "scripts" / "budget_forecast_snapshot.py"
 _FORECAST_LATEST = _REPO / "07_LOGS_AND_AUDIT" / "budget" / "forecast_latest.json"
 _TOKEN_GOV_LATEST = _REPO / "07_LOGS_AND_AUDIT" / "token_governance" / "latest.json"
+_BASELINE_AUDIT = _REPO / "scripts" / "baseline_audit.py"
+_GH_CI_HEALTH = _REPO / "scripts" / "gh_ci_health.py"
 
 
 def _lean_boot() -> bool:
@@ -162,6 +164,109 @@ def _inject_ready_queue(limit: int = 8) -> None:
     print()
 
 
+def _surface_for_runtime() -> str:
+    """Map CHROMATIC_RUNTIME to a baseline surface name (default 'cli')."""
+    mapping = {
+        "claude": "cli",
+        "cli": "cli",
+        "cursor": "cursor",
+        "vscode": "vscode",
+        "app": "app",
+    }
+    runtime = os.environ.get("CHROMATIC_RUNTIME", "claude").strip().lower()
+    return mapping.get(runtime, "cli")
+
+
+def _call_audit_surface(surface: str) -> dict:
+    """Load baseline_audit by path and call audit_surface. Raises on failure (caller catches)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("baseline_audit", _BASELINE_AUDIT)
+    if spec is None or spec.loader is None:
+        raise ImportError("baseline_audit spec not found")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    return mod.audit_surface(surface)  # type: ignore[no-any-return]
+
+
+def _call_ci_health() -> dict:
+    """Load gh_ci_health by path and call check_ci_health. Raises on failure (caller catches)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("gh_ci_health", _GH_CI_HEALTH)
+    if spec is None or spec.loader is None:
+        raise ImportError("gh_ci_health spec not found")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    return mod.check_ci_health()  # type: ignore[no-any-return]
+
+
+def _emit_baseline_alerts() -> None:
+    """Print per-surface baseline drift (warn/over metrics only). Fail-open."""
+    try:
+        surface = _surface_for_runtime()
+        result = _call_audit_surface(surface)
+        overall = result.get("overall", "unknown")
+        metrics = result.get("metrics", {})
+
+        print("--- Baseline drift ---")
+        if overall == "ok":
+            print(f"  [ok] {surface} surface within baseline")
+        else:
+            drifted = [
+                (name, m)
+                for name, m in metrics.items()
+                if m.get("status") in ("warn", "over")
+            ]
+            if not drifted:
+                print(f"  [ok] {surface} surface within baseline")
+            else:
+                for name, m in drifted:
+                    status = m.get("status", "?")
+                    value = m.get("value", "?")
+                    advice = m.get("advice", "")
+                    line = f"  [{status}] {name}={value}"
+                    if advice:
+                        line += f" — {advice}"
+                    print(line)
+        print()
+    except Exception as exc:  # noqa: BLE001
+        print(f"  baseline drift: skipped ({exc})", file=sys.stderr)
+
+
+def _emit_ci_health() -> None:
+    """Print a one-line CI-health warning when status != ok. Fail-open, non-blocking."""
+    try:
+        import threading
+
+        result: dict = {}
+        exc_holder: list[Exception] = []
+
+        def _probe() -> None:
+            try:
+                result.update(_call_ci_health())
+            except Exception as e:  # noqa: BLE001
+                exc_holder.append(e)
+
+        t = threading.Thread(target=_probe, daemon=True)
+        t.start()
+        t.join(timeout=8)
+
+        if exc_holder or not result:
+            return  # offline / timeout — skip silently
+
+        status = result.get("status", "ok")
+        if status == "ok":
+            return
+
+        reasons = result.get("reasons", [])
+        reason_str = "; ".join(reasons) if reasons else "CI health degraded"
+        print(f"  [CI-{status.upper()}] {reason_str}")
+        print()
+    except Exception:  # noqa: BLE001
+        pass  # never break session start
+
+
 def main() -> int:
     print("=== Chromatic Harness session start ===\n")
 
@@ -274,6 +379,9 @@ def main() -> int:
         except (subprocess.SubprocessError, OSError):
             print("  budget_forecast: unavailable")
     print()
+
+    _emit_baseline_alerts()
+    _emit_ci_health()
 
     try:
         subprocess.run(["bd", "prime"], cwd=_REPO, check=False)
