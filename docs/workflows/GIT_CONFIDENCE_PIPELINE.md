@@ -25,9 +25,14 @@ python scripts/workflow_git.py ship --from-log --verifier approve --run-tests
 # Execute allowed steps
 python scripts/workflow_git.py ship --execute --confidence 95 --verifier approve --tests-passed
 
+# GitKraken backend (auto uses gk when installed)
+python scripts/workflow_git.py plan --confidence 90 --verifier approve --tests-passed --backend auto
+
 # Full GO ship (runs tests + dry-run ship)
 python scripts/workflow_go.py "GO SHIP"
 ```
+
+**Git backend:** `--backend auto|gk|git` (default `auto`). See [GITKRAKEN_INTEGRATION.md](GITKRAKEN_INTEGRATION.md).
 
 ## Safety
 

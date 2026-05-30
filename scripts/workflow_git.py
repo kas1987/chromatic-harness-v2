@@ -22,7 +22,15 @@ if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
 from workflows.git_automation import run_git_pipeline  # noqa: E402
+from workflows.git_runner import VALID_BACKENDS, active_git_backend  # noqa: E402
 from workflows.run_log import append_run_log, read_last_entry  # noqa: E402
+
+
+def _apply_git_backend(backend: str | None) -> None:
+    if backend:
+        import os
+
+        os.environ["CHROMATIC_GIT_BACKEND"] = backend
 
 
 def _run_pytest(repo: Path) -> bool:
@@ -54,6 +62,7 @@ def _context_from_log() -> dict:
 
 
 def cmd_plan(args: argparse.Namespace) -> int:
+    _apply_git_backend(args.backend)
     ctx = _context_from_log() if args.from_log else {}
     confidence = args.confidence if args.confidence is not None else ctx.get("confidence", 0)
     risk = args.risk or ctx.get("risk_level", "low")
@@ -72,12 +81,14 @@ def cmd_plan(args: argparse.Namespace) -> int:
         for_plan=True,
     )
     out = result.to_dict()
+    out["git_backend_active"] = active_git_backend()
     append_run_log(REPO, {"mode": "GIT PLAN", **out})
     print(json.dumps(out, indent=2))
     return 0
 
 
 def cmd_ship(args: argparse.Namespace) -> int:
+    _apply_git_backend(args.backend)
     ctx = _context_from_log() if args.from_log else {}
     confidence = args.confidence if args.confidence is not None else ctx.get("confidence", 0)
     if confidence <= 0:
@@ -107,6 +118,7 @@ def cmd_ship(args: argparse.Namespace) -> int:
         dry_run=dry_run,
     )
     out = result.to_dict()
+    out["git_backend_active"] = active_git_backend()
     append_run_log(REPO, {"mode": "GIT SHIP", "execute": args.execute, **out})
     print(json.dumps(out, indent=2))
 
@@ -146,6 +158,12 @@ def main() -> int:
     common.add_argument("--bead-id", default="")
     common.add_argument("--message", default="")
     common.add_argument("--from-log", action="store_true")
+    common.add_argument(
+        "--backend",
+        choices=sorted(VALID_BACKENDS),
+        default="auto",
+        help="Git backend: auto (gk if installed), gk, or git (default: auto)",
+    )
 
     sub.add_parser("plan", parents=[common], help="Dry-run pipeline decision only")
     ship = sub.add_parser("ship", parents=[common], help="Run allowed git steps")

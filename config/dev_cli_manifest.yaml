@@ -1,0 +1,104 @@
+# Chromatic workspace CLI manifest — Windows install targets.
+# Regenerate audit: powershell -File scripts/install_dev_clis.ps1 -AuditOnly
+
+version: 1
+
+repos:
+  chromatic-harness-v2:
+    path: "~/chromatic-harness-v2"
+    python_requirements: requirements.txt
+    pip_extras: [ruff, mypy, bandit]
+  fusion-computer:
+    path: "~/fusion-computer"
+    python_requirements: requirements.txt
+    pip_extras: [pytest, ruff, mypy, bandit]
+  chromatic-design-studios:
+    path: "~/chromatic-design-studios"
+    npm_install: true
+  chromatic-stack:
+    path: "~/chromatic-stack"
+    notes: "Docker Desktop + Ollama; no extra CLIs beyond core"
+  claude-config:
+    path: "~/.claude"
+    notes: "Uses core git/python/gh/bd"
+
+# required: block session if missing after install attempt
+# recommended: install when missing; warn only
+tools:
+  - name: git
+    required: true
+    test: git
+    winget: Git.Git
+
+  - name: gh
+    required: true
+    test: gh
+    winget: GitHub.cli
+    note: "Run `gh auth login` once for PR automation"
+
+  - name: bd
+    required: true
+    test: bd
+    beads_install: true
+    note: "Beads CLI; includes embedded Dolt via `bd dolt`"
+
+  - name: gk
+    required: recommended
+    test: gk
+    winget: GitKraken.cli
+    note: "GitKraken CLI for git automations + MCP (`gk mcp`); run `gk auth login`"
+
+  - name: python
+    required: true
+    test: python
+    winget: Python.Python.3.12
+    note: "Harness automation expects 3.12+"
+
+  - name: docker
+    required: recommended
+    test: docker
+    winget: Docker.DockerDesktop
+    note: "chromatic-stack + harness deployment smoke"
+
+  - name: ollama
+    required: recommended
+    test: ollama
+    winget: Ollama.Ollama
+    note: "chromatic-stack local models"
+
+  - name: node
+    required: recommended
+    test: node
+    winget: OpenJS.NodeJS.LTS
+    note: "chromatic-design-studios (Node 20+)"
+
+  - name: npm
+    required: recommended
+    test: npm
+    note: "Bundled with Node.js LTS"
+
+  - name: jq
+    required: recommended
+    test: jq
+    winget: jqlang.jq
+
+  - name: rg
+    required: recommended
+    test: rg
+    winget: BurntSushi.ripgrep.MSVC
+
+  - name: bun
+    required: optional
+    test: bun
+    winget: Oven-sh.Bun
+
+  - name: pnpm
+    required: optional
+    test: pnpm
+    npm_global: pnpm
+
+  - name: go
+    required: optional
+    test: go
+    winget: GoLang.Go
+    note: "Alternate bd install path"
