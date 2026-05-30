@@ -21,6 +21,8 @@ EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 def _run(cmd: list[str], *, cwd: Path | None = None, timeout: int = 30) -> subprocess.CompletedProcess[str]:
     if cmd and cmd[0] == "bd":
         cmd = resolve_bd_argv() + cmd[1:]
+        if cmd[0] == "bd":
+            return subprocess.CompletedProcess(cmd, returncode=127, stdout="", stderr="bd not on PATH")
     return subprocess.run(
         cmd,
         cwd=cwd or REPO,
