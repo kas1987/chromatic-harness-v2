@@ -362,6 +362,84 @@ def main() -> None:
     sys.exit(0)
 
 
+def _audit_router_decision(entry: dict) -> None:
+    """Write router.decision span + execution entry to two-log audit. Fail-open."""
+    try:
+        sys.path.insert(0, str(_RUNTIME_DIR))
+        from audit.two_log import TwoLogAudit  # type: ignore[import]
+
+        audit = TwoLogAudit(_REPO)
+        audit.append_execution(
+            {
+                "event_type": "router.decision",
+                "agent_role": "router",
+                "task_id": "routing",
+                "provider": entry.get("provider", ""),
+                "model": entry.get("target_model", ""),
+                "tier": entry.get("tier"),
+                "blocked": entry.get("blocked", False),
+                "c_level": entry.get("c_level", ""),
+                "speed_mode": entry.get("speed_mode", ""),
+                "reason": entry.get("reason", ""),
+                "description": entry.get("description", "")[:120],
+            }
+        )
+        audit.append_trace_span(
+            {
+                "name": "router.decision",
+                "kind": "INTERNAL",
+                "status": "OK",
+                "duration_ms": 0,
+                "attributes": {
+                    "gen_ai.operation.name": "routing",
+                    "gen_ai.request.model": entry.get("target_model", ""),
+                    "router.provider": entry.get("provider", ""),
+                    "router.tier": entry.get("tier"),
+                    "router.blocked": entry.get("blocked", False),
+                    "router.c_level": entry.get("c_level", ""),
+                    "router.speed_mode": entry.get("speed_mode", ""),
+                    "router.reason": entry.get("reason", ""),
+                },
+            }
+        )
+        # Mirror to daily routing log (07_LOGS_AND_AUDIT/routing/routes_YYYYMMDD.jsonl)
+        today = datetime.now(timezone.utc).strftime("%Y%m%d")
+        routing_log = _REPO / "07_LOGS_AND_AUDIT" / "routing" / f"routes_{today}.jsonl"
+        routing_log.parent.mkdir(parents=True, exist_ok=True)
+        import uuid as _uuid
+
+        with routing_log.open("a", encoding="utf-8") as _fh:
+            _fh.write(
+                json.dumps(
+                    {
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "request_id": _uuid.uuid4().hex[:16],
+                        "task_id": entry.get("description", "")[:80],
+                        "task_type": entry.get("subagent_type", ""),
+                        "caller": "gate.py",
+                        "repo": str(_REPO),
+                        "selected_provider": entry.get("provider", ""),
+                        "selected_model": entry.get("target_model", ""),
+                        "route_reason": entry.get("reason", ""),
+                        "fallback_used": False,
+                        "confidence_score": entry.get("c_confidence"),
+                        "privacy_class": None,
+                        "cost_estimate_usd": None,
+                        "latency_ms": None,
+                        "result_status": "blocked"
+                        if entry.get("blocked")
+                        else "allowed",
+                        "warnings": [],
+                        "errors": [],
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
+    except Exception:  # noqa: BLE001 — telemetry never blocks routing
+        pass
+
+
 def _emit_advisory(advisory: str) -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     sys.stdout.write(
