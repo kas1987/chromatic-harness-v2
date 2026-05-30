@@ -23,6 +23,7 @@ _HEALTH = _REPO / "07_LOGS_AND_AUDIT" / "harness_health" / "latest.json"
 _BUDGET_FORECAST = _REPO / "scripts" / "budget_forecast_snapshot.py"
 _INJECTED_LEARNINGS = _REPO / ".agents" / "context" / "injected_learnings.json"
 _LEARNING_USAGE_LOG = _REPO / ".agents" / "metrics" / "learning_usage.jsonl"
+_BOOT_CONTEXT = _REPO / ".agents" / "context" / "BOOT_CONTEXT.md"
 
 
 def _emit_boot(cold_start: bool) -> None:
@@ -117,6 +118,11 @@ def main() -> int:
         print()
     else:
         print("(No handoff file — fresh session)\n")
+
+    if _BOOT_CONTEXT.is_file():
+        print("--- Boot context (.agents/context/BOOT_CONTEXT.md) ---")
+        print(_BOOT_CONTEXT.read_text(encoding="utf-8").rstrip())
+        print()
 
     print("--- Automated pre-session boot ---")
     runtime = os.environ.get("CHROMATIC_RUNTIME", "claude")
