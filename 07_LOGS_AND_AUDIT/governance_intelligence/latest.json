@@ -1,10 +1,10 @@
 {
   "ok": true,
-  "generated_at": "2026-05-30T07:53:40.041786+00:00",
+  "generated_at": "2026-05-30T08:49:57.498016+00:00",
   "sources": {
     "workflow_log": {
       "path": "docs/workflows/WORKFLOW_RUN_LOG.jsonl",
-      "rows": 2888
+      "rows": 4897
     },
     "agent_log": {
       "path": "07_LOGS_AND_AUDIT/AGENT_RUN_LOG.jsonl",
@@ -16,113 +16,122 @@
         "07_LOGS_AND_AUDIT/routing/routes_20260529.jsonl",
         "07_LOGS_AND_AUDIT/routing/routes_20260528.jsonl"
       ],
-      "rows": 1399
+      "rows": 1420
     }
   },
-  "event_count": 4288,
+  "event_count": 6318,
   "canonical_coverage": {
     "timestamp": {
-      "present": 4286,
+      "present": 6316,
       "missing": 2,
-      "coverage": 0.9995
+      "coverage": 0.9997
     },
     "task_id": {
-      "present": 3394,
+      "present": 5424,
       "missing": 894,
-      "coverage": 0.7915
+      "coverage": 0.8585
     },
     "provider": {
-      "present": 2629,
-      "missing": 1659,
-      "coverage": 0.6131
+      "present": 4654,
+      "missing": 1664,
+      "coverage": 0.7366
     },
     "model": {
-      "present": 2630,
-      "missing": 1658,
-      "coverage": 0.6133
+      "present": 4655,
+      "missing": 1663,
+      "coverage": 0.7368
     },
     "task_type": {
-      "present": 4286,
+      "present": 6316,
       "missing": 2,
-      "coverage": 0.9995
+      "coverage": 0.9997
     },
     "execution_status": {
-      "present": 2614,
-      "missing": 1674,
-      "coverage": 0.6096
+      "present": 5606,
+      "missing": 712,
+      "coverage": 0.8873
     },
     "confidence_score": {
-      "present": 2205,
-      "missing": 2083,
-      "coverage": 0.5142
+      "present": 2788,
+      "missing": 3530,
+      "coverage": 0.4413
     },
     "cost_usd": {
-      "present": 0,
-      "missing": 4288,
-      "coverage": 0.0
+      "present": 2113,
+      "missing": 4205,
+      "coverage": 0.3344
     },
     "latency_ms": {
-      "present": 1399,
-      "missing": 2889,
-      "coverage": 0.3263
+      "present": 2113,
+      "missing": 4205,
+      "coverage": 0.3344
     }
   },
   "provider_model_rollup": {
     "providers": {
       "unknown": {
-        "events": 3330,
-        "success": 1146,
-        "fail": 497,
-        "unknown": 1687,
+        "events": 4594,
+        "success": 1655,
+        "fail": 502,
+        "unknown": 2437,
         "models": {
           "kimi": 1,
-          "unknown": 3329
+          "unknown": 4593
         }
       },
       "gemini": {
-        "events": 20,
-        "success": 20,
+        "events": 98,
+        "success": 98,
         "fail": 0,
         "unknown": 0,
         "models": {
-          "gemini-2.5-pro": 20
+          "gemini-2.5-pro": 98
+        }
+      },
+      "workflow": {
+        "events": 672,
+        "success": 224,
+        "fail": 24,
+        "unknown": 424,
+        "models": {
+          "workflow:default": 672
         }
       },
       "mock": {
-        "events": 605,
+        "events": 615,
         "success": 0,
         "fail": 0,
-        "unknown": 605,
+        "unknown": 615,
         "models": {
-          "mock-v1": 605
+          "mock-v1": 615
         }
       },
       "native_claude": {
-        "events": 302,
+        "events": 306,
         "success": 0,
-        "fail": 300,
+        "fail": 304,
         "unknown": 2,
         "models": {
-          "native_claude:default": 302
+          "native_claude:default": 306
         }
       },
       "openai": {
-        "events": 13,
+        "events": 14,
         "success": 0,
         "fail": 4,
-        "unknown": 9,
+        "unknown": 10,
         "models": {
-          "stub-ok": 4,
+          "stub-ok": 5,
           "openai:default": 9
         }
       },
       "lmstudio": {
-        "events": 1,
+        "events": 2,
         "success": 0,
         "fail": 0,
-        "unknown": 1,
+        "unknown": 2,
         "models": {
-          "local-stub": 1
+          "local-stub": 2
         }
       },
       "openrouter": {
@@ -182,57 +191,66 @@
         }
       },
       "unknown": {
-        "events": 3329,
-        "success": 1146,
-        "fail": 497,
-        "unknown": 1686,
+        "events": 4593,
+        "success": 1655,
+        "fail": 502,
+        "unknown": 2436,
         "providers": {
-          "unknown": 3329
+          "unknown": 4593
         }
       },
       "gemini-2.5-pro": {
-        "events": 20,
-        "success": 20,
+        "events": 98,
+        "success": 98,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 20
+          "gemini": 98
+        }
+      },
+      "workflow:default": {
+        "events": 672,
+        "success": 224,
+        "fail": 24,
+        "unknown": 424,
+        "providers": {
+          "workflow": 672
         }
       },
       "mock-v1": {
-        "events": 605,
+        "events": 615,
         "success": 0,
         "fail": 0,
-        "unknown": 605,
+        "unknown": 615,
         "providers": {
-          "mock": 605
+          "mock": 615
         }
       },
       "native_claude:default": {
-        "events": 302,
+        "events": 306,
         "success": 0,
-        "fail": 300,
+        "fail": 304,
         "unknown": 2,
         "providers": {
-          "native_claude": 302
+          "native_claude": 306
         }
       },
       "stub-ok": {
-        "events": 4,
+        "events": 5,
         "success": 0,
         "fail": 0,
-        "unknown": 4,
+        "unknown": 5,
         "providers": {
-          "openai": 4
+          "openai": 5
         }
       },
       "local-stub": {
-        "events": 1,
+        "events": 2,
         "success": 0,
         "fail": 0,
-        "unknown": 1,
+        "unknown": 2,
         "providers": {
-          "lmstudio": 1
+          "lmstudio": 2
         }
       },
       "openrouter:default": {
@@ -292,114 +310,176 @@
     }
   },
   "task_rollup": {
-    "task_count": 26,
+    "task_count": 29,
     "top_tasks": [
       {
         "task_id": "unknown",
-        "events": 1190,
-        "success": 709,
-        "fail": 0,
-        "unknown": 481,
+        "events": 2533,
+        "success": 1442,
+        "fail": 24,
+        "unknown": 1067,
         "providers": {
-          "unknown": 1190
+          "unknown": 2074,
+          "workflow": 459
         },
         "models": {
-          "unknown": 1190
+          "unknown": 2074,
+          "workflow:default": 459
         },
         "task_types": {
-          "LOCK METRIC": 575,
-          "GO VERIFY": 481,
-          "SESSION BOOT": 133,
-          "PHASE COMPLETE": 1
+          "LOCK METRIC": 1145,
+          "GO VERIFY": 1042,
+          "SESSION BOOT": 293,
+          "PHASE COMPLETE": 3,
+          "GO SWARM": 24,
+          "GIT PLAN": 25,
+          "PARALLEL MAINTENANCE": 1
         },
-        "latest_timestamp": "2026-05-30T07:53:39.806261+00:00",
-        "latest_status": "ok"
+        "latest_timestamp": "2026-05-30T08:49:53.846778+00:00",
+        "latest_status": "logged"
       },
       {
         "task_id": "chromatic-harness-v2-bpq",
-        "events": 753,
+        "events": 810,
         "success": 0,
         "fail": 0,
-        "unknown": 753,
+        "unknown": 810,
         "providers": {
-          "unknown": 753
+          "unknown": 810
         },
         "models": {
-          "unknown": 753
+          "unknown": 810
         },
         "task_types": {
-          "GO AUDIT": 748,
+          "GO AUDIT": 805,
           "GO DEEP": 5
         },
-        "latest_timestamp": "2026-05-30T07:53:38.252459+00:00",
-        "latest_status": null
+        "latest_timestamp": "2026-05-30T08:00:02.307301+00:00",
+        "latest_status": "unknown"
       },
       {
         "task_id": "t-test",
-        "events": 655,
+        "events": 662,
         "success": 0,
-        "fail": 440,
-        "unknown": 215,
+        "fail": 445,
+        "unknown": 217,
         "providers": {
-          "native_claude": 251,
-          "unknown": 186,
-          "mock": 215,
+          "native_claude": 254,
+          "unknown": 188,
+          "mock": 217,
           "ollama": 3
         },
         "models": {
-          "native_claude:default": 251,
-          "unknown": 186,
-          "mock-v1": 215,
+          "native_claude:default": 254,
+          "unknown": 188,
+          "mock-v1": 217,
           "ollama:default": 3
         },
         "task_types": {
-          "classification": 655
+          "classification": 662
         },
-        "latest_timestamp": "2026-05-30T06:40:26.131021+00:00",
+        "latest_timestamp": "2026-05-30T08:41:19.127907+00:00",
         "latest_status": "text"
       },
       {
         "task_id": "task-int",
-        "events": 432,
+        "events": 440,
         "success": 0,
-        "fail": 148,
-        "unknown": 284,
+        "fail": 150,
+        "unknown": 290,
         "providers": {
-          "mock": 284,
-          "unknown": 101,
-          "native_claude": 47
+          "mock": 290,
+          "unknown": 102,
+          "native_claude": 48
         },
         "models": {
-          "mock-v1": 284,
-          "unknown": 101,
-          "native_claude:default": 47
+          "mock-v1": 290,
+          "unknown": 102,
+          "native_claude:default": 48
         },
         "task_types": {
-          "coding": 378,
-          "personal_context": 54
+          "coding": 385,
+          "personal_context": 55
         },
-        "latest_timestamp": "2026-05-30T05:37:45.716423+00:00",
+        "latest_timestamp": "2026-05-30T08:40:32.216184+00:00",
         "latest_status": "error"
       },
       {
-        "task_id": "t-oh-test",
-        "events": 261,
+        "task_id": "chromatic-harness-v2-a25",
+        "events": 291,
         "success": 0,
-        "fail": 174,
-        "unknown": 87,
+        "fail": 0,
+        "unknown": 291,
         "providers": {
-          "mock": 87,
-          "unknown": 174
+          "unknown": 108,
+          "workflow": 183
         },
         "models": {
-          "mock-v1": 87,
-          "unknown": 174
+          "unknown": 108,
+          "workflow:default": 183
         },
         "task_types": {
-          "personal_context": 261
+          "GO AUDIT": 290,
+          "GO DEEP": 1
         },
-        "latest_timestamp": "2026-05-30T05:37:59.384907+00:00",
+        "latest_timestamp": "2026-05-30T08:47:07.613631+00:00",
+        "latest_status": "logged"
+      },
+      {
+        "task_id": "t-oh-test",
+        "events": 264,
+        "success": 0,
+        "fail": 176,
+        "unknown": 88,
+        "providers": {
+          "mock": 88,
+          "unknown": 176
+        },
+        "models": {
+          "mock-v1": 88,
+          "unknown": 176
+        },
+        "task_types": {
+          "personal_context": 264
+        },
+        "latest_timestamp": "2026-05-30T08:40:48.581022+00:00",
         "latest_status": "error"
+      },
+      {
+        "task_id": "chromatic-harness-v2-sq2",
+        "events": 128,
+        "success": 0,
+        "fail": 0,
+        "unknown": 128,
+        "providers": {
+          "unknown": 128
+        },
+        "models": {
+          "unknown": 128
+        },
+        "task_types": {
+          "GO AUDIT": 128
+        },
+        "latest_timestamp": "2026-05-30T08:08:24.409220+00:00",
+        "latest_status": "unknown"
+      },
+      {
+        "task_id": "chromatic-harness-v2-6cj",
+        "events": 103,
+        "success": 0,
+        "fail": 0,
+        "unknown": 103,
+        "providers": {
+          "unknown": 103
+        },
+        "models": {
+          "unknown": 103
+        },
+        "task_types": {
+          "GO AUDIT": 103
+        },
+        "latest_timestamp": "2026-05-30T08:15:55.088107+00:00",
+        "latest_status": "unknown"
       },
       {
         "task_id": "api",
@@ -433,39 +513,75 @@
         "latest_status": "text"
       },
       {
-        "task_id": "chromatic-harness-v2-sq2",
-        "events": 21,
-        "success": 0,
+        "task_id": "chromatic-harness-v2-4n4",
+        "events": 35,
+        "success": 35,
         "fail": 0,
-        "unknown": 21,
+        "unknown": 0,
         "providers": {
-          "unknown": 21
+          "gemini": 35
         },
         "models": {
-          "unknown": 21
+          "gemini-2.5-pro": 35
         },
         "task_types": {
-          "GO AUDIT": 21
+          "delegation_gate": 35
         },
-        "latest_timestamp": "2026-05-30T05:14:48.660396+00:00",
-        "latest_status": null
+        "latest_timestamp": "2026-05-30T08:49:57.179612+00:00",
+        "latest_status": "execute"
+      },
+      {
+        "task_id": "chromatic-harness-v2-c2n",
+        "events": 30,
+        "success": 0,
+        "fail": 0,
+        "unknown": 30,
+        "providers": {
+          "workflow": 30
+        },
+        "models": {
+          "workflow:default": 30
+        },
+        "task_types": {
+          "GO AUDIT": 30
+        },
+        "latest_timestamp": "2026-05-30T08:49:53.698282+00:00",
+        "latest_status": "logged"
+      },
+      {
+        "task_id": "chromatic-harness-v2-4n4-delegation-c1",
+        "events": 9,
+        "success": 9,
+        "fail": 0,
+        "unknown": 0,
+        "providers": {
+          "gemini": 9
+        },
+        "models": {
+          "gemini-2.5-pro": 9
+        },
+        "task_types": {
+          "delegation_gate": 9
+        },
+        "latest_timestamp": "2026-05-30T08:14:21.205131+00:00",
+        "latest_status": "execute"
       },
       {
         "task_id": "chromatic-harness-v2-lc1",
-        "events": 7,
+        "events": 8,
         "success": 0,
         "fail": 0,
-        "unknown": 7,
+        "unknown": 8,
         "providers": {
-          "mock": 7
+          "mock": 8
         },
         "models": {
-          "mock-v1": 7
+          "mock-v1": 8
         },
         "task_types": {
-          "coding": 7
+          "coding": 8
         },
-        "latest_timestamp": "2026-05-30T05:39:32.779273+00:00",
+        "latest_timestamp": "2026-05-30T08:40:06.735512+00:00",
         "latest_status": "text"
       },
       {
@@ -488,203 +604,112 @@
         "latest_status": "execute"
       },
       {
-        "task_id": "chromatic-harness-v2-lc3",
-        "events": 4,
-        "success": 0,
-        "fail": 0,
-        "unknown": 4,
-        "providers": {
-          "openai": 4
-        },
-        "models": {
-          "stub-ok": 4
-        },
-        "task_types": {
-          "coding": 4
-        },
-        "latest_timestamp": "2026-05-30T05:39:32.822805+00:00",
-        "latest_status": "text"
-      },
-      {
-        "task_id": "chromatic-harness-v2-dcm",
-        "events": 3,
-        "success": 1,
-        "fail": 0,
-        "unknown": 2,
-        "providers": {
-          "unknown": 3
-        },
-        "models": {
-          "unknown": 3
-        },
-        "task_types": {
-          "GO": 1,
-          "GO AUDIT": 2
-        },
-        "latest_timestamp": "2026-05-30T03:09:57.192450+00:00",
-        "latest_status": null
-      },
-      {
-        "task_id": "chromatic-harness-v2-4n4-delegation-c1",
-        "events": 3,
-        "success": 3,
-        "fail": 0,
-        "unknown": 0,
-        "providers": {
-          "gemini": 3
-        },
-        "models": {
-          "gemini-2.5-pro": 3
-        },
-        "task_types": {
-          "delegation_gate": 3
-        },
-        "latest_timestamp": "2026-05-30T07:49:10.795384+00:00",
-        "latest_status": "execute"
-      },
-      {
         "task_id": "chromatic-harness-v2-4n4-delegation-c2",
-        "events": 2,
-        "success": 2,
+        "events": 6,
+        "success": 6,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 2
+          "gemini": 6
         },
         "models": {
-          "gemini-2.5-pro": 2
+          "gemini-2.5-pro": 6
         },
         "task_types": {
-          "delegation_gate": 2
+          "delegation_gate": 6
         },
-        "latest_timestamp": "2026-05-30T07:49:46.707038+00:00",
+        "latest_timestamp": "2026-05-30T08:14:52.251678+00:00",
         "latest_status": "execute"
       },
       {
         "task_id": "chromatic-harness-v2-4n4-delegation-c3",
-        "events": 2,
-        "success": 2,
+        "events": 6,
+        "success": 6,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 2
+          "gemini": 6
         },
         "models": {
-          "gemini-2.5-pro": 2
+          "gemini-2.5-pro": 6
         },
         "task_types": {
-          "delegation_gate": 2
+          "delegation_gate": 6
         },
-        "latest_timestamp": "2026-05-30T07:50:20.874659+00:00",
+        "latest_timestamp": "2026-05-30T08:15:23.417528+00:00",
         "latest_status": "execute"
       },
       {
         "task_id": "chromatic-harness-v2-4n4-delegation-c4",
-        "events": 2,
-        "success": 2,
+        "events": 6,
+        "success": 6,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 2
+          "gemini": 6
         },
         "models": {
-          "gemini-2.5-pro": 2
+          "gemini-2.5-pro": 6
         },
         "task_types": {
-          "delegation_gate": 2
+          "delegation_gate": 6
         },
-        "latest_timestamp": "2026-05-30T07:50:51.057752+00:00",
+        "latest_timestamp": "2026-05-30T08:15:57.881290+00:00",
         "latest_status": "execute"
       },
       {
         "task_id": "chromatic-harness-v2-4n4-delegation-c5",
-        "events": 2,
-        "success": 2,
+        "events": 6,
+        "success": 6,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 2
+          "gemini": 6
         },
         "models": {
-          "gemini-2.5-pro": 2
+          "gemini-2.5-pro": 6
         },
         "task_types": {
-          "delegation_gate": 2
+          "delegation_gate": 6
         },
-        "latest_timestamp": "2026-05-30T07:51:27.654521+00:00",
+        "latest_timestamp": "2026-05-30T08:16:36.623539+00:00",
         "latest_status": "execute"
       },
       {
         "task_id": "chromatic-harness-v2-4n4-delegation-c6",
-        "events": 2,
-        "success": 2,
+        "events": 6,
+        "success": 6,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 2
+          "gemini": 6
         },
         "models": {
-          "gemini-2.5-pro": 2
+          "gemini-2.5-pro": 6
         },
         "task_types": {
-          "delegation_gate": 2
+          "delegation_gate": 6
         },
-        "latest_timestamp": "2026-05-30T07:52:04.221183+00:00",
+        "latest_timestamp": "2026-05-30T08:17:18.772686+00:00",
         "latest_status": "execute"
       },
       {
         "task_id": "chromatic-harness-v2-4n4-delegation-c7",
-        "events": 2,
-        "success": 2,
+        "events": 6,
+        "success": 6,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 2
+          "gemini": 6
         },
         "models": {
-          "gemini-2.5-pro": 2
+          "gemini-2.5-pro": 6
         },
         "task_types": {
-          "delegation_gate": 2
+          "delegation_gate": 6
         },
-        "latest_timestamp": "2026-05-30T07:52:40.003051+00:00",
+        "latest_timestamp": "2026-05-30T08:17:56.487742+00:00",
         "latest_status": "execute"
-      },
-      {
-        "task_id": "chromatic-harness-v2-4n4-delegation-c8",
-        "events": 2,
-        "success": 2,
-        "fail": 0,
-        "unknown": 0,
-        "providers": {
-          "gemini": 2
-        },
-        "models": {
-          "gemini-2.5-pro": 2
-        },
-        "task_types": {
-          "delegation_gate": 2
-        },
-        "latest_timestamp": "2026-05-30T07:53:16.647151+00:00",
-        "latest_status": "execute"
-      },
-      {
-        "task_id": "T-EXAMPLE",
-        "events": 1,
-        "success": 0,
-        "fail": 0,
-        "unknown": 1,
-        "providers": {
-          "unknown": 1
-        },
-        "models": {
-          "kimi": 1
-        },
-        "task_types": {
-          "unknown": 1
-        },
-        "latest_timestamp": null,
-        "latest_status": null
       }
     ]
   },
@@ -692,159 +717,159 @@
     "top_keys": [
       {
         "key": "timestamp",
-        "present": 4286,
-        "coverage": 0.9995
+        "present": 6316,
+        "coverage": 0.9997
       },
       {
         "key": "confidence_score",
-        "present": 3091,
-        "coverage": 0.7208
+        "present": 5121,
+        "coverage": 0.8105
       },
       {
         "key": "task_id",
-        "present": 3091,
-        "coverage": 0.7208
+        "present": 5121,
+        "coverage": 0.8105
       },
       {
         "key": "latency_ms",
-        "present": 3090,
-        "coverage": 0.7206
+        "present": 5120,
+        "coverage": 0.8104
       },
       {
         "key": "task_type",
-        "present": 3090,
-        "coverage": 0.7206
+        "present": 5120,
+        "coverage": 0.8104
       },
       {
         "key": "mode",
-        "present": 2867,
-        "coverage": 0.6686
+        "present": 4798,
+        "coverage": 0.7594
       },
       {
         "key": "model",
-        "present": 1692,
-        "coverage": 0.3946
+        "present": 3701,
+        "coverage": 0.5858
       },
       {
         "key": "cost_usd",
-        "present": 1691,
-        "coverage": 0.3944
+        "present": 3700,
+        "coverage": 0.5856
       },
       {
         "key": "execution_status",
-        "present": 1691,
-        "coverage": 0.3944
+        "present": 3700,
+        "coverage": 0.5856
       },
       {
         "key": "provider",
-        "present": 1691,
-        "coverage": 0.3944
-      },
-      {
-        "key": "caller",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "cost_estimate_usd",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "errors",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "fallback_used",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "privacy_class",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "repo",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "request_id",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "result_status",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "route_reason",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "selected_model",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "selected_provider",
-        "present": 1399,
-        "coverage": 0.3263
-      },
-      {
-        "key": "warnings",
-        "present": 1399,
-        "coverage": 0.3263
+        "present": 3700,
+        "coverage": 0.5856
       },
       {
         "key": "decision",
-        "present": 1214,
-        "coverage": 0.2831
+        "present": 2050,
+        "coverage": 0.3245
       },
       {
         "key": "event_type",
-        "present": 1180,
-        "coverage": 0.2752
+        "present": 1991,
+        "coverage": 0.3151
       },
       {
         "key": "bead_id",
-        "present": 1120,
-        "coverage": 0.2612
+        "present": 1949,
+        "coverage": 0.3085
       },
       {
         "key": "handoff",
-        "present": 1085,
-        "coverage": 0.253
+        "present": 1835,
+        "coverage": 0.2904
       },
       {
         "key": "lock_owner",
-        "present": 930,
-        "coverage": 0.2169
+        "present": 1500,
+        "coverage": 0.2374
       },
       {
         "key": "lock_attempts",
-        "present": 929,
-        "coverage": 0.2167
+        "present": 1499,
+        "coverage": 0.2373
       },
       {
         "key": "lock_name",
-        "present": 929,
-        "coverage": 0.2167
+        "present": 1499,
+        "coverage": 0.2373
       },
       {
         "key": "lock_wait_ms",
-        "present": 929,
-        "coverage": 0.2167
+        "present": 1499,
+        "coverage": 0.2373
+      },
+      {
+        "key": "active_graph",
+        "present": 1441,
+        "coverage": 0.2281
+      },
+      {
+        "key": "bd_ready_excerpt",
+        "present": 1441,
+        "coverage": 0.2281
+      },
+      {
+        "key": "caller",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "cost_estimate_usd",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "errors",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "fallback_used",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "privacy_class",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "repo",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "request_id",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "result_status",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "route_reason",
+        "present": 1420,
+        "coverage": 0.2248
+      },
+      {
+        "key": "selected_model",
+        "present": 1420,
+        "coverage": 0.2248
       }
     ]
   },
   "recommendations": [
-    "Improve telemetry: confidence_score coverage is 51%. Standardize this field in run-log schema.",
-    "Critical telemetry gap: cost_usd coverage is 0%. Add mandatory logging in adapter + workflow emitters.",
+    "Improve telemetry: confidence_score coverage is 44%. Standardize this field in run-log schema.",
+    "Improve telemetry: cost_usd coverage is 33%. Standardize this field in run-log schema.",
     "Improve telemetry: latency_ms coverage is 33%. Standardize this field in run-log schema."
   ]
 }

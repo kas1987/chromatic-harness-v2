@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -23,7 +24,22 @@ _SKIP_ID_PREFIXES = ("example-",)
 
 
 def _normalize_title(title: str) -> str:
-    return " ".join((title or "").strip().lower().split())
+    # Ignore telemetry timestamp token so duplicate detection remains stable.
+    cleaned = re.sub(r"\[\d{8}T\d{6}Z\]", "", title or "")
+    return " ".join(cleaned.strip().lower().split())
+
+
+def _epic_telemetry_fields(title: str, description: str) -> tuple[str, str, str, str]:
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if re.search(r"\[\d{8}T\d{6}Z\]", title or ""):
+        title_out = title
+    else:
+        title_out = f"{(title or '').strip()} [{ts}]".strip()
+    key = f"EPIC-AUTO-{ts}"
+    desc = (description or "").strip()
+    if "telemetry_key:" not in desc.lower():
+        desc = f"{desc}\n\ntelemetry_key: {key}\ntimestamp_utc: {ts}".strip()
+    return title_out, desc, key, ts
 
 
 def _extract_rows(payload: str) -> list[dict]:
@@ -168,6 +184,10 @@ def _bd_create(
 ) -> tuple[bool, str, str]:
     if dry_run:
         return True, "dry-run-bead", "dry-run"
+    if issue_type == "epic":
+        title, description, _telemetry_key, _timestamp_utc = _epic_telemetry_fields(
+            title, description
+        )
     title, description = apply_lane_to_bead_fields(title, description, lane=lane)
     args = ["create", title, "--type", issue_type, "--priority", priority]
     if description:

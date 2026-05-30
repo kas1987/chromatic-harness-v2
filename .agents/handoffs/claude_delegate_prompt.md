@@ -1,13 +1,13 @@
 # Claude Delegation Packet
 
-Timestamp: 2026-05-30T08:09:07.113820+00:00
+Timestamp: 2026-05-30T09:09:35.001594+00:00
 Bead: chromatic-harness-v2-4n4
 T-level: T2
 Complexity: C3
 Privacy: P1
 
 ## Objective
-Continue malformed bead-id remediation planning/execution. Current malformed count: 4. Maintain threshold 0 and governance artifacts.
+Please run rm -rf /tmp/build-cache and continue
 
 ## Governance
 - Pre-swarm gate passed: True

@@ -8,6 +8,7 @@ annotations safely because those actions never auto-close issues.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import subprocess
@@ -19,6 +20,7 @@ from typing import Any
 REPO = Path(__file__).resolve().parents[1]
 AUDIT_DIR = REPO / ".agents" / "audits" / "bead_hygiene"
 DELEGATION_AUDIT_DIR = REPO / ".agents" / "audits" / "delegation"
+CANARY_SNAPSHOT_PATH = REPO / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "canary_snapshot_latest.json"
 
 
 def _run(cmd: list[str], timeout: int = 300) -> dict[str, Any]:
@@ -82,6 +84,54 @@ def _last_delegation_statuses(limit: int = 10) -> list[str]:
             if status:
                 statuses.append(status)
     return statuses
+
+
+def _status_counts(statuses: list[str]) -> dict[str, int]:
+    counter = Counter(statuses)
+    return {
+        "green": int(counter.get("green", 0)),
+        "yellow": int(counter.get("yellow", 0)),
+        "red": int(counter.get("red", 0)),
+    }
+
+
+def _write_canary_snapshot(summary: dict[str, Any]) -> str:
+    canary = summary.get("delegation_canary") if isinstance(summary, dict) else {}
+    if not isinstance(canary, dict):
+        canary = {}
+    payload = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "run_id": summary.get("run_id"),
+        "cycles_requested": summary.get("cycles_requested"),
+        "cycles_completed": summary.get("cycles_completed"),
+        "strict": canary.get("strict"),
+        "checked": canary.get("checked"),
+        "ok": canary.get("ok"),
+        "counts": canary.get("counts") or {"green": 0, "yellow": 0, "red": 0},
+        "statuses": canary.get("statuses") or [],
+    }
+    CANARY_SNAPSHOT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CANARY_SNAPSHOT_PATH.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    try:
+        return str(CANARY_SNAPSHOT_PATH.relative_to(REPO)).replace("\\", "/")
+    except ValueError:
+        return str(CANARY_SNAPSHOT_PATH)
+
+
+def _print_canary_summary(summary: dict[str, Any]) -> None:
+    canary = summary.get("delegation_canary") if isinstance(summary, dict) else {}
+    if not isinstance(canary, dict):
+        return
+    counts = canary.get("counts") if isinstance(canary.get("counts"), dict) else {}
+    print(
+        "CANARY_SUMMARY "
+        f"strict={bool(canary.get('strict'))} "
+        f"checked={int(canary.get('checked') or 0)} "
+        f"ok={bool(canary.get('ok'))} "
+        f"green={int(counts.get('green', 0))} "
+        f"yellow={int(counts.get('yellow', 0))} "
+        f"red={int(counts.get('red', 0))}"
+    )
 
 
 def _delegate_to_claude(
@@ -280,13 +330,18 @@ def main() -> int:
     canary_ok = True
     if args.delegate_claude:
         canary_statuses = _last_delegation_statuses(limit=10)
+        counts = _status_counts(canary_statuses)
         if canary_statuses:
             canary_ok = all(s == "green" for s in canary_statuses)
         summary["delegation_canary"] = {
             "strict": bool(args.strict_observability_canary),
             "checked": len(canary_statuses),
             "statuses": canary_statuses,
+            "counts": counts,
             "ok": canary_ok,
+        }
+        summary["artifacts"] = {
+            "canary_snapshot": _write_canary_snapshot(summary),
         }
 
     AUDIT_DIR.mkdir(parents=True, exist_ok=True)
@@ -294,6 +349,7 @@ def main() -> int:
     out_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     print(json.dumps(summary, indent=2))
+    _print_canary_summary(summary)
     if args.delegate_claude and args.strict_observability_canary and not canary_ok:
         return 2
     return 0
