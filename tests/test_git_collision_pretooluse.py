@@ -1,0 +1,125 @@
+"""Tests for the PreToolUse collision hook (git push / gh pr create gating)."""
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+_REPO = Path(__file__).resolve().parents[1]
+_HOOK = _REPO / "scripts" / "hooks" / "git_collision_pretooluse.py"
+
+
+def _run_hook(payload: dict, env_extra: dict | None = None):
+    env = {"PYTHONPATH": str(_REPO / "02_RUNTIME")}
+    import os
+
+    full_env = {**os.environ, **env}
+    if env_extra:
+        full_env.update(env_extra)
+    proc = subprocess.run(
+        [sys.executable, str(_HOOK)],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        env=full_env,
+        timeout=30,
+    )
+    return proc
+
+
+def test_non_bash_tool_allows():
+    p = _run_hook({"tool_name": "Read", "tool_input": {"file_path": "x"}})
+    assert p.returncode == 0
+
+
+def test_unrelated_bash_allows():
+    p = _run_hook({"tool_name": "Bash", "tool_input": {"command": "ls -la"}})
+    assert p.returncode == 0
+
+
+def test_disabled_via_env_allows():
+    p = _run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": "git push origin main"}},
+        env_extra={"CHROMATIC_NO_COLLISION_HOOK": "1"},
+    )
+    assert p.returncode == 0
+
+
+def test_malformed_stdin_allows():
+    proc = subprocess.run(
+        [sys.executable, str(_HOOK)],
+        input="{not json",
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert proc.returncode == 0
+
+
+def test_push_command_is_recognized_and_fails_open_on_clean():
+    # On a real clean repo with no collision, push must be allowed (exit 0).
+    p = _run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": "git push origin HEAD"}}
+    )
+    assert p.returncode == 0
+
+
+def test_hard_block_returns_exit_2(monkeypatch, capsys):
+    """In-process: a hard collision must block (exit 2) with a reason on stderr."""
+    import importlib.util
+    import io
+
+    spec = importlib.util.spec_from_file_location("collision_hook", _HOOK)
+    hook = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hook)
+
+    from concurrency.github_collision import CollisionVerdict
+
+    blocked = CollisionVerdict(action="push", branch="feat/x")
+    blocked.hard_blocks.append({"kind": "non_fast_forward", "detail": "remote ahead"})
+
+    monkeypatch.setattr(hook, "_current_branch", lambda: "feat/x")
+    monkeypatch.setattr(
+        "concurrency.github_collision.check_github_collision",
+        lambda **kw: blocked,
+    )
+    monkeypatch.setattr(
+        hook.sys,
+        "stdin",
+        io.StringIO(
+            json.dumps(
+                {"tool_name": "Bash", "tool_input": {"command": "git push origin x"}}
+            )
+        ),
+    )
+    assert hook.main() == 2
+    assert "BLOCKED" in capsys.readouterr().err
+
+
+def test_override_allows_hard_block(monkeypatch):
+    import importlib.util
+    import io
+
+    spec = importlib.util.spec_from_file_location("collision_hook2", _HOOK)
+    hook = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hook)
+
+    from concurrency.github_collision import CollisionVerdict
+
+    blocked = CollisionVerdict(action="push", branch="feat/x")
+    blocked.hard_blocks.append({"kind": "non_fast_forward", "detail": "remote ahead"})
+    monkeypatch.setattr(hook, "_current_branch", lambda: "feat/x")
+    monkeypatch.setattr(
+        "concurrency.github_collision.check_github_collision", lambda **kw: blocked
+    )
+    monkeypatch.setenv("CHROMATIC_ALLOW_COLLISION", "1")
+    monkeypatch.setattr(
+        hook.sys,
+        "stdin",
+        io.StringIO(
+            json.dumps(
+                {"tool_name": "Bash", "tool_input": {"command": "git push origin x"}}
+            )
+        ),
+    )
+    assert hook.main() == 0
