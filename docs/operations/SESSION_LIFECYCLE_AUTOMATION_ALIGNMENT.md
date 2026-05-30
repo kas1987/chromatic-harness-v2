@@ -129,9 +129,32 @@ contract without adding an agent step.
 
 ## 6. Recommended backlog (beads)
 
-| Priority | Bead | Primitive | Effort |
+| Priority | Bead | Primitive | Status |
 |----------|------|-----------|--------|
-| **P1** | Gap C — `ClosureMagnet` ship-completion check (Stage 8 + 10 + DoD) wired into `session_closeout` bead-close path | Magnet + script | M |
-| P2 | Gap B — `context_pressure_magnet` → deterministic compaction at 50–65% | Magnet | S–M |
-| P2 | Gap A — inject `bd ready` queue at SessionStart | hook script | S |
-| P3 | Closeout default-on pytest/ruff when code changed; auto `workflow_git.py ship` at conf ≥ 88 | script flags | S |
+| **P1** | Gap C — `ClosureMagnet` ship-completion check (Stage 8 + 10 + DoD) wired into `session_closeout` bead-close path | Magnet + script | ✅ **done** (`-rm7e`) |
+| P1 | GitHub session-collision guard — soft/hard blocks on open PR, in-flight Actions, remote-ahead, issue ownership | module + `workflow_git` | ✅ **done** (`-bvpz`) |
+| P2 | Gap B — `context_pressure_magnet` → deterministic compaction at 50–65% | Magnet | ✅ **done** (`-bi5v`) |
+| P2 | Gap A — inject `bd ready` queue at SessionStart | hook script | ⬜ open (`-eaez`) |
+| P3 | Closeout default-on pytest/ruff when code changed; auto `workflow_git.py ship` at conf ≥ 88 | script flags | ⬜ open (`-477a`) |
+
+---
+
+## 7. GitHub session-collision guard
+
+The local `session_lock` (SQLite, lease-based) serializes operations *within* a machine.
+Its read-side complement, [`02_RUNTIME/concurrency/github_collision.py`](../../02_RUNTIME/concurrency/github_collision.py),
+probes **remote GitHub state** before a session mutates it, with the same soft/hard tiering
+as the governance gates:
+
+| Probe | `push` | `open_pr` | `--force-push` |
+|-------|--------|-----------|----------------|
+| remote branch ahead of HEAD | **hard** (non-ff) | **hard** | **hard** (overwrite) |
+| open PR already on the branch | soft (updates it) | **hard** (duplicate) | — |
+| in-flight / queued Action runs | soft | soft | **hard** |
+| issue assigned to another login | soft | soft | soft |
+| `gh` unavailable | soft (`gh_unverified`, fail-open) | soft | soft |
+
+Wired into `scripts/workflow_git.py ship --execute`: soft warnings print and continue; a
+hard block aborts (exit 1) unless `--force-collision`. Dry-run/`plan` never hits the network.
+The verdict is logged (`mode=GH COLLISION`) and surfaced in ship output. Flags: `--base`,
+`--no-open-pr`, `--force-push`, `--no-collision-check`, `--force-collision`.
