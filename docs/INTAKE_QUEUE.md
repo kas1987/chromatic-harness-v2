@@ -37,11 +37,17 @@ Producer append (status=queued)
 ## Drain queue
 
 ```bash
+# Scheduled / one-shot cycle (poll + drain + audit log):
+powershell -File scripts/run_intake_cycle.ps1   # Windows
+bash scripts/run_intake_cycle.sh                # WSL/Linux
+
 python scripts/poll_inbox.py              # inbox sqlite → intake_queue.jsonl
 python scripts/auto_intake.py              # drain → beads
 python scripts/auto_intake.py --dry-run
 python scripts/auto_intake.py --limit 5
 ```
+
+Ops runbook: [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](ops/HARNESS_AUTOMATION_RUNBOOK.md)
 
 `goal` entries use **simple bullet decomposition** (no LLM) in P0; full GoalDecomposer is a later enhancement.
 

@@ -186,6 +186,27 @@ curl http://localhost:3030/agents
 curl http://localhost:3030/agents/openhands-001
 ```
 
+## Docker Compose (API + console)
+
+Production-style console image (not `npm run dev`):
+
+```bash
+cd 09_DEPLOYMENT
+cp .env.example .env   # fill keys
+docker compose up -d --build
+```
+
+Smoke (bounded timeouts):
+
+```powershell
+powershell -NoProfile -File ../scripts/smoke_stack.ps1
+```
+
+Full automation runbook: [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](docs/ops/HARNESS_AUTOMATION_RUNBOOK.md)
+
+- API: http://127.0.0.1:8787/health
+- Console: http://127.0.0.1:3030 (prod build via `09_DEPLOYMENT/Dockerfile.console`)
+
 ## Configuration
 
 ### Environment Variables

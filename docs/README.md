@@ -9,6 +9,8 @@
 | [routing/](routing/) | API routing, OpenHuman boundary |
 | [research/](research/) | Gap analysis, ecosystem landscape |
 | [retros/2026-05-29-session-roi-production-readiness.md](retros/2026-05-29-session-roi-production-readiness.md) | **Session retro** — context ROI, throughput, prod readiness, tomorrow beads |
+| [ops/HARNESS_AUTOMATION_RUNBOOK.md](ops/HARNESS_AUTOMATION_RUNBOOK.md) | **Automation** — intake cycle, smoke, Task Scheduler, CI |
+| [ops/P3_AUTOMATION_BACKLOG.md](ops/P3_AUTOMATION_BACKLOG.md) | P3 deferred automation (autonomy, playbooks, MCP mesh) |
 | [pdr/](pdr/) | Product decision records |
 
 Handoffs: [12_HANDOFFS/](../12_HANDOFFS/)

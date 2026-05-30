@@ -14,15 +14,17 @@ services:
       - "host.docker.internal:host-gateway"
 
   chromatic-console:
-    image: node:22-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run dev -- --port 3030"
+    build:
+      context: ..
+      dockerfile: 09_DEPLOYMENT/Dockerfile.console
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8787
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8787
-    volumes:
-      - ../05_FRONTEND_CONSOLE:/app
     ports:
       - "127.0.0.1:3030:3030"
+    depends_on:
+      - chromatic-api
 
 volumes:
   harness-data:
