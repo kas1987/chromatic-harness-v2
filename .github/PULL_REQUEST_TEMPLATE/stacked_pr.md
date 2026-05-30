@@ -21,3 +21,5 @@
 ## Governance Overrides
 - Artifact override: none
 - Size override: none
+
+<!-- Default PR size thresholds: files<=25, insertions<=800, deletions<=400. CI warns at 70% and blocks above limits unless Size override is approved. -->
