@@ -88,6 +88,7 @@ def default_registry() -> MagnetRegistry:
     """Built-in magnets + repo plugins (pyramid, secrets surface)."""
     from .closure_magnet import ClosureMagnet
     from .confidence_magnet import ConfidenceMagnet
+    from .context_pressure_magnet import ContextPressureMagnet
     from .cost_magnet import CostMagnet
     from .execution_magnet import ExecutionMagnet
     from .intake_magnet import IntakeMagnet
@@ -114,6 +115,7 @@ def default_registry() -> MagnetRegistry:
         MemoryMagnet(),
         SecurityMagnet(),
         QuotaMagnet(),
+        ContextPressureMagnet(),
         ClosureMagnet(),
         PyramidCheckPlugin(),
         SecretsSurfacePlugin(),
