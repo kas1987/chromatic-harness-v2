@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import tempfile
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -37,12 +38,12 @@ def agent_lead_module(repo_root):
     return _load_module(str(path), "agent_lead_handoff_test")
 
 
-@pytest.fixture(scope="module")
-def event_hub(repo_root):
-    # Import after environ setup
+@pytest.fixture
+def event_hub(tmp_path):
+    # Per-test tmpdir root eliminates cross-run event accumulation in the file store
     from console_api.event_store import MissionEventHub
 
-    return MissionEventHub(repo_root)
+    return MissionEventHub(tmp_path)
 
 
 @pytest.fixture(scope="module")
@@ -54,9 +55,9 @@ def intake_queue(repo_root):
 
 @pytest.fixture
 def sample_mission():
-    """Sample mission with realistic context."""
+    """Sample mission with realistic context. UUID suffix prevents cross-run ID collisions."""
     return {
-        "mission_id": "CHR-HANDOFF-1",
+        "mission_id": f"CHR-HANDOFF-{uuid.uuid4().hex[:8]}",
         "objective": "Implement user authentication module with OAuth",
         "confidence_required": 85.0,
         "autonomy_level": "L3",
@@ -65,13 +66,14 @@ def sample_mission():
 
 
 @pytest.fixture
-def sample_magnet_events():
-    """Magnet events from a completed mission."""
+def sample_magnet_events(sample_mission):
+    """Magnet events from a completed mission. Derives mission_id from sample_mission."""
     from magnets.base_magnet import MagnetEvent
 
+    mid = sample_mission["mission_id"]
     return [
         MagnetEvent(
-            mission_id="CHR-HANDOFF-1",
+            mission_id=mid,
             magnet_name="confidence_magnet",
             inflection_point="validation",
             observed_signal={"coverage": 0.92, "tests": "all_pass"},
@@ -80,7 +82,7 @@ def sample_magnet_events():
             recommended_action="proceed",
         ),
         MagnetEvent(
-            mission_id="CHR-HANDOFF-1",
+            mission_id=mid,
             magnet_name="execution_magnet",
             inflection_point="execution",
             observed_signal={"tasks_closed": 15, "errors": 0},
@@ -89,7 +91,7 @@ def sample_magnet_events():
             recommended_action="proceed",
         ),
         MagnetEvent(
-            mission_id="CHR-HANDOFF-1",
+            mission_id=mid,
             magnet_name="discipline_magnet",
             inflection_point="validation",
             observed_signal={"scope_adherence": 1.0, "timeline": "on_schedule"},
@@ -110,7 +112,10 @@ class TestAgentLeadHandoffIntegration:
         AgentLead = agent_lead_module.AgentLead
         output = AgentLead().run(sample_mission, sample_magnet_events)
 
-        assert output.final_report["synthesis"]["mission_id"] == "CHR-HANDOFF-1"
+        assert (
+            output.final_report["synthesis"]["mission_id"]
+            == sample_mission["mission_id"]
+        )
         assert output.decision in (
             "proceed",
             "proceed_reversible_only",
@@ -185,7 +190,7 @@ class TestAgentLeadHandoffIntegration:
 
     def test_event_hub_publishes_synthesis_events(self, event_hub):
         """EventHub persists and replays synthesis events."""
-        mission_id = "CHR-HANDOFF-2"
+        mission_id = f"CHR-SYNTH-{uuid.uuid4().hex[:8]}"
         event1 = {
             "event_type": "synthesis_start",
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -350,7 +355,7 @@ class TestAgentLeadHandoffIntegration:
             agent_lead_entries = [
                 e
                 for e in queue_entries
-                if e.source == "agent_lead"
+                if e.source == "bead_hook"  # agent_lead dispatches use bead_hook source
                 and sample_mission["mission_id"] in e.context.get("mission_id", "")
             ]
             assert len(agent_lead_entries) > 0
