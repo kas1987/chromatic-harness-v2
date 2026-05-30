@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Claude Code SessionEnd — repo-owned closeout (wire in ~/.claude/settings.json or project settings).
+# Optional bash wrapper. Canonical wiring: .claude/settings.json SessionEnd → session_closeout.py
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
