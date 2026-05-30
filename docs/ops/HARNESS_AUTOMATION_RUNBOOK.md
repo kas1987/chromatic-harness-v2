@@ -14,6 +14,7 @@ Local recurring automation uses **Windows Task Scheduler** ($0). **GitHub Action
 | Docker Desktop | `09_DEPLOYMENT/docker-compose.yml` stack |
 | Python 3.12+ | Scripts under `scripts/` |
 | `bd` (beads) | `auto_intake` creates/claims issues |
+| Dev CLIs (all rigs) | `powershell -File scripts/install_dev_clis.ps1` — see `config/dev_cli_manifest.yaml` |
 | `.env` in `09_DEPLOYMENT/` | Copy from [`.env.example`](../../09_DEPLOYMENT/.env.example) |
 
 Optional auth for API testing:

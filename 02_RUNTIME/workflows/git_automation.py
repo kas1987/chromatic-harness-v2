@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from workflows.git_policy import GitPipelineDecision, evaluate_git_pipeline
+from workflows.git_runner import active_git_backend, gh_argv, git_argv
 
 SECRET_PATTERNS = (
     r"\.env$",
@@ -30,6 +31,7 @@ class GitRunResult:
     def to_dict(self) -> dict:
         return {
             "dry_run": self.dry_run,
+            "git_backend": active_git_backend(),
             "pipeline": self.decision.to_dict(),
             "steps": self.steps,
             "error": self.error,
@@ -51,7 +53,7 @@ def _run(cmd: list[str], cwd: Path, *, dry_run: bool) -> dict:
 
 def _git_status_porcelain(repo: Path) -> str:
     proc = subprocess.run(
-        ["git", "status", "--porcelain"],
+        git_argv("status", "--porcelain"),
         cwd=repo,
         capture_output=True,
         text=True,
@@ -76,7 +78,7 @@ def _is_secret_path(path: str) -> bool:
 
 def _detect_secrets_in_changes(repo: Path) -> bool:
     proc = subprocess.run(
-        ["git", "diff", "--name-only", "HEAD"],
+        git_argv("diff", "--name-only", "HEAD"),
         cwd=repo,
         capture_output=True,
         text=True,
@@ -89,7 +91,7 @@ def _detect_secrets_in_changes(repo: Path) -> bool:
 
 def _current_branch(repo: Path) -> str:
     proc = subprocess.run(
-        ["git", "branch", "--show-current"],
+        git_argv("branch", "--show-current"),
         cwd=repo,
         capture_output=True,
         text=True,
@@ -106,7 +108,7 @@ def _protected_branch(branch: str) -> bool:
 def _gh_available() -> bool:
     try:
         proc = subprocess.run(
-            ["gh", "--version"],
+            gh_argv("--version"),
             capture_output=True,
             text=True,
             timeout=10,
@@ -121,7 +123,7 @@ def _open_pr_exists(repo: Path, branch: str) -> bool:
     if not _gh_available():
         return False
     proc = subprocess.run(
-        ["gh", "pr", "list", "--head", branch, "--json", "number", "--limit", "1"],
+        gh_argv("pr", "list", "--head", branch, "--json", "number", "--limit", "1"),
         cwd=repo,
         capture_output=True,
         text=True,
@@ -135,7 +137,7 @@ def _ci_passed_for_branch(repo: Path, branch: str) -> bool:
     if not _gh_available():
         return False
     proc = subprocess.run(
-        ["gh", "pr", "checks", "--branch", branch],
+        gh_argv("pr", "checks", "--branch", branch),
         cwd=repo,
         capture_output=True,
         text=True,
@@ -183,14 +185,14 @@ def run_git_pipeline(
     msg = commit_message or f"feat: close {bead_id}" if bead_id else "chore: workflow ship"
 
     if decision.commit:
-        steps.append(_run(["git", "add", "-A"], repo, dry_run=dry_run))
-        steps.append(_run(["git", "commit", "-m", msg], repo, dry_run=dry_run))
+        steps.append(_run(git_argv("add", "-A"), repo, dry_run=dry_run))
+        steps.append(_run(git_argv("commit", "-m", msg), repo, dry_run=dry_run))
     else:
         steps.append({"step": "commit", "status": "skipped", "reason": decision.reasons.get("commit")})
 
     if decision.push:
-        steps.append(_run(["git", "pull", "--rebase"], repo, dry_run=dry_run))
-        steps.append(_run(["git", "push"], repo, dry_run=dry_run))
+        steps.append(_run(git_argv("pull", "--rebase"), repo, dry_run=dry_run))
+        steps.append(_run(git_argv("push"), repo, dry_run=dry_run))
     else:
         steps.append({"step": "push", "status": "skipped", "reason": decision.reasons.get("push")})
 
@@ -199,7 +201,7 @@ def run_git_pipeline(
         body = f"Automated PR from workflow_git.\n\nBead: {bead_id}\nConfidence: {confidence}"
         steps.append(
             _run(
-                ["gh", "pr", "create", "--title", title, "--body", body],
+                gh_argv("pr", "create", "--title", title, "--body", body),
                 repo,
                 dry_run=dry_run,
             )
@@ -218,7 +220,7 @@ def run_git_pipeline(
     if decision.merge and _gh_available():
         steps.append(
             _run(
-                ["gh", "pr", "merge", "--squash", "--auto"],
+                gh_argv("pr", "merge", "--squash", "--auto"),
                 repo,
                 dry_run=dry_run,
             )

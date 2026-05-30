@@ -58,6 +58,7 @@ python scripts/session_boot_automation.py --force       # refresh manifest now
 |------|-----|
 | Handoff + compact rules | [12_HANDOFFS/SESSION_COMPACT.md](12_HANDOFFS/SESSION_COMPACT.md) |
 | **Repo / rig map** | [docs/REPO_AND_RIG_INVENTORY.md](docs/REPO_AND_RIG_INVENTORY.md) — `scripts/audit_local_repos.ps1` |
+| **Dev CLIs (all rigs)** | `powershell -File scripts/install_dev_clis.ps1` — `config/dev_cli_manifest.yaml` |
 | **MCP disable / lean Claude** | [docs/CURSOR_CONTEXT_HYGIENE.md](docs/CURSOR_CONTEXT_HYGIENE.md) |
 | **Do not trust / do not do** | [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) |
 | **Implementation discipline** | [docs/governance/KARPATHY_DISCIPLINE.md](docs/governance/KARPATHY_DISCIPLINE.md) |
