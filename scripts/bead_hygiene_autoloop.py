@@ -18,6 +18,7 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 AUDIT_DIR = REPO / ".agents" / "audits" / "bead_hygiene"
+DELEGATION_AUDIT_DIR = REPO / ".agents" / "audits" / "delegation"
 
 
 def _run(cmd: list[str], timeout: int = 300) -> dict[str, Any]:
@@ -67,6 +68,20 @@ def _malformed_targets(commands_json: Path) -> list[str]:
         if target:
             out.append(target)
     return out
+
+
+def _last_delegation_statuses(limit: int = 10) -> list[str]:
+    if not DELEGATION_AUDIT_DIR.is_dir():
+        return []
+    files = sorted(DELEGATION_AUDIT_DIR.glob("delegation_observability_*.json"))[-max(1, limit):]
+    statuses: list[str] = []
+    for path in files:
+        data = _read_json(path, {})
+        if isinstance(data, dict):
+            status = str(data.get("status") or "").strip().lower()
+            if status:
+                statuses.append(status)
+    return statuses
 
 
 def _delegate_to_claude(
@@ -132,6 +147,12 @@ def main() -> int:
         "--owner-bead-id",
         default="chromatic-harness-v2-4n4",
         help="Owner bead for delegation context",
+    )
+    parser.add_argument(
+        "--strict-observability-canary",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Fail run when any of the last 10 delegation observability reports are non-green",
     )
     parser.add_argument("extras", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -199,6 +220,8 @@ def main() -> int:
 
         latest = _read_json(AUDIT_DIR / "latest.json", {})
         findings = latest.get("findings") if isinstance(latest, dict) else []
+        if not isinstance(findings, list):
+            findings = []
         finding_counts = {
             str(f.get("code")): int(f.get("count") or 0)
             for f in findings
@@ -253,11 +276,26 @@ def main() -> int:
     summary["finished"] = datetime.now(timezone.utc).isoformat()
     summary["cycles_completed"] = len(summary["cycles"])
 
+    canary_statuses: list[str] = []
+    canary_ok = True
+    if args.delegate_claude:
+        canary_statuses = _last_delegation_statuses(limit=10)
+        if canary_statuses:
+            canary_ok = all(s == "green" for s in canary_statuses)
+        summary["delegation_canary"] = {
+            "strict": bool(args.strict_observability_canary),
+            "checked": len(canary_statuses),
+            "statuses": canary_statuses,
+            "ok": canary_ok,
+        }
+
     AUDIT_DIR.mkdir(parents=True, exist_ok=True)
     out_path = AUDIT_DIR / "latest_autoloop_report.json"
     out_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     print(json.dumps(summary, indent=2))
+    if args.delegate_claude and args.strict_observability_canary and not canary_ok:
+        return 2
     return 0
 
 

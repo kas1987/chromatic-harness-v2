@@ -1,10 +1,10 @@
 {
   "ok": true,
-  "generated_at": "2026-05-30T07:53:40.041786+00:00",
+  "generated_at": "2026-05-30T07:51:54.052040+00:00",
   "sources": {
     "workflow_log": {
       "path": "docs/workflows/WORKFLOW_RUN_LOG.jsonl",
-      "rows": 2888
+      "rows": 2814
     },
     "agent_log": {
       "path": "07_LOGS_AND_AUDIT/AGENT_RUN_LOG.jsonl",
@@ -19,73 +19,73 @@
       "rows": 1399
     }
   },
-  "event_count": 4288,
+  "event_count": 4214,
   "canonical_coverage": {
     "timestamp": {
-      "present": 4286,
+      "present": 4212,
       "missing": 2,
       "coverage": 0.9995
     },
     "task_id": {
-      "present": 3394,
+      "present": 3320,
       "missing": 894,
-      "coverage": 0.7915
+      "coverage": 0.7879
     },
     "provider": {
-      "present": 2629,
+      "present": 2555,
       "missing": 1659,
-      "coverage": 0.6131
+      "coverage": 0.6063
     },
     "model": {
-      "present": 2630,
-      "missing": 1658,
-      "coverage": 0.6133
+      "present": 2228,
+      "missing": 1986,
+      "coverage": 0.5287
     },
     "task_type": {
-      "present": 4286,
+      "present": 4212,
       "missing": 2,
       "coverage": 0.9995
     },
     "execution_status": {
-      "present": 2614,
-      "missing": 1674,
-      "coverage": 0.6096
+      "present": 2582,
+      "missing": 1632,
+      "coverage": 0.6127
     },
     "confidence_score": {
-      "present": 2205,
-      "missing": 2083,
-      "coverage": 0.5142
+      "present": 2184,
+      "missing": 2030,
+      "coverage": 0.5183
     },
     "cost_usd": {
       "present": 0,
-      "missing": 4288,
+      "missing": 4214,
       "coverage": 0.0
     },
     "latency_ms": {
       "present": 1399,
-      "missing": 2889,
-      "coverage": 0.3263
+      "missing": 2815,
+      "coverage": 0.332
     }
   },
   "provider_model_rollup": {
     "providers": {
       "unknown": {
-        "events": 3330,
-        "success": 1146,
+        "events": 3260,
+        "success": 1118,
         "fail": 497,
-        "unknown": 1687,
+        "unknown": 1645,
         "models": {
           "kimi": 1,
-          "unknown": 3329
+          "unknown": 3259
         }
       },
       "gemini": {
-        "events": 20,
-        "success": 20,
+        "events": 16,
+        "success": 16,
         "fail": 0,
         "unknown": 0,
         "models": {
-          "gemini-2.5-pro": 20
+          "gemini-2.5-pro": 16
         }
       },
       "mock": {
@@ -103,7 +103,7 @@
         "fail": 300,
         "unknown": 2,
         "models": {
-          "native_claude:default": 302
+          "unknown": 302
         }
       },
       "openai": {
@@ -113,7 +113,7 @@
         "unknown": 9,
         "models": {
           "stub-ok": 4,
-          "openai:default": 9
+          "unknown": 9
         }
       },
       "lmstudio": {
@@ -131,7 +131,7 @@
         "fail": 2,
         "unknown": 1,
         "models": {
-          "openrouter:default": 3
+          "unknown": 3
         }
       },
       "ollama": {
@@ -140,7 +140,7 @@
         "fail": 3,
         "unknown": 0,
         "models": {
-          "ollama:default": 3
+          "unknown": 3
         }
       },
       "anthropic": {
@@ -149,7 +149,7 @@
         "fail": 5,
         "unknown": 0,
         "models": {
-          "anthropic:default": 5
+          "unknown": 5
         }
       },
       "prism-orchestrator": {
@@ -158,7 +158,7 @@
         "fail": 3,
         "unknown": 0,
         "models": {
-          "prism-orchestrator:default": 3
+          "unknown": 3
         }
       },
       "google": {
@@ -167,7 +167,7 @@
         "fail": 3,
         "unknown": 0,
         "models": {
-          "google:default": 3
+          "unknown": 3
         }
       }
     },
@@ -182,21 +182,28 @@
         }
       },
       "unknown": {
-        "events": 3329,
-        "success": 1146,
-        "fail": 497,
-        "unknown": 1686,
+        "events": 3587,
+        "success": 1118,
+        "fail": 817,
+        "unknown": 1652,
         "providers": {
-          "unknown": 3329
+          "unknown": 3259,
+          "native_claude": 302,
+          "openrouter": 3,
+          "ollama": 3,
+          "openai": 9,
+          "anthropic": 5,
+          "prism-orchestrator": 3,
+          "google": 3
         }
       },
       "gemini-2.5-pro": {
-        "events": 20,
-        "success": 20,
+        "events": 16,
+        "success": 16,
         "fail": 0,
         "unknown": 0,
         "providers": {
-          "gemini": 20
+          "gemini": 16
         }
       },
       "mock-v1": {
@@ -206,15 +213,6 @@
         "unknown": 605,
         "providers": {
           "mock": 605
-        }
-      },
-      "native_claude:default": {
-        "events": 302,
-        "success": 0,
-        "fail": 300,
-        "unknown": 2,
-        "providers": {
-          "native_claude": 302
         }
       },
       "stub-ok": {
@@ -234,104 +232,50 @@
         "providers": {
           "lmstudio": 1
         }
-      },
-      "openrouter:default": {
-        "events": 3,
-        "success": 0,
-        "fail": 2,
-        "unknown": 1,
-        "providers": {
-          "openrouter": 3
-        }
-      },
-      "ollama:default": {
-        "events": 3,
-        "success": 0,
-        "fail": 3,
-        "unknown": 0,
-        "providers": {
-          "ollama": 3
-        }
-      },
-      "openai:default": {
-        "events": 9,
-        "success": 0,
-        "fail": 4,
-        "unknown": 5,
-        "providers": {
-          "openai": 9
-        }
-      },
-      "anthropic:default": {
-        "events": 5,
-        "success": 0,
-        "fail": 5,
-        "unknown": 0,
-        "providers": {
-          "anthropic": 5
-        }
-      },
-      "prism-orchestrator:default": {
-        "events": 3,
-        "success": 0,
-        "fail": 3,
-        "unknown": 0,
-        "providers": {
-          "prism-orchestrator": 3
-        }
-      },
-      "google:default": {
-        "events": 3,
-        "success": 0,
-        "fail": 3,
-        "unknown": 0,
-        "providers": {
-          "google": 3
-        }
       }
     }
   },
   "task_rollup": {
-    "task_count": 26,
+    "task_count": 25,
     "top_tasks": [
       {
         "task_id": "unknown",
-        "events": 1190,
-        "success": 709,
+        "events": 1141,
+        "success": 681,
         "fail": 0,
-        "unknown": 481,
+        "unknown": 460,
         "providers": {
-          "unknown": 1190
+          "unknown": 1141
         },
         "models": {
-          "unknown": 1190
+          "unknown": 1141
         },
         "task_types": {
-          "LOCK METRIC": 575,
-          "GO VERIFY": 481,
-          "SESSION BOOT": 133,
+          "LOCK METRIC": 554,
+          "GO VERIFY": 460,
+          "SESSION BOOT": 126,
           "PHASE COMPLETE": 1
         },
-        "latest_timestamp": "2026-05-30T07:53:39.806261+00:00",
-        "latest_status": "ok"
+        "latest_timestamp": "2026-05-30T07:51:52.986787+00:00",
+        "latest_status": null
       },
       {
         "task_id": "chromatic-harness-v2-bpq",
-        "events": 753,
+        "events": 732,
         "success": 0,
         "fail": 0,
-        "unknown": 753,
+        "unknown": 732,
         "providers": {
-          "unknown": 753
+          "unknown": 732
         },
         "models": {
-          "unknown": 753
+          "unknown": 732
         },
         "task_types": {
-          "GO AUDIT": 748,
+          "GO AUDIT": 727,
           "GO DEEP": 5
         },
-        "latest_timestamp": "2026-05-30T07:53:38.252459+00:00",
+        "latest_timestamp": "2026-05-30T07:51:52.849428+00:00",
         "latest_status": null
       },
       {
@@ -347,10 +291,8 @@
           "ollama": 3
         },
         "models": {
-          "native_claude:default": 251,
-          "unknown": 186,
-          "mock-v1": 215,
-          "ollama:default": 3
+          "unknown": 440,
+          "mock-v1": 215
         },
         "task_types": {
           "classification": 655
@@ -371,8 +313,7 @@
         },
         "models": {
           "mock-v1": 284,
-          "unknown": 101,
-          "native_claude:default": 47
+          "unknown": 148
         },
         "task_types": {
           "coding": 378,
@@ -417,13 +358,8 @@
           "google": 3
         },
         "models": {
-          "native_claude:default": 4,
-          "openrouter:default": 3,
-          "mock-v1": 11,
-          "openai:default": 9,
-          "anthropic:default": 5,
-          "prism-orchestrator:default": 3,
-          "google:default": 3
+          "unknown": 27,
+          "mock-v1": 11
         },
         "task_types": {
           "classification": 32,
@@ -615,60 +551,6 @@
         "latest_status": "execute"
       },
       {
-        "task_id": "chromatic-harness-v2-4n4-delegation-c6",
-        "events": 2,
-        "success": 2,
-        "fail": 0,
-        "unknown": 0,
-        "providers": {
-          "gemini": 2
-        },
-        "models": {
-          "gemini-2.5-pro": 2
-        },
-        "task_types": {
-          "delegation_gate": 2
-        },
-        "latest_timestamp": "2026-05-30T07:52:04.221183+00:00",
-        "latest_status": "execute"
-      },
-      {
-        "task_id": "chromatic-harness-v2-4n4-delegation-c7",
-        "events": 2,
-        "success": 2,
-        "fail": 0,
-        "unknown": 0,
-        "providers": {
-          "gemini": 2
-        },
-        "models": {
-          "gemini-2.5-pro": 2
-        },
-        "task_types": {
-          "delegation_gate": 2
-        },
-        "latest_timestamp": "2026-05-30T07:52:40.003051+00:00",
-        "latest_status": "execute"
-      },
-      {
-        "task_id": "chromatic-harness-v2-4n4-delegation-c8",
-        "events": 2,
-        "success": 2,
-        "fail": 0,
-        "unknown": 0,
-        "providers": {
-          "gemini": 2
-        },
-        "models": {
-          "gemini-2.5-pro": 2
-        },
-        "task_types": {
-          "delegation_gate": 2
-        },
-        "latest_timestamp": "2026-05-30T07:53:16.647151+00:00",
-        "latest_status": "execute"
-      },
-      {
         "task_id": "T-EXAMPLE",
         "events": 1,
         "success": 0,
@@ -685,6 +567,60 @@
         },
         "latest_timestamp": null,
         "latest_status": null
+      },
+      {
+        "task_id": "chromatic-harness-v2-ar7",
+        "events": 1,
+        "success": 1,
+        "fail": 0,
+        "unknown": 0,
+        "providers": {
+          "unknown": 1
+        },
+        "models": {
+          "unknown": 1
+        },
+        "task_types": {
+          "PHASE COMPLETE": 1
+        },
+        "latest_timestamp": "2026-05-30T02:41:53.494169+00:00",
+        "latest_status": "ok"
+      },
+      {
+        "task_id": "chromatic-harness-v2-4n4-delegation-c6",
+        "events": 1,
+        "success": 1,
+        "fail": 0,
+        "unknown": 0,
+        "providers": {
+          "gemini": 1
+        },
+        "models": {
+          "gemini-2.5-pro": 1
+        },
+        "task_types": {
+          "delegation_gate": 1
+        },
+        "latest_timestamp": "2026-05-30T07:46:23.526878+00:00",
+        "latest_status": "execute"
+      },
+      {
+        "task_id": "chromatic-harness-v2-4n4-delegation-c7",
+        "events": 1,
+        "success": 1,
+        "fail": 0,
+        "unknown": 0,
+        "providers": {
+          "gemini": 1
+        },
+        "models": {
+          "gemini-2.5-pro": 1
+        },
+        "task_types": {
+          "delegation_gate": 1
+        },
+        "latest_timestamp": "2026-05-30T07:46:52.399834+00:00",
+        "latest_status": "execute"
       }
     ]
   },
@@ -692,158 +628,159 @@
     "top_keys": [
       {
         "key": "timestamp",
-        "present": 4286,
+        "present": 4212,
         "coverage": 0.9995
       },
       {
         "key": "confidence_score",
-        "present": 3091,
-        "coverage": 0.7208
+        "present": 3017,
+        "coverage": 0.7159
       },
       {
         "key": "task_id",
-        "present": 3091,
-        "coverage": 0.7208
+        "present": 3017,
+        "coverage": 0.7159
       },
       {
         "key": "latency_ms",
-        "present": 3090,
-        "coverage": 0.7206
+        "present": 3016,
+        "coverage": 0.7157
       },
       {
         "key": "task_type",
-        "present": 3090,
-        "coverage": 0.7206
+        "present": 3016,
+        "coverage": 0.7157
       },
       {
         "key": "mode",
-        "present": 2867,
-        "coverage": 0.6686
+        "present": 2797,
+        "coverage": 0.6637
       },
       {
         "key": "model",
-        "present": 1692,
-        "coverage": 0.3946
+        "present": 1618,
+        "coverage": 0.384
       },
       {
         "key": "cost_usd",
-        "present": 1691,
-        "coverage": 0.3944
+        "present": 1617,
+        "coverage": 0.3837
       },
       {
         "key": "execution_status",
-        "present": 1691,
-        "coverage": 0.3944
+        "present": 1617,
+        "coverage": 0.3837
       },
       {
         "key": "provider",
-        "present": 1691,
-        "coverage": 0.3944
+        "present": 1617,
+        "coverage": 0.3837
       },
       {
         "key": "caller",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "cost_estimate_usd",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "errors",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "fallback_used",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "privacy_class",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "repo",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "request_id",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "result_status",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "route_reason",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "selected_model",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "selected_provider",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "warnings",
         "present": 1399,
-        "coverage": 0.3263
+        "coverage": 0.332
       },
       {
         "key": "decision",
-        "present": 1214,
-        "coverage": 0.2831
+        "present": 1182,
+        "coverage": 0.2805
       },
       {
         "key": "event_type",
-        "present": 1180,
-        "coverage": 0.2752
+        "present": 1148,
+        "coverage": 0.2724
       },
       {
         "key": "bead_id",
-        "present": 1120,
-        "coverage": 0.2612
+        "present": 1088,
+        "coverage": 0.2582
       },
       {
         "key": "handoff",
-        "present": 1085,
-        "coverage": 0.253
+        "present": 1057,
+        "coverage": 0.2508
       },
       {
         "key": "lock_owner",
-        "present": 930,
-        "coverage": 0.2169
+        "present": 909,
+        "coverage": 0.2157
       },
       {
         "key": "lock_attempts",
-        "present": 929,
-        "coverage": 0.2167
+        "present": 908,
+        "coverage": 0.2155
       },
       {
         "key": "lock_name",
-        "present": 929,
-        "coverage": 0.2167
+        "present": 908,
+        "coverage": 0.2155
       },
       {
         "key": "lock_wait_ms",
-        "present": 929,
-        "coverage": 0.2167
+        "present": 908,
+        "coverage": 0.2155
       }
     ]
   },
   "recommendations": [
-    "Improve telemetry: confidence_score coverage is 51%. Standardize this field in run-log schema.",
+    "Improve telemetry: model coverage is 53%. Standardize this field in run-log schema.",
+    "Improve telemetry: confidence_score coverage is 52%. Standardize this field in run-log schema.",
     "Critical telemetry gap: cost_usd coverage is 0%. Add mandatory logging in adapter + workflow emitters.",
     "Improve telemetry: latency_ms coverage is 33%. Standardize this field in run-log schema."
   ]

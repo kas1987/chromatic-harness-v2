@@ -1,12 +1,12 @@
 {
   "audit": "token_governance_closed_loop",
-  "timestamp": "2026-05-30T07:59:59.535822+00:00",
+  "timestamp": "2026-05-30T07:51:57.712012+00:00",
   "root": "C:\\Users\\kas41\\chromatic-harness-v2",
-  "status": "red",
+  "status": "yellow",
   "counts": {
     "pass": 3,
-    "warn": 0,
-    "fail": 1
+    "warn": 1,
+    "fail": 0
   },
   "checks": [
     {
@@ -48,9 +48,9 @@
     },
     {
       "name": "daily_harness_audit_strict",
-      "status": "fail",
-      "returncode": 1,
-      "message": "status=red",
+      "status": "warn",
+      "returncode": 0,
+      "message": "status=yellow",
       "command": [
         "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
         "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\daily_harness_audit.py",
@@ -66,13 +66,13 @@
       "id": "token-gov-daily-audit-remediation",
       "title": "Remediate strict daily audit findings affecting token governance",
       "goal": "Resolve red/yellow strict daily audit findings and enforce green baseline",
-      "priority": "P1",
+      "priority": "P2",
       "tier": 2,
       "type": "task",
       "context": {
         "category": "token_governance",
         "source_check": "daily_harness_audit_strict",
-        "message": "status=red"
+        "message": "status=yellow"
       }
     }
   ],

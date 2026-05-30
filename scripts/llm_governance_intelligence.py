@@ -138,13 +138,18 @@ def _normalize(source: str, row: dict[str, Any]) -> NormalizedEvent:
     cost = _pick(row, "actual_cost", "estimated_cost", "cost_usd")
     latency = _pick(row, "latency_ms", "duration_ms", "elapsed_ms")
 
+    provider = _pick(row, "provider", "selected_provider")
+    model = _pick(row, "model", "selected_model", "assigned_model")
+    if provider and not model:
+        model = f"{provider}:default"
+
     return NormalizedEvent(
         source=source,
         raw_keys=sorted(row.keys()),
         timestamp=_pick(row, "timestamp", "generated_at", "created_at"),
         task_id=_pick(row, "task_id", "bead_id", "workflow_id", "request_id"),
-        provider=_pick(row, "provider", "selected_provider"),
-        model=_pick(row, "model", "selected_model", "assigned_model"),
+        provider=provider,
+        model=model,
         task_type=_pick(row, "task_type", "mode", "event_type"),
         execution_status=_pick(row, "result_status", "status", "result", "decision", "validation"),
         confidence_score=_to_float(confidence),

@@ -51,3 +51,24 @@ def test_destructive_intent_is_blocked_pre_gate() -> None:
     assert proc.returncode == 1
     payload = json.loads(proc.stdout)
     assert payload.get("reason") == "destructive_intent_blocked"
+
+
+def test_allow_destructive_override_allows_gate_progress() -> None:
+    proc = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--task",
+            "Please run rm -rf /tmp/build-cache and continue",
+            "--bead-id",
+            "chromatic-harness-v2-4n4",
+            "--invoked-by",
+            "preflight",
+            "--allow-destructive",
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(proc.stdout)
+    assert payload.get("reason") != "destructive_intent_blocked"
