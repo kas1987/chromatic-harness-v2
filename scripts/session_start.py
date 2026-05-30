@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -19,6 +20,7 @@ _HANDOFF = _REPO / ".agents" / "handoffs" / "latest.json"
 _OPS = _REPO / "AGENT_OPERATIONS.md"
 _MANIFEST = _REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
 _HEALTH = _REPO / "07_LOGS_AND_AUDIT" / "harness_health" / "latest.json"
+_BUDGET_FORECAST = _REPO / "scripts" / "budget_forecast_snapshot.py"
 
 
 def _emit_boot(cold_start: bool) -> None:
@@ -40,11 +42,45 @@ def _emit_boot(cold_start: bool) -> None:
         print(f"  telemetry: session.boot skipped ({exc})", file=sys.stderr)
 
 
+def _inject_learnings() -> None:
+    """Surface top relevant prior learnings so a fresh session isn't blind.
+
+    The SessionStart hook's stdout becomes session context, so printing here
+    IS injection for Claude Code. Fail-open.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "02_RUNTIME"))
+        from knowledge.select_learnings import format_for_injection, select_top
+
+        terms: list[str] = []
+        try:
+            br = subprocess.run(
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                cwd=_REPO,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            ).stdout.strip()
+            # branch like feat/router-loop-guard -> [router, loop, guard]
+            terms = [t for t in re.split(r"[/_-]", br) if len(t) > 2]
+        except Exception:
+            pass
+        top = select_top(n=3, terms=terms)
+        if top:
+            print("--- Prior learnings (apply where relevant) ---")
+            print(format_for_injection(top))
+            print()
+    except Exception as exc:  # noqa: BLE001
+        print(f"  learnings: injection skipped ({exc})", file=sys.stderr)
+
+
 def main() -> int:
     print("=== Chromatic Harness session start ===\n")
 
     cold_start = not _HANDOFF.is_file()
     _emit_boot(cold_start)
+    _inject_learnings()
 
     if _HANDOFF.is_file():
         print("--- Handoff (.agents/handoffs/latest.json) ---")
@@ -108,6 +144,29 @@ def main() -> int:
             print("  readiness_score: n/a")
     else:
         print("  readiness_status: (not written yet)")
+
+    if _BUDGET_FORECAST.is_file():
+        try:
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(_BUDGET_FORECAST),
+                    "--write",
+                    "--format",
+                    "line",
+                ],
+                cwd=_REPO,
+                capture_output=True,
+                text=True,
+                timeout=45,
+                check=False,
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                print(f"  budget_forecast: {proc.stdout.strip()}")
+            elif proc.stderr.strip():
+                print(f"  budget_forecast: unavailable ({proc.stderr.strip()})")
+        except (subprocess.SubprocessError, OSError):
+            print("  budget_forecast: unavailable")
     print()
 
     try:
