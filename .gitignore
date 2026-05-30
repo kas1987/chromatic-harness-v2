@@ -19,6 +19,8 @@ htmlcov/
 
 # Intake / workflow / WS runtime logs (local only)
 07_LOGS_AND_AUDIT/intake_queue.jsonl
+07_LOGS_AND_AUDIT/intake_cycle/*.jsonl
+!07_LOGS_AND_AUDIT/intake_cycle/.gitkeep
 07_LOGS_AND_AUDIT/decisions/*.jsonl
 07_LOGS_AND_AUDIT/execution/*.jsonl
 07_LOGS_AND_AUDIT/traces/*.jsonl

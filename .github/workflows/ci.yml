@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v5
         with:
@@ -23,6 +25,9 @@ jobs:
 
       - name: Agent operations guard (mandatory docs)
         run: python scripts/check_agent_operations.py
+
+      - name: Intake close-loop validation (dry-run)
+        run: python scripts/validate_intake_loop.py
 
       - name: MCP context audit (fixture baseline)
         run: |
@@ -56,3 +61,18 @@ jobs:
           name: coverage-report
           path: htmlcov/
           if-no-files-found: ignore
+
+      - name: Git pipeline plan dry-run (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          python scripts/workflow_git.py plan --confidence 0 --tests-passed \
+            > workflow_git_plan.json
+          python -c "import json; json.load(open('workflow_git_plan.json'))"
+
+      - name: Upload git plan artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-git-plan
+          path: workflow_git_plan.json
+          if-no-files-found: error

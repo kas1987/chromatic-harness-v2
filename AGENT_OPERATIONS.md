@@ -44,6 +44,7 @@ python scripts/audit_mcp_context.py --profile harness_dev
 | **GO modes (bounded runtime)** | `python scripts/workflow_go.py GO` or `/go` — [docs/workflows/GO_MODES.md](docs/workflows/GO_MODES.md); **no** unattended `GO SWARM` ([AGENT_ANTIPATTERNS](docs/AGENT_ANTIPATTERNS.md)) |
 | **Git ship (confidence-gated)** | `python scripts/workflow_git.py plan` → `ship --execute` — [docs/workflows/PERMISSION_GATE.md](docs/workflows/PERMISSION_GATE.md) |
 | **Intake queue (close loop)** | [docs/INTAKE_QUEUE.md](docs/INTAKE_QUEUE.md) — `python scripts/auto_intake.py` |
+| **Automation / ops** | [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](docs/ops/HARNESS_AUTOMATION_RUNBOOK.md) — `run_intake_cycle`, `smoke_stack`, Task Scheduler |
 | **Chromatic MCP (lite)** | [docs/CHROMATIC_MCP_SERVER.md](docs/CHROMATIC_MCP_SERVER.md) — one server vs 15 plugins |
 | **Two-log audit** | [docs/workflows/TWO_LOG_AUDIT.md](docs/workflows/TWO_LOG_AUDIT.md) — `07_LOGS_AND_AUDIT/execution/` + `traces/` |
 | **Knowledge harvest** | `python scripts/harvest_rigs.py` — [docs/KNOWLEDGE_HARVEST.md](docs/KNOWLEDGE_HARVEST.md); runs on session handoff |
