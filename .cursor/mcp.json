@@ -5,7 +5,7 @@
       "args": ["-m", "chromatic_mcp.server"],
       "cwd": ".",
       "env": {
-        "PYTHONPATH": "02_RUNTIME;."
+        "PYTHONPATH": "02_RUNTIME"
       }
     }
   }
