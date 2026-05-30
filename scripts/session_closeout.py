@@ -1221,6 +1221,72 @@ def _append_auto_turn_observation(result: dict[str, Any]) -> str:
     return rel.as_posix()
 
 
+_SHIP_EVIDENCE = _REPO / ".agents" / "handoffs" / "ship_evidence.json"
+
+
+def evaluate_ship_completion(
+    beads_ready: list[str], *, evidence_path: Path | None = None
+) -> dict[str, Any]:
+    """Run the ClosureMagnet ship-completion check (ship-idea S8+S10+DoD) over the
+    session's beads (Gap C closeout wiring).
+
+    Evidence source: ``.agents/handoffs/ship_evidence.json`` — either a flat dict of
+    ship fields (applies to all beads) or ``{bead_id: {lean_ok, live_ok, dod_ok | ship_log}}``.
+    Returns per-bead verdicts and the beads that must NOT be closed
+    (recommended_action == "replan"). Fail-open: no evidence ⇒ nothing blocked.
+    """
+    result: dict[str, Any] = {
+        "ok": True,
+        "evaluated": [],
+        "block_close": [],
+        "applicable": False,
+    }
+    path = evidence_path or _SHIP_EVIDENCE
+    if not path.is_file():
+        result["skip_reason"] = "no ship_evidence.json"
+        return result
+    try:
+        evidence = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        result["ok"] = False
+        result["error"] = str(exc)
+        return result
+    if not isinstance(evidence, dict) or not evidence:
+        result["skip_reason"] = "evidence not a non-empty dict"
+        return result
+
+    try:
+        from magnets.closure_magnet import ClosureMagnet  # type: ignore
+    except Exception as exc:  # noqa: BLE001
+        result["ok"] = False
+        result["error"] = f"closure magnet import failed: {exc}"
+        return result
+
+    magnet = ClosureMagnet()
+    per_bead_keyed = all(isinstance(v, dict) for v in evidence.values())
+    for bead in beads_ready:
+        bead_signal = (
+            dict(evidence.get(bead) or {}) if per_bead_keyed else dict(evidence)
+        )
+        if not bead_signal:
+            continue
+        result["applicable"] = True
+        bead_signal.setdefault("validation_passed", True)
+        # Note: do NOT inject bead_id here — evidence is already per-bead scoped, and
+        # forcing a bead_id would scope-filter unscoped [S8]/[S10] log lines to nothing.
+        event = magnet.observe(bead, "closure", bead_signal)
+        ship = (event.observed_signal or {}).get("ship_completion") or {}
+        verdict = {
+            "bead_id": bead,
+            "recommended_action": event.recommended_action,
+            "missing": ship.get("missing", []),
+        }
+        result["evaluated"].append(verdict)
+        if event.recommended_action == "replan":
+            result["block_close"].append(verdict)
+    return result
+
+
 def git_snapshot() -> dict[str, Any]:
     snap: dict[str, Any] = {}
     for key, args in [
@@ -1346,17 +1412,29 @@ def main() -> int:
     ledger = BudgetLedger(_REPO)
     snapshot = ledger.snapshot()
 
+    # Gap C: enforce /ship-idea S8+S10+DoD before a bead is considered closeable.
+    ship_completion = evaluate_ship_completion(beads)
+    ship_risks: list[str] = []
+    ship_goals: list[str] = []
+    for v in ship_completion.get("block_close", []):
+        miss = ",".join(v.get("missing", [])) or "ship-idea gates"
+        ship_risks.append(
+            f"ship incomplete — bead {v['bead_id']} missing {miss}; do NOT close"
+        )
+        ship_goals.append(f"Finish ship-idea {miss} for {v['bead_id']}")
+
     handoff_prep: dict[str, Any] = {
         "directive_summary": args.summary
         or f"Session closeout ({source}). Budget decision: {snapshot.decision}.",
         "decision": "review" if snapshot.decision != "halt_human" else "halt",
-        "next_session_goals": [
+        "next_session_goals": ship_goals
+        + [
             beads[0] if beads else "bd ready",
             "Read .agents/handoffs/transfer_packet.json",
             "Run new_session_bootstrap.py",
         ],
         "context_snapshot": {"objective": "Continue harness mission from handoff"},
-        "risks": list(snapshot.reasons),
+        "risks": list(snapshot.reasons) + ship_risks,
     }
 
     result: dict[str, Any] = {
@@ -1364,6 +1442,7 @@ def main() -> int:
         "dry_run": args.dry_run,
         "git": git,
         "beads_ready": beads,
+        "ship_completion": ship_completion,
         "budget": snapshot.to_budget_dict(),
         "closeout_telemetry_path": "",
         "closeout_telemetry_history_path": "",
