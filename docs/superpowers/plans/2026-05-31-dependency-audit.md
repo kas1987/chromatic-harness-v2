@@ -162,7 +162,11 @@ import re
 import sys
 from pathlib import Path
 
-STDLIB = set(sys.stdlib_module_names) if hasattr(sys, 'stdlib_module_names') else set()
+STDLIB = set(sys.stdlib_module_names) if hasattr(sys, 'stdlib_module_names') else {
+    'os', 'sys', 're', 'json', 'pathlib', 'math', 'collections', 'datetime',
+    'shutil', 'subprocess', 'ast', 'argparse', 'time', 'logging', 'typing',
+    'functools', 'hashlib', 'uuid', 'random', 'select', 'socket', 'threading'
+}
 
 SKIP_DIRS = {'.venv', 'venv', '__pycache__', 'node_modules', '.worktrees', '.git', 'dist', 'build'}
 
@@ -185,11 +189,17 @@ def parse_pyproject(path: Path) -> set[str]:
     if not pyproject.exists():
         return pkgs
     content = pyproject.read_text(errors='ignore')
-    # Extract from [project.dependencies] and [tool.poetry.dependencies]
+    in_deps = False
     for line in content.splitlines():
-        m = re.match(r'^\s*"?([a-zA-Z0-9_\-]+)[>=<!"\s]', line)
-        if m:
-            pkgs.add(m.group(1).lower().replace('-', '_'))
+        line = line.strip()
+        if line.startswith('[') and line.endswith(']'):
+            section = line[1:-1].strip()
+            in_deps = section in ('project.dependencies', 'tool.poetry.dependencies', 'tool.poetry.group.dev.dependencies')
+            continue
+        if in_deps:
+            m = re.match(r'^"?([a-zA-Z0-9_\-]+)"?\s*[>=<!"\s=]', line)
+            if m:
+                pkgs.add(m.group(1).lower().replace('-', '_'))
     return pkgs
 
 
@@ -294,8 +304,11 @@ def collect_imports(path: Path) -> set[str]:
             content = f.read_text(errors='ignore')
             for m in IMPORT_RE.finditer(content):
                 pkg = m.group(1)
-                # Bare package name (strip scoped @org/pkg to just the key)
-                imports.add(pkg.lower())
+                parts = pkg.split('/')
+                if pkg.startswith('@') and len(parts) > 1:
+                    imports.add(f"{parts[0]}/{parts[1]}".lower())
+                else:
+                    imports.add(parts[0].lower())
     return imports
 
 
@@ -378,8 +391,8 @@ def collect_tools(path: Path) -> dict[str, list[str]]:
 
 
 def check_path(tool: str) -> bool:
-    result = subprocess.run(['command', '-v', tool], shell=True, capture_output=True)
-    return result.returncode == 0
+    import shutil
+    return shutil.which(tool) is not None
 
 
 def run(target: Path) -> dict:
@@ -480,7 +493,9 @@ def load_log_events(target: Path, days: int) -> list[dict]:
                 ts_str = event.get('timestamp') or event.get('ts') or event.get('time', '')
                 if ts_str:
                     try:
-                        ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00').replace('+00:00', ''))
+                        ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+                        if ts.tzinfo is not None:
+                            ts = ts.replace(tzinfo=None)
                         if ts < cutoff:
                             continue
                     except ValueError:
@@ -529,8 +544,11 @@ def run(target: Path, days: int = 30) -> dict:
     events = load_log_events(target, days)
     call_counts, token_costs = extract_tool_stats(events)
     called = set(call_counts.keys())
-    registered_set = set(registered)
-    dead = sorted(registered_set - called)
+    dead = []
+    for server in registered:
+        if not any(server in tool or tool in server for tool in called):
+            dead.append(server)
+    dead = sorted(dead)
     top_calls = sorted(call_counts.items(), key=lambda x: x[1], reverse=True)[:10]
     top_cost = sorted(token_costs.items(), key=lambda x: x[1], reverse=True)[:10]
     return {
