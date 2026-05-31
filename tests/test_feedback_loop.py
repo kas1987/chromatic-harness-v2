@@ -8,7 +8,6 @@ feedback_loop_pct KPI counts learning-sourced candidates.
 from __future__ import annotations
 
 import importlib.util
-import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
