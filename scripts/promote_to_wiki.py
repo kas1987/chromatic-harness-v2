@@ -16,6 +16,8 @@ import hashlib
 import json
 import os
 import re
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -226,6 +228,22 @@ def main() -> int:
         rel = _promote_one(src, wiki, execute=execute)
         if rel:
             promoted.append(rel)
+            if execute:
+                # Register the promoted candidate in the canon registry for traceability
+                candidate_name = Path(item["path"]).stem
+                try:
+                    subprocess.run(
+                        [
+                            sys.executable,
+                            str(REPO / "scripts" / "register_canon.py"),
+                            "--add",
+                            candidate_name,
+                        ],
+                        check=False,
+                        capture_output=True,
+                    )
+                except Exception:
+                    pass  # Registry update is best-effort; do not fail promotion
         item["wiki_dest"] = rel or "(unchanged)"
 
     report = {
