@@ -78,6 +78,9 @@ config/pre_session/settings.local.yaml
 # Claude Code personal hook overrides — per-machine, not committed (see settings.local.json.example)
 .claude/settings.local.json
 
+# Hook audit output — machine-local absolute paths, not portable
+hook_audit.json
+
 # Local pre-session pack staging (not source of truth)
 .tmp_pre_session_pack/
 
