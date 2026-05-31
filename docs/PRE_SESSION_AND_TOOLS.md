@@ -1,6 +1,6 @@
 # Pre-Session Tools, Resources, and MCP Inventory
 
-> **Generated:** `2026-05-31T20:34:23.637084+00:00`  
+> **Generated:** `2026-05-31T20:39:04.963419+00:00`  
 > **Regenerate:** `python scripts/generate_pre_session_inventory.py`  
 > **MCP path scanned:** `C:\Users\kas41\.cursor\projects\c-Users-kas41-chromatic-harness-v2\mcps`
 
@@ -16,8 +16,8 @@ See also: [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)
 | --- | --- |
 | Native Cursor tools | 15 |
 | Subagent types | 9 |
-| MCP servers (registered) | 2 |
-| MCP tools (descriptors) | 5 |
+| MCP servers (registered) | 5 |
+| MCP tools (descriptors) | 41 |
 | CRG manifest resources | 15 |
 
 ---
@@ -66,9 +66,27 @@ See also: [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)
 
 `create_project`, `move_agent_to_cloned_root`, `move_agent_to_root`, `open_automation`, `rename_chat`
 
-### `cursor-backend-control` (cursor-backend-control) — 0 tools
+### `cursor-backend-control` (cursor-backend-control) — 5 tools
 
-*Registered but no tool descriptors — likely needs authentication or plugin not connected.*
+`build_automation_prefill_url`, `create_automation`, `get_automation`, `list_automations`, `update_automation`
+
+### `cursor-ide-browser` (cursor-ide-browser) — 16 tools
+
+**Categories:** `browser_cdp`, `browser_click`, `browser_drag`, `browser_fill`, `browser_get_bounding_box`, `browser_highlight`, `browser_lock`, `browser_mouse_click_xy`, … (+8 more)
+
+<details><summary>Full tool list</summary>
+
+`browser_cdp`, `browser_click`, `browser_drag`, `browser_fill`, `browser_get_bounding_box`, `browser_highlight`, `browser_lock`, `browser_mouse_click_xy`, `browser_navigate`, `browser_press_key`, `browser_scroll`, `browser_select_option`, `browser_snapshot`, `browser_tabs`, `browser_take_screenshot`, `browser_type`
+
+</details>
+
+### `user-codegraph` (codegraph) — 10 tools
+
+`codegraph_callees`, `codegraph_callers`, `codegraph_context`, `codegraph_explore`, `codegraph_files`, `codegraph_impact`, `codegraph_node`, `codegraph_search`, `codegraph_status`, `codegraph_trace`
+
+### `user-review-daemon` (review-daemon) — 5 tools
+
+`review_enqueue`, `review_package`, `review_run`, `review_ship`, `review_status`
 
 ---
 

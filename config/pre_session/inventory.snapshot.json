@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-05-31T20:34:23.637084+00:00",
+  "generated_at": "2026-05-31T20:39:04.963419+00:00",
   "repo": "C:\\Users\\kas41\\chromatic-harness-v2",
   "mcp_descriptors_path": "C:\\Users\\kas41\\.cursor\\projects\\c-Users-kas41-chromatic-harness-v2\\mcps",
   "summary": {
     "native_tool_count": 15,
     "subagent_count": 9,
-    "mcp_server_count": 2,
-    "mcp_tool_count": 5,
+    "mcp_server_count": 5,
+    "mcp_tool_count": 41,
     "crg_resource_count": 15
   },
   "native_tools": [
@@ -99,9 +99,70 @@
     {
       "id": "cursor-backend-control",
       "display_name": "cursor-backend-control",
-      "tool_count": 0,
-      "tools": [],
-      "status": "registered_no_descriptors"
+      "tool_count": 5,
+      "tools": [
+        "build_automation_prefill_url",
+        "create_automation",
+        "get_automation",
+        "list_automations",
+        "update_automation"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "cursor-ide-browser",
+      "display_name": "cursor-ide-browser",
+      "tool_count": 16,
+      "tools": [
+        "browser_cdp",
+        "browser_click",
+        "browser_drag",
+        "browser_fill",
+        "browser_get_bounding_box",
+        "browser_highlight",
+        "browser_lock",
+        "browser_mouse_click_xy",
+        "browser_navigate",
+        "browser_press_key",
+        "browser_scroll",
+        "browser_select_option",
+        "browser_snapshot",
+        "browser_tabs",
+        "browser_take_screenshot",
+        "browser_type"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "user-codegraph",
+      "display_name": "codegraph",
+      "tool_count": 10,
+      "tools": [
+        "codegraph_callees",
+        "codegraph_callers",
+        "codegraph_context",
+        "codegraph_explore",
+        "codegraph_files",
+        "codegraph_impact",
+        "codegraph_node",
+        "codegraph_search",
+        "codegraph_status",
+        "codegraph_trace"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "user-review-daemon",
+      "display_name": "review-daemon",
+      "tool_count": 5,
+      "tools": [
+        "review_enqueue",
+        "review_package",
+        "review_run",
+        "review_ship",
+        "review_status"
+      ],
+      "status": "active"
     }
   ],
   "crg_manifest": [

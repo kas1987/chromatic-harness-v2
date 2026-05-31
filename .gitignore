@@ -72,6 +72,9 @@ docs/workflows/WORKFLOW_RUN_LOG.jsonl
 # Pre-session inventory machine-local paths
 config/pre_session/settings.local.yaml
 
+# Runtime lock DB — created fresh by _ensure_db(); never commit session state
+.agents/locks/session_locks.sqlite3
+
 # Claude Code personal hook overrides — committed to repo (Windows PowerShell wrappers)
 # .claude/settings.local.json
 
