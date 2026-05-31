@@ -15,26 +15,42 @@ from __future__ import annotations
 
 import json
 import os
+from typing import Any
 from pathlib import Path
 
 _METRICS = Path(".agents/audits/locks/latest_lock_metrics.json")
 
 
+def _num(value: Any, default: float) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def main() -> int:
+    # Defensive: a malformed file, a non-dict root, non-dict nested values, or a
+    # misconfigured env var must never crash this gate (it would red-light CI).
     data: dict = {}
     if _METRICS.is_file():
         try:
-            data = json.loads(_METRICS.read_text(encoding="utf-8"))
+            loaded = json.loads(_METRICS.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                data = loaded
         except (OSError, json.JSONDecodeError):
-            data = {}
+            pass
 
-    rate = float(data.get("timeout_rate", 0.0) or 0.0)
-    p95 = float((data.get("wait_ms") or {}).get("p95", 0) or 0)
-    total = int((data.get("event_counts") or {}).get("total", 0) or 0)
+    wait_ms = data.get("wait_ms") if isinstance(data.get("wait_ms"), dict) else {}
+    counts = (
+        data.get("event_counts") if isinstance(data.get("event_counts"), dict) else {}
+    )
+    rate = _num(data.get("timeout_rate"), 0.0)
+    p95 = _num(wait_ms.get("p95"), 0.0)
+    total = int(_num(counts.get("total"), 0))
     print(f"LOCK_METRICS_SUMMARY timeout_rate={rate} p95_ms={p95} total={total}")
 
-    thr = float(os.environ.get("CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD", "0.05"))
-    min_n = int(os.environ.get("CHROMATIC_LOCK_MIN_SAMPLE_SIZE", "20"))
+    thr = _num(os.environ.get("CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD"), 0.05)
+    min_n = int(_num(os.environ.get("CHROMATIC_LOCK_MIN_SAMPLE_SIZE"), 20))
     print(
         f"LOCK_GATE timeout_rate={rate} total={total} threshold={thr} min_sample={min_n}"
     )
