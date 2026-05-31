@@ -16,6 +16,8 @@ import hashlib
 import json
 import os
 import re
+import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -23,6 +25,7 @@ REPO = Path(__file__).resolve().parents[1]
 DEFAULT_WIKI = Path(r"C:\Users\kas41\chromatic-wiki")
 LEARNINGS = REPO / ".agents" / "learnings"
 AUTO_TURN_REPORTS = REPO / "07_LOGS_AND_AUDIT" / "auto_turn_thresholds"
+CANDIDATES_DIR = REPO / ".agents" / "candidates"
 WIKI_LEARNINGS = "02_LEARNINGS"
 
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -68,6 +71,38 @@ def _confidence(meta: dict[str, str]) -> float:
 def _slug(name: str) -> str:
     base = re.sub(r"[^a-zA-Z0-9]+", "-", name.lower()).strip("-")
     return base[:80] or "learning"
+
+
+def _approved_candidates() -> set[str] | None:
+    """Return set of approved candidate names, or None if no candidates dir / it's empty.
+
+    Returns None  → no staging guard in effect (backward compatible).
+    Returns set() → candidates dir exists but is empty or has no approved items.
+    Returns {name, ...} → approved names that may be promoted.
+    """
+    if not CANDIDATES_DIR.is_dir():
+        return None
+    # Collect all non-schema .md files
+    candidate_files = [
+        p
+        for p in CANDIDATES_DIR.iterdir()
+        if p.suffix == ".md"
+        and p.name not in ("SCHEMA.md",)
+        and not p.name.startswith("_")
+    ]
+    if not candidate_files:
+        return None  # Dir exists but empty — treat as backward-compatible
+    approved: set[str] = set()
+    for path in candidate_files:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        meta, _ = _parse_frontmatter(text)
+        if meta.get("status", "").strip().lower() == "approved":
+            name = meta.get("name", path.stem).strip()
+            approved.add(name)
+    return approved
 
 
 def _discover_candidates(min_conf: float) -> list[dict]:
@@ -145,13 +180,70 @@ def main() -> int:
         )
         return 1
 
+    # Candidate staging guard: if .agents/candidates/ is non-empty, only promote
+    # items that have an approved candidate record. Backward-compatible: if the
+    # directory doesn't exist or is empty, behave as before.
+    approved_names = _approved_candidates()
+    if approved_names is not None:
+        print(
+            json.dumps(
+                {
+                    "info": "Candidate staging guard active",
+                    "approved_count": len(approved_names),
+                    "hint": (
+                        "Edit .agents/candidates/<slug>.md and set status: approved "
+                        "to allow promotion, or delete .agents/candidates/ to disable guard."
+                    ),
+                }
+            )
+        )
+
     candidates = _discover_candidates(args.min_confidence)
+
+    # Apply candidate guard filter
+    if approved_names is not None:
+        guarded_out: list[dict] = []
+        blocked: list[str] = []
+        for item in candidates:
+            if item["name"] in approved_names:
+                guarded_out.append(item)
+            else:
+                blocked.append(item["name"])
+        candidates = guarded_out
+        if blocked:
+            print(
+                json.dumps(
+                    {
+                        "guard": "blocked",
+                        "count": len(blocked),
+                        "names": blocked[:20],
+                        "hint": "Set status: approved in .agents/candidates/<slug>.md to promote",
+                    }
+                )
+            )
+
     promoted: list[str] = []
     for item in candidates:
         src = REPO / item["path"]
         rel = _promote_one(src, wiki, execute=execute)
         if rel:
             promoted.append(rel)
+            if execute:
+                # Register the promoted candidate in the canon registry for traceability
+                candidate_name = Path(item["path"]).stem
+                try:
+                    subprocess.run(
+                        [
+                            sys.executable,
+                            str(REPO / "scripts" / "register_canon.py"),
+                            "--add",
+                            candidate_name,
+                        ],
+                        check=False,
+                        capture_output=True,
+                    )
+                except Exception:
+                    pass  # Registry update is best-effort; do not fail promotion
         item["wiki_dest"] = rel or "(unchanged)"
 
     report = {
