@@ -123,6 +123,20 @@ def test_payload_cwd_outside_repo_fails_open():
     assert p.returncode == 0
 
 
+def test_quoted_git_push_in_argument_does_not_trigger():
+    """A literal 'git push' inside a quoted argument (e.g. a commit/reply body) must
+    not trigger the gate — only real command tokens count."""
+    p = _run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": 'gh api repos/x/y/pulls/1/comments -f body="fixed the git push collision"',
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
 def test_leading_cd_wins_over_payload_cwd():
     """`cd <other-repo> && git push` with payload cwd = harness must fail-open:
     the cd target is where the command actually runs, so it overrides payload cwd."""
