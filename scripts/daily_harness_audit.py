@@ -366,6 +366,33 @@ def audit(
                     }
                 )
 
+    root_artifact_hygiene_summary: dict[str, Any] = {}
+    root_hygiene_script = root / "scripts" / "root_artifact_hygiene.py"
+    if root_hygiene_script.is_file():
+        hygiene_result = run_cmd(
+            root, ["python", "scripts/root_artifact_hygiene.py"], timeout=30
+        )
+        command_results.append(hygiene_result)
+        for line in (hygiene_result.get("stdout") or "").splitlines():
+            if line.startswith("ROOT_ARTIFACT_HYGIENE:"):
+                key, _, val = line[len("ROOT_ARTIFACT_HYGIENE:") :].partition("=")
+                key = key.strip()
+                val = val.strip()
+                try:
+                    root_artifact_hygiene_summary[key] = int(val)
+                except ValueError:
+                    root_artifact_hygiene_summary[key] = val
+        planned = root_artifact_hygiene_summary.get("planned", 0)
+        if isinstance(planned, int) and planned > 0:
+            findings.append(
+                {
+                    "severity": "P2",
+                    "code": "root_artifact_hygiene_drift",
+                    "file": "scripts/root_artifact_hygiene.py",
+                    "message": f"root artifact hygiene: {planned} planned moves",
+                }
+            )
+
     counts: dict[str, int] = {"P0": 0, "P1": 0, "P2": 0, "P3": 0}
     for f in findings:
         counts[f.get("severity", "P3")] = counts.get(f.get("severity", "P3"), 0) + 1
@@ -386,6 +413,7 @@ def audit(
         "counts": counts,
         "lock_metrics": lock_metrics_summary,
         "bead_hygiene": bead_hygiene_summary,
+        "root_artifact_hygiene": root_artifact_hygiene_summary,
         "findings": sorted(
             findings, key=lambda f: severity_rank(f.get("severity", "P3"))
         ),
