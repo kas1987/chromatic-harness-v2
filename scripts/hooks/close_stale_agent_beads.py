@@ -2,14 +2,18 @@ import shutil
 import subprocess
 import sys
 
-# Resolve bd from PATH; fall back to common Windows npm install location
-BD = (
-    shutil.which("bd")
-    or shutil.which("bd.cmd")
-    or r"C:\Users\kas41\AppData\Roaming\npm\bd.cmd"
-)
-if not BD:
-    sys.exit(0)  # bd not installed — skip silently rather than break session closeout
+
+def _find_bd():
+    for name in ("bd.cmd", "bd.exe", "bd"):
+        found = shutil.which(name)
+        if found:
+            return found
+    return None
+
+
+BD = _find_bd()
+if BD is None:
+    sys.exit(0)  # fail-open: bd not installed, skip sweep
 
 result = subprocess.run(
     [BD, "list", "--status", "in_progress", "--limit", "0"],
@@ -29,8 +33,11 @@ ids = [
 if not ids:
     sys.exit(0)
 
-subprocess.run(
-    [BD, "close"] + ids + ["--reason", "session-end sweep", "--quiet"],
-    check=False,
-    shell=False,
-)
+try:
+    subprocess.run(
+        [BD, "close"] + ids + ["--reason", "session-end sweep", "--quiet"],
+        check=False,
+        shell=False,
+    )
+except Exception:
+    pass  # fail-open: bd failure must never break SessionEnd

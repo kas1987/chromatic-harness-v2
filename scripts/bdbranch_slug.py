@@ -12,11 +12,7 @@ if len(sys.argv) < 2:
 
 bead_id = sys.argv[1]
 
-bd_cmd = (
-    shutil.which("bd")
-    or shutil.which("bd.cmd")
-    or r"C:\Users\kas41\AppData\Roaming\npm\bd.cmd"
-)
+bd_cmd = shutil.which("bd.cmd") or shutil.which("bd.exe") or shutil.which("bd")
 if not bd_cmd:
     print("bd not found in PATH", file=sys.stderr)
     sys.exit(1)
