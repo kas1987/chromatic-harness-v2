@@ -26,6 +26,16 @@
             "timeout": 180
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/hooks/close_stale_agent_beads.py",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "PreCompact": [
