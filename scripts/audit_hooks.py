@@ -167,13 +167,24 @@ def _findings(rows: list[dict]) -> list[dict]:
         if r.get("event") in ("PreToolUse", "preToolUse")
         and "Agent" in str(r.get("matcher", ""))
     ]
-    # Only flag if the *same* command appears more than once (genuine duplicate that
-    # would run the gate twice). Distinct hooks (model-router, efficiency-advisor,
-    # gate.py) are intentional and should not be HIGH. (-eytk fix)
-    seen: dict[str, int] = {}
+
+    # Only flag if the *same script* appears more than once (genuine duplicate that
+    # would run the gate twice). Normalize by .py basename so absolute vs relative
+    # spellings (e.g. "python 02_RUNTIME/router/gate.py" vs
+    # "python C:/…/gate.py") are treated as the same script. Distinct hooks with
+    # different basenames (model-router, efficiency-advisor, gate.py) are
+    # intentional and must not be HIGH. (-eytk fix; codex #3330644287)
+    def _gate_key(cmd: str) -> str:
+        for token in reversed(cmd.split()):
+            if token.endswith(".py"):
+                return Path(token).name
+        return cmd
+
+    seen: dict[str, list[str]] = {}
     for cmd in agent_cmds:
-        seen[cmd] = seen.get(cmd, 0) + 1
-    dup_cmds = [cmd for cmd, count in seen.items() if count > 1]
+        key = _gate_key(cmd)
+        seen.setdefault(key, []).append(cmd)
+    dup_cmds = [cmds[0] for cmds in seen.values() if len(cmds) > 1]
     if dup_cmds:
         findings.append(
             {
