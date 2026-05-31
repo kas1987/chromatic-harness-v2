@@ -1,15 +1,15 @@
 # Pre-Session Inventory (Quick Reference)
 
 > Full doc: [docs/PRE_SESSION_AND_TOOLS.md](../docs/PRE_SESSION_AND_TOOLS.md)  
-> Generated: `2026-05-30T21:23:03.631592+00:00`
+> Generated: `2026-05-31T20:46:45.077283+00:00`
 
 ## At a glance
 
 | Category | Count |
 |----------|------:|
 | Native tools | 15 |
-| MCP servers | 2 |
-| MCP tools | 5 |
+| MCP servers | 5 |
+| MCP tools | 41 |
 | CRG resources | 15 |
 
 ## Before changing tools or MCP

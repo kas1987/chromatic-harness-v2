@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-30T09:09:35.001594+00:00",
+  "generated_at": "2026-05-31T18:09:03.291401+00:00",
   "runtime": "claude_code",
   "run_id": null,
   "task_id": "chromatic-harness-v2-4n4",
@@ -13,6 +13,7 @@
     "confidence": 0.0,
     "matched_keywords": [],
     "reasoning_depth": "deep",
+    "evidence_source": "none",
     "source": "classifier"
   },
   "confidence": {

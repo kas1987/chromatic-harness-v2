@@ -72,11 +72,20 @@ docs/workflows/WORKFLOW_RUN_LOG.jsonl
 # Pre-session inventory machine-local paths
 config/pre_session/settings.local.yaml
 
-# Claude Code personal hook overrides (copy from settings.local.json.example)
+# Runtime lock DB — created fresh by _ensure_db(); never commit session state
+.agents/locks/session_locks.sqlite3
+
+# Claude Code personal hook overrides — per-machine, not committed (see settings.local.json.example)
 .claude/settings.local.json
+
+# Hook audit output — machine-local absolute paths, not portable
+hook_audit.json
 
 # Local pre-session pack staging (not source of truth)
 .tmp_pre_session_pack/
+
+# Budget daily log — append-only telemetry, grows to 50MB+; ledger.jsonl + monthly.json are the tracked artifacts
+07_LOGS_AND_AUDIT/budget/daily.jsonl
 
 # BASELINE audit scorecards (generated)
 07_LOGS_AND_AUDIT/baseline/

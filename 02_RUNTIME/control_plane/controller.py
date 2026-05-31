@@ -57,6 +57,7 @@ for _p in (str(_RUNTIME_DIR), str(_REPO)):
         sys.path.insert(0, _p)
 
 from budget.quota_state import (  # noqa: E402
+    MANUAL_SEED_TTL_SECONDS,
     STALENESS_SECONDS,
     QuotaState,
     QuotaStateReader,
@@ -415,6 +416,14 @@ def run_once(
     forecast = _read_forecast(forecast_path)
     prev, pending_dir, pending_ticks = _read_overlay_state(overlay_path)
 
+    # Manual-seeded quota state is valid for 24h (MANUAL_SEED_TTL_SECONDS);
+    # proxy-captured state expires in the standard 5-minute window.
+    effective_max_age = (
+        MANUAL_SEED_TTL_SECONDS
+        if state.source == "manual"
+        else max_age_seconds
+    )
+
     decision = compute_decision(
         state,
         forecast,
@@ -422,7 +431,7 @@ def run_once(
         pending_dir=pending_dir,
         pending_ticks=pending_ticks,
         now=now,
-        max_age_seconds=max_age_seconds,
+        max_age_seconds=effective_max_age,
     )
 
     overlay = decision.to_overlay(now=now)

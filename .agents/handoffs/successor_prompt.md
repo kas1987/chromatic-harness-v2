@@ -1,7 +1,7 @@
 # Successor Agent Prompt
 
-**Transfer ID:** b1390166-4880-4737-a289-ab037cb0c0f8
-**Budget decision:** spawn
+**Transfer ID:** 95b21f5e-8c24-442b-ba68-d4aac4fe0342
+**Budget decision:** halt_human
 
 ## Objective
 
@@ -9,7 +9,7 @@ Continue harness mission from handoff
 
 ## Summary
 
-Session closeout (vscode). Budget decision: spawn.
+Session closeout (claude_code). Budget decision: halt_human.
 
 ## Next action
 
@@ -17,7 +17,7 @@ bd ready
 
 ## Risks
 
-- budget headroom OK for successor spawn
+- monthly cap reached ($11492.76 >= $400.00)
 
 ## Handoff
 

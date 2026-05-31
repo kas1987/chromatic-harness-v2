@@ -1,0 +1,1 @@
+{"worker":"W1","bead":"pwdz","status":"done","files_changed":["scripts/session_closeout.py","tests/test_closeout_wiki_promotion.py"],"tests":"4 passed","notes":"Added promote_learnings_to_wiki() with injectable runner, --promote-wiki BooleanOptionalAction flag, harvest-gated wiring in main(), and 4 fail-open tests."}

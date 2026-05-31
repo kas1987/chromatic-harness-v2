@@ -1,6 +1,5 @@
 {
-  "_comment": "Copy to .claude/settings.local.json (gitignored). Optional harness-only SessionStart.",
-  "_merge_note": "Claude Code may MERGE or REPLACE hooks with global settings — verify on your version before relying on slim mode.",
+  "_comment": "Windows per-machine hook overrides. Copy to .claude/settings.local.json (gitignored). Wraps each hook in PowerShell hidden-window to suppress terminal popups on Windows.",
   "hooks": {
     "SessionStart": [
       {
@@ -8,8 +7,54 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/session_start.py",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python scripts/session_start.py\"",
             "timeout": 120
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python scripts/session_closeout.py --invoked-by claude_code\"",
+            "timeout": 180
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"bd prime\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python 02_RUNTIME/router/gate.py\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python scripts/hooks/git_collision_pretooluse.py\"",
+            "timeout": 30
           }
         ]
       }

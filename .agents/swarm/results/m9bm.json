@@ -1,0 +1,12 @@
+{
+  "worker": "W3",
+  "bead": "m9bm",
+  "status": "done",
+  "files_changed": [
+    "scripts/hooks/git_collision_pretooluse.py",
+    "02_RUNTIME/concurrency/github_collision.py",
+    "tests/test_git_collision_pretooluse.py"
+  ],
+  "tests": "11 passed",
+  "notes": "Hook now derives effective cwd from payload.cwd/tool_input.cwd or leading cd-path; _current_branch and check_github_collision accept optional cwd; all fail-open invariants preserved."
+}

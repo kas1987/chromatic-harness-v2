@@ -43,6 +43,15 @@ DEFAULT_OUT = FORECAST_LATEST
 # Reuse the spec target; do NOT introduce a new target key (spec §9).
 TARGET_PCT = 90.0
 
+# Extended TTL for manually-seeded quota state — must match the value in
+# 02_RUNTIME/budget/quota_state.py (MANUAL_SEED_TTL_SECONDS = 86400).
+# Kept here as a local mirror so the forecaster and the controller use the
+# same window without a circular import between tools/ and 02_RUNTIME/.
+MANUAL_SEED_TTL_SECONDS = 86400
+# Default staleness window for proxy-captured quota state — must match
+# 02_RUNTIME/budget/quota_state.py (STALENESS_SECONDS = 300).
+STALENESS_SECONDS = 300
+
 # Fold in the C×T ROI routing card verbatim from quota_roi.py (seed tool).
 ROI_ROUTING_CARD = [
     {
@@ -165,7 +174,11 @@ def build_axis_prepaid(
     asset); >= target → ``green``.
     """
     # Manual seeds are valid for 24h; proxy captures expire in the normal 5min window.
-    _ttl = 86400 if getattr(quota_state, "source", None) == "manual" else 300
+    _ttl = (
+        MANUAL_SEED_TTL_SECONDS
+        if getattr(quota_state, "source", None) == "manual"
+        else STALENESS_SECONDS
+    )
     fresh = bool(
         quota_state is not None and quota_state.is_fresh(now=now, max_age_seconds=_ttl)
     )
