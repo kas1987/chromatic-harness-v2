@@ -87,7 +87,8 @@ def main() -> int:
     # WINS over the shell's starting cwd. Priority: (1) leading `cd <path>` (resolved
     # against payload cwd if relative), (2) payload cwd, (3) _REPO.
     payload_cwd: Path | None = None
-    raw_cwd = payload.get("cwd") or ((payload.get("tool_input") or {}).get("cwd"))
+    _ti = payload.get("tool_input") or payload.get("toolInput") or {}
+    raw_cwd = payload.get("cwd") or (_ti.get("cwd") if isinstance(_ti, dict) else None)
     if raw_cwd:
         try:
             payload_cwd = Path(str(raw_cwd)).resolve()
