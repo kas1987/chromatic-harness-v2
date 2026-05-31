@@ -9,7 +9,6 @@ import types
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import pytest
 
 # ---------------------------------------------------------------------------
 # Bootstrap: register stub modules that session_closeout imports at module level

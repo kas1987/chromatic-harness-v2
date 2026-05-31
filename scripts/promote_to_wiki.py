@@ -22,6 +22,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_WIKI = Path(r"C:\Users\kas41\chromatic-wiki")
 LEARNINGS = REPO / ".agents" / "learnings"
+AUTO_TURN_REPORTS = REPO / "07_LOGS_AND_AUDIT" / "auto_turn_thresholds"
 WIKI_LEARNINGS = "02_LEARNINGS"
 
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -70,25 +71,27 @@ def _slug(name: str) -> str:
 
 
 def _discover_candidates(min_conf: float) -> list[dict]:
-    if not LEARNINGS.is_dir():
-        return []
     out: list[dict] = []
-    for path in sorted(LEARNINGS.rglob("*.md")):
-        if path.name.startswith("_"):
+    # Learnings plus the auto-turn threshold calibration reports (also promotable).
+    for base in (LEARNINGS, AUTO_TURN_REPORTS):
+        if not base.is_dir():
             continue
-        text = path.read_text(encoding="utf-8", errors="replace")
-        meta, _ = _parse_frontmatter(text)
-        conf = _confidence(meta)
-        if conf < min_conf:
-            continue
-        out.append(
-            {
-                "path": str(path.relative_to(REPO)),
-                "name": meta.get("name", path.stem),
-                "confidence": conf,
-                "sha": hashlib.sha256(text.encode()).hexdigest()[:12],
-            }
-        )
+        for path in sorted(base.rglob("*.md")):
+            if path.name.startswith("_"):
+                continue
+            text = path.read_text(encoding="utf-8", errors="replace")
+            meta, _ = _parse_frontmatter(text)
+            conf = _confidence(meta)
+            if conf < min_conf:
+                continue
+            out.append(
+                {
+                    "path": str(path.relative_to(REPO)),
+                    "name": meta.get("name", path.stem),
+                    "confidence": conf,
+                    "sha": hashlib.sha256(text.encode()).hexdigest()[:12],
+                }
+            )
     return out
 
 
@@ -99,11 +102,14 @@ def _promote_one(src: Path, wiki_root: Path, *, execute: bool) -> str | None:
     dest = wiki_root / WIKI_LEARNINGS / f"{slug}.md"
     if dest.is_file():
         existing = dest.read_text(encoding="utf-8", errors="replace")
-        if hashlib.sha256(existing.encode()).hexdigest() == hashlib.sha256(text.encode()).hexdigest():
+        if (
+            hashlib.sha256(existing.encode()).hexdigest()
+            == hashlib.sha256(text.encode()).hexdigest()
+        ):
             return None
 
     header = meta.copy()
-    header.setdefault("promoted_from", str(src.relative_to(REPO)))
+    header.setdefault("promoted_from", src.relative_to(REPO).as_posix())
     header.setdefault("date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     header.setdefault("status", "candidate")
     lines = ["---"]

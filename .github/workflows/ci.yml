@@ -10,6 +10,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # The router/provider tests assert local-provider routing (native_claude), which is
+    # gated by a runtime probe (claude on PATH) absent on a cloud runner. Declare the
+    # native-claude relay so the routing LOGIC is tested deterministically, matching dev.
+    env:
+      NATIVE_CLAUDE_RELAY_URL: "http://localhost:11434"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,6 +27,19 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # Several governance/intake checks shell out to `bd` (beads). Install it so the
+      # checks run for real on the runner instead of FileNotFound-ing.
+      - name: Install beads (bd)
+        run: |
+          set -euo pipefail
+          curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
+          for d in "$HOME/.local/bin" "$HOME/.beads/bin" /usr/local/bin; do
+            [ -x "$d/bd" ] && echo "$d" >> "$GITHUB_PATH" && export PATH="$d:$PATH"
+          done
+          # Hard-fail if bd did not land on PATH: the governance/intake checks must run
+          # for real, not fail-open. (codex review #3330604912)
+          command -v bd && bd --version
 
       # These two-log/intake JSONLs are runtime-generated and gitignored, so a clean
       # CI checkout lacks them. Seed empty placeholders so the mandatory-docs guard
@@ -82,13 +100,13 @@ jobs:
         run: python scripts/lock_metrics_rollup.py --lookback-days 7 --write
 
       - name: Print lock metrics summary
-        run: python -c "import json; from pathlib import Path; p=Path('.agents/audits/locks/latest_lock_metrics.json'); d=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}; print(f\"LOCK_METRICS_SUMMARY timeout_rate={d.get('timeout_rate',0)} p95_ms={(d.get('wait_ms') or {}).get('p95',0)} total={(d.get('event_counts') or {}).get('total',0)}\")"
+        run: python scripts/lock_metrics_gate.py
 
       - name: Enforce lock timeout gate (sample-aware)
         env:
           CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD: "0.05"
           CHROMATIC_LOCK_MIN_SAMPLE_SIZE: "20"
-        run: python -c "import json, os, sys; from pathlib import Path; p=Path('.agents/audits/locks/latest_lock_metrics.json'); d=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}; r=float(d.get('timeout_rate',0.0)); n=int((d.get('event_counts') or {}).get('total',0)); thr=float(os.environ.get('CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD','0.05')); min_n=int(os.environ.get('CHROMATIC_LOCK_MIN_SAMPLE_SIZE','20')); print(f'LOCK_GATE timeout_rate={r} total={n} threshold={thr} min_sample={min_n}'); sys.exit(1 if (n>=min_n and r>thr) else 0)"
+        run: python scripts/lock_metrics_gate.py
 
       - name: Upload lock metrics artifact
         if: github.event_name == 'pull_request'
@@ -162,13 +180,13 @@ jobs:
         run: python scripts/lock_metrics_rollup.py --lookback-days 7 --write
 
       - name: Print lock metrics summary
-        run: python -c "import json; from pathlib import Path; p=Path('.agents/audits/locks/latest_lock_metrics.json'); d=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}; print(f\"LOCK_METRICS_SUMMARY timeout_rate={d.get('timeout_rate',0)} p95_ms={(d.get('wait_ms') or {}).get('p95',0)} total={(d.get('event_counts') or {}).get('total',0)}\")"
+        run: python scripts/lock_metrics_gate.py
 
       - name: Enforce lock timeout gate (sample-aware)
         env:
           CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD: "0.05"
           CHROMATIC_LOCK_MIN_SAMPLE_SIZE: "20"
-        run: python -c "import json, os, sys; from pathlib import Path; p=Path('.agents/audits/locks/latest_lock_metrics.json'); d=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}; r=float(d.get('timeout_rate',0.0)); n=int((d.get('event_counts') or {}).get('total',0)); thr=float(os.environ.get('CHROMATIC_LOCK_TIMEOUT_RATE_THRESHOLD','0.05')); min_n=int(os.environ.get('CHROMATIC_LOCK_MIN_SAMPLE_SIZE','20')); print(f'LOCK_GATE timeout_rate={r} total={n} threshold={thr} min_sample={min_n}'); sys.exit(1 if (n>=min_n and r>thr) else 0)"
+        run: python scripts/lock_metrics_gate.py
 
       - name: Upload lock metrics artifact
         if: github.event_name == 'pull_request'
