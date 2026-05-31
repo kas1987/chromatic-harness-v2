@@ -1,0 +1,160 @@
+{
+  "desktop_root": "C:\\AI-DJ\\01_ACTIVE_REPOS",
+  "generated_at": "2026-05-31T21:07:58.782387Z",
+  "laptop_root": "C:\\Users\\kas41",
+  "repos": [
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\.01_Image Org",
+      "github_remote": "https://github.com/kas1987/Image-Prism.git",
+      "notes": "2 local-only branch(es): worktree-agent-abdf5b8ce943b9309, worktree-agent-ae8d58d1c01764a7d",
+      "risk": "LocalBranch",
+      "laptop_path": "",
+      "name": ".01_Image Org",
+      "current_branch": "feat/kind-flag-worker-stop-test-providers"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\.04_Prism",
+      "github_remote": "https://github.com/kas1987/04-prism-LAP.git",
+      "notes": "1 local-only branch(es): main",
+      "risk": "LocalBranch",
+      "laptop_path": "",
+      "name": ".04_Prism",
+      "current_branch": "preserve/laptop-20260531"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\.claude",
+      "github_remote": "https://github.com/kas1987/claude-config.git",
+      "notes": "5 uncommitted file(s); 67 local-only branch(es): linux, macos, session/2026-05-21-claude-md-patches-and-plugin-sync, session/2026-05-21-governance-and-router-config-federate, session/2026-05-21-headless-cron-and-custom-commands, session/2026-05-21-swarm-session-health-rpi-preflight, swarm/task-abc-wave-1779402162, swarm/task-abc-wave-1779402172, swarm/task-abc-wave-1779402180, swarm/task-abc-wave-1779402193, swarm/task-abc-wave-1779402216, swarm/task-abc-wave-1779873101, swarm/task-abc-wave-1779873286, swarm/task-abc-wave-1779873578, swarm/task-abc-wave-1779873760, swarm/task-abc-wave-1779873885, swarm/task-abc-wave-1779874308, swarm/task-abc-wave-1779874806, swarm/task-abc-wave-1779875724, swarm/task-abc-wave-1779875725, swarm/task-abc-wave-1779875901, swarm/task-abc-wave-1779877096, swarm/task-abc-wave-1779891129, swarm/task-abc-wave-1779891214, swarm/task-abc-wave-1779891529, swarm/task-abc-wave-1779891663, swarm/task-abc-wave-1779893130, swarm/task-abc-wave-1779922849, swarm/task-abc-wave-1779923583, swarm/task-abc-wave-1779974341, swarm/task-abc-wave-1779974780, swarm/task-abc-wave-1779975023, swarm/task-abc-wave-1779975137, swarm/task-abc-wave-1779975723, swarm/task-abc-wave-1779976021, swarm/task-abc-wave-1779982421, swarm/task-abc-wave-1780183091, swarm/task-abc-wave-1780184151, swarm/task-xyz-wave-1779402163, swarm/task-xyz-wave-1779402193, swarm/task-xyz-wave-1779402217, swarm/task-xyz-wave-1779873102, swarm/task-xyz-wave-1779873287, swarm/task-xyz-wave-1779873580, swarm/task-xyz-wave-1779873761, swarm/task-xyz-wave-1779873886, swarm/task-xyz-wave-1779874309, swarm/task-xyz-wave-1779874808, swarm/task-xyz-wave-1779875726, swarm/task-xyz-wave-1779875902, swarm/task-xyz-wave-1779877097, swarm/task-xyz-wave-1779891130, swarm/task-xyz-wave-1779891215, swarm/task-xyz-wave-1779891536, swarm/task-xyz-wave-1779891665, swarm/task-xyz-wave-1779893132, swarm/task-xyz-wave-1779922850, swarm/task-xyz-wave-1779923584, swarm/task-xyz-wave-1779974343, swarm/task-xyz-wave-1779974781, swarm/task-xyz-wave-1779975024, swarm/task-xyz-wave-1779975138, swarm/task-xyz-wave-1779975724, swarm/task-xyz-wave-1779976023, swarm/task-xyz-wave-1779982424, swarm/task-xyz-wave-1780183096, swarm/task-xyz-wave-1780184154",
+      "risk": "Dirty",
+      "laptop_path": "C:\\Users\\kas41\\.claude",
+      "name": ".claude",
+      "current_branch": "session/token-efficiency"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\plugin",
+      "github_remote": "https://github.com/nyldn/claude-octopus",
+      "notes": "2 commit(s) not pushed",
+      "risk": "Ahead",
+      "laptop_path": "C:\\Users\\kas41\\.claude-octopus\\plugin",
+      "name": "plugin",
+      "current_branch": "main"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\plugins",
+      "github_remote": "https://github.com/openai/plugins.git",
+      "notes": "1 uncommitted file(s)",
+      "risk": "Dirty",
+      "laptop_path": "C:\\Users\\kas41\\.codex\\.tmp\\plugins",
+      "name": "plugins",
+      "current_branch": "main"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\skills",
+      "github_remote": "https://github.com/openai/skills.git",
+      "notes": "1 uncommitted file(s)",
+      "risk": "Dirty",
+      "laptop_path": "C:\\Users\\kas41\\.codex\\vendor_imports\\skills",
+      "name": "skills",
+      "current_branch": "main"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\.oh-my-bash",
+      "github_remote": "https://github.com/ohmybash/oh-my-bash.git",
+      "notes": "1 uncommitted file(s)",
+      "risk": "Dirty",
+      "laptop_path": "C:\\Users\\kas41\\.oh-my-bash",
+      "name": ".oh-my-bash",
+      "current_branch": "master"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\skills",
+      "github_remote": "https://github.com/kas1987/claude-skills.git",
+      "notes": "",
+      "risk": "Clean",
+      "laptop_path": "C:\\Users\\kas41\\.pi\\agent\\skills",
+      "name": "skills",
+      "current_branch": "preserve/laptop-20260531"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\.pyenv",
+      "github_remote": "",
+      "notes": "HEAD is detached â€” snapshot state, verify before wipe",
+      "risk": "Detached",
+      "laptop_path": "C:\\Users\\kas41\\.pyenv",
+      "name": ".pyenv",
+      "current_branch": "(detached)"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\zelexdoll-theme",
+      "github_remote": "",
+      "notes": "No remote â€” work will be lost on rebuild; 1 local-only branch(es): master",
+      "risk": "LocalOnly",
+      "laptop_path": "C:\\Users\\kas41\\archived\\zelexdoll-theme",
+      "name": "zelexdoll-theme",
+      "current_branch": "master"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\Chromatic_Wiki",
+      "github_remote": "https://github.com/kas1987/chromatic-wiki.git",
+      "notes": "",
+      "risk": "Clean",
+      "laptop_path": "C:\\Users\\kas41\\Chromatic_Wiki",
+      "name": "Chromatic_Wiki",
+      "current_branch": "session/wiki-v0-1-initial"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\chromatic-design-studios",
+      "github_remote": "https://github.com/kas1987/chromatic-design-studios.git",
+      "notes": "",
+      "risk": "Clean",
+      "laptop_path": "C:\\Users\\kas41\\chromatic-design-studios",
+      "name": "chromatic-design-studios",
+      "current_branch": "master"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\chromatic-harness-v2",
+      "github_remote": "https://github.com/kas1987/chromatic-harness-v2.git",
+      "notes": "15 uncommitted file(s); 2 local-only branch(es): epic/4nk5.4-inventory-stale-desktop-repos, session/auto-mode-governance-20260530",
+      "risk": "Dirty",
+      "laptop_path": "C:\\Users\\kas41\\chromatic-harness-v2",
+      "name": "chromatic-harness-v2",
+      "current_branch": "epic/4nk5.4-inventory-stale-desktop-repos"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\chromatic-stack",
+      "github_remote": "https://github.com/kas1987/chromatic-stack.git",
+      "notes": "1 local-only branch(es): master",
+      "risk": "LocalBranch",
+      "laptop_path": "C:\\Users\\kas41\\chromatic-stack",
+      "name": "chromatic-stack",
+      "current_branch": "preserve/laptop-20260531"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\chromatic-wiki",
+      "github_remote": "https://github.com/kas1987/chromatic-wiki.git",
+      "notes": "1 local-only branch(es): learnings/auto-promote-20260531-182846",
+      "risk": "LocalBranch",
+      "laptop_path": "C:\\Users\\kas41\\chromatic-wiki",
+      "name": "chromatic-wiki",
+      "current_branch": "learnings/auto-promote-20260531-182846"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\claude-powerline",
+      "github_remote": "https://github.com/Owloops/claude-powerline.git",
+      "notes": "1 local-only branch(es): kas41/context-thresholds",
+      "risk": "LocalBranch",
+      "laptop_path": "C:\\Users\\kas41\\claude-powerline",
+      "name": "claude-powerline",
+      "current_branch": "kas41/context-thresholds"
+    },
+    {
+      "desktop_path": "C:\\AI-DJ\\01_ACTIVE_REPOS\\fusion-computer",
+      "github_remote": "https://github.com/kas1987/fusion-computer.git",
+      "notes": "",
+      "risk": "Clean",
+      "laptop_path": "C:\\Users\\kas41\\fusion-computer",
+      "name": "fusion-computer",
+      "current_branch": "session/2026-05-28-harness-v2"
+    }
+  ]
+}
