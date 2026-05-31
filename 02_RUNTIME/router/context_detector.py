@@ -97,7 +97,7 @@ class ContextDetector:
 
             status = MEMORYSTATUSEX()
             status.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
-            if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+            if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):  # type: ignore[attr-defined]  # windll is Windows-only
                 return None
             if not status.ullTotalPhys:
                 return None
@@ -285,7 +285,7 @@ class ContextDetector:
                     ]
 
                 sps = SYSTEM_POWER_STATUS()
-                if ctypes.windll.kernel32.GetSystemPowerStatus(ctypes.byref(sps)):
+                if ctypes.windll.kernel32.GetSystemPowerStatus(ctypes.byref(sps)):  # type: ignore[attr-defined]  # windll is Windows-only
                     return sps.ACLineStatus == 0  # type: ignore[return-value]  # 0 = battery, 1 = AC
         except Exception:
             pass
