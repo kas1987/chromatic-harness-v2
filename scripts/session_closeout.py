@@ -1260,6 +1260,44 @@ def run_change_gated_quality(*, run_pytest: bool) -> dict[str, Any]:
     return summary
 
 
+def _auto_git_ship(*, quality: dict[str, Any], bead_id: str = "") -> dict[str, Any]:
+    """Auto-ship via workflow_git when quality gates pass (-477a).
+
+    Confidence 92 is used when ruff+pytest both pass (or pytest was skipped but ruff
+    passed). Collision guard inside workflow_git.py provides the safety net. Fail-open.
+    """
+    ruff_ok = (quality.get("ruff") or {}).get("ok", True)
+    pytest_result = quality.get("pytest")
+    pytest_ok = pytest_result is None or pytest_result.get("ok", True)
+    if not ruff_ok:
+        return {"skipped": True, "reason": "ruff_failed"}
+    confidence = 92 if pytest_ok else 88
+    cmd = [
+        sys.executable,
+        str(_REPO / "scripts" / "workflow_git.py"),
+        "ship",
+        "--confidence",
+        str(confidence),
+        "--verifier",
+        "approve",
+        "--execute",
+    ]
+    if pytest_ok and pytest_result is not None:
+        cmd.append("--tests-passed")
+    if bead_id:
+        cmd += ["--bead-id", bead_id]
+    try:
+        code, out = _run(cmd, timeout=120)
+        return {
+            "exit": code,
+            "ok": code == 0,
+            "confidence": confidence,
+            "output": out[:2000],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
 def _select_auto_turn_artifact_kind(result: dict[str, Any]) -> str:
     # Open beads imply in-flight work, so emit a learning checkpoint rather than a full post-mortem.
     if result.get("beads_ready"):
@@ -1550,6 +1588,11 @@ def main() -> int:
         "--no-pytest",
         action="store_true",
         help="Skip pytest in the change-gated quality step (ruff still runs on changed .py)",
+    )
+    parser.add_argument(
+        "--no-auto-ship",
+        action="store_true",
+        help="Skip automatic workflow_git ship even when quality gates pass",
     )
     parser.add_argument(
         "--epic-policy-config",
@@ -1857,6 +1900,12 @@ def main() -> int:
         )
     if quality.get("ruff") and not quality["ruff"]["ok"]:
         handoff_prep["risks"].append("ruff check found issues")
+
+    # Auto-ship (-477a): invoke workflow_git ship when quality passes, unless opted out.
+    if not args.no_auto_ship:
+        result["auto_git_ship"] = _auto_git_ship(quality=quality)
+    else:
+        result["auto_git_ship"] = {"skipped": True, "reason": "--no-auto-ship"}
 
     log_activity(
         args.summary or f"session closeout ({source}); budget={snapshot.decision}",
