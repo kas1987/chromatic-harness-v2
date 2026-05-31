@@ -79,11 +79,10 @@ def _parse_scorecard_sessions(path: Path) -> list[dict]:
 
 
 def _pct_series(
-    kpi_name: str, sessions: list[dict], *, baseline: float, current: float
+    kpi_name: str, n: int, *, baseline: float, current: float
 ) -> list[float]:
-    """Build a simple interpolated series from baseline to current across sessions."""
-    n = max(sessions[0].get("session_count", 1), 1) if sessions else 1
-    if n == 1:
+    """Build a simple interpolated series from baseline to current across n sessions."""
+    if n <= 1:
         return [baseline]
     step = (current - baseline) / (n - 1)
     return [round(baseline + step * i, 1) for i in range(n)]
@@ -92,7 +91,12 @@ def _pct_series(
 def generate_telemetry_summary(*, dry_run: bool = False) -> str:
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
-    # Token ledger digest
+    # Token ledger digest — count all rows, sample last 2000 for spend
+    ledger_total_lines = 0
+    if _LEDGER.exists():
+        ledger_total_lines = sum(
+            1 for ln in _LEDGER.read_text(encoding="utf-8").splitlines() if ln.strip()
+        )
     ledger_rows = _load_jsonl(_LEDGER, tail=2000)
     total_usd = sum(float(r.get("usd") or 0) for r in ledger_rows)
     by_axis: dict[str, float] = {}
@@ -105,10 +109,10 @@ def generate_telemetry_summary(*, dry_run: bool = False) -> str:
     last_gov = gov_rows[-1] if gov_rows else {}
     gov_status = str(last_gov.get("status") or "unknown")
 
-    # Harness health
+    # Harness health — keys match 07_LOGS_AND_AUDIT/harness_health/latest.json schema
     health = _load_json(_HEALTH)
-    health_status = str(health.get("status") or "unknown")
-    health_ts = str(health.get("timestamp") or "")
+    health_status = str(health.get("overall_status") or "unknown")
+    health_ts = str(health.get("generated_at_utc") or "")
 
     axis_lines = "\n".join(
         f"  - Axis {ax}: ${v:.2f}" for ax, v in sorted(by_axis.items())
@@ -123,7 +127,8 @@ def generate_telemetry_summary(*, dry_run: bool = False) -> str:
 
 | Metric | Value |
 |--------|-------|
-| Total ledger entries | {len(ledger_rows):,} |
+| Total ledger entries | {ledger_total_lines:,} |
+| Sampled entries (last 2000) | {len(ledger_rows):,} |
 | Total USD (sampled last 2000) | ${total_usd:.2f} |
 | Axis breakdown | P={by_axis.get("P", 0):.2f} / D={by_axis.get("D", 0):.2f} / F={by_axis.get("F", 0):.2f} |
 
@@ -162,13 +167,28 @@ def generate_dashboard(*, dry_run: bool = False) -> str:
     labels = [f'"Baseline (S1)"'] + [f'"S{i}"' for i in range(2, n + 1)]
     label_str = ", ".join(labels)
 
-    # Coverage pct series (0% → current)
+    # Coverage pct series — read from scorecard, fall back to 33%
     cov_current = 33.0
-    cov_series = _pct_series("coverage", sessions_info, baseline=0, current=cov_current)
+    cov_kpi = kpis.get("% sessions started from state files") or kpis.get(
+        "% sessions from state files"
+    )
+    if cov_kpi:
+        try:
+            cov_current = float(cov_kpi["current"].replace("%", "").strip())
+        except (ValueError, KeyError):
+            pass
+    cov_series = _pct_series("coverage", n, baseline=0, current=cov_current)
     cov_str = ", ".join(str(v) for v in cov_series)
 
-    # Decision log entries (2 → 4)
+    # Decision log entries — read from scorecard, fall back to 4
     dec_current = 4
+    dec_kpi = kpis.get("% actions logged to decision log") or kpis.get(
+        "Decision log entries"
+    )
+    if dec_kpi:
+        m_dec = re.search(r"(\d+)", dec_kpi.get("current", ""))
+        if m_dec:
+            dec_current = int(m_dec.group(1))
     dec_series = [round(2 + (dec_current - 2) / max(n - 1, 1) * i) for i in range(n)]
     dec_str = ", ".join(str(v) for v in dec_series)
 

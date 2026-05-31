@@ -1,27 +1,28 @@
 # Telemetry Summary — chromatic-harness-v2
 
-> Generated: 2026-05-31T22:19:26+00:00
+> Generated: 2026-05-31T22:37:02+00:00
 > Run `python scripts/generate_dashboard.py --summary` to refresh
 
 ## Token Budget
 
 | Metric | Value |
 |--------|-------|
-| Total ledger entries | 2,000 |
-| Total USD (sampled last 2000) | $11.02 |
-| Axis breakdown | P=0.00 / D=11.02 / F=0.00 |
+| Total ledger entries | 3,962 |
+| Sampled entries (last 2000) | 2,000 |
+| Total USD (sampled last 2000) | $11.59 |
+| Axis breakdown | P=0.00 / D=11.59 / F=0.00 |
 
 ## Governance Health
 
 | Check | Value |
 |-------|-------|
 | Last governance run status | red |
-| Harness health status | unknown |
-| Health snapshot timestamp | N/A |
+| Harness health status | red |
+| Health snapshot timestamp | 2026-05-31T18:28:51 |
 
 ## Axis Spend Breakdown (last 2000 ledger entries)
 
-  - Axis D: $11.02
+  - Axis D: $11.59
   - Axis F: $0.00
   - Axis P: $0.00
 
