@@ -104,6 +104,54 @@ def _infer_name(fm: dict, stem: str) -> str:
     return _slugify(raw) or _slugify(stem)
 
 
+def _yaml_scalar(value: str) -> str:
+    """Quote a YAML scalar when it contains characters that break frontmatter.
+
+    A bare scalar like ``Research: Most-Used Skills`` is parsed as a mapping by
+    standard YAML loaders. Double-quote (and escape) when the value contains a
+    colon-space, leading indicator chars, or quotes so generated frontmatter
+    round-trips through any YAML/frontmatter consumer, not just our tolerant
+    custom parser.
+    """
+    text = str(value)
+    needs_quote = (
+        ": " in text
+        or text.endswith(":")
+        or text.startswith(
+            (
+                "#",
+                "!",
+                "&",
+                "*",
+                "?",
+                "|",
+                ">",
+                "%",
+                "@",
+                "`",
+                '"',
+                "'",
+                "[",
+                "{",
+                "-",
+                " ",
+            )
+        )
+        or text.endswith(" ")
+        or any(c in text for c in ("\n", "\t"))
+        or text == ""
+    )
+    if not needs_quote:
+        return text
+    escaped = (
+        text.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+        .replace("\t", "\\t")
+    )
+    return f'"{escaped}"'
+
+
 def _render_pattern(
     name: str,
     ptype: str,
@@ -117,11 +165,11 @@ def _render_pattern(
     sources_str = "[" + ", ".join(source_learnings) + "]" if source_learnings else "[]"
     return (
         f"---\n"
-        f"name: {name}\n"
+        f"name: {_yaml_scalar(name)}\n"
         f"type: {ptype}\n"
         f"confidence: {confidence:.2f}\n"
         f"source_learnings: {sources_str}\n"
-        f"description: {description}\n"
+        f"description: {_yaml_scalar(description)}\n"
         f"tags: {tags_str}\n"
         f"---\n\n"
         f"{body}\n"

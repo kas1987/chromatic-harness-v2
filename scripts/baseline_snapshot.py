@@ -24,6 +24,7 @@ COLLECTOR_MODULES = [
     "context_budget_adherence",
     "mcp_count",
     "terminal_use",
+    "pattern_count",
 ]
 
 
