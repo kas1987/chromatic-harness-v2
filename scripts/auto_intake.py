@@ -6,6 +6,10 @@ Usage:
   python scripts/auto_intake.py --dry-run    # simulate without bd
   python scripts/auto_intake.py --limit 3
   python scripts/auto_intake.py --no-claim   # create only, do not claim
+
+Note: External knowledge captures (URLs, PDFs, repos) are written to .agents/raw_capture/
+via scripts/capture_external.py and do not flow through intake_queue.jsonl.
+They form a separate sink for KOS Stage 1 (raw capture) before later processing.
 """
 
 from __future__ import annotations
@@ -27,9 +31,15 @@ from concurrency.session_lock import session_lock  # noqa: E402
 def main() -> int:
     parser = argparse.ArgumentParser(description="Drain intake queue to beads")
     parser.add_argument("--dry-run", action="store_true", help="Do not call bd")
-    parser.add_argument("--limit", type=int, default=None, help="Max entries to process")
-    parser.add_argument("--no-claim", action="store_true", help="Skip bd update --claim")
-    parser.add_argument("--session-id", default="", help="Session id for lock ownership")
+    parser.add_argument(
+        "--limit", type=int, default=None, help="Max entries to process"
+    )
+    parser.add_argument(
+        "--no-claim", action="store_true", help="Skip bd update --claim"
+    )
+    parser.add_argument(
+        "--session-id", default="", help="Session id for lock ownership"
+    )
     parser.add_argument(
         "--lock-timeout",
         type=float,

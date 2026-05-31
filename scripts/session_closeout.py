@@ -1595,6 +1595,11 @@ def main() -> int:
         help="Skip automatic workflow_git ship even when quality gates pass",
     )
     parser.add_argument(
+        "--no-feedback-loop",
+        action="store_true",
+        help="Skip KOS Stage 8 feedback loop (learnings -> candidates)",
+    )
+    parser.add_argument(
         "--epic-policy-config",
         default="",
         help="Optional path to an alternate epic SWOT policy config JSON file",
@@ -1824,6 +1829,28 @@ def main() -> int:
             "ok": harvest_code == 0,
             "output": harvest_out[:2000],
         }
+
+    # KOS Stage 8 feedback loop: surface high-confidence learnings as pending
+    # candidates so the flywheel compounds. Runs after harvest (which writes new
+    # learnings) and before wiki promotion (which reads the candidate queue).
+    if not args.no_feedback_loop:
+        try:
+            _scripts_dir = str(Path(__file__).resolve().parent)
+            if _scripts_dir not in sys.path:
+                sys.path.insert(0, _scripts_dir)
+            from feedback_loop import run_feedback_loop  # noqa: E402
+
+            result["feedback_loop"] = run_feedback_loop(
+                min_confidence=0.8, dry_run=args.dry_run
+            )
+        except Exception as exc:  # never block closeout on the flywheel
+            result["feedback_loop"] = {
+                "status": "error",
+                "error": str(exc),
+                "staged": 0,
+            }
+    else:
+        result["feedback_loop"] = {"status": "skipped", "reason": "--no-feedback-loop"}
 
     if args.promote_wiki and harvest_mode != "none":
         promo = promote_learnings_to_wiki(execute=True)

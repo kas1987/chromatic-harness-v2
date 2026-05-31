@@ -1,3 +1,4 @@
 {"date": "2026-05-31", "branch": "fix/axis-p-manual-ttl", "commit": "96f4d156bad8b440b400569f579bcec60797ba11", "beads_closed": 4, "notes": "xacy.1+xacy.2+xacy.3+xacy.4 governance sprint; laptop authority preserved"}
 {"commit":"6193b37e36b6fc38db3879a9f7d0cb1cb3b469f3","notes":"session close-out: final telemetry flush + beads dolt push","branch":"session/chromatic-harness-v2-initial","beads_closed":3,"date":"2026-05-30"}
 {"commit":"e70f3d2bd512e6595a863c161c08fae14833dc64","notes":"feat(beads): create epics and beads from 4 PDR ZIP packs","branch":"session/chromatic-harness-v2-initial","beads_closed":1,"date":"2026-05-29"}
+{"event": "knowledge_feedback", "new_candidates": 28, "session_id": "f99924fc-99c5-4477-939d-e091c4b47771", "timestamp": "2026-05-31T23:13:35.941379+00:00"}

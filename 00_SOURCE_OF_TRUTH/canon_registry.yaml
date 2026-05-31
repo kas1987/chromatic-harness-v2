@@ -1,0 +1,115 @@
+# Canon Registry — source of truth for all promoted artifacts
+# Schema:
+#   id:           unique identifier, format <slug>-v<N>
+#   title:        human-readable title
+#   version:      semantic version string, e.g. "1.0" or "1.1"
+#   source_type:  manual | candidate | decision | learning
+#   source_ref:   relative path to source file in this repo
+#   source_bead:  bead ID that originated this artifact (if applicable)
+#   promoted_at:  ISO date of initial promotion, YYYY-MM-DD
+#   promoted_by:  agent | system | <username>
+#   tags:         list of classification tags
+#   status:       active | deprecated | superseded
+
+
+
+
+entries:
+  - id: glossary-v1
+    title: "Chromatic Glossary"
+    version: 1.0
+    source_type: manual
+    source_ref: 00_SOURCE_OF_TRUTH/GLOSSARY.md
+    source_bead: null
+    promoted_at: 2026-01-01
+    promoted_by: system
+    tags: [reference, glossary]
+    status: active
+
+  - id: decision-log-v1
+    title: "Harness Decision Log"
+    version: 1.0
+    source_type: manual
+    source_ref: 00_SOURCE_OF_TRUTH/DECISION_LOG.md
+    source_bead: null
+    promoted_at: 2026-01-01
+    promoted_by: system
+    tags: [decisions, governance]
+    status: active
+
+  - id: option-c-complete-v1
+    title: "Option C Integration — Complete"
+    version: 1.0
+    source_type: manual
+    source_ref: 00_SOURCE_OF_TRUTH/OPTION_C_COMPLETE.md
+    source_bead: null
+    promoted_at: 2026-01-01
+    promoted_by: system
+    tags: [architecture, option-c]
+    status: active
+
+  - id: chromatic-harness-manifest-v1
+    title: "Chromatic Harness Manifest"
+    version: 1.0
+    source_type: manual
+    source_ref: 00_SOURCE_OF_TRUTH/CHROMATIC_HARNESS_MANIFEST.md
+    source_bead: null
+    promoted_at: 2026-01-01
+    promoted_by: system
+    tags: [reference, manifest]
+    status: active
+
+  - id: harness-execution-flow-v1
+    title: "Harness Execution Flow"
+    version: 1.0
+    source_type: manual
+    source_ref: 00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md
+    source_bead: null
+    promoted_at: 2026-01-01
+    promoted_by: system
+    tags: [reference, execution]
+    status: active
+
+  - id: option-c-integration-architecture-v1
+    title: "Option C Integration Architecture"
+    version: 1.0
+    source_type: manual
+    source_ref: 00_SOURCE_OF_TRUTH/OPTION_C_INTEGRATION_ARCHITECTURE.md
+    source_bead: null
+    promoted_at: 2026-01-01
+    promoted_by: system
+    tags: [architecture, option-c]
+    status: active
+
+  - id: check-existing-skills-v1
+    title: "Check Existing Skills Before Designing New Ones"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/check-existing-skills.md
+    source_bead: 2026-05-02-check-existing-skills-before-designing
+    promoted_at: 2026-05-31
+    promoted_by: agent
+    tags: []
+    status: active
+
+  - id: session-branch-workflow-v1
+    title: "Start Sessions on Named Branches"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/session-branch-workflow.md
+    source_bead: 2026-05-02-session-branch-workflow
+    promoted_at: 2026-05-31
+    promoted_by: agent
+    tags: []
+    status: active
+
+  - id: governance-guards-is2f-v1
+    title: "Live-Query-First Pattern for Policy Guards"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/governance-guards-is2f.md
+    source_bead: 2026-05-30-governance-guards-is2f
+    promoted_at: 2026-05-31
+    promoted_by: agent
+    tags: []
+    status: active

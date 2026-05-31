@@ -92,3 +92,9 @@ hook_audit.json
 
 # Keep the archived HEAVY workflow audit artifact tracked (validate_workflow_token_governance requires it)
 !.claude/workflows/*.HEAVY.js.bak
+
+# Root-artifact scratch — bd dumps, codegraph output, server logs, autoloop temps.
+# The hygiene report (latest_root_artifact_hygiene.json) IS tracked; scratch is not.
+07_LOGS_AND_AUDIT/root_artifacts/.tmp_*
+07_LOGS_AND_AUDIT/root_artifacts/__bh_*
+07_LOGS_AND_AUDIT/root_artifacts/server_std*.txt
