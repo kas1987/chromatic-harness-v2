@@ -164,7 +164,11 @@ def build_axis_prepaid(
     inverted — projected close < target → ``red`` (under-utilizing the prepaid
     asset); >= target → ``green``.
     """
-    fresh = bool(quota_state is not None and quota_state.is_fresh(now=now))
+    # Manual seeds are valid for 24h; proxy captures expire in the normal 5min window.
+    _ttl = 86400 if getattr(quota_state, "source", None) == "manual" else 300
+    fresh = bool(
+        quota_state is not None and quota_state.is_fresh(now=now, max_age_seconds=_ttl)
+    )
     weekly_pct = quota_state.weekly_pct if quota_state is not None else None
     reset_at = quota_state.weekly_reset if quota_state is not None else None
 
