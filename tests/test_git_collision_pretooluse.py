@@ -91,7 +91,7 @@ def test_hard_block_returns_exit_2(monkeypatch, capsys):
     blocked = CollisionVerdict(action="push", branch="feat/x")
     blocked.hard_blocks.append({"kind": "non_fast_forward", "detail": "remote ahead"})
 
-    monkeypatch.setattr(hook, "_current_branch", lambda: "feat/x")
+    monkeypatch.setattr(hook, "_current_branch", lambda cwd=None: "feat/x")
     monkeypatch.setattr(
         "concurrency.github_collision.check_github_collision",
         lambda **kw: blocked,
@@ -109,6 +109,105 @@ def test_hard_block_returns_exit_2(monkeypatch, capsys):
     assert "BLOCKED" in capsys.readouterr().err
 
 
+def test_payload_cwd_outside_repo_fails_open():
+    """Explicit payload cwd pointing at a different repo → fail-open (exit 0)."""
+    p = _run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": "gh pr create --title x",
+                "cwd": "C:/Users/kas41/some-other-repo",
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
+def test_quoted_git_push_in_argument_does_not_trigger():
+    """A literal 'git push' inside a quoted argument (e.g. a commit/reply body) must
+    not trigger the gate — only real command tokens count."""
+    p = _run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": 'gh api repos/x/y/pulls/1/comments -f body="fixed the git push collision"',
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
+def test_leading_cd_wins_over_payload_cwd():
+    """`cd <other-repo> && git push` with payload cwd = harness must fail-open:
+    the cd target is where the command actually runs, so it overrides payload cwd."""
+    import os
+
+    p = _run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": 'cd "C:/Users/kas41/some-other-repo" && git push origin HEAD',
+                "cwd": os.getcwd(),  # harness repo
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
+def test_camelcase_toolinput_cwd_honored():
+    """camelCase toolInput.cwd pointing at another repo → fail-open (parity with snake_case)."""
+    p = _run_hook(
+        {
+            "toolName": "Bash",
+            "toolInput": {
+                "command": "gh pr create --title x",
+                "cwd": "C:/Users/kas41/some-other-repo",
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
+def test_payload_cwd_field_at_toplevel_fails_open():
+    """payload.cwd (top-level) pointing at a different repo → fail-open."""
+    p = _run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {"command": "git push origin HEAD"},
+            "cwd": "C:/Users/kas41/some-other-repo",
+        }
+    )
+    assert p.returncode == 0
+
+
+def test_check_github_collision_accepts_cwd_kwarg():
+    """check_github_collision must accept cwd= without raising."""
+    import sys
+
+    sys.path.insert(0, str(_REPO / "02_RUNTIME"))
+    from concurrency.github_collision import PUSH, check_github_collision
+
+    fake_results: list = []
+
+    def fake_git(cmd):
+        fake_results.append(cmd)
+        return 1, ""
+
+    def fake_gh(cmd):
+        fake_results.append(cmd)
+        return 0, "[]"
+
+    v = check_github_collision(
+        branch="feat/test",
+        action=PUSH,
+        cwd="/tmp/fake-repo",
+        gh_runner=fake_gh,
+        git_runner=fake_git,
+    )
+    assert v.action == PUSH
+    assert v.branch == "feat/test"
+
+
 def test_override_allows_hard_block(monkeypatch):
     import importlib.util
     import io
@@ -121,7 +220,7 @@ def test_override_allows_hard_block(monkeypatch):
 
     blocked = CollisionVerdict(action="push", branch="feat/x")
     blocked.hard_blocks.append({"kind": "non_fast_forward", "detail": "remote ahead"})
-    monkeypatch.setattr(hook, "_current_branch", lambda: "feat/x")
+    monkeypatch.setattr(hook, "_current_branch", lambda cwd=None: "feat/x")
     monkeypatch.setattr(
         "concurrency.github_collision.check_github_collision", lambda **kw: blocked
     )

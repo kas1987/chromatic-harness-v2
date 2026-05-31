@@ -219,6 +219,28 @@ def _probe_issue_ownership(
             )
 
 
+def _make_cwd_runner(cwd: "str | None") -> Runner:
+    """Return a runner that executes commands with the given cwd."""
+    if cwd is None:
+        return _default_runner
+
+    def _runner(cmd: list[str]) -> tuple[int, str]:
+        try:
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+                cwd=cwd,
+            )
+            return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+        except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+            return 127, str(exc)
+
+    return _runner
+
+
 def check_github_collision(
     *,
     branch: str,
@@ -229,12 +251,18 @@ def check_github_collision(
     force: bool = False,
     gh_runner: Runner | None = None,
     git_runner: Runner | None = None,
+    cwd: "str | None" = None,
 ) -> CollisionVerdict:
-    """Probe remote GitHub state for collisions before ``action`` on ``branch``."""
+    """Probe remote GitHub state for collisions before ``action`` on ``branch``.
+
+    ``cwd`` sets the working directory for the default gh/git runners. Ignored
+    when explicit ``gh_runner``/``git_runner`` callables are provided.
+    """
     if action not in _VALID_ACTIONS:
         raise ValueError(f"action must be one of {_VALID_ACTIONS}, got {action!r}")
-    gh = gh_runner or _default_runner
-    git = git_runner or _default_runner
+    _cwd_runner = _make_cwd_runner(cwd) if cwd is not None else _default_runner
+    gh = gh_runner or _cwd_runner
+    git = git_runner or _cwd_runner
     v = CollisionVerdict(action=action, branch=branch, base=base, force=force)
 
     _probe_remote_ahead(v, git)

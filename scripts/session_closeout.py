@@ -977,6 +977,40 @@ def ensure_epic_swot_chain() -> dict[str, Any]:
     }
 
 
+def promote_learnings_to_wiki(*, execute: bool, runner=None) -> dict[str, Any]:
+    """Run promote_to_wiki.py and return a verdict dict.
+
+    Args:
+        execute: if True, pass --execute; else dry-run (no files written).
+        runner: injectable callable(cmd) -> (returncode, output) for testing.
+                Defaults to _run.
+    Returns:
+        {"ok": bool, "promoted": int, "skipped_reason": str}
+    Fail-open: never raises.
+    """
+    result: dict[str, Any] = {"ok": False, "promoted": 0, "skipped_reason": ""}
+    try:
+        cmd = [sys.executable, str(_REPO / "scripts" / "promote_to_wiki.py")]
+        if execute:
+            cmd.append("--execute")
+        else:
+            cmd.append("--dry-run")
+        _runner = runner if runner is not None else _run
+        code, out = _runner(cmd)
+        if code != 0:
+            result["skipped_reason"] = f"promote_to_wiki exited {code}"
+            return result
+        try:
+            payload = json.loads(out)
+            result["promoted"] = int(payload.get("promoted") or 0)
+            result["ok"] = True
+        except (json.JSONDecodeError, TypeError, ValueError) as exc:
+            result["skipped_reason"] = f"malformed JSON: {exc}"
+    except Exception as exc:  # noqa: BLE001
+        result["skipped_reason"] = f"unexpected error: {exc}"
+    return result
+
+
 def _build_epic_swot_summary(epic: dict[str, Any] | None) -> dict[str, Any]:
     e = epic or {}
     return {
@@ -1400,6 +1434,12 @@ def main() -> int:
         "--harvest", action="store_true", help="Run harvest_rigs --execute"
     )
     parser.add_argument("--wiki-dry-run", action="store_true")
+    parser.add_argument(
+        "--promote-wiki",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Promote high-confidence learnings to the Chromatic Wiki after harvest",
+    )
     parser.add_argument("--git-triage", action="store_true")
     parser.add_argument(
         "--with-api", action="store_true", help="Phase C: optional API budget ingest"
@@ -1650,6 +1690,21 @@ def main() -> int:
             "exit": harvest_code,
             "ok": harvest_code == 0,
             "output": harvest_out[:2000],
+        }
+
+    if args.promote_wiki and harvest_mode != "none":
+        result["wiki_promotion"] = promote_learnings_to_wiki(execute=True)
+    elif harvest_mode == "none":
+        result["wiki_promotion"] = {
+            "ok": False,
+            "promoted": 0,
+            "skipped_reason": "harvest_mode is none; wiki promotion skipped",
+        }
+    else:
+        result["wiki_promotion"] = {
+            "ok": False,
+            "promoted": 0,
+            "skipped_reason": "--no-promote-wiki flag set",
         }
 
     if args.wiki_dry_run:
