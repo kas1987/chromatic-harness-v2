@@ -39,17 +39,27 @@ no common ancestor). Local CLAUDE.md was the live system; force push was the cor
 
 ## What We Learned
 
-For append-only JSONL logs in shell hooks, rotate with `tail -n keep > tmp && cp tmp log && rm tmp`.
-Using `>` to truncate in-place is not atomic. The `mv` pattern fails when src/dst are on different
-devices (Windows/WSL). `cp + rm` is portable and effectively atomic for small log sizes.
+For append-only JSONL logs in shell hooks, rotate atomically by writing a temp file **in the
+same directory as the log** and renaming it over the old file:
+`tail -n keep log > log.tmp.$$ && mv log.tmp.$$ log`. A same-filesystem `mv` is a rename
+(atomic) — a tail-following consumer never sees a partial file. The cross-device `mv` failure
+only happens when the temp is on a *different* filesystem (e.g. `$TMPDIR` on WSL), which the
+same-dir temp avoids.
+
+> **Correction (PR #22 review):** an earlier draft recommended `cp tmp log && rm tmp` and called
+> it "effectively atomic" — it is **not**. `cp` opens/truncates the destination and streams bytes,
+> so a concurrent reader can observe an empty or partially-written `log.jsonl`. Use same-dir temp +
+> rename, or explicitly document `cp` as a non-atomic best-effort fallback.
 
 `MAX_LOG_LINES` via env var (with a `:-default` fallback in the script) keeps configuration
 at the call site without touching the hook logic.
 
 ## Why It Matters
 
-Log rotation in a PreToolUse hook must never block or fail-loud. The `cp + rm` pattern
-degrades gracefully and is safe to run inside a hook that always exits 0.
+Log rotation in a PreToolUse hook must never block or fail-loud. Use the same-directory
+temp + `mv`/rename pattern (atomic, no partial reads) inside a hook that always exits 0.
+`cp + rm` is only a **non-atomic best-effort fallback** — a tail-following consumer can
+observe a truncated/partial log mid-copy, so don't treat it as safe.
 
 ## Source
 

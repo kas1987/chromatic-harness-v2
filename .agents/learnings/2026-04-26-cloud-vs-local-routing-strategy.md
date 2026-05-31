@@ -70,26 +70,33 @@ Three integration points that match your existing infra:
 
 ### 1. PreToolUse hook router
 
-Add a `model-router.sh` PreToolUse hook (alongside `yolo-guard.sh`) that inspects the agent's intended `subagent_type` and `model` parameter. If the task fits the local-routing heuristic, rewrite the request to point at your OL endpoint.
+Add a `model-router.sh` PreToolUse hook (alongside `yolo-guard.sh`) that inspects the agent's intended `subagent_type` and `model` parameter. If the task fits the local-routing heuristic, **emit a non-blocking routing recommendation to a sidecar** for a downstream OL router to act on — do **not** rewrite the Agent request in-band (the `model` parameter is a fixed cloud enum, so an OL sentinel would be rejected).
 
 ```bash
 # ~/.claude/hooks/model-router.sh — sketch
 input=$(cat)
 tool=$(echo "$input" | jq -r '.tool_name')
-sub_type=$(echo "$input" | jq -r '.tool_input.subagent_type // ""')
 description=$(echo "$input" | jq -r '.tool_input.description // ""')
 
 if [ "$tool" = "Agent" ]; then
   if echo "$description" | grep -qiE "(scaffold|seed templates|slash command|markdown|README|frontmatter)"; then
-    # Rewrite model parameter to OL endpoint sentinel
-    echo "$input" | jq '.tool_input.model = "ol-local"'
-    exit 0
+    # OBSERVER pattern: emit a routing RECOMMENDATION to a sidecar for a downstream
+    # OL consumer. Do NOT rewrite `.tool_input.model` — Claude Code's Agent `model`
+    # parameter is a fixed enum (haiku|sonnet|opus); a local sentinel would be
+    # rejected and crash the Agent call.
+    echo "{\"recommend\":\"ol-local\",\"reason\":\"mechanical\"}" >> .agents/routing/recommendations.jsonl
   fi
 fi
-echo "$input"
+exit 0
 ```
 
-The OL layer would need to recognize the `ol-local` sentinel and reroute.
+> **Correction (PR #22 review):** an earlier draft rewrote `.tool_input.model` to a
+> local sentinel and echoed stdin. That is doubly wrong: (1) a real PreToolUse hook must
+> return modifications under `hookSpecificOutput.updatedInput` (echoing stdin is treated
+> as *no* decision), and (2) `model` only accepts the cloud enum, so a local sentinel
+> rejects the call. The correct shape is a **non-blocking observer** that records a
+> recommendation for a downstream OL router to act on — never mutate the Agent model
+> in-band.
 
 ### 2. Subagent-type-based routing in CLAUDE.md
 
@@ -98,11 +105,11 @@ Add a memory note to your global CLAUDE.md so the orchestrator self-routes:
 ```markdown
 ## Model routing for subagents
 
-- Mechanical implementer (file-with-given-content, scaffold, run-test-report-result): use local OL via `model: "ol-fast"`
-- Judgment implementer (multi-file integration, design decisions): use `model: "sonnet"` or `"opus"`
-- Spec compliance reviewer: use `model: "ol-fast"` for boilerplate tasks, `"haiku"` for module-level, `"sonnet"` for multi-file
+- Mechanical implementer (file-with-given-content, scaffold, run-test-report-result): cheapest cloud tier `model: "haiku"` (or recommend local-OL via sidecar)
+- Judgment implementer (multi-file integration, design decisions): `model: "sonnet"` or `"opus"`
+- Spec compliance reviewer: `model: "haiku"` for module-level, `"sonnet"` for multi-file
 - Code quality reviewer: same as spec reviewer
-- Brainstorm / plan / discovery: ALWAYS cloud (`"opus"` or `"sonnet"`)
+- Brainstorm / plan / discovery: ALWAYS `"opus"` or `"sonnet"`
 ```
 
 The orchestrator (me) reads this and passes the right `model` parameter at dispatch time.
@@ -152,4 +159,4 @@ This gives you per-invocation control when you know a task is mechanical.
 ## Source
 
 Direct observation of this session: 350 turns, $266.61 cost, classified by pattern.
-Transcript: `~/.claude/projects/C--Users-kas41/8c687aae-...jsonl`.
+Transcript: `~/.claude/projects/<project>/<session-id>.jsonl` (path redacted — see CANON_PR_CHECKLIST).
