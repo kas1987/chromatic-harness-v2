@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Deterministic Magnet Scoring Beats Opaque Metrics
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

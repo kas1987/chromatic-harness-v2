@@ -5,7 +5,7 @@ source_type: pattern
 confidence: 0.90
 suggested_use: run_id + task_id contract upgrades delegation observability to green
 canon_map: general
-status: pending
+status: approved
 tags: []
 ---
 

@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Match Subagent Dispatch Granularity to Task Complexity
 canon_map: routing
-status: pending
+status: approved
 tags: [subagents, orchestration, efficiency, pragma]
 ---
 

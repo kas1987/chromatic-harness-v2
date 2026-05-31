@@ -5,7 +5,7 @@ source_type: pattern
 confidence: 0.90
 suggested_use: Guard Tests Should Precede Dependent Tests
 canon_map: general
-status: pending
+status: approved
 tags: []
 ---
 

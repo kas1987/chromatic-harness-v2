@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: unittest.mock patch captures the module reference at patch time
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

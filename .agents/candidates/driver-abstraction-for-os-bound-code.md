@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Driver Abstractions Make OS-Bound Code Unit-Testable
 canon_map: operations
-status: pending
+status: approved
 tags: [testing, abstraction, os-integration, dependency-injection]
 ---
 

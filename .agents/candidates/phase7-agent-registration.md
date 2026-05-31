@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Props-Lift Polling Components Before Adding a Second Data Source
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

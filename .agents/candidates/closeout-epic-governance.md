@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Governed EPIC Reuse Beats EPIC Proliferation
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

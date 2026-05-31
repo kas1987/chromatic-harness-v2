@@ -5,7 +5,7 @@ source_type: principle
 confidence: 0.85
 suggested_use: Auto-appended instruction prose silently breaks the CI docs guard
 canon_map: knowledge
-status: pending
+status: approved
 tags: []
 ---
 

@@ -5,7 +5,7 @@ source_type: principle
 confidence: 0.90
 suggested_use: MCP Server `--help` is a "Does It Start" Test
 canon_map: knowledge
-status: pending
+status: approved
 tags: []
 ---
 

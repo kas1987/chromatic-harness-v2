@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.85
 suggested_use: A git-hook installer must resolve core.hooksPath and refuse managed dirs
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

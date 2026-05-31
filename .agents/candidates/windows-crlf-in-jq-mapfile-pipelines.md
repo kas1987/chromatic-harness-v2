@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Windows CRLF Silently Corrupts jq + mapfile Patterns
 canon_map: operations
-status: pending
+status: approved
 tags: [windows, bash, jq, mapfile, line-endings, gotcha]
 ---
 

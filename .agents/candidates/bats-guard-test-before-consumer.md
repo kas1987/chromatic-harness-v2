@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Add fixture-existence guard before bats consumer tests
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

@@ -5,7 +5,7 @@ source_type: pattern
 confidence: 0.90
 suggested_use: Module-Level Side Effects Require Env Isolation Before Import
 canon_map: general
-status: pending
+status: approved
 tags: []
 ---
 

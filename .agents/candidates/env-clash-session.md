@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: python3 -c inline fails on Windows git-bash
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

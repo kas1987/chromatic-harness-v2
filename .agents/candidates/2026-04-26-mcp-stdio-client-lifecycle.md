@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: MCP stdio one-shot client lifecycle
 canon_map: operations
-status: pending
+status: approved
 tags: [mcp, stdio, subprocess, python, lifecycle, integration]
 ---
 

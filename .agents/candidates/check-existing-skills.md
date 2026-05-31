@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Check Existing Skills Before Designing New Ones
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

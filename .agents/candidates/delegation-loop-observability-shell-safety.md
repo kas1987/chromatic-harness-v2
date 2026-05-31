@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: delegation success and pickup correlation are different controls
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

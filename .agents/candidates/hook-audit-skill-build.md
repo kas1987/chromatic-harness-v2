@@ -5,7 +5,7 @@ source_type: principle
 confidence: 0.90
 suggested_use: RED/GREEN test cycle is the right way to build a skill
 canon_map: knowledge
-status: pending
+status: approved
 tags: []
 ---
 

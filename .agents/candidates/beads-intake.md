@@ -5,7 +5,7 @@ source_type: pattern
 confidence: 0.90
 suggested_use: Structured Action Intake via Beads Unifies Multi-Source Findings
 canon_map: general
-status: pending
+status: approved
 tags: []
 ---
 

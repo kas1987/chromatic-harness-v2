@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Unrelated Git Histories — Force Push as Clean Resolution
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

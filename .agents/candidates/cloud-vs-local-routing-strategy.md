@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Cloud vs Local (Ollama) Routing Strategy
 canon_map: routing
-status: pending
+status: approved
 tags: [routing, ollama, cost-optimization, subagents, ol-layer]
 ---
 

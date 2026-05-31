@@ -5,7 +5,7 @@ source_type: pattern
 confidence: 0.90
 suggested_use: Add env-var override when test files hardcode relative path chains
 canon_map: general
-status: pending
+status: approved
 tags: []
 ---
 

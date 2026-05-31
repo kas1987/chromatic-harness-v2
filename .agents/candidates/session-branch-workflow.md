@@ -5,7 +5,7 @@ source_type: pattern
 confidence: 0.90
 suggested_use: Start Sessions on Named Branches
 canon_map: general
-status: pending
+status: approved
 tags: []
 ---
 

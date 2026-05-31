@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Non-Blocking Observer Hooks for Policy Decisions
 canon_map: operations
-status: pending
+status: approved
 tags: [hooks, observer-pattern, separation-of-concerns, policy-vs-enforcement]
 ---
 

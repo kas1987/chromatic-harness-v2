@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: GitHub Actions can be disabled at the repo level — and look like it's still running
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 

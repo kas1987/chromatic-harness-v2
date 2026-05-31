@@ -5,7 +5,7 @@ source_type: principle
 confidence: 0.90
 suggested_use: PostToolUse formatter rewrites Python files after Edit
 canon_map: knowledge
-status: pending
+status: approved
 tags: []
 ---
 

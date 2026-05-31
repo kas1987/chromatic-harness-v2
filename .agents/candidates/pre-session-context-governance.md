@@ -5,7 +5,7 @@ source_type: principle
 confidence: 0.90
 suggested_use: CRG governs the router, not Cursor instruction context
 canon_map: knowledge
-status: pending
+status: approved
 tags: []
 ---
 

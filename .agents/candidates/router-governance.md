@@ -5,7 +5,7 @@ source_type: anti-pattern
 confidence: 0.90
 suggested_use: Router Advisory vs Enforcement Gap
 canon_map: operations
-status: pending
+status: approved
 tags: []
 ---
 
