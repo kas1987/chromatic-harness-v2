@@ -1,0 +1,307 @@
+﻿{
+    "total_repos":  17,
+    "local_only":  1,
+    "repos":  [
+                  {
+                      "branch":  "feat/kind-flag-worker-stop-test-providers",
+                      "path":  "C:\\.01_Image Org",
+                      "risk":  "LocalBranch",
+                      "remote":  "https://github.com/kas1987/Image-Prism.git",
+                      "dirty":  0,
+                      "name":  ".01_Image Org",
+                      "local_branches":  [
+                                             "worktree-agent-abdf5b8ce943b9309",
+                                             "worktree-agent-ae8d58d1c01764a7d"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "2 local-only branch(es): worktree-agent-abdf5b8ce943b9309, worktree-agent-ae8d58d1c01764a7d"
+                  },
+                  {
+                      "branch":  "preserve/laptop-20260531",
+                      "path":  "C:\\.04_Prism",
+                      "risk":  "LocalBranch",
+                      "remote":  "https://github.com/kas1987/04-prism-LAP.git",
+                      "dirty":  0,
+                      "name":  ".04_Prism",
+                      "local_branches":  [
+                                             "main"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "1 local-only branch(es): main"
+                  },
+                  {
+                      "branch":  "session/token-efficiency",
+                      "path":  "C:\\Users\\kas41\\.claude",
+                      "risk":  "Dirty",
+                      "remote":  "https://github.com/kas1987/claude-config.git",
+                      "dirty":  5,
+                      "name":  ".claude",
+                      "local_branches":  [
+                                             "linux",
+                                             "macos",
+                                             "session/2026-05-21-claude-md-patches-and-plugin-sync",
+                                             "session/2026-05-21-governance-and-router-config-federate",
+                                             "session/2026-05-21-headless-cron-and-custom-commands",
+                                             "session/2026-05-21-swarm-session-health-rpi-preflight",
+                                             "swarm/task-abc-wave-1779402162",
+                                             "swarm/task-abc-wave-1779402172",
+                                             "swarm/task-abc-wave-1779402180",
+                                             "swarm/task-abc-wave-1779402193",
+                                             "swarm/task-abc-wave-1779402216",
+                                             "swarm/task-abc-wave-1779873101",
+                                             "swarm/task-abc-wave-1779873286",
+                                             "swarm/task-abc-wave-1779873578",
+                                             "swarm/task-abc-wave-1779873760",
+                                             "swarm/task-abc-wave-1779873885",
+                                             "swarm/task-abc-wave-1779874308",
+                                             "swarm/task-abc-wave-1779874806",
+                                             "swarm/task-abc-wave-1779875724",
+                                             "swarm/task-abc-wave-1779875725",
+                                             "swarm/task-abc-wave-1779875901",
+                                             "swarm/task-abc-wave-1779877096",
+                                             "swarm/task-abc-wave-1779891129",
+                                             "swarm/task-abc-wave-1779891214",
+                                             "swarm/task-abc-wave-1779891529",
+                                             "swarm/task-abc-wave-1779891663",
+                                             "swarm/task-abc-wave-1779893130",
+                                             "swarm/task-abc-wave-1779922849",
+                                             "swarm/task-abc-wave-1779923583",
+                                             "swarm/task-abc-wave-1779974341",
+                                             "swarm/task-abc-wave-1779974780",
+                                             "swarm/task-abc-wave-1779975023",
+                                             "swarm/task-abc-wave-1779975137",
+                                             "swarm/task-abc-wave-1779975723",
+                                             "swarm/task-abc-wave-1779976021",
+                                             "swarm/task-abc-wave-1779982421",
+                                             "swarm/task-abc-wave-1780183091",
+                                             "swarm/task-abc-wave-1780184151",
+                                             "swarm/task-xyz-wave-1779402163",
+                                             "swarm/task-xyz-wave-1779402193",
+                                             "swarm/task-xyz-wave-1779402217",
+                                             "swarm/task-xyz-wave-1779873102",
+                                             "swarm/task-xyz-wave-1779873287",
+                                             "swarm/task-xyz-wave-1779873580",
+                                             "swarm/task-xyz-wave-1779873761",
+                                             "swarm/task-xyz-wave-1779873886",
+                                             "swarm/task-xyz-wave-1779874309",
+                                             "swarm/task-xyz-wave-1779874808",
+                                             "swarm/task-xyz-wave-1779875726",
+                                             "swarm/task-xyz-wave-1779875902",
+                                             "swarm/task-xyz-wave-1779877097",
+                                             "swarm/task-xyz-wave-1779891130",
+                                             "swarm/task-xyz-wave-1779891215",
+                                             "swarm/task-xyz-wave-1779891536",
+                                             "swarm/task-xyz-wave-1779891665",
+                                             "swarm/task-xyz-wave-1779893132",
+                                             "swarm/task-xyz-wave-1779922850",
+                                             "swarm/task-xyz-wave-1779923584",
+                                             "swarm/task-xyz-wave-1779974343",
+                                             "swarm/task-xyz-wave-1779974781",
+                                             "swarm/task-xyz-wave-1779975024",
+                                             "swarm/task-xyz-wave-1779975138",
+                                             "swarm/task-xyz-wave-1779975724",
+                                             "swarm/task-xyz-wave-1779976023",
+                                             "swarm/task-xyz-wave-1779982424",
+                                             "swarm/task-xyz-wave-1780183096",
+                                             "swarm/task-xyz-wave-1780184154"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "5 uncommitted file(s); 67 local-only branch(es): linux, macos, session/2026-05-21-claude-md-patches-and-plugin-sync, session/2026-05-21-governance-and-router-config-federate, session/2026-05-21-headless-cron-and-custom-commands, session/2026-05-21-swarm-session-health-rpi-preflight, swarm/task-abc-wave-1779402162, swarm/task-abc-wave-1779402172, swarm/task-abc-wave-1779402180, swarm/task-abc-wave-1779402193, swarm/task-abc-wave-1779402216, swarm/task-abc-wave-1779873101, swarm/task-abc-wave-1779873286, swarm/task-abc-wave-1779873578, swarm/task-abc-wave-1779873760, swarm/task-abc-wave-1779873885, swarm/task-abc-wave-1779874308, swarm/task-abc-wave-1779874806, swarm/task-abc-wave-1779875724, swarm/task-abc-wave-1779875725, swarm/task-abc-wave-1779875901, swarm/task-abc-wave-1779877096, swarm/task-abc-wave-1779891129, swarm/task-abc-wave-1779891214, swarm/task-abc-wave-1779891529, swarm/task-abc-wave-1779891663, swarm/task-abc-wave-1779893130, swarm/task-abc-wave-1779922849, swarm/task-abc-wave-1779923583, swarm/task-abc-wave-1779974341, swarm/task-abc-wave-1779974780, swarm/task-abc-wave-1779975023, swarm/task-abc-wave-1779975137, swarm/task-abc-wave-1779975723, swarm/task-abc-wave-1779976021, swarm/task-abc-wave-1779982421, swarm/task-abc-wave-1780183091, swarm/task-abc-wave-1780184151, swarm/task-xyz-wave-1779402163, swarm/task-xyz-wave-1779402193, swarm/task-xyz-wave-1779402217, swarm/task-xyz-wave-1779873102, swarm/task-xyz-wave-1779873287, swarm/task-xyz-wave-1779873580, swarm/task-xyz-wave-1779873761, swarm/task-xyz-wave-1779873886, swarm/task-xyz-wave-1779874309, swarm/task-xyz-wave-1779874808, swarm/task-xyz-wave-1779875726, swarm/task-xyz-wave-1779875902, swarm/task-xyz-wave-1779877097, swarm/task-xyz-wave-1779891130, swarm/task-xyz-wave-1779891215, swarm/task-xyz-wave-1779891536, swarm/task-xyz-wave-1779891665, swarm/task-xyz-wave-1779893132, swarm/task-xyz-wave-1779922850, swarm/task-xyz-wave-1779923584, swarm/task-xyz-wave-1779974343, swarm/task-xyz-wave-1779974781, swarm/task-xyz-wave-1779975024, swarm/task-xyz-wave-1779975138, swarm/task-xyz-wave-1779975724, swarm/task-xyz-wave-1779976023, swarm/task-xyz-wave-1779982424, swarm/task-xyz-wave-1780183096, swarm/task-xyz-wave-1780184154"
+                  },
+                  {
+                      "branch":  "main",
+                      "path":  "C:\\Users\\kas41\\.claude-octopus\\plugin",
+                      "risk":  "Ahead",
+                      "remote":  "https://github.com/nyldn/claude-octopus",
+                      "dirty":  0,
+                      "name":  "plugin",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  2,
+                      "notes":  "2 commit(s) not pushed"
+                  },
+                  {
+                      "branch":  "main",
+                      "path":  "C:\\Users\\kas41\\.codex\\.tmp\\plugins",
+                      "risk":  "Dirty",
+                      "remote":  "https://github.com/openai/plugins.git",
+                      "dirty":  1,
+                      "name":  "plugins",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "1 uncommitted file(s)"
+                  },
+                  {
+                      "branch":  "main",
+                      "path":  "C:\\Users\\kas41\\.codex\\vendor_imports\\skills",
+                      "risk":  "Dirty",
+                      "remote":  "https://github.com/openai/skills.git",
+                      "dirty":  1,
+                      "name":  "skills",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "1 uncommitted file(s)"
+                  },
+                  {
+                      "branch":  "master",
+                      "path":  "C:\\Users\\kas41\\.oh-my-bash",
+                      "risk":  "Dirty",
+                      "remote":  "https://github.com/ohmybash/oh-my-bash.git",
+                      "dirty":  1,
+                      "name":  ".oh-my-bash",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "1 uncommitted file(s)"
+                  },
+                  {
+                      "branch":  "preserve/laptop-20260531",
+                      "path":  "C:\\Users\\kas41\\.pi\\agent\\skills",
+                      "risk":  "Clean",
+                      "remote":  "https://github.com/kas1987/claude-skills.git",
+                      "dirty":  0,
+                      "name":  "skills",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  ""
+                  },
+                  {
+                      "branch":  "(detached)",
+                      "path":  "C:\\Users\\kas41\\.pyenv",
+                      "risk":  "Detached",
+                      "remote":  "(none)",
+                      "dirty":  0,
+                      "name":  ".pyenv",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "HEAD is detached â€” snapshot state, verify before wipe"
+                  },
+                  {
+                      "branch":  "master",
+                      "path":  "C:\\Users\\kas41\\archived\\zelexdoll-theme",
+                      "risk":  "LocalOnly",
+                      "remote":  "(none)",
+                      "dirty":  0,
+                      "name":  "zelexdoll-theme",
+                      "local_branches":  [
+                                             "master"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "No remote â€” work will be lost on rebuild; 1 local-only branch(es): master"
+                  },
+                  {
+                      "branch":  "session/wiki-v0-1-initial",
+                      "path":  "C:\\Users\\kas41\\Chromatic_Wiki",
+                      "risk":  "Clean",
+                      "remote":  "https://github.com/kas1987/chromatic-wiki.git",
+                      "dirty":  0,
+                      "name":  "Chromatic_Wiki",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  ""
+                  },
+                  {
+                      "branch":  "master",
+                      "path":  "C:\\Users\\kas41\\chromatic-design-studios",
+                      "risk":  "Clean",
+                      "remote":  "https://github.com/kas1987/chromatic-design-studios.git",
+                      "dirty":  0,
+                      "name":  "chromatic-design-studios",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  ""
+                  },
+                  {
+                      "branch":  "epic/4nk5.4-inventory-stale-desktop-repos",
+                      "path":  "C:\\Users\\kas41\\chromatic-harness-v2",
+                      "risk":  "Dirty",
+                      "remote":  "https://github.com/kas1987/chromatic-harness-v2.git",
+                      "dirty":  15,
+                      "name":  "chromatic-harness-v2",
+                      "local_branches":  [
+                                             "epic/4nk5.4-inventory-stale-desktop-repos",
+                                             "session/auto-mode-governance-20260530"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "15 uncommitted file(s); 2 local-only branch(es): epic/4nk5.4-inventory-stale-desktop-repos, session/auto-mode-governance-20260530"
+                  },
+                  {
+                      "branch":  "preserve/laptop-20260531",
+                      "path":  "C:\\Users\\kas41\\chromatic-stack",
+                      "risk":  "LocalBranch",
+                      "remote":  "https://github.com/kas1987/chromatic-stack.git",
+                      "dirty":  0,
+                      "name":  "chromatic-stack",
+                      "local_branches":  [
+                                             "master"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "1 local-only branch(es): master"
+                  },
+                  {
+                      "branch":  "learnings/auto-promote-20260531-182846",
+                      "path":  "C:\\Users\\kas41\\chromatic-wiki",
+                      "risk":  "LocalBranch",
+                      "remote":  "https://github.com/kas1987/chromatic-wiki.git",
+                      "dirty":  0,
+                      "name":  "chromatic-wiki",
+                      "local_branches":  [
+                                             "learnings/auto-promote-20260531-182846"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "1 local-only branch(es): learnings/auto-promote-20260531-182846"
+                  },
+                  {
+                      "branch":  "kas41/context-thresholds",
+                      "path":  "C:\\Users\\kas41\\claude-powerline",
+                      "risk":  "LocalBranch",
+                      "remote":  "https://github.com/Owloops/claude-powerline.git",
+                      "dirty":  0,
+                      "name":  "claude-powerline",
+                      "local_branches":  [
+                                             "kas41/context-thresholds"
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  "1 local-only branch(es): kas41/context-thresholds"
+                  },
+                  {
+                      "branch":  "session/2026-05-28-harness-v2",
+                      "path":  "C:\\Users\\kas41\\fusion-computer",
+                      "risk":  "Clean",
+                      "remote":  "https://github.com/kas1987/fusion-computer.git",
+                      "dirty":  0,
+                      "name":  "fusion-computer",
+                      "local_branches":  [
+
+                                         ],
+                      "ahead_by":  0,
+                      "notes":  ""
+                  }
+              ],
+    "scanned_roots":  [
+                          "C:\\Users\\kas41",
+                          "C:\\.01_Image Org",
+                          "C:\\.04_Prism"
+                      ],
+    "local_branch":  5,
+    "dirty":  5,
+    "detached":  1,
+    "generated_at":  "2026-05-31T21:07:58.7823870Z",
+    "ahead":  1,
+    "p0_risk":  true,
+    "clean":  4
+}
