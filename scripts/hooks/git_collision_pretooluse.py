@@ -73,8 +73,12 @@ def main() -> int:
     if not command:
         return 0
 
-    is_pr = bool(_PR_RE.search(command))
-    is_push = bool(_PUSH_RE.search(command))
+    # Strip quoted segments before matching so a literal "git push" / "gh pr create"
+    # inside a quoted argument (e.g. a commit message or a gh-api reply body) does not
+    # trigger the gate. We only want the actual command tokens.
+    unquoted = re.sub(r"'[^']*'|\"[^\"]*\"", " ", command)
+    is_pr = bool(_PR_RE.search(unquoted))
+    is_push = bool(_PUSH_RE.search(unquoted))
     if not (is_pr or is_push):
         return 0
 
