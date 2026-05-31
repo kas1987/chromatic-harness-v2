@@ -109,6 +109,49 @@ def test_hard_block_returns_exit_2(monkeypatch, capsys):
     assert "BLOCKED" in capsys.readouterr().err
 
 
+def _run_hook_inproc(monkeypatch, capsys, kind, *, strict=False):
+    import importlib.util
+    import io
+
+    spec = importlib.util.spec_from_file_location("collision_hook_x", _HOOK)
+    hook = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hook)
+    from concurrency.github_collision import CollisionVerdict
+
+    v = CollisionVerdict(action="push", branch="feat/x")
+    v.hard_blocks.append({"kind": kind, "detail": f"{kind} detail"})
+    monkeypatch.setattr(hook, "_current_branch", lambda cwd=None: "feat/x")
+    monkeypatch.setattr(
+        "concurrency.github_collision.check_github_collision", lambda **kw: v
+    )
+    if strict:
+        monkeypatch.setenv("CHROMATIC_COLLISION_STRICT", "1")
+    monkeypatch.setattr(
+        hook.sys,
+        "stdin",
+        io.StringIO(
+            json.dumps(
+                {"tool_name": "Bash", "tool_input": {"command": "git push origin x"}}
+            )
+        ),
+    )
+    return hook.main()
+
+
+def test_non_destructive_collision_is_advisory_not_block(monkeypatch, capsys):
+    # duplicate_pr / actions_in_flight are NOT destructive → warn + allow (exit 0).
+    assert _run_hook_inproc(monkeypatch, capsys, "duplicate_pr") == 0
+    assert "[collision][warn]" in capsys.readouterr().err
+
+
+def test_strict_env_blocks_any_collision(monkeypatch, capsys):
+    assert _run_hook_inproc(monkeypatch, capsys, "duplicate_pr", strict=True) == 2
+
+
+def test_destructive_still_blocks_by_default(monkeypatch, capsys):
+    assert _run_hook_inproc(monkeypatch, capsys, "non_fast_forward") == 2
+
+
 def test_payload_cwd_outside_repo_fails_open():
     """Explicit payload cwd pointing at a different repo → fail-open (exit 0)."""
     p = _run_hook(
