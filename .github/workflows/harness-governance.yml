@@ -37,11 +37,14 @@ jobs:
 
       - name: Install beads (bd)
         run: |
-          curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash || true
+          set -euo pipefail
+          curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
           for d in "$HOME/.local/bin" "$HOME/.beads/bin" /usr/local/bin; do
-            [ -x "$d/bd" ] && echo "$d" >> "$GITHUB_PATH"
+            [ -x "$d/bd" ] && echo "$d" >> "$GITHUB_PATH" && export PATH="$d:$PATH"
           done
-          command -v bd && bd --version || echo "bd not on PATH"
+          # Hard-fail if bd did not land on PATH: governance checks must run for real,
+          # not fail-open. (codex review #3330604912)
+          command -v bd && bd --version
 
       - name: Seed runtime log placeholders
         run: |
