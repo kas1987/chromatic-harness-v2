@@ -17,6 +17,10 @@ on:
 jobs:
   governance:
     runs-on: ubuntu-latest
+    # See ci.yml: declare the native-claude relay so router/provider tests run
+    # deterministically on a cloud runner (no local `claude` binary).
+    env:
+      NATIVE_CLAUDE_RELAY_URL: "http://localhost:11434"
     steps:
       - uses: actions/checkout@v4
         with:

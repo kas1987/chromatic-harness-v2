@@ -10,6 +10,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # The router/provider tests assert local-provider routing (native_claude), which is
+    # gated by a runtime probe (claude on PATH) absent on a cloud runner. Declare the
+    # native-claude relay so the routing LOGIC is tested deterministically, matching dev.
+    env:
+      NATIVE_CLAUDE_RELAY_URL: "http://localhost:11434"
     steps:
       - uses: actions/checkout@v4
         with:
