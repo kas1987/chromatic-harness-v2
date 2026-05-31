@@ -28,6 +28,14 @@ SUITES = [
             "test_complexity_and_routing.py",
         ],
     ),
+    (
+        "magnets pipeline (7 canonical + orchestrator)",
+        [
+            "test_canonical_magnets.py",
+            "test_magnet_orchestrator.py",
+            "test_magnet_plugins.py",
+        ],
+    ),
 ]
 
 
@@ -111,8 +119,8 @@ def main() -> int:
                 "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 "branch": "unknown",
                 "commit": "unknown",
-                "total_pass": 16,
-                "total_fail": 0,
+                "suites_pass": len(SUITES),
+                "suites_fail": 0,
                 "gate": "pre-push",
                 "runner": "pytest",
             }

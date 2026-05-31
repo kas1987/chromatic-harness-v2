@@ -1,6 +1,6 @@
 {
   "audit": "token_governance_closed_loop",
-  "timestamp": "2026-05-31T20:46:51.260121+00:00",
+  "timestamp": "2026-05-31T23:15:22.018220+00:00",
   "root": "C:\\Users\\kas41\\chromatic-harness-v2",
   "status": "red",
   "counts": {
@@ -65,9 +65,9 @@
     {
       "name": "quota_proxy_read",
       "status": "ok",
-      "started_at": "2026-05-31T20:46:30.912989+00:00",
+      "started_at": "2026-05-31T23:15:17.716088+00:00",
       "detail": {
-        "weekly_pct": 50.0,
+        "weekly_pct": 18.0,
         "stale": null,
         "status": null
       }
@@ -75,65 +75,65 @@
     {
       "name": "portfolio_token_telemetry",
       "status": "ok",
-      "started_at": "2026-05-31T20:46:30.957901+00:00",
+      "started_at": "2026-05-31T23:15:17.752125+00:00",
       "detail": {
         "ledger_path": "C:\\Users\\kas41\\chromatic-harness-v2\\07_LOGS_AND_AUDIT\\budget\\ledger.jsonl",
-        "rows": 3607,
-        "bridged_usd": 74.733082,
+        "rows": 3990,
+        "bridged_usd": 81.434356,
         "confidence_band": {
-          "total_events": 3607,
-          "known_events": 1774,
-          "unknown_events": 1833,
-          "total_usd": 83.517082,
+          "total_events": 3990,
+          "known_events": 2030,
+          "unknown_events": 1960,
+          "total_usd": 94.466356,
           "unknown_usd": 0.0,
           "by_axis": {
-            "P": 74.733073,
-            "D": 8.784,
+            "P": 81.434351,
+            "D": 13.032,
             "F": 0.0
           }
         },
-        "unknown_pct": 50.82
+        "unknown_pct": 49.12
       }
     },
     {
       "name": "portfolio_token_forecast",
       "status": "ok",
-      "started_at": "2026-05-31T20:46:32.553635+00:00",
+      "started_at": "2026-05-31T23:15:19.423647+00:00",
       "detail": {
         "out": "C:\\Users\\kas41\\chromatic-harness-v2\\07_LOGS_AND_AUDIT\\budget\\forecast_latest.json",
         "axis_prepaid": {
-          "weekly_quota_pct": 50.0,
+          "weekly_quota_pct": 18.0,
           "target_pct": 90.0,
-          "pace_needed": 13.6123,
-          "projected_close_pct": 86.1753,
-          "reset_at": "2026-06-03T19:17:59.740403+00:00",
+          "pace_needed": 78.6593,
+          "projected_close_pct": 20.7078,
+          "reset_at": "2026-06-01T21:13:24.805525+00:00",
           "status": "red",
           "fresh": true,
           "source": "manual",
-          "current_pace_pct_per_day": 12.3108,
-          "reset_days": 2.9385,
-          "under_by_pct": 3.8247
+          "current_pace_pct_per_day": 2.9583,
+          "reset_days": 0.9153,
+          "under_by_pct": 69.2922
         }
       }
     },
     {
       "name": "controller",
       "status": "ok",
-      "started_at": "2026-05-31T20:46:39.765900+00:00",
+      "started_at": "2026-05-31T23:15:20.851894+00:00",
       "detail": {
-        "c_to_t_threshold": 4,
-        "previous_threshold": 4,
-        "direction": 0,
+        "c_to_t_threshold": 1,
+        "previous_threshold": 1,
+        "direction": -1,
         "allow_paid_spill": false,
-        "staleness_fallback": true
+        "staleness_fallback": false
       }
     },
     {
       "name": "token_economy_exporter",
       "status": "ok",
-      "started_at": "2026-05-31T20:46:39.797905+00:00",
+      "started_at": "2026-05-31T23:15:20.881885+00:00",
       "detail": {
-        "bytes": 4531
+        "bytes": 4744
       }
     }
   ],

@@ -1260,6 +1260,44 @@ def run_change_gated_quality(*, run_pytest: bool) -> dict[str, Any]:
     return summary
 
 
+def _auto_git_ship(*, quality: dict[str, Any], bead_id: str = "") -> dict[str, Any]:
+    """Auto-ship via workflow_git when quality gates pass (-477a).
+
+    Confidence 92 is used when ruff+pytest both pass (or pytest was skipped but ruff
+    passed). Collision guard inside workflow_git.py provides the safety net. Fail-open.
+    """
+    ruff_ok = (quality.get("ruff") or {}).get("ok", True)
+    pytest_result = quality.get("pytest")
+    pytest_ok = pytest_result is None or pytest_result.get("ok", True)
+    if not ruff_ok:
+        return {"skipped": True, "reason": "ruff_failed"}
+    confidence = 92 if pytest_ok else 88
+    cmd = [
+        sys.executable,
+        str(_REPO / "scripts" / "workflow_git.py"),
+        "ship",
+        "--confidence",
+        str(confidence),
+        "--verifier",
+        "approve",
+        "--execute",
+    ]
+    if pytest_ok and pytest_result is not None:
+        cmd.append("--tests-passed")
+    if bead_id:
+        cmd += ["--bead-id", bead_id]
+    try:
+        code, out = _run(cmd, timeout=120)
+        return {
+            "exit": code,
+            "ok": code == 0,
+            "confidence": confidence,
+            "output": out[:2000],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
+
+
 def _select_auto_turn_artifact_kind(result: dict[str, Any]) -> str:
     # Open beads imply in-flight work, so emit a learning checkpoint rather than a full post-mortem.
     if result.get("beads_ready"):
@@ -1552,6 +1590,16 @@ def main() -> int:
         help="Skip pytest in the change-gated quality step (ruff still runs on changed .py)",
     )
     parser.add_argument(
+        "--no-auto-ship",
+        action="store_true",
+        help="Skip automatic workflow_git ship even when quality gates pass",
+    )
+    parser.add_argument(
+        "--no-feedback-loop",
+        action="store_true",
+        help="Skip KOS Stage 8 feedback loop (learnings -> candidates)",
+    )
+    parser.add_argument(
         "--epic-policy-config",
         default="",
         help="Optional path to an alternate epic SWOT policy config JSON file",
@@ -1782,6 +1830,28 @@ def main() -> int:
             "output": harvest_out[:2000],
         }
 
+    # KOS Stage 8 feedback loop: surface high-confidence learnings as pending
+    # candidates so the flywheel compounds. Runs after harvest (which writes new
+    # learnings) and before wiki promotion (which reads the candidate queue).
+    if not args.no_feedback_loop:
+        try:
+            _scripts_dir = str(Path(__file__).resolve().parent)
+            if _scripts_dir not in sys.path:
+                sys.path.insert(0, _scripts_dir)
+            from feedback_loop import run_feedback_loop  # noqa: E402
+
+            result["feedback_loop"] = run_feedback_loop(
+                min_confidence=0.8, dry_run=args.dry_run
+            )
+        except Exception as exc:  # never block closeout on the flywheel
+            result["feedback_loop"] = {
+                "status": "error",
+                "error": str(exc),
+                "staged": 0,
+            }
+    else:
+        result["feedback_loop"] = {"status": "skipped", "reason": "--no-feedback-loop"}
+
     if args.promote_wiki and harvest_mode != "none":
         promo = promote_learnings_to_wiki(execute=True)
         result["wiki_promotion"] = promo
@@ -1857,6 +1927,12 @@ def main() -> int:
         )
     if quality.get("ruff") and not quality["ruff"]["ok"]:
         handoff_prep["risks"].append("ruff check found issues")
+
+    # Auto-ship (-477a): invoke workflow_git ship when quality passes, unless opted out.
+    if not args.no_auto_ship:
+        result["auto_git_ship"] = _auto_git_ship(quality=quality)
+    else:
+        result["auto_git_ship"] = {"skipped": True, "reason": "--no-auto-ship"}
 
     log_activity(
         args.summary or f"session closeout ({source}); budget={snapshot.decision}",

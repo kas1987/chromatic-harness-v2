@@ -1,0 +1,13 @@
+{
+  "candidate": "silent-ci-disable-detection",
+  "reviewed_at": "2026-05-31T23:00:02.660558+00:00",
+  "reviewer": "auto",
+  "checks": {
+    "confidence_ok": true,
+    "not_duplicate": true,
+    "has_suggested_use": true,
+    "alignment_ok": true
+  },
+  "verdict": "approved",
+  "notes": "auto-approved: all checks passed"
+}
