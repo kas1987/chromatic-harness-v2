@@ -31,11 +31,11 @@ _PR_RE = re.compile(r"\bgh\s+pr\s+create\b")
 _FORCE_RE = re.compile(r"(\s-f\b|--force\b|--force-with-lease\b|\s\+[\w/]+:)")
 
 
-def _current_branch() -> str:
+def _current_branch(cwd: Path | None = None) -> str:
     try:
         r = subprocess.run(
             ["git", "branch", "--show-current"],
-            cwd=_REPO,
+            cwd=str(cwd) if cwd is not None else str(_REPO),
             capture_output=True,
             text=True,
             timeout=10,
@@ -73,33 +73,57 @@ def main() -> int:
     if not command:
         return 0
 
-    is_pr = bool(_PR_RE.search(command))
-    is_push = bool(_PUSH_RE.search(command))
+    # Strip quoted segments before matching so a literal "git push" / "gh pr create"
+    # inside a quoted argument (e.g. a commit message or a gh-api reply body) does not
+    # trigger the gate. We only want the actual command tokens.
+    unquoted = re.sub(r"'[^']*'|\"[^\"]*\"", " ", command)
+    is_pr = bool(_PR_RE.search(unquoted))
+    is_push = bool(_PUSH_RE.search(unquoted))
     if not (is_pr or is_push):
         return 0
 
-    # The probe reasons about _REPO (this repo). A command that `cd`s into a
-    # *different* repo (e.g. the wiki) would be judged against the wrong repo, so
-    # fail-open rather than false-block. Detect a leading `cd <path>` outside _REPO.
+    # Determine the effective working directory for the git/gh probes.
+    # A leading `cd <path> &&` changes where the git/gh command ACTUALLY runs, so it
+    # WINS over the shell's starting cwd. Priority: (1) leading `cd <path>` (resolved
+    # against payload cwd if relative), (2) payload cwd, (3) _REPO.
+    payload_cwd: Path | None = None
+    _ti = payload.get("tool_input") or payload.get("toolInput") or {}
+    raw_cwd = payload.get("cwd") or (_ti.get("cwd") if isinstance(_ti, dict) else None)
+    if raw_cwd:
+        try:
+            payload_cwd = Path(str(raw_cwd)).resolve()
+        except (OSError, ValueError):
+            payload_cwd = None
+
+    effective_cwd: Path | None = None
     m = re.match(r"\s*cd\s+(['\"]?)([^'\"&|;]+)\1\s*&&", command)
     if m:
-        target = m.group(2).strip()
         try:
-            if (
-                Path(target).resolve() != _REPO
-                and _REPO not in Path(target).resolve().parents
-            ):
-                return 0
+            target = Path(m.group(2).strip())
+            if not target.is_absolute() and payload_cwd is not None:
+                target = payload_cwd / target
+            effective_cwd = target.resolve()
         except (OSError, ValueError):
+            return 0  # fail-open: can't parse path
+    elif payload_cwd is not None:
+        effective_cwd = payload_cwd
+
+    # If the effective cwd is outside _REPO, fail-open: we can't reliably judge
+    # collisions for an unrelated repo.
+    if effective_cwd is not None:
+        if effective_cwd != _REPO and _REPO not in effective_cwd.parents:
             return 0
+    else:
+        effective_cwd = _REPO
 
     try:
         from concurrency.github_collision import OPEN_PR, PUSH, check_github_collision
 
         verdict = check_github_collision(
-            branch=_current_branch(),
+            branch=_current_branch(effective_cwd),
             action=OPEN_PR if is_pr else PUSH,
             force=bool(_FORCE_RE.search(command)),
+            cwd=str(effective_cwd),
         )
     except Exception:  # noqa: BLE001 — never break the tool call
         return 0
