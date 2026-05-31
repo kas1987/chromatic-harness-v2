@@ -1,38 +1,47 @@
-# dependency-audit Plugin — Design Spec
+# dependency-audit — Chromatic Family Design Spec
 
 **Date:** 2026-05-31  
 **Status:** Approved  
-**Install target:** `~/.claude/plugins/local/dependency-audit/`
+**Install target:** `~/.claude/plugins/local/audit-family/`  
+**Family key:** `audit-family@local`  
+**Chromatic approach:** Chromatic Families — NOT superpowers
 
 ---
 
 ## Purpose
 
-A global Claude Code plugin that audits any repo's declared vs actual dependencies across Python, Node/TypeScript, and shell — and reports MCP tool usage frequency, coverage gaps, and cost from harness logs. Invoked as `/dependency-audit`.
+A Chromatic Family plugin that audits any repo's declared vs actual dependencies across Python, Node/TypeScript, and shell — and reports MCP tool usage frequency, coverage gaps, and cost from harness logs. Invoked as `/dependency-audit`. Toggled on/off via `skills-family.ps1` for infra sessions.
 
 ---
 
 ## File Layout
 
 ```
-~/.claude/plugins/local/dependency-audit/
+~/.claude/plugins/local/audit-family/
 ├── .claude-plugin/
-│   └── plugin.json
+│   └── plugin.json                  # name: audit-family, version: 1.0.0
 └── skills/
     └── dependency-audit/
         ├── SKILL.md
         ├── scripts/
-        │   ├── run_audit.py        # entrypoint: arg parsing, orchestrates scanners
-        │   ├── audit_python.py     # requirements*.txt / pyproject.toml vs ast-parsed .py
-        │   ├── audit_node.py       # package.json vs import/require in .ts/.js
-        │   ├── audit_shell.py      # .sh files → external tool calls
-        │   ├── audit_mcp.py        # 07_LOGS_AND_AUDIT/ JSONL → freq/coverage/cost
-        │   └── render.py           # JSON → terminal tables + written report file
+        │   ├── run_audit.py         # entrypoint: arg parsing, orchestrates scanners
+        │   ├── audit_python.py      # requirements*.txt / pyproject.toml vs ast-parsed .py
+        │   ├── audit_node.py        # package.json vs import/require in .ts/.js
+        │   ├── audit_shell.py       # .sh files → external tool calls
+        │   ├── audit_mcp.py         # 07_LOGS_AND_AUDIT/ JSONL → freq/coverage/cost
+        │   └── render.py            # JSON → terminal tables + written report file
         └── references/
-            └── log-schema.md       # expected JSONL shapes for MCP log parsing
+            └── log-schema.md        # expected JSONL shapes for MCP log parsing
 ```
 
-`installed_plugins.json` gets a new `dependency-audit@local` entry.
+### Registration changes
+
+`installed_plugins.json` gets a new `audit-family@local` entry pointing to `~/.claude/plugins/local/audit-family/`.
+
+`skills-family.ps1` updated to add `audit` as a switchable family:
+- `skills-family.ps1 audit` — audit family on, all others off (infra session)
+- `skills-family.ps1 all` — all four families on
+- `skills-family.ps1 core` — all families off (base token minimum)
 
 ---
 
@@ -55,6 +64,7 @@ A global Claude Code plugin that audits any repo's declared vs actual dependenci
 /dependency-audit --path /some/repo  # scan specific path
 /dependency-audit --python-only      # skip node/shell/mcp sections
 /dependency-audit --mcp-only         # just MCP intelligence report
+/dependency-audit --days 7           # MCP log window (default: 30)
 ```
 
 ---
@@ -76,7 +86,7 @@ A global Claude Code plugin that audits any repo's declared vs actual dependenci
 ### audit_python.py
 - **Declared:** parse `requirements.txt`, `requirements-*.txt`, `pyproject.toml` (`[tool.poetry.dependencies]` + `[project.dependencies]`)
 - **Actual:** `ast.parse()` every `.py` file (excluding `.venv/`, `node_modules/`, `.worktrees/`), collect all `import X` and `from X import Y` top-level module names
-- **Reports:** unused declared packages, undeclared imports (present in source but absent from manifest)
+- **Reports:** unused declared packages, undeclared imports (present in source but absent from manifest). Python stdlib modules (`sys`, `os`, `json`, etc.) are filtered out — only third-party imports are checked against the manifest.
 
 ### audit_node.py
 - **Declared:** parse `package.json` `dependencies` + `devDependencies` in `TARGET_PATH` (and subdirs up to 2 levels, excluding `node_modules/`)
