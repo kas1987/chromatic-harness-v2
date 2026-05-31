@@ -1,33 +1,31 @@
 # Context Rebuild Summary
 
-Generated: 2026-05-30T09:11:47.497320+00:00
+Generated: 2026-05-31T18:09:28.455533+00:00
 Mode: soft
 Risk Level: green
 
 ## Git
 
-Branch: `cursor/close-all-harness-gaps`
+Branch: `clean/wiki-git-push-t5ob`
 
 ```text
 M .agents/context/context_rebuild_summary.md
+ M .agents/handoffs/auto_turn_observations.jsonl
  M .agents/handoffs/claude_delegate_packet.json
  M .agents/handoffs/claude_delegate_prompt.md
- M .agents/handoffs/successor_prompt.md
- M .agents/handoffs/transfer_packet.json
  M .agents/harvest/latest.json
  M .agents/locks/session_locks.sqlite3
- M .agents/workflows/active-graph.json
  M .beads/interactions.jsonl
- M .beads/issues.jsonl
- D .claude/CLAUDE.md
- M 02_RUNTIME/audit/two_log.py
  m 02_RUNTIME/runtime-engines/roach-pi
- M 02_RUNTIME/workflows/run_log.py
  M 07_LOGS_AND_AUDIT/active_sessions.sqlite3
+ M 07_LOGS_AND_AUDIT/budget/daily.jsonl
+ M 07_LOGS_AND_AUDIT/budget/forecast_latest.json
+ M 07_LOGS_AND_AUDIT/budget/ledger.jsonl
  M 07_LOGS_AND_AUDIT/budget/monthly.json
- M 07_LOGS_AND_AUDIT/governance_intelligence/history.jsonl
- M 07_LOGS_AND_AUDIT/governance_intelligence/latest.json
- M 07_LOGS_AND_AUDIT/governance_intelligence/latest.md
+ M 07_LOGS_AND_AUDIT/control_plane/routing_policy_overlay.json
+ M 07_LOGS_AND_AUDIT/governance_intelligence/canary_snapshot_latest.json
+ M 07_LOGS_AND_AUDIT/harness_health/latest.json
+ M 07_LOGS_AND_AUDIT/harness_health/latest.md
  M 07_LOGS_AND_AUDIT/token_governance/history.jsonl
  M 07_LOGS_AND_AUDIT/token_governance/latest.json
  M 07_LOGS_AND_AUDIT/token_governance/latest.md
@@ -36,244 +34,14 @@ M .agents/context/context_rebuild_summary.md
  M config/pre_session/inventory.snapshot.json
  M docs/PRE_SESSION_AND_TOOLS.md
  M docs/workflows/WORKFLOW_RUN_LOG.jsonl
- M scripts/bead_hygiene_autoloop.py
- M scripts/llm_governance_intelligence.py
- M scripts/session_closeout.py
- M tests/test_bead_hygiene_autoloop_canary.py
- M tests/test_llm_governance_intelligence_normalization.py
- M tests/test_sandbox_promotion_ladder_e2e.py
- M tests/test_session_closeout.py
- M tests/test_two_log_audit.py
- M tests/test_workflows.py
-?? 02_RUNTIME/sandbox-lab/promotion-scorer-cli.ts
-?? 07_LOGS_AND_AUDIT/governance_intelligence/canary_evidence_latest.md
-?? 07_LOGS_AND_AUDIT/governance_intelligence/canary_snapshot_latest.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_080545.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_081729.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_081754.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_081943.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_082359.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_082917.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083013.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083250.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083338.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083426.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083616.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083659.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083751.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083832.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_083915.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084006.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084229.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084320.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084420.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084515.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084609.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084655.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084742.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084822.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084910.json
-?? 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_20260530_084957.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080106.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080133.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080141.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080308.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080331.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080355.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080418.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080500.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080524.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080652.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080714.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080719.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080919.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_080954.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081014.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081106.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081122.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081248.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081304.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081330.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081337.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081502.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081518.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081557.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081626.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081710.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081728.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081856.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081925.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_081928.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082121.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082153.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082221.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082229.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082317.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082333.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082458.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082522.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082523.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082636.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082716.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082752.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082816.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082830.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_082920.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083051.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083121.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083123.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083323.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083357.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083420.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083522.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083547.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083656.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083727.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083729.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083919.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_083959.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084029.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084119.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084140.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084258.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084333.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084336.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084445.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084530.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084559.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084626.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084724.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084858.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084924.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_084925.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085126.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085159.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085226.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085316.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085453.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085524.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085527.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085717.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085757.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085823.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_085918.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090056.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090122.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090126.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090317.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090357.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090423.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090529.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090659.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090724.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090726.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_090928.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_091005.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_091041.json
-?? 07_LOGS_AND_AUDIT/token_governance/token_governance_20260530_091137.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080106.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080133.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080141.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080308.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080331.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080355.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080418.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080500.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080524.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080652.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080714.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080719.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080919.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_080954.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081014.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081107.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081122.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081248.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081304.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081330.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081337.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081502.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081518.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081557.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081626.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081710.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081728.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081856.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081925.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_081928.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082121.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082153.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082221.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082229.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082317.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082333.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082458.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082522.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082523.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082636.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082716.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082752.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082816.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082830.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_082920.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083051.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083121.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083123.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083323.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083357.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083420.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083522.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083547.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083656.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083727.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083729.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083919.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_083959.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084029.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084119.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084140.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084258.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084333.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084336.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084445.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084530.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084559.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084626.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084724.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084858.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084924.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_084925.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085126.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085159.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085226.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085316.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085453.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085524.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085527.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085717.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085757.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085823.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_085918.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090056.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090122.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090126.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090317.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090357.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090423.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090530.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090659.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090724.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090726.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_090928.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_091005.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_091041.json
-?? 07_LOGS_AND_AUDIT/unified_guard/session_guard_20260530_091137.json
+?? .agents/swarm/
+?? hook_audit.json
 ```
 
 ## Handoff
 
 Pointer exists: True
-Handoff path: 12_HANDOFFS/sessions/SESSION.md
+Handoff path: 12_HANDOFFS/sessions/CHR-HANDOFF-9bd8f062.md
 
 ## Beads
 
