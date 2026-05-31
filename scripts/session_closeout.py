@@ -1011,6 +1011,96 @@ def promote_learnings_to_wiki(*, execute: bool, runner=None) -> dict[str, Any]:
     return result
 
 
+def wiki_git_push(wiki_root: Path, *, runner=None) -> dict[str, Any]:
+    """Commit promoted learnings in wiki_root, push a branch, open a PR.
+
+    Wiki main is hook-protected so we must use a feature branch + PR.
+    Fail-open: never raises; returns {ok, branch, pr_url, skipped_reason}.
+    """
+    result: dict[str, Any] = {
+        "ok": False,
+        "branch": "",
+        "pr_url": "",
+        "skipped_reason": "",
+    }
+    try:
+        import datetime as _dt
+        import shutil
+
+        if not wiki_root.is_dir():
+            result["skipped_reason"] = f"wiki root not found: {wiki_root}"
+            return result
+        if not shutil.which("git"):
+            result["skipped_reason"] = "git not on PATH"
+            return result
+
+        _r = runner if runner is not None else _run
+
+        # Only proceed if there are staged/unstaged changes in the wiki
+        _, status_out = _r(["git", "-C", str(wiki_root), "status", "--porcelain"])
+        if not status_out.strip():
+            result["ok"] = True
+            result["skipped_reason"] = "no changes to commit"
+            return result
+
+        stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%d-%H%M%S")
+        branch = f"learnings/auto-promote-{stamp}"
+
+        for cmd in [
+            ["git", "-C", str(wiki_root), "checkout", "-b", branch],
+            ["git", "-C", str(wiki_root), "add", "02_LEARNINGS/"],
+            [
+                "git",
+                "-C",
+                str(wiki_root),
+                "commit",
+                "-m",
+                f"chore: auto-promote harness learnings {stamp}",
+            ],
+            ["git", "-C", str(wiki_root), "push", "-u", "origin", branch],
+        ]:
+            code, out = _r(cmd)
+            if code != 0:
+                result["skipped_reason"] = (
+                    f"{' '.join(cmd[2:4])} failed ({code}): {out[:200]}"
+                )
+                return result
+
+        result["branch"] = branch
+
+        if shutil.which("gh"):
+            pr_body = (
+                "Auto-promoted harness learnings from `session_closeout.py --promote-wiki`.\n\n"
+                "Review for accuracy before merging — content is generated from `.agents/learnings/` "
+                "and `07_LOGS_AND_AUDIT/auto_turn_thresholds/`."
+            )
+            pr_cmd = [
+                "gh",
+                "pr",
+                "create",
+                "--repo",
+                "kas1987/chromatic-wiki",
+                "--base",
+                "main",
+                "--head",
+                branch,
+                "--title",
+                f"chore: auto-promote learnings {stamp}",
+                "--body",
+                pr_body,
+            ]
+            pr_code, pr_out = _r(pr_cmd)
+            if pr_code == 0:
+                result["pr_url"] = pr_out.strip()
+            else:
+                result["skipped_reason"] = f"gh pr create failed: {pr_out[:200]}"
+
+        result["ok"] = True
+    except Exception as exc:  # noqa: BLE001
+        result["skipped_reason"] = f"unexpected error: {exc}"
+    return result
+
+
 def _build_epic_swot_summary(epic: dict[str, Any] | None) -> dict[str, Any]:
     e = epic or {}
     return {
@@ -1693,17 +1783,42 @@ def main() -> int:
         }
 
     if args.promote_wiki and harvest_mode != "none":
-        result["wiki_promotion"] = promote_learnings_to_wiki(execute=True)
+        promo = promote_learnings_to_wiki(execute=True)
+        result["wiki_promotion"] = promo
+        # Auto-commit + branch-push + PR if any files were actually copied (-t5ob)
+        if promo.get("ok") and promo.get("promoted", 0) > 0:
+            _wiki_raw = os.environ.get("CHROMATIC_WIKI_ROOT", "")
+            _wiki_root = (
+                Path(_wiki_raw).resolve()
+                if _wiki_raw
+                else Path(r"C:\Users\kas41\chromatic-wiki")
+            )
+            result["wiki_git_push"] = wiki_git_push(_wiki_root)
+        else:
+            result["wiki_git_push"] = {
+                "ok": True,
+                "branch": "",
+                "pr_url": "",
+                "skipped_reason": "nothing promoted; no wiki commit needed",
+            }
     elif harvest_mode == "none":
         result["wiki_promotion"] = {
             "ok": False,
             "promoted": 0,
             "skipped_reason": "harvest_mode is none; wiki promotion skipped",
         }
+        result["wiki_git_push"] = {
+            "ok": True,
+            "skipped_reason": "wiki promotion skipped",
+        }
     else:
         result["wiki_promotion"] = {
             "ok": False,
             "promoted": 0,
+            "skipped_reason": "--no-promote-wiki flag set",
+        }
+        result["wiki_git_push"] = {
+            "ok": True,
             "skipped_reason": "--no-promote-wiki flag set",
         }
 
