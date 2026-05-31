@@ -27,9 +27,20 @@ until we noticed the integration timing.
 
 ## Pattern: one-shot Popen + terminate
 
+> **MCP lifecycle caveat:** a compliant `@modelcontextprotocol/sdk` stdio server will
+> reject `tools/call` as the first frame. Per the [MCP lifecycle](https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle),
+> a one-shot client must first send an `initialize` request, then a
+> `notifications/initialized` notification, and only then the `tools/call`. The snippet
+> below shows the *process-management* fix (the original bug); prepend the init handshake
+> for a spec-correct client.
+
 ```python
 def call_mcp_oneshot(tool: str, args: dict, mcp_path: str, request_id: int = 1) -> dict:
-    """Call a single MCP tool from a non-persistent client."""
+    """Call a single MCP tool from a non-persistent client.
+
+    NOTE: send `initialize` + `notifications/initialized` BEFORE this `tools/call`
+    frame — compliant SDK servers require the lifecycle handshake first.
+    """
     request = {
         "jsonrpc": "2.0", "id": request_id, "method": "tools/call",
         "params": {"name": tool, "arguments": args},
@@ -51,6 +62,17 @@ def call_mcp_oneshot(tool: str, args: dict, mcp_path: str, request_id: int = 1) 
         proc.stdin.flush()
         proc.stdin.close()
 
+        # Bound the read with a WATCHDOG, not communicate(): an MCP stdio server keeps its
+        # event loop alive after emitting the response, so communicate() (which waits for
+        # process EOF/exit) would hit the timeout and discard a successful reply. Instead
+        # read line-by-line — returning as soon as the matching response arrives — and arm a
+        # timer that kills the process if it ever stalls, which forces stdout EOF and breaks
+        # the loop.
+        import threading
+
+        watchdog = threading.Timer(30.0, proc.kill)
+        watchdog.start()
+
         for line in proc.stdout:
             line = line.strip()
             if not line:
@@ -64,11 +86,15 @@ def call_mcp_oneshot(tool: str, args: dict, mcp_path: str, request_id: int = 1) 
             if "result" in response:
                 content = response["result"].get("content", [])
                 if content and content[0].get("type") == "text":
-                    return json.loads(content[0]["text"])
+                    try:
+                        return json.loads(content[0]["text"])
+                    except json.JSONDecodeError:
+                        return {"text": content[0]["text"]}  # non-JSON tool output
             if "error" in response:
                 return {"error": f"MCP error: {response['error']}"}
-        return {"error": "MCP subprocess exited before response"}
+        return {"error": "MCP subprocess exited or timed out before response"}
     finally:
+        watchdog.cancel()
         try:
             proc.terminate()
             proc.wait(timeout=2)
