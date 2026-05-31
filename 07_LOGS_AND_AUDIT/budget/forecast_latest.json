@@ -282,14 +282,17 @@
     }
   },
   "axis_prepaid": {
-    "weekly_quota_pct": null,
+    "weekly_quota_pct": 50.0,
     "target_pct": 90.0,
-    "pace_needed": null,
-    "projected_close_pct": null,
-    "reset_at": null,
-    "status": "stale",
-    "fresh": false,
-    "source": "absent"
+    "pace_needed": 13.6138,
+    "projected_close_pct": 86.1684,
+    "reset_at": "2026-06-03T19:17:59.740403+00:00",
+    "status": "red",
+    "fresh": true,
+    "source": "manual",
+    "current_pace_pct_per_day": 12.3098,
+    "reset_days": 2.9382,
+    "under_by_pct": 3.8316
   },
   "roi_card": {
     "routing_card": [
@@ -323,12 +326,12 @@
       }
     ],
     "ledger_events_by_axis": {
-      "P": 2234,
-      "D": 1308,
-      "F": 11
+      "P": 1691,
+      "D": 1894,
+      "F": 25
     },
     "ledger_events_by_c_level": {},
-    "ledger_rows": 3553,
+    "ledger_rows": 3610,
     "note": "spend prepaid Axis-P quota on highest complexity (C3/C4); keep C1/C2 on free local"
   },
   "dollar_forecast": {
@@ -340,30 +343,33 @@
     "note": "ccusage $ is the Axis D estimator only; Axis P comes from quota_state"
   },
   "forecast_variance": {
-    "status": "green",
+    "status": "red",
     "metrics": {
       "day": {
-        "samples": 0,
-        "mae_usd": 0.0,
-        "mape_pct": 0.0
+        "samples": 84,
+        "mae_usd": 31907.2308,
+        "mape_pct": 96.32
       },
       "week": {
-        "samples": 0,
-        "mae_usd": 0.0,
-        "mape_pct": 0.0
+        "samples": 84,
+        "mae_usd": 31907.2308,
+        "mape_pct": 96.32
       },
       "month": {
-        "samples": 0,
-        "mae_usd": 0.0,
-        "mape_pct": 0.0
+        "samples": 84,
+        "mae_usd": 51001.6117,
+        "mape_pct": 97.34
       }
     },
     "coverage": {
       "forecast_rows": 84,
-      "daily_ledger_rows": 103947,
-      "scored_rows": 0
+      "daily_ledger_rows": 497048,
+      "scored_rows": 84
     },
-    "recommendations": []
+    "recommendations": [
+      "weekly forecast mape high; increase smoothing window",
+      "daily forecast noisy; reduce intraday projection weight"
+    ]
   },
-  "portfolio_forecast_generated_at": "2026-05-30T21:22:23.956513+00:00"
+  "portfolio_forecast_generated_at": "2026-05-31T20:47:00.256824+00:00"
 }

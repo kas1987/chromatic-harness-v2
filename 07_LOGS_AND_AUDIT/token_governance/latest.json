@@ -1,11 +1,11 @@
 {
   "audit": "token_governance_closed_loop",
-  "timestamp": "2026-05-30T21:22:27.057149+00:00",
+  "timestamp": "2026-05-31T20:46:51.260121+00:00",
   "root": "C:\\Users\\kas41\\chromatic-harness-v2",
   "status": "red",
   "counts": {
-    "pass": 3,
-    "warn": 0,
+    "pass": 2,
+    "warn": 1,
     "fail": 1
   },
   "checks": [
@@ -25,9 +25,9 @@
     },
     {
       "name": "audit_mcp_context",
-      "status": "pass",
+      "status": "warn",
       "returncode": 0,
-      "message": "within threshold",
+      "message": "Heavy MCP servers still present on disk: user-review-daemon",
       "command": [
         "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
         "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\audit_mcp_context.py",
@@ -65,9 +65,9 @@
     {
       "name": "quota_proxy_read",
       "status": "ok",
-      "started_at": "2026-05-30T21:22:22.713826+00:00",
+      "started_at": "2026-05-31T20:46:30.912989+00:00",
       "detail": {
-        "weekly_pct": null,
+        "weekly_pct": 50.0,
         "stale": null,
         "status": null
       }
@@ -75,48 +75,51 @@
     {
       "name": "portfolio_token_telemetry",
       "status": "ok",
-      "started_at": "2026-05-30T21:22:22.735832+00:00",
+      "started_at": "2026-05-31T20:46:30.957901+00:00",
       "detail": {
         "ledger_path": "C:\\Users\\kas41\\chromatic-harness-v2\\07_LOGS_AND_AUDIT\\budget\\ledger.jsonl",
-        "rows": 3553,
-        "bridged_usd": 251.208013,
+        "rows": 3607,
+        "bridged_usd": 74.733082,
         "confidence_band": {
-          "total_events": 3553,
-          "known_events": 1874,
-          "unknown_events": 1679,
-          "total_usd": 254.088013,
-          "unknown_usd": 199.327393,
+          "total_events": 3607,
+          "known_events": 1774,
+          "unknown_events": 1833,
+          "total_usd": 83.517082,
+          "unknown_usd": 0.0,
           "by_axis": {
-            "P": 251.208042,
-            "D": 2.88,
+            "P": 74.733073,
+            "D": 8.784,
             "F": 0.0
           }
         },
-        "unknown_pct": 47.26
+        "unknown_pct": 50.82
       }
     },
     {
       "name": "portfolio_token_forecast",
       "status": "ok",
-      "started_at": "2026-05-30T21:22:23.955515+00:00",
+      "started_at": "2026-05-31T20:46:32.553635+00:00",
       "detail": {
         "out": "C:\\Users\\kas41\\chromatic-harness-v2\\07_LOGS_AND_AUDIT\\budget\\forecast_latest.json",
         "axis_prepaid": {
-          "weekly_quota_pct": null,
+          "weekly_quota_pct": 50.0,
           "target_pct": 90.0,
-          "pace_needed": null,
-          "projected_close_pct": null,
-          "reset_at": null,
-          "status": "stale",
-          "fresh": false,
-          "source": "absent"
+          "pace_needed": 13.6123,
+          "projected_close_pct": 86.1753,
+          "reset_at": "2026-06-03T19:17:59.740403+00:00",
+          "status": "red",
+          "fresh": true,
+          "source": "manual",
+          "current_pace_pct_per_day": 12.3108,
+          "reset_days": 2.9385,
+          "under_by_pct": 3.8247
         }
       }
     },
     {
       "name": "controller",
       "status": "ok",
-      "started_at": "2026-05-30T21:22:25.054494+00:00",
+      "started_at": "2026-05-31T20:46:39.765900+00:00",
       "detail": {
         "c_to_t_threshold": 4,
         "previous_threshold": 4,
@@ -128,13 +131,26 @@
     {
       "name": "token_economy_exporter",
       "status": "ok",
-      "started_at": "2026-05-30T21:22:25.078699+00:00",
+      "started_at": "2026-05-31T20:46:39.797905+00:00",
       "detail": {
-        "bytes": 4106
+        "bytes": 4531
       }
     }
   ],
   "suggestions": [
+    {
+      "id": "token-gov-mcp-trim",
+      "title": "Trim MCP token surface below profile warning threshold",
+      "goal": "Disable or prune heavy MCP descriptors and re-run audit_mcp_context + session_context_report",
+      "priority": "P1",
+      "tier": 1,
+      "type": "task",
+      "context": {
+        "category": "token_governance",
+        "source_check": "audit_mcp_context",
+        "message": "Heavy MCP servers still present on disk: user-review-daemon"
+      }
+    },
     {
       "id": "token-gov-daily-audit-remediation",
       "title": "Remediate strict daily audit findings affecting token governance",
@@ -150,6 +166,11 @@
     }
   ],
   "queue_actions": [
+    {
+      "id": "token-gov-mcp-trim",
+      "status": "skipped_existing",
+      "reason": "processed"
+    },
     {
       "id": "token-gov-daily-audit-remediation",
       "status": "skipped_existing",

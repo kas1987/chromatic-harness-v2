@@ -25,6 +25,10 @@ from typing import Any
 # Default staleness window per spec §7 (controller 5-minute staleness guard).
 STALENESS_SECONDS = 300
 
+# Extended TTL for manually-seeded quota state (spec §4); manual seeds are not
+# refreshed by a live proxy so we honor them for a full 24-hour window.
+MANUAL_SEED_TTL_SECONDS = 86400
+
 # Canonical producer drop location (spec §3).
 DEFAULT_QUOTA_STATE_PATH = (
     Path.home() / ".claude" / "powerline" / "usage" / "quota_state.json"
