@@ -79,25 +79,29 @@ def main() -> int:
         return 0
 
     # Determine the effective working directory for the git/gh probes.
-    # Priority: (1) explicit payload cwd field, (2) leading `cd <path> &&`, (3) _REPO.
-    effective_cwd: Path | None = None
-
-    # Check for explicit cwd in the payload (Claude Code sets this on Bash calls).
-    payload_cwd = payload.get("cwd") or ((payload.get("tool_input") or {}).get("cwd"))
-    if payload_cwd:
+    # A leading `cd <path> &&` changes where the git/gh command ACTUALLY runs, so it
+    # WINS over the shell's starting cwd. Priority: (1) leading `cd <path>` (resolved
+    # against payload cwd if relative), (2) payload cwd, (3) _REPO.
+    payload_cwd: Path | None = None
+    raw_cwd = payload.get("cwd") or ((payload.get("tool_input") or {}).get("cwd"))
+    if raw_cwd:
         try:
-            effective_cwd = Path(str(payload_cwd)).resolve()
+            payload_cwd = Path(str(raw_cwd)).resolve()
         except (OSError, ValueError):
-            effective_cwd = None
+            payload_cwd = None
 
-    # Fall back to leading `cd <path> &&` detection.
+    effective_cwd: Path | None = None
     m = re.match(r"\s*cd\s+(['\"]?)([^'\"&|;]+)\1\s*&&", command)
-    if m and effective_cwd is None:
-        target = m.group(2).strip()
+    if m:
         try:
-            effective_cwd = Path(target).resolve()
+            target = Path(m.group(2).strip())
+            if not target.is_absolute() and payload_cwd is not None:
+                target = payload_cwd / target
+            effective_cwd = target.resolve()
         except (OSError, ValueError):
             return 0  # fail-open: can't parse path
+    elif payload_cwd is not None:
+        effective_cwd = payload_cwd
 
     # If the effective cwd is outside _REPO, fail-open: we can't reliably judge
     # collisions for an unrelated repo.

@@ -123,6 +123,23 @@ def test_payload_cwd_outside_repo_fails_open():
     assert p.returncode == 0
 
 
+def test_leading_cd_wins_over_payload_cwd():
+    """`cd <other-repo> && git push` with payload cwd = harness must fail-open:
+    the cd target is where the command actually runs, so it overrides payload cwd."""
+    import os
+
+    p = _run_hook(
+        {
+            "tool_name": "Bash",
+            "tool_input": {
+                "command": 'cd "C:/Users/kas41/some-other-repo" && git push origin HEAD',
+                "cwd": os.getcwd(),  # harness repo
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
 def test_payload_cwd_field_at_toplevel_fails_open():
     """payload.cwd (top-level) pointing at a different repo → fail-open."""
     p = _run_hook(
