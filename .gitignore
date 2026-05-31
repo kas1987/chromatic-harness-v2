@@ -81,6 +81,9 @@ config/pre_session/settings.local.yaml
 # Local pre-session pack staging (not source of truth)
 .tmp_pre_session_pack/
 
+# Budget daily log — append-only telemetry, grows to 50MB+; ledger.jsonl + monthly.json are the tracked artifacts
+07_LOGS_AND_AUDIT/budget/daily.jsonl
+
 # BASELINE audit scorecards (generated)
 07_LOGS_AND_AUDIT/baseline/
 
