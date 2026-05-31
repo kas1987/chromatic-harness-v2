@@ -154,6 +154,20 @@ def test_leading_cd_wins_over_payload_cwd():
     assert p.returncode == 0
 
 
+def test_camelcase_toolinput_cwd_honored():
+    """camelCase toolInput.cwd pointing at another repo → fail-open (parity with snake_case)."""
+    p = _run_hook(
+        {
+            "toolName": "Bash",
+            "toolInput": {
+                "command": "gh pr create --title x",
+                "cwd": "C:/Users/kas41/some-other-repo",
+            },
+        }
+    )
+    assert p.returncode == 0
+
+
 def test_payload_cwd_field_at_toplevel_fails_open():
     """payload.cwd (top-level) pointing at a different repo → fail-open."""
     p = _run_hook(
