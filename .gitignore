@@ -80,3 +80,6 @@ config/pre_session/settings.local.yaml
 
 # BASELINE audit scorecards (generated)
 07_LOGS_AND_AUDIT/baseline/
+
+# Keep the archived HEAVY workflow audit artifact tracked (validate_workflow_token_governance requires it)
+!.claude/workflows/*.HEAVY.js.bak

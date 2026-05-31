@@ -1,0 +1,15 @@
+// ARCHIVED — DO NOT SYNC TO ~/.claude/workflows/
+// Estimated cost: 500k–2M+ tokens per run.
+// Chain: discovery → plan → CRANK → vibe → release/post-mortem
+//
+// Restore only with explicit human approval.
+// Safe replacement: ship.js (lite)
+
+export const meta = {
+  name: 'ship-HEAVY-DO-NOT-USE',
+  description: 'ARCHIVED: full /ship with /crank — see docs/AGENT_ANTIPATTERNS.md',
+}
+
+throw new Error(
+  'ship.HEAVY is archived. Use /ship (lite) or /close-issue <id>. See docs/AGENT_ANTIPATTERNS.md'
+)
