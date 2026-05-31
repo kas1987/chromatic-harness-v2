@@ -4,12 +4,14 @@ Next review: 2026-06-07
 
 | KPI | Baseline | Target | Current |
 |-----|---------|--------|---------|
-| % sessions started from state files | 0% | 80% | 0% |
+| % sessions started from state files | 0% | 80% | 33% |
 | % tasks classified P1-P4 | 100% | 100% | 100% |
 | % P4 items parked (not worked) | N/A | 95% | N/A |
-| % actions logged to decision log | 2 entries | 90% | 2 entries |
+| % actions logged to decision log | 2 entries | 90% | 4 entries |
 | Scope drift incidents / session | 0 | <1 | 0 |
 | Broken governance files | 0 | 0 | 0 |
+
+Last updated: 2026-05-31 | Sessions logged: 3
 
 ## Notes — measurement methodology
 
@@ -28,7 +30,9 @@ Will become measurable once P4 beads are created (xacy.3 intent).
 **% actions logged to decision log**
 `01_STATE/DECISION_LOG.md` was created this session with 2 seed entries.
 Baseline = 2 cumulative logged decisions. Target is a % rate per session (to be
-trended from xacy.4 onward).
+trended from xacy.4 onward). Updated to 4 entries after xacy.4 governance sprint.
+
+Last updated: 2026-05-31 | Sessions logged: 3
 
 **Scope drift incidents / session**
 Last 5 commits reviewed (`git log --oneline -5`): all map to tracked epics
