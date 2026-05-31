@@ -128,13 +128,29 @@ def main() -> int:
     except Exception:  # noqa: BLE001 — never break the tool call
         return 0
 
-    for w in verdict.soft_warnings:
+    # Advisory by default: only the genuinely destructive cases (a push that would
+    # overwrite remote commits) HARD-block. Duplicate-PR / in-flight-Actions / issue
+    # ownership are surfaced as warnings, not blocks — a guard reasoning about external
+    # state from a limited payload is false-positive-prone, and a false block stalls
+    # real work. Set CHROMATIC_COLLISION_STRICT=1 to hard-block on any collision.
+    _DESTRUCTIVE = {"non_fast_forward", "force_overwrite"}
+    strict = os.environ.get("CHROMATIC_COLLISION_STRICT", "").strip() in (
+        "1",
+        "true",
+        "yes",
+    )
+    blocking = [b for b in verdict.hard_blocks if strict or b["kind"] in _DESTRUCTIVE]
+    advisory = [b for b in verdict.hard_blocks if b not in blocking]
+
+    for w in list(verdict.soft_warnings) + advisory:
         print(f"[collision][warn] {w['kind']}: {w['detail']}", file=sys.stderr)
 
-    if verdict.blocked and os.environ.get(
-        "CHROMATIC_ALLOW_COLLISION", ""
-    ).strip() not in ("1", "true", "yes"):
-        reasons = "; ".join(b["detail"] for b in verdict.hard_blocks)
+    if blocking and os.environ.get("CHROMATIC_ALLOW_COLLISION", "").strip() not in (
+        "1",
+        "true",
+        "yes",
+    ):
+        reasons = "; ".join(b["detail"] for b in blocking)
         print(
             "BLOCKED by GitHub session-collision guard: "
             f"{reasons}. Override once with CHROMATIC_ALLOW_COLLISION=1.",
