@@ -29,16 +29,21 @@ def _num(value: Any, default: float) -> float:
 
 
 def main() -> int:
-    # Defensive: a malformed file, a non-dict root, non-dict nested values, or a
-    # misconfigured env var must never crash this gate (it would red-light CI).
+    # A MISSING file = no lock activity → fail open (pass). But a PRESENT file that is
+    # corrupt/unreadable/non-dict means the rollup we just generated is broken — that's
+    # a real regression, so FAIL the gate rather than silently passing with zeros. Nested
+    # values and env vars are still cast defensively (data-quality within a valid report).
     data: dict = {}
     if _METRICS.is_file():
         try:
             loaded = json.loads(_METRICS.read_text(encoding="utf-8"))
-            if isinstance(loaded, dict):
-                data = loaded
-        except (OSError, json.JSONDecodeError):
-            pass
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"LOCK_GATE FAIL: metrics file present but unreadable: {exc}")
+            return 1
+        if not isinstance(loaded, dict):
+            print("LOCK_GATE FAIL: metrics root is not a JSON object")
+            return 1
+        data = loaded
 
     wait_ms = data.get("wait_ms") if isinstance(data.get("wait_ms"), dict) else {}
     counts = (
