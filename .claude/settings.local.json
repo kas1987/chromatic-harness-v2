@@ -1,8 +1,4 @@
 {
-  "env": {
-    "ROUTER_CODEGRAPH_IMPACT": "true",
-    "CHROMATIC_LEAN_BOOT": "1"
-  },
   "hooks": {
     "SessionStart": [
       {
@@ -10,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/session_start.py",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python scripts/session_start.py\"",
             "timeout": 120
           }
         ]
@@ -22,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/session_closeout.py --invoked-by claude_code",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python scripts/session_closeout.py --invoked-by claude_code\"",
             "timeout": 180
           }
         ]
@@ -34,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bd prime",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"bd prime\"",
             "timeout": 30
           }
         ]
@@ -46,7 +42,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python 02_RUNTIME/router/gate.py",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python 02_RUNTIME/router/gate.py\"",
             "timeout": 10
           }
         ]
@@ -56,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python scripts/hooks/git_collision_pretooluse.py",
+            "command": "powershell -NoProfile -WindowStyle Hidden -Command \"python scripts/hooks/git_collision_pretooluse.py\"",
             "timeout": 30
           }
         ]

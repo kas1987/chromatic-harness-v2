@@ -1,6 +1,6 @@
 {
   "schema": "routing_policy_overlay/v1",
-  "generated_at": "2026-05-31T20:07:52.889616Z",
+  "generated_at": "2026-05-31T20:10:35.141951Z",
   "c_to_t_threshold": 4,
   "allow_paid_spill": false,
   "staleness_fallback": true,

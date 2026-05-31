@@ -72,8 +72,8 @@ docs/workflows/WORKFLOW_RUN_LOG.jsonl
 # Pre-session inventory machine-local paths
 config/pre_session/settings.local.yaml
 
-# Claude Code personal hook overrides (copy from settings.local.json.example)
-.claude/settings.local.json
+# Claude Code personal hook overrides — committed to repo (Windows PowerShell wrappers)
+# .claude/settings.local.json
 
 # Local pre-session pack staging (not source of truth)
 .tmp_pre_session_pack/
