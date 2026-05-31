@@ -101,6 +101,9 @@ def default_registry() -> MagnetRegistry:
     from .scope_magnet import ScopeMagnet
     from .security_magnet import SecurityMagnet
     from .validation_magnet import ValidationMagnet
+    from .plan_magnet import PlanMagnet
+    from .dispatch_magnet import DispatchMagnet
+    from .decision_magnet import DecisionMagnet
 
     reg = MagnetRegistry()
     for magnet in (
@@ -119,6 +122,9 @@ def default_registry() -> MagnetRegistry:
         ClosureMagnet(),
         PyramidCheckPlugin(),
         SecretsSurfacePlugin(),
+        PlanMagnet(),
+        DispatchMagnet(),
+        DecisionMagnet(),
     ):
         if isinstance(magnet, MagnetPlugin):
             reg.register(magnet)
