@@ -50,7 +50,10 @@ SCHEDULED_TASK_NAMES = [
 CI_GUARDS = [
     ("Agent operations", "scripts/check_agent_operations.py"),
     ("Intake loop", "scripts/validate_intake_loop.py"),
-    ("MCP audit fixture", "scripts/audit_mcp_context.py --mcps-path tests/fixtures/mcp_minimal"),
+    (
+        "MCP audit fixture",
+        "scripts/audit_mcp_context.py --mcps-path tests/fixtures/mcp_minimal",
+    ),
 ]
 
 
@@ -140,7 +143,11 @@ def _query_schtasks(name: str) -> dict:
             timeout=10,
             check=False,
         )
-        return {"name": name, "installed": r.returncode == 0, "detail": (r.stdout or "")[:500]}
+        return {
+            "name": name,
+            "installed": r.returncode == 0,
+            "detail": (r.stdout or "")[:500],
+        }
     except (OSError, subprocess.TimeoutExpired):
         return {"name": name, "installed": False, "detail": ""}
 
@@ -160,17 +167,26 @@ def _findings(rows: list[dict]) -> list[dict]:
         if r.get("event") in ("PreToolUse", "preToolUse")
         and "Agent" in str(r.get("matcher", ""))
     ]
-    if len(agent_cmds) > 1:
+    # Only flag if the *same* command appears more than once (genuine duplicate that
+    # would run the gate twice). Distinct hooks (model-router, efficiency-advisor,
+    # gate.py) are intentional and should not be HIGH. (-eytk fix)
+    seen: dict[str, int] = {}
+    for cmd in agent_cmds:
+        seen[cmd] = seen.get(cmd, 0) + 1
+    dup_cmds = [cmd for cmd, count in seen.items() if count > 1]
+    if dup_cmds:
         findings.append(
             {
                 "severity": "HIGH",
                 "title": "Duplicate PreToolUse Agent hooks",
-                "detail": f"{len(agent_cmds)} Agent gate hooks configured — may run gate.py twice per agent dispatch.",
-                "commands": agent_cmds,
+                "detail": f"{len(dup_cmds)} command(s) registered more than once for PreToolUse Agent — gate runs multiple times per dispatch.",
+                "commands": dup_cmds,
             }
         )
 
-    session_starts = [r for r in rows if r.get("event") in ("SessionStart", "sessionStart")]
+    session_starts = [
+        r for r in rows if r.get("event") in ("SessionStart", "sessionStart")
+    ]
     if len(session_starts) > 2:
         findings.append(
             {
@@ -198,7 +214,11 @@ def _findings(rows: list[dict]) -> list[dict]:
                 }
             )
 
-    cursor_boot = [r for r in rows if r.get("platform") == "cursor" and r.get("event") == "sessionStart"]
+    cursor_boot = [
+        r
+        for r in rows
+        if r.get("platform") == "cursor" and r.get("event") == "sessionStart"
+    ]
     if not cursor_boot:
         findings.append(
             {
@@ -256,7 +276,11 @@ def build_report() -> dict[str, Any]:
 
     scheduled = [_query_schtasks(n) for n in SCHEDULED_TASK_NAMES]
     workflows = _list_workflows()
-    always_rules = list((REPO / ".cursor" / "rules").glob("*.mdc")) if (REPO / ".cursor" / "rules").is_dir() else []
+    always_rules = (
+        list((REPO / ".cursor" / "rules").glob("*.mdc"))
+        if (REPO / ".cursor" / "rules").is_dir()
+        else []
+    )
 
     return {
         "repo": str(REPO),
@@ -313,8 +337,8 @@ def render_markdown(report: dict[str, Any]) -> str:
             continue
         cmd = (r.get("command") or "")[:80].replace("|", "\\|")
         lines.append(
-            f"| {r.get('platform')} | `{Path(r.get('source','')).name}` | "
-            f"{r.get('event')} | {r.get('matcher')} | {r.get('timeout','')} | `{cmd}` |"
+            f"| {r.get('platform')} | `{Path(r.get('source', '')).name}` | "
+            f"{r.get('event')} | {r.get('matcher')} | {r.get('timeout', '')} | `{cmd}` |"
         )
 
     lines.extend(["", "## Repo workflows (slash commands, not lifecycle hooks)", ""])
