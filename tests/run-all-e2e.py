@@ -318,6 +318,12 @@ SUITES = [
             "test_event_lifecycle.py",
         ],
     ),
+    (
+        "agent mission packet compliance (OBS-012)",
+        [
+            "test_mission_packet.py",
+        ],
+    ),
 ]
 
 
