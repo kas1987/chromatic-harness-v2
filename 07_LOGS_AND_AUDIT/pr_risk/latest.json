@@ -1,0 +1,27 @@
+{
+  "metrics": {
+    "status": "ok",
+    "base": "a9829d71f261fd869b73efb445b605caa4c12073",
+    "changed_files": 0,
+    "added_lines": 0,
+    "deleted_lines": 0,
+    "total_lines": 0
+  },
+  "risk": {
+    "risk_level": "low",
+    "reasons": [],
+    "protected_paths": [],
+    "generated_paths": [],
+    "thresholds": {
+      "warn_files": 30,
+      "fail_files": 100,
+      "warn_lines": 800,
+      "fail_lines": 3000
+    }
+  },
+  "changed_files": 0,
+  "total_lines": 0,
+  "risk_level": "low",
+  "passed": true,
+  "timestamp": "20260601T021753Z"
+}

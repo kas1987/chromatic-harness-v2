@@ -58,6 +58,12 @@ SUITES = [
             "test_security_scan.py",
         ],
     ),
+    (
+        "PR size & change-risk gate",
+        [
+            "test_pr_size_gate.py",
+        ],
+    ),
 ]
 
 

@@ -475,6 +475,18 @@ def _security_summary() -> dict[str, Any]:
         return {"status": "error", "error": str(exc), "passed": None}
 
 
+def _pr_risk_summary() -> dict[str, Any]:
+    """Surface the latest PR size & change-risk result in the closeout report
+    (fail-open). Reads the artifact written by scripts/pr_size_gate.py."""
+    try:
+        sys.path.insert(0, str(_REPO / "scripts"))
+        import pr_size_gate  # noqa: PLC0415
+
+        return pr_size_gate.summarize()
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "error", "error": str(exc), "risk_level": None}
+
+
 def _run_harness_health_snapshot() -> dict[str, Any]:
     code, out = _run(
         [
@@ -1969,6 +1981,7 @@ def main() -> int:
     result["learning_outcomes"] = _emit_injected_learning_outcomes()
     result["epic_reviews"] = _run_epic_reviews()
     result["security"] = _security_summary()
+    result["pr_risk"] = _pr_risk_summary()
 
     print(json.dumps(result, indent=2))
     return 0
