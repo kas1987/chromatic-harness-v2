@@ -162,6 +162,12 @@ SUITES = [
             "test_lease_manager.py",
         ],
     ),
+    (
+        "mutation manifest enforcement (P0-CC-002)",
+        [
+            "test_mutation_manifest.py",
+        ],
+    ),
 ]
 
 
