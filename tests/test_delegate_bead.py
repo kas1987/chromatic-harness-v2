@@ -16,18 +16,23 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 sys.path.insert(0, str(REPO / "02_RUNTIME"))
 
+# Import after the sys.path insert above so `router` resolves in CI, where the
+# 02_RUNTIME path is not on sys.path at collection time. Keep this import block
+# directly after the insert (no statements between) so isort/ruff-fix doesn't
+# hoist it back above the path setup. See tests/test_router_autopath.py.
+from router.contracts import (  # noqa: E402
+    OutputType,
+    RouteOutput,
+    RouteResponse,
+)
+
 
 def _load_delegate():
-    spec = importlib.util.spec_from_file_location(
-        "delegate_bead", SCRIPTS / "delegate_bead.py"
-    )
+    spec = importlib.util.spec_from_file_location("delegate_bead", SCRIPTS / "delegate_bead.py")
     mod = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
     spec.loader.exec_module(mod)
     return mod
-
-
-from router.contracts import RouteResponse, RouteOutput, OutputType  # noqa: E402
 
 
 class _FakeComplexity:
