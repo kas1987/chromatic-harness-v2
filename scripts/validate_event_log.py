@@ -9,6 +9,47 @@ from pathlib import Path
 
 REQUIRED = {"event_id", "timestamp", "event_type", "severity", "category", "message", "source", "status"}
 
+VALID_EVENT_TYPES = {
+    "info",
+    "error",
+    "warning",
+    "incident",
+    "collision",
+    "learning",
+    "fix",
+    "status_update",
+    "command_result",
+}
+VALID_SEVERITIES = {"info", "low", "medium", "high", "critical"}
+VALID_CATEGORIES = {
+    "tool_failure",
+    "file_collision",
+    "test_failure",
+    "dependency_error",
+    "context_drift",
+    "scope_breach",
+    "secret_exposure",
+    "loop_behavior",
+    "model_misroute",
+    "playbook_gap",
+    "git_state",
+    "command_failure",
+    "manual_note",
+    "validation_failure",
+    "unknown",
+}
+VALID_STATUSES = {
+    "open",
+    "routed",
+    "queued",
+    "active",
+    "resolved",
+    "ignored",
+    "failed",
+    "incident_opened",
+    "collision_opened",
+}
+
 
 def validate_line(line: str, line_no: int) -> list[str]:
     errors: list[str] = []
@@ -16,6 +57,8 @@ def validate_line(line: str, line_no: int) -> list[str]:
         event = json.loads(line)
     except json.JSONDecodeError as exc:
         return [f"Line {line_no}: invalid JSON: {exc}"]
+    if not isinstance(event, dict):
+        return [f"Line {line_no}: expected JSON object, got {type(event).__name__}"]
     missing = REQUIRED - set(event)
     if missing:
         errors.append(f"Line {line_no}: missing required fields: {', '.join(sorted(missing))}")
@@ -23,6 +66,15 @@ def validate_line(line: str, line_no: int) -> list[str]:
         errors.append(f"Line {line_no}: source must be object")
     elif "surface" not in event["source"]:
         errors.append(f"Line {line_no}: source.surface missing")
+    for field, valid in (
+        ("event_type", VALID_EVENT_TYPES),
+        ("severity", VALID_SEVERITIES),
+        ("category", VALID_CATEGORIES),
+        ("status", VALID_STATUSES),
+    ):
+        val = event.get(field)
+        if val is not None and val not in valid:
+            errors.append(f"Line {line_no}: invalid {field}: {val!r}")
     return errors
 
 

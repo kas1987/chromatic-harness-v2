@@ -11,7 +11,11 @@ SECRET_PATTERNS = [
     re.compile(r"sk-proj-[A-Za-z0-9_-]{20,}"),
     re.compile(r"ghp_[A-Za-z0-9_]{20,}"),
     re.compile(r"github_pat_[A-Za-z0-9_]{20,}"),
-    re.compile(r"(?i)(api[_-]?key|token|secret|password)\s*[:=]\s*['\"]?[^\s'\"]+"),
+    # Backreference \2 matches the same opening/closing quote (or empty for unquoted)
+    re.compile(r"(?i)(api[_-]?key|token|secret|password)\s*[:=]\s*(['\"]?)([^\s'\"]+)\2"),
+    # Authorization and Cookie headers
+    re.compile(r"(?i)(Authorization)\s*:\s*\S+"),
+    re.compile(r"(?i)(Cookie)\s*:\s*[^\r\n]+"),
     re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----"),
 ]
 

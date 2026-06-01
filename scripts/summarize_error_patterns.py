@@ -16,7 +16,12 @@ def load_events(path: Path) -> list[dict]:
     with path.open("r", encoding="utf-8") as handle:
         for line in handle:
             if line.strip():
-                events.append(json.loads(line))
+                try:
+                    event = json.loads(line)
+                    if isinstance(event, dict):
+                        events.append(event)
+                except json.JSONDecodeError:
+                    pass
     return events
 
 

@@ -13,24 +13,36 @@ from typing import Any
 
 try:
     from redact_secrets import redact_text
-except ImportError:
-    def redact_text(text: str) -> tuple[str, bool]:
-        return text, False
+except ImportError as _redact_err:
+    raise SystemExit(
+        f"redact_secrets unavailable ({_redact_err}): refusing to log without secret redaction"
+    ) from _redact_err
 
 DEFAULT_LOG = Path("00_META/observability/ERROR_LOG.jsonl")
 VALID_EVENT_TYPES = {"info", "warning", "error", "incident", "collision", "learning"}
 VALID_SEVERITIES = {"info", "low", "medium", "high", "critical"}
 VALID_CATEGORIES = {
-    "tool_failure", "file_collision", "test_failure", "dependency_error",
-    "context_drift", "scope_breach", "secret_exposure", "loop_behavior",
-    "model_misroute", "playbook_gap", "permission_error", "git_state_error",
-    "environment_error", "artifact_error", "manual_note"
+    "tool_failure",
+    "file_collision",
+    "test_failure",
+    "dependency_error",
+    "context_drift",
+    "scope_breach",
+    "secret_exposure",
+    "loop_behavior",
+    "model_misroute",
+    "playbook_gap",
+    "permission_error",
+    "git_state_error",
+    "environment_error",
+    "artifact_error",
+    "manual_note",
 }
 VALID_STATUSES = {"open", "triaged", "queued", "active", "resolved", "ignored", "escalated"}
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 def make_event_id() -> str:
@@ -71,11 +83,15 @@ def build_event(args: argparse.Namespace) -> dict[str, Any]:
         "category": args.category,
         "message": message,
         "source": {
-            "surface": args.source,
-            "ide": args.ide,
-            "agent": args.agent,
-            "model": args.model,
-            "session_id": args.session_id or os.environ.get("CHROMATIC_SESSION_ID", "manual")
+            k: v
+            for k, v in {
+                "surface": args.source,
+                "ide": args.ide,
+                "agent": args.agent,
+                "model": args.model,
+                "session_id": args.session_id or os.environ.get("CHROMATIC_SESSION_ID", "manual"),
+            }.items()
+            if v is not None
         },
         "command": command,
         "files_touched": split_csv(args.files_touched),
@@ -88,7 +104,7 @@ def build_event(args: argparse.Namespace) -> dict[str, Any]:
         "linked_fix": args.linked_fix,
         "linked_learning": args.linked_learning,
         "next_action": args.next_action,
-        "metadata": {}
+        "metadata": {},
     }
     return event
 
