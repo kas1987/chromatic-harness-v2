@@ -150,6 +150,12 @@ SUITES = [
             "test_disaster_recovery.py",
         ],
     ),
+    (
+        "rudalo migration audit (#84)",
+        [
+            "test_rudalo_migration_audit.py",
+        ],
+    ),
 ]
 
 
