@@ -1,4 +1,5 @@
 """Pytest suite for review_intake.py and classify_review_finding.py."""
+
 from __future__ import annotations
 
 import json
@@ -6,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -13,7 +15,8 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = REPO_ROOT / "scripts"
 FIXTURES = REPO_ROOT / "tests" / "fixtures" / "review_intake"
-BASE = REPO_ROOT / "07_LOGS_AND_AUDIT" / "review_intake"
+# Isolated scratch dir — never write to the tracked 07_LOGS_AND_AUDIT/review_intake paths.
+BASE = Path(tempfile.mkdtemp(prefix="review_intake_test_"))
 
 sys.path.insert(0, str(SCRIPTS))
 
@@ -121,11 +124,16 @@ class TestReviewIntakeScript:
         cmd = [
             sys.executable,
             str(SCRIPTS / "review_intake.py"),
-            "--event-name", event_name,
-            "--event-path", str(FIXTURES / event_file),
-            "--findings", str(BASE / "findings.jsonl"),
-            "--queue", str(BASE / "queue.json"),
-            "--state", str(BASE / "state.json"),
+            "--event-name",
+            event_name,
+            "--event-path",
+            str(FIXTURES / event_file),
+            "--findings",
+            str(BASE / "findings.jsonl"),
+            "--queue",
+            str(BASE / "queue.json"),
+            "--state",
+            str(BASE / "state.json"),
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
         assert result.returncode == 0, result.stderr
@@ -167,7 +175,9 @@ class TestLockPrBranch:
         return subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
 
     def test_acquire_and_release(self):
-        r1 = self._run_lock("acquire", "--repo", "owner/repo", "--pr-number", "42", "--holder", "Sentinel", "--queue-item-id", "NW-1")
+        r1 = self._run_lock(
+            "acquire", "--repo", "owner/repo", "--pr-number", "42", "--holder", "Sentinel", "--queue-item-id", "NW-1"
+        )
         assert r1.returncode == 0
         data = json.loads(r1.stdout)
         assert data["acquired"] is True
@@ -176,7 +186,9 @@ class TestLockPrBranch:
         assert r2.returncode == 0
         assert "lock_id" in r2.stdout
 
-        r3 = self._run_lock("acquire", "--repo", "owner/repo", "--pr-number", "42", "--holder", "Auditor", "--queue-item-id", "NW-2")
+        r3 = self._run_lock(
+            "acquire", "--repo", "owner/repo", "--pr-number", "42", "--holder", "Auditor", "--queue-item-id", "NW-2"
+        )
         assert r3.returncode == 2
         data3 = json.loads(r3.stdout)
         assert data3["acquired"] is False
@@ -184,7 +196,9 @@ class TestLockPrBranch:
         r4 = self._run_lock("release", "--repo", "owner/repo", "--pr-number", "42")
         assert r4.returncode == 0
 
-        r5 = self._run_lock("acquire", "--repo", "owner/repo", "--pr-number", "42", "--holder", "Auditor", "--queue-item-id", "NW-2")
+        r5 = self._run_lock(
+            "acquire", "--repo", "owner/repo", "--pr-number", "42", "--holder", "Auditor", "--queue-item-id", "NW-2"
+        )
         assert r5.returncode == 0
         data5 = json.loads(r5.stdout)
         assert data5["acquired"] is True
@@ -195,14 +209,24 @@ class TestPostReviewResolution:
         cmd = [
             sys.executable,
             str(SCRIPTS / "post_review_resolution.py"),
-            "--finding", "RF-ABC123",
-            "--task", "NW-XYZ789",
-            "--agent", "Sentinel",
-            "--status", "Resolved",
-            "--confidence", "92",
-            "--change", "Fixed off-by-one error.",
-            "--files", "src/list.py",
-            "--validation", "pytest tests/test_list.py",
+            "--finding",
+            "RF-ABC123",
+            "--task",
+            "NW-XYZ789",
+            "--agent",
+            "Sentinel",
+            "--status",
+            "Resolved",
+            "--confidence",
+            "92",
+            "--change",
+            "Fixed off-by-one error.",
+            "--files",
+            "src/list.py",
+            "--validation",
+            "pytest tests/test_list.py",
+            "--log",
+            str(BASE / "resolution_log.jsonl"),
         ]
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=REPO_ROOT)
         assert result.returncode == 0

@@ -1,0 +1,15 @@
+{
+  "action": "completed",
+  "repository": {"full_name": "owner/repo"},
+  "workflow_run": {
+    "id": 444555,
+    "name": "CI",
+    "conclusion": "failure",
+    "head_sha": "ghi012",
+    "updated_at": "2026-06-01T20:15:00Z",
+    "html_url": "https://github.com/owner/repo/actions/runs/444555",
+    "pull_requests": [
+      {"number": 44}
+    ]
+  }
+}

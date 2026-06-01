@@ -107,6 +107,14 @@ SUITES = [
         ],
     ),
     (
+        "review intake (PDR re-engineer + 8 acceptance criteria)",
+        [
+            "test_review_intake.py",
+            "test_review_intake_acceptance.py",
+            "test_review_intake_central_collector.py",
+        ],
+    ),
+    (
         "harness health cockpit (#79)",
         [
             "test_harness_health_check.py",

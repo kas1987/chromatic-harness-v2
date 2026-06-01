@@ -5,6 +5,8 @@ on:
     types: [submitted, edited, dismissed]
   pull_request_review_comment:
     types: [created, edited, deleted]
+  pull_request:
+    types: [synchronize]
   issue_comment:
     types: [created, edited]
   check_run:
@@ -13,9 +15,8 @@ on:
     types: [completed]
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: read
-  issues: write
   checks: read
 
 defaults:
@@ -28,6 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Ensure review intake folders exist
         run: |
@@ -49,10 +54,13 @@ jobs:
             --queue 07_LOGS_AND_AUDIT/review_intake/queue.json \
             --state 07_LOGS_AND_AUDIT/review_intake/state.json
 
-      - name: Commit intake updates
-        run: |
-          git config user.name "Chromatic Review Intake"
-          git config user.email "actions@github.com"
-          git add 07_LOGS_AND_AUDIT/review_intake/findings.jsonl 07_LOGS_AND_AUDIT/review_intake/queue.json 07_LOGS_AND_AUDIT/review_intake/state.json
-          git diff --cached --quiet || git commit -m "chore(review-intake): ingest GitHub review event"
-          git push
+      # State is published as a workflow artifact rather than pushed to a protected
+      # branch. A downstream collector (scripts/review_intake_central_collector.py)
+      # ingests these artifacts; this keeps the default branch immutable from CI.
+      - name: Publish intake artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-intake-state-${{ github.run_id }}
+          path: 07_LOGS_AND_AUDIT/review_intake/
+          if-no-files-found: warn
+          retention-days: 14

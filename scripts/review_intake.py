@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Ingest GitHub review-related events into Chromatic findings and Next Work."""
+
 from __future__ import annotations
 
 import argparse
@@ -249,6 +250,7 @@ def finding_to_queue_item(finding: Dict[str, Any]) -> Dict[str, Any]:
         "status": status,
         "priority": min(100, max(1, score)),
         "repo": finding.get("repo"),
+        "pr_number": pr,
         "area": "review-intake",
         "specialties": specialties_for_type(finding_type),
         "owner_agent": finding.get("suggested_agent", "Auditor"),
@@ -259,9 +261,47 @@ def finding_to_queue_item(finding: Dict[str, Any]) -> Dict[str, Any]:
         "acceptance_checks": finding.get("acceptance_checks") or ["Review manually"],
         "links": links,
         "source_finding_id": finding.get("finding_id"),
+        "commit_sha": finding.get("commit_sha"),
         "allowed_files": [finding.get("path")] if finding.get("path") else [],
         "notes": f"Review finding from {finding.get('source')} at {path}. Body: {finding.get('body', '')[:500]}",
     }
+
+
+def invalidate_stale_queue_items(queue_path: Path, repo: str, pr_number: Any, after_sha: str | None) -> int:
+    """Mark queue items stale when their source commit no longer matches the PR head.
+
+    Triggered by ``pull_request.synchronize``. Items tied to a concrete commit that
+    differs from the new head SHA are blocked so dispatch never patches stale feedback.
+    Items with no commit (issue-level instructions) are left untouched. Findings.jsonl
+    stays append-only; the queue is the mutable, dispatchable surface (PDR S15 decision).
+    """
+    if not queue_path.exists():
+        return 0
+    queue = load_queue(queue_path)
+    invalidated = 0
+    for item in queue.get("items", []):
+        if str(item.get("repo")) != str(repo):
+            continue
+        if pr_number is not None and item.get("pr_number") != pr_number:
+            continue
+        item_sha = item.get("commit_sha")
+        if not item_sha or item_sha == after_sha:
+            continue
+        if item.get("status") in {"done", "in-progress"}:
+            continue
+        if item.get("stale") and item.get("superseded_by_sha") == after_sha:
+            continue
+        item["status"] = "blocked"
+        item["stale"] = True
+        item["superseded_by_sha"] = after_sha
+        reasons = set(item.get("blocked_by") or [])
+        reasons.add(f"stale: PR synchronized to {after_sha}")
+        item["blocked_by"] = sorted(reasons)
+        item["updated_at"] = utc_now()
+        invalidated += 1
+    if invalidated:
+        queue_path.write_text(json.dumps(queue, indent=2, sort_keys=True) + "\n")
+    return invalidated
 
 
 def upsert_queue_item(queue_path: Path, item: Dict[str, Any]) -> bool:
@@ -280,14 +320,18 @@ def upsert_queue_item(queue_path: Path, item: Dict[str, Any]) -> bool:
     return True
 
 
-def update_state(path: Path, event_name: str, finding: Dict[str, Any] | None, queue_item: Dict[str, Any] | None) -> None:
+def update_state(
+    path: Path, event_name: str, finding: Dict[str, Any] | None, queue_item: Dict[str, Any] | None
+) -> None:
     state = load_json(path) if path.exists() else {}
-    state.update({
-        "last_event_name": event_name,
-        "last_processed_at": utc_now(),
-        "last_finding_id": finding.get("finding_id") if finding else None,
-        "last_queue_item_id": queue_item.get("id") if queue_item else None,
-    })
+    state.update(
+        {
+            "last_event_name": event_name,
+            "last_processed_at": utc_now(),
+            "last_finding_id": finding.get("finding_id") if finding else None,
+            "last_queue_item_id": queue_item.get("id") if queue_item else None,
+        }
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
 
@@ -303,6 +347,17 @@ def main() -> int:
 
     event = load_json(Path(args.event_path))
     repo = event.get("repository", {}).get("full_name") or event.get("repository") or "unknown/repo"
+
+    if args.event_name == "pull_request" and event.get("action") == "synchronize":
+        pr = event.get("pull_request", {})
+        after_sha = event.get("after") or pr.get("head", {}).get("sha")
+        invalidated = invalidate_stale_queue_items(Path(args.queue), repo, pr.get("number"), after_sha)
+        update_state(Path(args.state), args.event_name, None, None)
+        print(
+            json.dumps({"synchronize": True, "invalidated_queue_items": invalidated, "after_sha": after_sha}, indent=2)
+        )
+        return 0
+
     finding = normalize_event(args.event_name, event, repo)
     if not finding:
         update_state(Path(args.state), args.event_name, None, None)
@@ -314,7 +369,12 @@ def main() -> int:
     queue_item = finding_to_queue_item(enriched)
     upsert_queue_item(Path(args.queue), queue_item)
     update_state(Path(args.state), args.event_name, enriched, queue_item)
-    print(json.dumps({"finding_created": created, "finding_id": enriched["finding_id"], "queue_item_id": queue_item["id"]}, indent=2))
+    print(
+        json.dumps(
+            {"finding_created": created, "finding_id": enriched["finding_id"], "queue_item_id": queue_item["id"]},
+            indent=2,
+        )
+    )
     return 0
 
 
