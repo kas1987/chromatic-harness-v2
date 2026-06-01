@@ -55,6 +55,26 @@ jobs:
       - name: Agent operations guard (mandatory docs)
         run: python scripts/check_agent_operations.py
 
+      - name: Governance gate — secret scan (blocking)
+        run: python scripts/security_scan.py --no-deps
+
+      - name: Governance gates — advisory reports (non-blocking)
+        continue-on-error: true
+        run: |
+          python scripts/pr_size_gate.py --base origin/${{ github.base_ref || 'session/chromatic-harness-v2-initial' }} || true
+          python scripts/arch_compliance_gate.py || true
+          python scripts/drift_gate.py || true
+          python scripts/ai_review_gate.py --base origin/${{ github.base_ref || 'session/chromatic-harness-v2-initial' }} || true
+          python scripts/release_readiness.py || true
+
+      - name: Upload governance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-reports
+          path: 07_LOGS_AND_AUDIT/{security,pr_risk,arch,drift,ai_review,release}/latest.json
+          if-no-files-found: ignore
+
       - name: Hook audit (no HIGH findings)
         run: |
           python scripts/audit_hooks.py --json > hook_audit.json
