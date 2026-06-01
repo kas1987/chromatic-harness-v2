@@ -128,9 +128,12 @@ def summarize(path: Path | None = None) -> dict[str, Any]:
         }
     except Exception as exc:  # noqa: BLE001
         result = {"status": "error", "error": str(exc), "invocation_count": None}
+    # Honor the test-isolation log path: write the artifact alongside the
+    # provided invocations log rather than the production telemetry dir.
+    artifact_path = (path.parent / "latest.json") if path else ARTIFACT_PATH
     try:
-        ARTIFACT_PATH.parent.mkdir(parents=True, exist_ok=True)
-        ARTIFACT_PATH.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        artifact_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
     except Exception:  # noqa: BLE001
         pass
     return result
