@@ -95,6 +95,16 @@ def test_known_commands_reads_real_registry():
     assert "/go" in names and "/recover" in names
 
 
+def test_summarize_artifact_written_beside_log_not_production(tmp_path):
+    """Artifact must be written beside the log file, not to the production directory."""
+    m = _mod()
+    p = tmp_path / "inv.jsonl"
+    m.log_invocation("/go", path=p)
+    m.summarize(p)
+    expected = tmp_path / "latest.json"
+    assert expected.is_file(), "artifact should be written beside the log file, not the production directory"
+
+
 if __name__ == "__main__":
     import pytest
 

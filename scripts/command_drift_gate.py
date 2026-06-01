@@ -111,9 +111,11 @@ def summarize(registry_path: Path | None = None, root: Path | None = None) -> di
         result = run_gate(registry_path, root)
     except Exception as exc:  # noqa: BLE001
         result = {"status": "error", "error": str(exc), "drift_count": None, "high_severity": None}
+    # Derive artifact path from root when provided so test calls don't write to production.
+    artifact = (root / "07_LOGS_AND_AUDIT" / "command_drift" / "latest.json") if root else ARTIFACT_PATH
     try:
-        ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
-        ARTIFACT_PATH.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_text(json.dumps(result, indent=2), encoding="utf-8")
     except Exception:  # noqa: BLE001
         pass
     return result

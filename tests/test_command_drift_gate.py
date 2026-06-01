@@ -116,6 +116,21 @@ def test_summarize_fail_open_on_bad_path(tmp_path):
     assert out["status"] in {"ok", "error"}
 
 
+def test_summarize_artifact_written_to_tmp_not_production(tmp_path):
+    """Artifact must go into root-relative path, not the hardcoded production dir."""
+    m = _mod()
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts" / "go.py").write_text("x", encoding="utf-8")
+    reg_path = tmp_path / "reg.yaml"
+    reg_path.write_text(
+        "version: 0.1.0\ncommands:\n  - name: /go\n    script: scripts/go.py\n    fallback_script: null\n",
+        encoding="utf-8",
+    )
+    m.summarize(reg_path, tmp_path)
+    expected = tmp_path / "07_LOGS_AND_AUDIT" / "command_drift" / "latest.json"
+    assert expected.is_file(), "artifact should be written under the provided root, not the production directory"
+
+
 if __name__ == "__main__":
     import pytest
 
