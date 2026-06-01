@@ -252,6 +252,12 @@ SUITES = [
             "test_command_matrix.py",
         ],
     ),
+    (
+        "observability v2.1 scaffold (OBS-001)",
+        [
+            "test_observability_scaffold.py",
+        ],
+    ),
 ]
 
 

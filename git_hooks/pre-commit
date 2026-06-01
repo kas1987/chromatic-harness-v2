@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+python scripts/validate_event_schema.py --log 00_META/observability/ERROR_LOG.jsonl
+python scripts/detect_file_collisions.py --active-writers .chromatic/active_writers.json
+python scripts/scan_for_secrets.py

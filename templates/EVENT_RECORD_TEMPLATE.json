@@ -1,0 +1,28 @@
+{
+  "event_id": "evt_YYYYMMDD_HHMMSS_shortid",
+  "timestamp": "YYYY-MM-DDTHH:MM:SS-04:00",
+  "repo": "repo-name",
+  "workspace": "local",
+  "event_type": "error",
+  "severity": "medium",
+  "category": "test_failure",
+  "message": "Short human-readable description.",
+  "source": {
+    "surface": "terminal",
+    "ide": "vscode",
+    "agent": "codex",
+    "model": "model-name",
+    "session_id": "session-id"
+  },
+  "command": "command that failed, redacted",
+  "files_touched": ["path/to/file"],
+  "error_signature": "stable_signature_or_short_hash",
+  "raw_excerpt": "redacted excerpt",
+  "redacted": true,
+  "suspected_cause": "Possible cause.",
+  "action_taken": "What was done immediately.",
+  "status": "open",
+  "linked_fix": null,
+  "linked_learning": null,
+  "next_action": "Bounded next action."
+}
