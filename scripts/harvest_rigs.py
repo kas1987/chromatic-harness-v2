@@ -30,19 +30,29 @@ def _parse_roots(raw: str | None) -> list[Path] | None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Harvest learnings across rig .agents/ trees")
-    parser.add_argument("--execute", action="store_true", help="Copy promoted files (default: dry-run)")
-    parser.add_argument("--session-end", action="store_true", help="Lite harvest for session compact")
+    parser = argparse.ArgumentParser(
+        description="Harvest learnings across rig .agents/ trees"
+    )
+    parser.add_argument(
+        "--execute", action="store_true", help="Copy promoted files (default: dry-run)"
+    )
+    parser.add_argument(
+        "--session-end", action="store_true", help="Lite harvest for session compact"
+    )
     parser.add_argument("--roots", help="Comma-separated extra rig roots to scan")
     parser.add_argument("--min-confidence", type=float, default=0.5)
-    parser.add_argument("--global-hub", action="store_true", help="Promote to ~/.agents/learnings/")
+    parser.add_argument(
+        "--global-hub", action="store_true", help="Promote to ~/.agents/learnings/"
+    )
     args = parser.parse_args(argv)
 
     extra = _parse_roots(args.roots)
     dry_run = not args.execute
 
     if args.session_end:
-        report = run_session_harvest(REPO, dry_run=dry_run, min_confidence=max(args.min_confidence, 0.6))
+        report = run_session_harvest(
+            REPO, dry_run=dry_run, min_confidence=max(args.min_confidence, 0.6)
+        )
     else:
         report = run_harvest(
             REPO,
@@ -53,6 +63,14 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     print(json.dumps(report.to_dict(), indent=2))
+
+    # KOS Stage 4 integration: after harvesting learnings, run pattern extraction.
+    # This populates .agents/patterns/ from the newly promoted learnings.
+    # To trigger: import and call extract_patterns.extract_patterns(dry_run=dry_run)
+    # from scripts/extract_patterns.py — kept separate to avoid circular deps.
+    # Example:
+    #   from extract_patterns import extract_patterns
+    #   extract_patterns(dry_run=dry_run)
     return 0
 
 

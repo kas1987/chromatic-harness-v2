@@ -1,0 +1,17 @@
+{
+  "date": "2026-05-31",
+  "metrics": {
+    "cache_hit_rate__status": "not_instrumented",
+    "router_ratio__status": "not_instrumented",
+    "learning_application_rate__status": "not_instrumented",
+    "context_budget_adherence__status": "not_instrumented",
+    "mcp_count__status": "ok",
+    "mcp_count__mcp_count": 3,
+    "mcp_count__mcp_servers": [
+      "live-director",
+      "review-daemon",
+      "codegraph"
+    ],
+    "terminal_use__status": "not_instrumented"
+  }
+}
