@@ -487,6 +487,16 @@ def _pr_risk_summary() -> dict[str, Any]:
         return {"status": "error", "error": str(exc), "risk_level": None}
 
 
+def _gate_summary(module_name: str, fallback_key: str = "passed") -> dict[str, Any]:
+    """Generic fail-open reader for a gate module's summarize() (gh-58 gates)."""
+    try:
+        sys.path.insert(0, str(_REPO / "scripts"))
+        mod = __import__(module_name)
+        return mod.summarize()
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "error", "error": str(exc), fallback_key: None}
+
+
 def _run_harness_health_snapshot() -> dict[str, Any]:
     code, out = _run(
         [
@@ -1982,6 +1992,9 @@ def main() -> int:
     result["epic_reviews"] = _run_epic_reviews()
     result["security"] = _security_summary()
     result["pr_risk"] = _pr_risk_summary()
+    result["coverage"] = _gate_summary("coverage_gate")
+    result["docs_drift"] = _gate_summary("docs_drift_gate", fallback_key="risk_level")
+    result["arch_compliance"] = _gate_summary("arch_compliance_gate")
 
     print(json.dumps(result, indent=2))
     return 0
