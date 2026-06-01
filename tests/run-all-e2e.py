@@ -288,6 +288,12 @@ SUITES = [
             "test_git_snapshots.py",
         ],
     ),
+    (
+        "IDE observability tasks (OBS-007)",
+        [
+            "test_ide_tasks.py",
+        ],
+    ),
 ]
 
 
