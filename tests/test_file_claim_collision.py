@@ -96,6 +96,51 @@ def test_release_clears_entries(tmp_path):
     assert _claims(root) == {}
 
 
+# --- regressions from code-review feedback (Codex/Gemini on PR #143) ---
+
+
+def test_release_normalizes_dotslash_paths(tmp_path):
+    """Gemini HIGH: release must canonicalize paths like claim does, so a
+    `./src/foo.py` release matches the stored `src/foo.py` claim."""
+    root = _root(tmp_path)
+    _claim(root, "alice", "sess-A", "src/foo.py")
+    r = subprocess.run(
+        [sys.executable, str(RELEASE), "--repo-root", str(root), "--session", "sess-A", "--files", "./src/foo.py"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert r.returncode == 0, r.stderr
+    assert _claims(root) == {}, "dotslash release should have cleared the normalized claim"
+
+
+def test_collision_routed_even_when_register_dir_absent(tmp_path):
+    """Codex P2: routing must create 00_META/observability before writing the
+    register, so a blocked claim is still logged when the dir doesn't pre-exist."""
+    root = tmp_path
+    (root / ".chromatic").mkdir(parents=True, exist_ok=True)  # NO 00_META/observability
+    _claim(root, "alice", "sess-A", "src/foo.py")
+    blocked = _claim(root, "bob", "sess-B", "src/foo.py")
+    assert blocked.returncode == 3
+    register = root / "00_META" / "observability" / "COLLISION_REGISTER.md"
+    assert register.is_file() and "foo.py" in register.read_text(encoding="utf-8")
+
+
+def test_detect_collisions_handles_non_object_json(tmp_path):
+    """Gemini/Copilot HIGH: detector must not crash on a valid-but-non-object
+    active-writers file (e.g. a JSON list)."""
+    root = _root(tmp_path)
+    (root / ".chromatic" / "active_writers.json").write_text("[]", encoding="utf-8")
+    r = subprocess.run(
+        [sys.executable, str(REPO / "scripts" / "detect_file_collisions.py"), "--repo-root", str(root)],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert r.returncode == 2, f"expected graceful exit 2, got {r.returncode}: {r.stderr}"
+    assert "malformed" in r.stderr.lower()
+
+
 if __name__ == "__main__":
     import pytest
 

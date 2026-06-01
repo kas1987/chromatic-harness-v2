@@ -42,6 +42,7 @@ def _route_collision(root, blocked, writer, session, task):
     lines.append("")
     reg = root / "00_META" / "observability" / "COLLISION_REGISTER.md"
     try:
+        reg.parent.mkdir(parents=True, exist_ok=True)
         with reg.open("a", encoding="utf-8") as fh:
             fh.write("\n".join(lines) + "\n")
     except OSError:
