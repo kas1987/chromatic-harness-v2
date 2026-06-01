@@ -44,6 +44,12 @@ SUITES = [
         ],
     ),
     (
+        "common_harness run_safe (tree-reap on timeout)",
+        [
+            "test_common_harness_run_safe.py",
+        ],
+    ),
+    (
         "issue->bead intake pipeline",
         [
             "test_audit_issue_intake.py",
