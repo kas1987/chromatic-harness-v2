@@ -234,6 +234,12 @@ SUITES = [
             "test_repo_role_registry.py",
         ],
     ),
+    (
+        "command matrix doc generation (j5ik)",
+        [
+            "test_command_matrix.py",
+        ],
+    ),
 ]
 
 
