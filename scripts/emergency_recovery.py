@@ -156,6 +156,7 @@ def recover_stale_lease(
     *,
     apply: bool = False,
     affects_secrets: bool = False,
+    delete_requested: bool = False,
     ledger: Path | None = None,
     log_path: Path | None = None,
 ) -> dict[str, Any]:
@@ -185,6 +186,7 @@ def recover_stale_lease(
         target_lease=target,
         rollback_plan=rollback_plan,
         affects_secrets=affects_secrets,
+        delete_requested=delete_requested,
         ledger=led,
     )
     if stops:
@@ -295,6 +297,7 @@ def main() -> int:
     s.add_argument("--reason", required=True)
     s.add_argument("--rollback-plan", required=True)
     s.add_argument("--affects-secrets", action="store_true")
+    s.add_argument("--delete-requested", action="store_true")
     s.add_argument("--apply", action="store_true")
 
     args = parser.parse_args()
@@ -314,6 +317,7 @@ def main() -> int:
             args.rollback_plan,
             apply=args.apply,
             affects_secrets=args.affects_secrets,
+            delete_requested=args.delete_requested,
             ledger=ledger,
         )
         print(json.dumps(result, indent=2))

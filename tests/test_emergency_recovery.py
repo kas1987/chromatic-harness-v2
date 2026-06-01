@@ -179,6 +179,31 @@ def test_every_action_is_logged(tmp_path):
     assert rows and rows[-1]["action"] == "stale_lease_recovery" and rows[-1]["ok"] is True
 
 
+def test_stop_condition_delete_requested(tmp_path):
+    """delete_requested must be a wired stop condition, not dead code."""
+    er = _mod()
+    stops = er.assess_stop_conditions(target_lease=None, rollback_plan="rb", delete_requested=True)
+    assert "delete_requested" in stops
+
+
+def test_recover_blocked_when_delete_requested(tmp_path):
+    er = _mod()
+    ledger = tmp_path / "l.jsonl"
+    _seed_lease(ledger, active=False, lease_id="lease-stale")
+    res = er.recover_stale_lease(
+        "lease-stale",
+        "AgentA",
+        "stale",
+        "git checkout -- .",
+        apply=True,
+        delete_requested=True,
+        ledger=ledger,
+        log_path=tmp_path / "log.jsonl",
+    )
+    assert res["status"] == "blocked"
+    assert "delete_requested" in res["stop_conditions"]
+
+
 def test_summarize_fail_open_and_artifact(tmp_path):
     er = _mod()
     ledger = tmp_path / "l.jsonl"
