@@ -133,9 +133,7 @@ def test_needs_self_heal_on_mid_confidence_plan_only():
     assert needs_self_heal(record)
 
 
-def test_apply_self_heal_writes_graph_and_intake(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_apply_self_heal_writes_graph_and_intake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import intake.queue as queue_mod
 
     queue_path = tmp_path / "intake_queue.jsonl"
@@ -195,9 +193,7 @@ def test_verifier_approves_valid_run():
 def test_run_log_append_and_read(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import workflows.run_log as run_log_mod
 
-    monkeypatch.setattr(
-        run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl"
-    )
+    monkeypatch.setattr(run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl")
     append_run_log(REPO, {"task_id": "T-1", "result": "ok"})
     last = read_last_entry(REPO)
     assert last is not None
@@ -205,14 +201,10 @@ def test_run_log_append_and_read(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert "timestamp" in last
 
 
-def test_run_log_canonical_overrides_unknown_and_nulls(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_run_log_canonical_overrides_unknown_and_nulls(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import workflows.run_log as run_log_mod
 
-    monkeypatch.setattr(
-        run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl"
-    )
+    monkeypatch.setattr(run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl")
     append_run_log(
         REPO,
         {
@@ -237,14 +229,10 @@ def test_run_log_canonical_overrides_unknown_and_nulls(
     assert last["latency_ms"] == 0.0
 
 
-def test_run_log_canonical_reads_scalar_confidence(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_run_log_canonical_reads_scalar_confidence(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import workflows.run_log as run_log_mod
 
-    monkeypatch.setattr(
-        run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl"
-    )
+    monkeypatch.setattr(run_log_mod, "default_log_path", lambda root: tmp_path / "log.jsonl")
     append_run_log(
         REPO,
         {
@@ -286,9 +274,7 @@ def test_workflow_go_swarm_blocked():
 def test_orchestrator_create_mission_from_task():
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location(
-        "orchestrator_mod", RUNTIME / "orchestrator" / "orchestrator.py"
-    )
+    spec = importlib.util.spec_from_file_location("orchestrator_mod", RUNTIME / "orchestrator" / "orchestrator.py")
     mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
     spec.loader.exec_module(mod)  # type: ignore[union-attr]
     orch = mod.Orchestrator()
@@ -335,12 +321,8 @@ def test_git_pipeline_merge_requires_high_confidence():
 
 
 def test_git_permission_commit_requires_verifier():
-    assert not check_permission(
-        Action.GIT_COMMIT, confidence=80, verifier_approved=False
-    ).allowed
-    assert check_permission(
-        Action.GIT_COMMIT, confidence=80, verifier_approved=True
-    ).allowed
+    assert not check_permission(Action.GIT_COMMIT, confidence=80, verifier_approved=False).allowed
+    assert check_permission(Action.GIT_COMMIT, confidence=80, verifier_approved=True).allowed
 
 
 def test_git_permission_push_requires_tests():

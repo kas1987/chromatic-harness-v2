@@ -68,9 +68,7 @@ def test_apply_actions_write_changes_fs(fake_repo: Path):
     rah.apply_actions(actions, write=True)
 
     assert not src_move.exists()
-    assert (
-        fake_repo / "07_LOGS_AND_AUDIT" / "root_artifacts" / ".tmp_sample.txt"
-    ).is_file()
+    assert (fake_repo / "07_LOGS_AND_AUDIT" / "root_artifacts" / ".tmp_sample.txt").is_file()
     assert not src_del.exists()
     assert all(a.applied for a in actions)
 

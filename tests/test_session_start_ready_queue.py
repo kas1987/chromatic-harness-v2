@@ -4,17 +4,13 @@ import importlib.util
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "session_start", _REPO / "scripts" / "session_start.py"
-)
+_spec = importlib.util.spec_from_file_location("session_start", _REPO / "scripts" / "session_start.py")
 ss = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ss)  # type: ignore
 
 
 def test_prints_ready_beads(monkeypatch, capsys):
-    monkeypatch.setattr(
-        ss, "_bd", lambda args, timeout=20: (0, "chr-1 first\nchr-2 second")
-    )
+    monkeypatch.setattr(ss, "_bd", lambda args, timeout=20: (0, "chr-1 first\nchr-2 second"))
     ss._inject_ready_queue()
     out = capsys.readouterr().out
     assert "Ready beads" in out

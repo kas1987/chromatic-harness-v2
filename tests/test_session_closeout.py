@@ -113,9 +113,7 @@ def test_run_bd_fallback_on_winerror2(monkeypatch):
         return 1, "unexpected"
 
     monkeypatch.setattr(session_closeout, "_run", fake_run)
-    code, out = session_closeout._run_bd(
-        ["create", "--type", "epic", "--title", "x"], timeout=30
-    )
+    code, out = session_closeout._run_bd(["create", "--type", "epic", "--title", "x"], timeout=30)
     assert code == 0
     assert "Created issue" in out
     assert calls[0][0] == "bd"
@@ -133,9 +131,7 @@ def test_run_bd_no_fallback_for_other_errors(monkeypatch):
         return 1, "permission denied"
 
     monkeypatch.setattr(session_closeout, "_run", fake_run)
-    code, out = session_closeout._run_bd(
-        ["create", "--type", "task", "--title", "x"], timeout=30
-    )
+    code, out = session_closeout._run_bd(["create", "--type", "task", "--title", "x"], timeout=30)
     assert code == 1
     assert out == "permission denied"
     assert len(calls) == 1
@@ -166,15 +162,11 @@ def test_epic_swot_title_has_utc_timestamp(monkeypatch):
     assert f"[{data['timestamp_utc']}]" in data["epic_title"]
     assert f"[{data['timestamp_utc']}]" in data["task_title"]
 
-    epic_create = next(
-        c for c in calls if c[:2] == ["create", "--type"] and "epic" in c
-    )
+    epic_create = next(c for c in calls if c[:2] == ["create", "--type"] and "epic" in c)
     epic_title = epic_create[epic_create.index("--title") + 1]
     assert epic_title == data["epic_title"]
 
-    task_create = next(
-        c for c in calls if c[:2] == ["create", "--type"] and "task" in c
-    )
+    task_create = next(c for c in calls if c[:2] == ["create", "--type"] and "task" in c)
     task_title = task_create[task_create.index("--title") + 1]
     assert task_title == data["task_title"]
 
@@ -196,10 +188,7 @@ def test_apply_epic_swot_aliases_consistent_mapping():
 
     session_closeout._apply_epic_swot_aliases(result, epic)
 
-    assert (
-        result["epic_swot_telemetry_key"]
-        == result["epic_swot_summary"]["telemetry_key"]
-    )
+    assert result["epic_swot_telemetry_key"] == result["epic_swot_summary"]["telemetry_key"]
     assert result["epic_timestamp_utc"] == result["epic_swot_summary"]["timestamp_utc"]
     assert result["epic_title"] == result["epic_swot_summary"]["epic_title"]
     assert result["epic_swot_summary"]["parent_linked"] is True
@@ -256,9 +245,7 @@ def test_build_closeout_telemetry_snapshot_schema():
     assert snap["auto_start_ok"] is True
 
 
-def test_write_closeout_telemetry_snapshot_writes_latest_and_history(
-    tmp_path: Path, monkeypatch
-):
+def test_write_closeout_telemetry_snapshot_writes_latest_and_history(tmp_path: Path, monkeypatch):
     sys.path.insert(0, str(_REPO / "scripts"))
     import session_closeout  # noqa: E402
 
@@ -320,19 +307,11 @@ def test_main_passes_epic_policy_config_override(tmp_path: Path, monkeypatch):
         "write_handoff",
         lambda *args, **kwargs: _REPO / "12_HANDOFFS" / "handoff.md",
     )
-    monkeypatch.setattr(
-        session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True}
-    )
-    monkeypatch.setattr(
-        session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None
-    )
+    monkeypatch.setattr(session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True})
+    monkeypatch.setattr(session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None)
     monkeypatch.setattr(session_closeout, "log_activity", lambda *args, **kwargs: None)
-    monkeypatch.setattr(
-        session_closeout, "evaluate_epic_swot_policy", fake_evaluate_epic_swot_policy
-    )
-    monkeypatch.setattr(
-        session_closeout, "find_latest_open_swot_epic", lambda *args, **kwargs: {}
-    )
+    monkeypatch.setattr(session_closeout, "evaluate_epic_swot_policy", fake_evaluate_epic_swot_policy)
+    monkeypatch.setattr(session_closeout, "find_latest_open_swot_epic", lambda *args, **kwargs: {})
     monkeypatch.setattr(
         session_closeout,
         "_write_closeout_telemetry_snapshot",
@@ -444,12 +423,8 @@ def test_evaluate_epic_swot_policy_allows_when_complexity_high_and_no_recent_ope
 
     # When live query succeeds with empty list (no open epics), creation is allowed.
     with (
-        unittest.mock.patch.object(
-            session_closeout, "_fetch_swot_rows_live", return_value=[]
-        ),
-        unittest.mock.patch.object(
-            session_closeout, "_fetch_pending_swot_tasks_live", return_value=[]
-        ),
+        unittest.mock.patch.object(session_closeout, "_fetch_swot_rows_live", return_value=[]),
+        unittest.mock.patch.object(session_closeout, "_fetch_pending_swot_tasks_live", return_value=[]),
     ):
         out = session_closeout.evaluate_epic_swot_policy(
             snapshot=snap,
@@ -464,12 +439,8 @@ def test_evaluate_epic_swot_policy_allows_when_complexity_high_and_no_recent_ope
 
     # When live query fails (bd unavailable), creation is blocked to prevent duplicate spam.
     with (
-        unittest.mock.patch.object(
-            session_closeout, "_fetch_swot_rows_live", return_value=None
-        ),
-        unittest.mock.patch.object(
-            session_closeout, "_fetch_pending_swot_tasks_live", return_value=None
-        ),
+        unittest.mock.patch.object(session_closeout, "_fetch_swot_rows_live", return_value=None),
+        unittest.mock.patch.object(session_closeout, "_fetch_pending_swot_tasks_live", return_value=None),
     ):
         out_fail_closed = session_closeout.evaluate_epic_swot_policy(
             snapshot=snap,
@@ -562,9 +533,7 @@ def test_find_latest_open_swot_epic(tmp_path: Path):
 
     import unittest.mock
 
-    with unittest.mock.patch.object(
-        session_closeout, "_fetch_swot_rows_live", return_value=None
-    ):
+    with unittest.mock.patch.object(session_closeout, "_fetch_swot_rows_live", return_value=None):
         out = session_closeout.find_latest_open_swot_epic(issues)
     assert out["epic_id"] == "chromatic-harness-v2-new"
     assert out["timestamp_utc"] == "20260530T091000Z"
@@ -654,9 +623,7 @@ def test_find_open_swot_task_for_epic(tmp_path: Path):
     import unittest.mock
 
     with unittest.mock.patch.object(session_closeout, "_run_bd", return_value=(1, "")):
-        out = session_closeout.find_open_swot_task_for_epic(
-            "chromatic-harness-v2-epic1", issues
-        )
+        out = session_closeout.find_open_swot_task_for_epic("chromatic-harness-v2-epic1", issues)
     assert out["task_id"] == "chromatic-harness-v2-task-new"
     assert "EPIC-SWOT" in out["task_title"]
 
@@ -779,12 +746,8 @@ def test_load_swot_epic_history_uses_live_query_when_available(tmp_path: Path):
         "status": "open",
         "created_at": "2026-05-30T09:50:00Z",
     }
-    with unittest.mock.patch.object(
-        session_closeout, "_fetch_swot_rows_live", return_value=[live_row]
-    ):
-        stats = session_closeout._load_swot_epic_history(
-            issues_path=issues, now_utc=now
-        )
+    with unittest.mock.patch.object(session_closeout, "_fetch_swot_rows_live", return_value=[live_row]):
+        stats = session_closeout._load_swot_epic_history(issues_path=issues, now_utc=now)
     assert stats["open_swot_total"] == 1
 
 
@@ -808,12 +771,8 @@ def test_load_swot_epic_history_falls_back_to_jsonl(tmp_path: Path):
         ),
         encoding="utf-8",
     )
-    with unittest.mock.patch.object(
-        session_closeout, "_fetch_swot_rows_live", return_value=None
-    ):
-        stats = session_closeout._load_swot_epic_history(
-            issues_path=issues, now_utc=now
-        )
+    with unittest.mock.patch.object(session_closeout, "_fetch_swot_rows_live", return_value=None):
+        stats = session_closeout._load_swot_epic_history(issues_path=issues, now_utc=now)
     assert stats["open_swot_total"] == 1
 
 
@@ -827,9 +786,7 @@ def test_load_swot_epic_history_cap_enforced(tmp_path: Path):
     issues = tmp_path / "issues.jsonl"
     issues.write_text("", encoding="utf-8")
     gov = tmp_path / "gov.json"
-    gov.write_text(
-        json.dumps({"event_count": 0, "canonical_coverage": {}}), encoding="utf-8"
-    )
+    gov.write_text(json.dumps({"event_count": 0, "canonical_coverage": {}}), encoding="utf-8")
     live_rows = [
         {
             "id": f"chromatic-harness-v2-swot-{i}",
@@ -840,12 +797,8 @@ def test_load_swot_epic_history_cap_enforced(tmp_path: Path):
         }
         for i in range(2)
     ]
-    snap = __import__("types").SimpleNamespace(
-        session_est_tokens=50000, decision="spawn"
-    )
-    with unittest.mock.patch.object(
-        session_closeout, "_fetch_swot_rows_live", return_value=live_rows
-    ):
+    snap = __import__("types").SimpleNamespace(session_est_tokens=50000, decision="spawn")
+    with unittest.mock.patch.object(session_closeout, "_fetch_swot_rows_live", return_value=live_rows):
         out = session_closeout.evaluate_epic_swot_policy(
             snapshot=snap,
             beads_ready=[],
@@ -874,12 +827,8 @@ def test_load_swot_epic_history_counts_in_progress(tmp_path: Path):
         "status": "in_progress",
         "created_at": "2026-05-30T09:00:00Z",
     }
-    with unittest.mock.patch.object(
-        session_closeout, "_fetch_swot_rows_live", return_value=[live_row]
-    ):
-        stats = session_closeout._load_swot_epic_history(
-            issues_path=issues, now_utc=now
-        )
+    with unittest.mock.patch.object(session_closeout, "_fetch_swot_rows_live", return_value=[live_row]):
+        stats = session_closeout._load_swot_epic_history(issues_path=issues, now_utc=now)
     assert stats["open_swot_total"] == 1
 
 
@@ -916,9 +865,7 @@ def test_write_auto_turn_post_mortem_creates_file(tmp_path: Path, monkeypatch):
     assert "harvest_mode: session_end" in text
 
 
-def test_main_auto_turn_threshold_triggers_post_mortem_and_session_end_harvest(
-    tmp_path: Path, monkeypatch
-):
+def test_main_auto_turn_threshold_triggers_post_mortem_and_session_end_harvest(tmp_path: Path, monkeypatch):
     sys.path.insert(0, str(_REPO / "scripts"))
     import session_closeout  # noqa: E402
 
@@ -952,12 +899,8 @@ def test_main_auto_turn_threshold_triggers_post_mortem_and_session_end_harvest(
         "write_handoff",
         lambda *args, **kwargs: tmp_path / "12_HANDOFFS" / "handoff.md",
     )
-    monkeypatch.setattr(
-        session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True}
-    )
-    monkeypatch.setattr(
-        session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None
-    )
+    monkeypatch.setattr(session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True})
+    monkeypatch.setattr(session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None)
     monkeypatch.setattr(session_closeout, "log_activity", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         session_closeout,
@@ -996,11 +939,7 @@ def test_main_auto_turn_threshold_triggers_post_mortem_and_session_end_harvest(
     assert payload["auto_turn"]["observation_log_path"]
     assert (tmp_path / payload["auto_turn"]["observation_log_path"]).is_file()
 
-    harvest_call = next(
-        call
-        for call in run_calls
-        if "harvest_rigs.py" in " ".join(str(x) for x in call)
-    )
+    harvest_call = next(call for call in run_calls if "harvest_rigs.py" in " ".join(str(x) for x in call))
     assert "--execute" in harvest_call
     assert "--session-end" in harvest_call
 
@@ -1034,21 +973,15 @@ def test_main_auto_turn_uses_checkpoint_when_tasks_open(tmp_path: Path, monkeypa
 
     monkeypatch.setattr(session_closeout, "_REPO", tmp_path)
     monkeypatch.setattr(session_closeout, "BudgetLedger", FakeLedger)
-    monkeypatch.setattr(
-        session_closeout, "git_snapshot", lambda: {"status_short": [" M foo.py"]}
-    )
+    monkeypatch.setattr(session_closeout, "git_snapshot", lambda: {"status_short": [" M foo.py"]})
     monkeypatch.setattr(session_closeout, "beads_ready_ids", lambda: ["bead-1"])
     monkeypatch.setattr(
         session_closeout,
         "write_handoff",
         lambda *args, **kwargs: tmp_path / "12_HANDOFFS" / "handoff.md",
     )
-    monkeypatch.setattr(
-        session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True}
-    )
-    monkeypatch.setattr(
-        session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None
-    )
+    monkeypatch.setattr(session_closeout, "build_transfer_packet", lambda *args, **kwargs: {"ok": True})
+    monkeypatch.setattr(session_closeout, "write_transfer_artifacts", lambda *args, **kwargs: None)
     monkeypatch.setattr(session_closeout, "log_activity", lambda *args, **kwargs: None)
     monkeypatch.setattr(
         session_closeout,
@@ -1105,9 +1038,7 @@ def test_emit_outcomes_no_injected_file(tmp_path, monkeypatch):
     sys.path.insert(0, str(_REPO / "scripts"))
     import session_closeout
 
-    monkeypatch.setattr(
-        session_closeout, "_INJECTED_LEARNINGS", tmp_path / "missing.json"
-    )
+    monkeypatch.setattr(session_closeout, "_INJECTED_LEARNINGS", tmp_path / "missing.json")
     monkeypatch.setattr(session_closeout, "_EXECUTION_LOG", tmp_path / "exec.jsonl")
     result = session_closeout._emit_injected_learning_outcomes()
     assert result["ok"] is False
@@ -1178,9 +1109,7 @@ def test_emit_outcomes_failure_path(tmp_path, monkeypatch):
             {
                 "injected_at": now,
                 "terms": [],
-                "learnings": [
-                    {"name": "my-learning", "path": "", "title": "My Learning"}
-                ],
+                "learnings": [{"name": "my-learning", "path": "", "title": "My Learning"}],
             }
         ),
         encoding="utf-8",
@@ -1212,9 +1141,7 @@ def test_emit_outcomes_failure_path(tmp_path, monkeypatch):
     assert result["had_error"] is True
 
 
-def test_evaluate_epic_swot_policy_staleness_override_allows_create(
-    tmp_path: Path, monkeypatch
-):
+def test_evaluate_epic_swot_policy_staleness_override_allows_create(tmp_path: Path, monkeypatch):
     """When the only open EPIC-SWOT is older than staleness_override_hours, allow creation."""
     import sys
 

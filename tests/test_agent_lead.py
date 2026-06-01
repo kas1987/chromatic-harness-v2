@@ -10,9 +10,7 @@ from magnets.base_magnet import MagnetEvent
 
 
 def _load_agent_lead():
-    orch_dir = os.path.join(
-        os.path.dirname(__file__), "..", "02_RUNTIME", "orchestrator"
-    )
+    orch_dir = os.path.join(os.path.dirname(__file__), "..", "02_RUNTIME", "orchestrator")
     path = os.path.join(orch_dir, "agent_lead.py")
     spec = importlib.util.spec_from_file_location("agent_lead_test", path)
     assert spec and spec.loader

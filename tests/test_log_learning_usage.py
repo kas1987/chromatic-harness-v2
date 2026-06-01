@@ -36,9 +36,7 @@ def test_log_learning_usage_writes_event(tmp_path, monkeypatch):
     )
     assert proc.returncode == 0
     assert log_path.is_file()
-    lines = [
-        ln for ln in log_path.read_text(encoding="utf-8").splitlines() if ln.strip()
-    ]
+    lines = [ln for ln in log_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
     assert len(lines) == 1
     event = json.loads(lines[0])
     assert event["event_type"] == "applied_success"

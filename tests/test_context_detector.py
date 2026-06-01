@@ -65,9 +65,7 @@ class TestDeviceClassification:
     def test_desktop_with_gpu(self):
         assert ContextDetector._classify_device(gpu_available=True) == "desktop"
 
-    @patch(
-        "router.context_detector.ContextDetector._probe_gpu", return_value=(None, None)
-    )
+    @patch("router.context_detector.ContextDetector._probe_gpu", return_value=(None, None))
     @patch(
         "router.context_detector.ContextDetector._probe_ollama_local",
         return_value=(False, []),
@@ -99,16 +97,12 @@ class TestDeviceClassification:
 
 
 class TestConnectivity:
-    @patch(
-        "router.context_detector.ContextDetector._probe_gpu", return_value=(None, None)
-    )
+    @patch("router.context_detector.ContextDetector._probe_gpu", return_value=(None, None))
     @patch(
         "router.context_detector.ContextDetector._probe_ollama_local",
         return_value=(False, []),
     )
-    @patch(
-        "router.context_detector.ContextDetector._probe_internet", return_value=False
-    )
+    @patch("router.context_detector.ContextDetector._probe_internet", return_value=False)
     @patch("router.context_detector.ContextDetector._probe_battery", return_value=False)
     def test_offline_connectivity(self, *_mocks):
         ctx = ContextDetector().detect()
@@ -119,9 +113,7 @@ class TestConnectivity:
     def test_probe_internet_reachable(self, _mock):
         assert ContextDetector._probe_internet() is True
 
-    @patch(
-        "router.context_detector.ContextDetector._probe_internet", return_value=False
-    )
+    @patch("router.context_detector.ContextDetector._probe_internet", return_value=False)
     def test_probe_internet_unreachable(self, _mock):
         assert ContextDetector._probe_internet() is False
 
@@ -159,9 +151,7 @@ class TestMemoryPressure:
         )
         assert ContextDetector._detect_memory_pressure() == "medium"
 
-    @patch(
-        "router.context_detector.ContextDetector._probe_gpu", return_value=(None, None)
-    )
+    @patch("router.context_detector.ContextDetector._probe_gpu", return_value=(None, None))
     @patch(
         "router.context_detector.ContextDetector._probe_ollama_local",
         return_value=(False, []),
@@ -321,9 +311,7 @@ class TestRemoteOllamaRouting:
             ("C3", "debug the failing request path", "root cause the 500 error"),
         ],
     )
-    def test_prefers_remote_ollama_when_reachable(
-        self, selector, classifier, c_level, task_desc, prompt, monkeypatch
-    ):
+    def test_prefers_remote_ollama_when_reachable(self, selector, classifier, c_level, task_desc, prompt, monkeypatch):
         monkeypatch.setattr(
             ProviderSelector,
             "_probe_remote_ollama",
@@ -331,9 +319,7 @@ class TestRemoteOllamaRouting:
         )
         result = classifier.classify(task_desc, prompt)
         assert result.level == c_level
-        ctx = _laptop_remote_ctx(
-            remote_endpoints=[{"host": "desktop.local", "port": 11434}]
-        )
+        ctx = _laptop_remote_ctx(remote_endpoints=[{"host": "desktop.local", "port": 11434}])
         sel = selector.select(result, ctx, speed_mode="balance")
         assert sel.context_key == "context_laptop_remote"
         assert sel.ranked_choices[0].provider == "ollama_remote_desktop"
@@ -344,12 +330,8 @@ class TestRemoteOllamaRouting:
             "_probe_remote_ollama",
             staticmethod(lambda eps: False),
         )
-        result = classifier.classify(
-            "scaffold a new module", "scaffold the directory layout"
-        )
-        ctx = _laptop_remote_ctx(
-            remote_endpoints=[{"host": "desktop.local", "port": 11434}]
-        )
+        result = classifier.classify("scaffold a new module", "scaffold the directory layout")
+        ctx = _laptop_remote_ctx(remote_endpoints=[{"host": "desktop.local", "port": 11434}])
         sel = selector.select(result, ctx, speed_mode="balance")
         providers = [c.provider for c in sel.ranked_choices]
         assert "ollama_remote_desktop" not in providers
@@ -358,15 +340,11 @@ class TestRemoteOllamaRouting:
 
 class TestNativeClaudeAvailability:
     def test_native_claude_filtered_without_runtime(self, selector, monkeypatch):
-        monkeypatch.setattr(
-            ProviderSelector, "_native_claude_available", staticmethod(lambda: False)
-        )
+        monkeypatch.setattr(ProviderSelector, "_native_claude_available", staticmethod(lambda: False))
         ctx = _laptop_remote_ctx(remote_endpoints=[])
         choices = [
             ProviderChoice(provider="native_claude", model=None, tier=0, reason="test"),
-            ProviderChoice(
-                provider="ollama_local", model="llama3.2:3b", tier=0, reason="test"
-            ),
+            ProviderChoice(provider="ollama_local", model="llama3.2:3b", tier=0, reason="test"),
         ]
 
         filtered = selector._filter_by_availability(choices, ctx)
@@ -374,9 +352,7 @@ class TestNativeClaudeAvailability:
         assert [choice.provider for choice in filtered] == ["ollama_local"]
 
     def test_native_claude_allowed_with_runtime(self, selector, monkeypatch):
-        monkeypatch.setattr(
-            ProviderSelector, "_native_claude_available", staticmethod(lambda: True)
-        )
+        monkeypatch.setattr(ProviderSelector, "_native_claude_available", staticmethod(lambda: True))
         ctx = _laptop_remote_ctx(remote_endpoints=[])
         choices = [
             ProviderChoice(provider="native_claude", model=None, tier=0, reason="test"),

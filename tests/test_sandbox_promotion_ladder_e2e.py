@@ -12,12 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 
-_CLI_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "02_RUNTIME"
-    / "sandbox-lab"
-    / "promotion-scorer-cli.ts"
-)
+_CLI_PATH = Path(__file__).resolve().parents[1] / "02_RUNTIME" / "sandbox-lab" / "promotion-scorer-cli.ts"
 
 # On Windows, subprocess.run needs the .cmd extension; shutil.which finds it.
 _NPX = shutil.which("npx") or "npx"
@@ -53,9 +48,7 @@ def _score(
         shell=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            f"TS PromotionScorer CLI failed (exit {result.returncode}):\n{result.stderr}"
-        )
+        raise RuntimeError(f"TS PromotionScorer CLI failed (exit {result.returncode}):\n{result.stderr}")
     data = json.loads(result.stdout.strip())
     return SimpleNamespace(**data)
 
