@@ -18,8 +18,13 @@ python scripts/log_harness_event.py \
 
 ## 3. Validate Event Log
 
+`validate_event_schema.py` is the **required** validator (used by CI): it enforces
+the full event schema — required fields, `source.surface`, and the `severity`,
+`event_type`, `category`, and `status` enums — and exits non-zero on any malformed
+line or out-of-schema value.
+
 ```bash
-python scripts/validate_event_log.py --log 00_META/observability/ERROR_LOG.jsonl
+python scripts/validate_event_schema.py --log 00_META/observability/ERROR_LOG.jsonl
 ```
 
 ## 4. Detect Collisions
