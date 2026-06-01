@@ -43,6 +43,12 @@ SUITES = [
             "test_delegate_bead.py",
         ],
     ),
+    (
+        "issue->bead intake pipeline",
+        [
+            "test_audit_issue_intake.py",
+        ],
+    ),
 ]
 
 
