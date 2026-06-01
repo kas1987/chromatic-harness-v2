@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -34,19 +33,18 @@ sys.path.insert(0, str(_SCRIPTS))
 
 import lease_manager as _lm  # noqa: E402
 import file_collision_gate as _fcg  # noqa: E402
+from common_harness import run_safe  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
 # Bead helpers
 # ---------------------------------------------------------------------------
 
+
 def _bd(*args: str, timeout: int = 15) -> tuple[int, str]:
     """Run bd and return (returncode, stdout). Fail-open on any error."""
     try:
-        result = subprocess.run(
-            ["bd", *args],
-            cwd=REPO, capture_output=True, text=True, timeout=timeout, check=False,
-        )
+        result = run_safe(["bd", *args], cwd=REPO, timeout=timeout)
         return result.returncode, result.stdout
     except Exception:  # noqa: BLE001
         return -1, ""
@@ -81,10 +79,7 @@ def _branch_for_bead(bead_id: str) -> str | None:
     # Convention: branch name contains bead id slug
     slug = bead_id.split("-")[-1] if "-" in bead_id else bead_id
     try:
-        result = subprocess.run(
-            ["git", "branch", "--list", f"*{slug}*"],
-            cwd=REPO, capture_output=True, text=True, timeout=10, check=False,
-        )
+        result = run_safe(["git", "branch", "--list", f"*{slug}*"], cwd=REPO, timeout=10)
         lines = [l.strip().lstrip("* ") for l in result.stdout.splitlines() if l.strip()]
         return lines[0] if lines else None
     except Exception:  # noqa: BLE001
@@ -95,10 +90,7 @@ def _files_touched_by_branch(branch: str) -> list[str]:
     """Return files this branch has changed relative to its merge-base with main."""
     for base in ("origin/main", "origin/master", "main", "master"):
         try:
-            result = subprocess.run(
-                ["git", "diff", "--name-only", f"{base}...{branch}"],
-                cwd=REPO, capture_output=True, text=True, timeout=15, check=False,
-            )
+            result = run_safe(["git", "diff", "--name-only", f"{base}...{branch}"], cwd=REPO, timeout=15)
             if result.returncode == 0 and result.stdout.strip():
                 return [l.strip() for l in result.stdout.splitlines() if l.strip()]
         except Exception:  # noqa: BLE001
@@ -109,6 +101,7 @@ def _files_touched_by_branch(branch: str) -> list[str]:
 # ---------------------------------------------------------------------------
 # Cross-check logic
 # ---------------------------------------------------------------------------
+
 
 def _active_write_leases() -> list[dict[str, Any]]:
     ledger = _lm.DEFAULT_LEDGER
@@ -163,13 +156,15 @@ def check_files(paths: list[str]) -> dict[str, Any]:
         for p in paths:
             for bf in bead_files:
                 if _lm.overlaps(p, bf):
-                    bead_conflicts.append({
-                        "path": p,
-                        "bead_id": bid,
-                        "bead_file": bf,
-                        "bead_branch": branch,
-                        "owner": bead.get("owner", "?"),
-                    })
+                    bead_conflicts.append(
+                        {
+                            "path": p,
+                            "bead_id": bid,
+                            "bead_file": bf,
+                            "bead_branch": branch,
+                            "owner": bead.get("owner", "?"),
+                        }
+                    )
 
     all_clear = not lease_conflicts and not bead_conflicts
     return {
@@ -197,16 +192,18 @@ def full_status() -> dict[str, Any]:
             for resource in lease.get("resources", []):
                 for bf in bead_files:
                     if _lm.overlaps(resource, bf):
-                        issues.append({
-                            "bead_id": bid,
-                            "bead_owner": bead.get("owner", "?"),
-                            "bead_branch": branch,
-                            "bead_file": bf,
-                            "lease_id": lease.get("lease_id", "?")[:8],
-                            "lease_owner": lease_owner,
-                            "lease_resource": resource,
-                            "lease_mode": lease.get("mode", "?"),
-                        })
+                        issues.append(
+                            {
+                                "bead_id": bid,
+                                "bead_owner": bead.get("owner", "?"),
+                                "bead_branch": branch,
+                                "bead_file": bf,
+                                "lease_id": lease.get("lease_id", "?")[:8],
+                                "lease_owner": lease_owner,
+                                "lease_resource": resource,
+                                "lease_mode": lease.get("mode", "?"),
+                            }
+                        )
 
     return {
         "status": "conflict" if issues else "ok",
@@ -219,6 +216,7 @@ def full_status() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Bead ↔ lease cross-check (advisory)")
@@ -256,7 +254,9 @@ def main() -> int:
             if result["bead_lease_conflicts"]:
                 print(f"  Conflicts ({len(result['bead_lease_conflicts'])}):")
                 for c in result["bead_lease_conflicts"]:
-                    print(f"    bead={c['bead_id']} ({c['bead_owner']}) ↔ lease={c['lease_id']} ({c['lease_owner']}) on {c['bead_file']}")
+                    print(
+                        f"    bead={c['bead_id']} ({c['bead_owner']}) ↔ lease={c['lease_id']} ({c['lease_owner']}) on {c['bead_file']}"
+                    )
             else:
                 print("  No conflicts detected.")
         return 1 if result["status"] == "conflict" else 0
