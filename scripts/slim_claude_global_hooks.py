@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -77,7 +78,9 @@ def apply() -> int:
 
     hooks["SessionStart"] = []
     _save(GLOBAL_SETTINGS, doc)
-    print("Cleared global SessionStart — Harness project session_start.py owns boot in this repo.")
+    print(
+        "Cleared global SessionStart — Harness project session_start.py owns boot in this repo."
+    )
     return 0
 
 
