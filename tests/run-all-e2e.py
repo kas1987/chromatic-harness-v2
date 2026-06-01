@@ -112,6 +112,13 @@ SUITES = [
             "test_go_mode.py",
         ],
     ),
+    (
+        "collision guard + queue self-review",
+        [
+            "test_collision_guard.py",
+            "test_queue_self_review.py",
+        ],
+    ),
 ]
 
 
