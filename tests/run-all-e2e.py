@@ -205,6 +205,12 @@ SUITES = [
         ],
     ),
     (
+        "claude adapter policy validator (nprv)",
+        [
+            "test_claude_adapter_policy.py",
+        ],
+    ),
+    (
         "file-scope collision detection (P0-CC-004)",
         [
             "test_file_collision_gate.py",
