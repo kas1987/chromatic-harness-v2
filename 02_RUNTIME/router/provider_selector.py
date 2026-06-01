@@ -34,9 +34,7 @@ _LOCAL_ROUTING_PROVIDERS: frozenset[str] = frozenset(
 )
 
 # Cloud/broker ids in routing-table.yaml (blocked for P3–P5 per broker policy)
-_CLOUD_ROUTING_PROVIDERS: frozenset[str] = frozenset(
-    {"gemini", "openai", "claude_api", "openrouter", "together_ai"}
-)
+_CLOUD_ROUTING_PROVIDERS: frozenset[str] = frozenset({"gemini", "openai", "claude_api", "openrouter", "together_ai"})
 
 _PRIVACY_ORDER: dict[str, int] = {
     "P0": 0,
@@ -46,13 +44,6 @@ _PRIVACY_ORDER: dict[str, int] = {
     "P4": 4,
     "P5": 5,
 }
-
-_CLAUDE_SESSION_ENV_VARS: tuple[str, ...] = (
-    "CLAUDECODE",
-    "CLAUDE_SESSION_ID",
-    "CLAUDE_PROJECT_DIR",
-    "CLAUDECODE_SESSION_ID",
-)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -75,16 +66,10 @@ class ProviderSelector:
     """Reads routing-table.yaml and resolves providers."""
 
     DEFAULT_ROUTING_TABLE = (
-        Path(__file__).resolve().parent.parent.parent
-        / "09_DEPLOYMENT"
-        / "config"
-        / "routing"
-        / "routing-table.yaml"
+        Path(__file__).resolve().parent.parent.parent / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
     )
 
-    DEFAULT_PREFS = (
-        Path.home() / ".claude" / "config" / "routing" / "user-preferences.yaml"
-    )
+    DEFAULT_PREFS = Path.home() / ".claude" / "config" / "routing" / "user-preferences.yaml"
 
     DEFAULT_OPENROUTER_MODELS = (
         Path(__file__).resolve().parent.parent.parent
@@ -103,9 +88,7 @@ class ProviderSelector:
     ):
         self._table_path = routing_table_path or self.DEFAULT_ROUTING_TABLE
         self._prefs_path = prefs_path or self.DEFAULT_PREFS
-        self._openrouter_models_path = (
-            openrouter_models_path or self.DEFAULT_OPENROUTER_MODELS
-        )
+        self._openrouter_models_path = openrouter_models_path or self.DEFAULT_OPENROUTER_MODELS
         self._policy_loader = policy_loader or PolicyLoader()
         self._table: dict = {}
         self._prefs: dict = {}
@@ -132,22 +115,13 @@ class ProviderSelector:
     def _load_openrouter_allowlist(self) -> set[str]:
         path = self._openrouter_models_path
         if not path.exists():
-            alt = (
-                Path(__file__).resolve().parent.parent.parent
-                / "config"
-                / "routing"
-                / "openrouter-models.yaml"
-            )
+            alt = Path(__file__).resolve().parent.parent.parent / "config" / "routing" / "openrouter-models.yaml"
             path = alt if alt.exists() else path
         if not path.exists():
             return set()
         with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
-        return {
-            str(m["id"])
-            for m in data.get("models", [])
-            if isinstance(m, dict) and m.get("id")
-        }
+        return {str(m["id"]) for m in data.get("models", []) if isinstance(m, dict) and m.get("id")}
 
     # ── Entry point ──────────────────────────────────────────────────────
 
@@ -178,9 +152,7 @@ class ProviderSelector:
 
     # ── Speed mode resolution ──────────────────────────────────────────────
 
-    def _resolve_speed_mode(
-        self, explicit: SpeedMode | None, context: RuntimeContext
-    ) -> SpeedMode:
+    def _resolve_speed_mode(self, explicit: SpeedMode | None, context: RuntimeContext) -> SpeedMode:
         if explicit:
             return explicit
 
@@ -213,9 +185,7 @@ class ProviderSelector:
 
     # ── Routing table lookup ─────────────────────────────────────────────
 
-    def _lookup_routing_table(
-        self, ctx_key: str, mode: SpeedMode, c_level: str
-    ) -> list[ProviderChoice]:
+    def _lookup_routing_table(self, ctx_key: str, mode: SpeedMode, c_level: str) -> list[ProviderChoice]:
         raw = self._table.get(ctx_key, {})
         mode_map = raw.get(mode, {})
         entries: list[str] = mode_map.get(c_level, [])
@@ -256,9 +226,7 @@ class ProviderSelector:
 
     # ── Availability filtering ─────────────────────────────────────────
 
-    def _filter_by_availability(
-        self, choices: list[ProviderChoice], context: RuntimeContext
-    ) -> list[ProviderChoice]:
+    def _filter_by_availability(self, choices: list[ProviderChoice], context: RuntimeContext) -> list[ProviderChoice]:
         filtered = []
         for c in choices:
             if c.provider == "ollama_local" and not context.ollama_local_reachable:
@@ -274,21 +242,39 @@ class ProviderSelector:
                     continue
             filtered.append(c)
         if not filtered:
-            # Ultimate fallback
-            filtered.append(
-                ProviderChoice(
-                    provider="native_claude",
-                    model=None,
-                    tier=4,
-                    reason="no reachable providers — fallback to native",
+            # Ultimate fallback — prefer local Ollama when it is reachable
+            # (avoids routing to native_claude which fails with WinError 2 on
+            # Windows when the CLI can't be spawned as a subprocess). Only fall
+            # back to native_claude when the relay or CLI is genuinely available.
+            if context.ollama_local_reachable:
+                filtered.append(
+                    ProviderChoice(
+                        provider="ollama_local",
+                        model="llama3.2:3b",
+                        tier=0,
+                        reason="fallback: no routing-table providers reachable; Ollama is up",
+                    )
                 )
-            )
+            elif self._native_claude_available():
+                filtered.append(
+                    ProviderChoice(
+                        provider="native_claude",
+                        model=None,
+                        tier=4,
+                        reason="fallback: no routing-table providers reachable",
+                    )
+                )
+            # else: empty → router falls through to its own mock/error path
         return filtered
 
     @staticmethod
     def _native_claude_available() -> bool:
-        if any(os.environ.get(name) for name in _CLAUDE_SESSION_ENV_VARS):
-            return True
+        # A relay URL means a working HTTP server is available — that's the
+        # correct signal. Being inside a Claude Code session
+        # (_CLAUDE_SESSION_ENV_VARS) does NOT mean the `claude` subprocess CLI
+        # works: on Windows it typically fails with WinError 2. Removing that
+        # check prevents false-positives that cause the auto-path to land on
+        # native_claude and then fall through to mock rather than Ollama.
         if os.environ.get("NATIVE_CLAUDE_RELAY_URL", "").strip():
             return True
         return shutil.which("claude") is not None
@@ -327,9 +313,7 @@ class ProviderSelector:
             return self._privacy_level("P1")
         return self._privacy_level("P2")
 
-    def _filter_by_privacy(
-        self, choices: list[ProviderChoice], privacy_class: str
-    ) -> list[ProviderChoice]:
+    def _filter_by_privacy(self, choices: list[ProviderChoice], privacy_class: str) -> list[ProviderChoice]:
         """Enforce OPENROUTER_BROKER_POLICY + providers.yaml privacy_max."""
         task_level = self._privacy_level(privacy_class)
         filtered: list[ProviderChoice] = []
@@ -361,9 +345,7 @@ class ProviderSelector:
         blocklist = self._prefs.get("provider_blocklist", [])
         return [c for c in choices if c.provider not in blocklist]
 
-    def _apply_preference_override(
-        self, choices: list[ProviderChoice]
-    ) -> list[ProviderChoice]:
+    def _apply_preference_override(self, choices: list[ProviderChoice]) -> list[ProviderChoice]:
         pref = self._prefs.get("provider_preference")
         if not pref:
             return choices
