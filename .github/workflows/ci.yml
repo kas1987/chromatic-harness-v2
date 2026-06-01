@@ -55,6 +55,9 @@ jobs:
       - name: Agent operations guard (mandatory docs)
         run: python scripts/check_agent_operations.py
 
+      - name: Claude adapter policy validation
+        run: python scripts/validate_claude_adapter_policy.py
+
       - name: Governance gate — secret scan (blocking)
         run: python scripts/security_scan.py --no-deps
 
