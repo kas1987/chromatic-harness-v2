@@ -6,7 +6,7 @@ exclude = [
     ".claude",
     ".worktrees",
     "02_RUNTIME/runtime-engines",
-    ".tmp_bd_mini.py",
+    ".tmp_*.py",
     ".tmp_bd_payload.json",
     ".tmp_analyze_bd.py",
     ".tmp_bd_analyze.py",
