@@ -187,6 +187,30 @@ SUITES = [
         ],
     ),
     (
+        "command telemetry logging (dnif)",
+        [
+            "test_command_telemetry.py",
+        ],
+    ),
+    (
+        "command drift detection (ulos)",
+        [
+            "test_command_drift_gate.py",
+        ],
+    ),
+    (
+        "emergency recovery command (k9j7)",
+        [
+            "test_emergency_recovery.py",
+        ],
+    ),
+    (
+        "claude adapter policy validator (nprv)",
+        [
+            "test_claude_adapter_policy.py",
+        ],
+    ),
+    (
         "file-scope collision detection (P0-CC-004)",
         [
             "test_file_collision_gate.py",
@@ -220,6 +244,12 @@ SUITES = [
         "federation repo role registry (PDR-FED-001)",
         [
             "test_repo_role_registry.py",
+        ],
+    ),
+    (
+        "command matrix doc generation (j5ik)",
+        [
+            "test_command_matrix.py",
         ],
     ),
     (
