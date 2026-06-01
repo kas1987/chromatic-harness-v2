@@ -19,6 +19,9 @@ htmlcov/
 07_LOGS_AND_AUDIT/unified_guard/session_guard_[0-9]*_[0-9]*.json
 07_LOGS_AND_AUDIT/governance_intelligence/governance_intelligence_[0-9]*_[0-9]*.json
 
+# Observability event log (runtime append; schema/templates are tracked)
+00_META/observability/ERROR_LOG.jsonl
+
 # Router observability logs
 07_LOGS_AND_AUDIT/routing/*.jsonl
 

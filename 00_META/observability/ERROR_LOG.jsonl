@@ -1,1 +1,0 @@
-{"category": "system_event", "event_id": "evt_bootstrap", "event_type": "info", "files_touched": [], "message": "Observability PDR 0.1.0 bootstrap \u2014 log seeded", "redacted": false, "severity": "low", "source": {"surface": "ci"}, "status": "resolved", "timestamp": "2026-06-01T00:00:00+00:00"}
