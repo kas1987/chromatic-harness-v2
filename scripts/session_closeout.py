@@ -460,6 +460,21 @@ def _run_epic_reviews() -> dict[str, Any]:
         return {"status": "error", "error": str(exc), "epics": []}
 
 
+def _security_summary() -> dict[str, Any]:
+    """Surface the latest security-scan result in the closeout report (fail-open).
+
+    Reads the artifact written by scripts/security_scan.py rather than re-scanning,
+    so closeout stays fast. Returns {"status": "no_scan"} if no scan has run.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "scripts"))
+        import security_scan  # noqa: PLC0415
+
+        return security_scan.summarize()
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "error", "error": str(exc), "passed": None}
+
+
 def _run_harness_health_snapshot() -> dict[str, Any]:
     code, out = _run(
         [
@@ -1953,6 +1968,7 @@ def main() -> int:
 
     result["learning_outcomes"] = _emit_injected_learning_outcomes()
     result["epic_reviews"] = _run_epic_reviews()
+    result["security"] = _security_summary()
 
     print(json.dumps(result, indent=2))
     return 0

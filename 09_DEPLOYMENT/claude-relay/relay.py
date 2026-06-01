@@ -9,7 +9,8 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
 MODEL_DEFAULT = "claude-haiku-4-5-20251001"
 
 # Resolve claude CLI — check env override first, then common Windows npm path, then PATH
-import os, shutil as _shutil
+import os
+import shutil as _shutil
 
 _CLAUDE_CMD = (
     os.environ.get("CLAUDE_BIN")

@@ -56,7 +56,7 @@ def write_successor_prompt(
             "## Handoff",
             "",
             f"- Markdown: `{handoff_path}`",
-            f"- Packet: `.agents/handoffs/transfer_packet.json`",
+            "- Packet: `.agents/handoffs/transfer_packet.json`",
             "",
             "## Boot (run first)",
             "",
