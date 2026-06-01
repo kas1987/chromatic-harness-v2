@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Harness Mutation Manifest",
+  "type": "object",
+  "required": ["task_id", "issue", "owner_agent", "risk_tier", "intended_changes", "allowed_files", "forbidden_files", "acceptance_checks"],
+  "properties": {
+    "task_id": { "type": "string" },
+    "issue": { "type": ["integer", "null"] },
+    "owner_agent": { "type": "string" },
+    "risk_tier": { "enum": ["T0", "T1", "T2", "T3", "T4", "T5"] },
+    "confidence_score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "intended_changes": { "type": "array", "items": { "type": "string" } },
+    "allowed_files": { "type": "array", "items": { "type": "string" } },
+    "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "acceptance_checks": { "type": "array", "items": { "type": "string" } },
+    "verifier_required": { "type": "boolean" },
+    "rollback_plan": { "type": "string" }
+  }
+}
