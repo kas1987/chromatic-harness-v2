@@ -132,6 +132,24 @@ SUITES = [
             "test_skill_inventory.py",
         ],
     ),
+    (
+        "verifier agent (#82)",
+        [
+            "test_verifier_agent.py",
+        ],
+    ),
+    (
+        "memory write gate (#86)",
+        [
+            "test_memory_gate.py",
+        ],
+    ),
+    (
+        "disaster recovery (#88)",
+        [
+            "test_disaster_recovery.py",
+        ],
+    ),
 ]
 
 
