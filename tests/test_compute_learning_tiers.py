@@ -4,9 +4,7 @@ import json
 from datetime import datetime, timezone
 
 
-def _write_learning(
-    path, name: str, category: str, confidence: float, date: str
-) -> None:
+def _write_learning(path, name: str, category: str, confidence: float, date: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "\n".join(
@@ -122,9 +120,7 @@ def test_compute_learning_tiers_need_mapping(tmp_path, monkeypatch):
     assert item["need_level"] == "N1"
 
 
-def test_compute_learning_tiers_delta_promoted_from_previous_report(
-    tmp_path, monkeypatch
-):
+def test_compute_learning_tiers_delta_promoted_from_previous_report(tmp_path, monkeypatch):
     import scripts.compute_learning_tiers as clt
 
     repo = tmp_path
@@ -181,9 +177,7 @@ def test_compute_learning_tiers_delta_promoted_from_previous_report(
     assert int(report["delta"]["promoted"]) >= 1
 
 
-def test_compute_learning_tiers_uses_previous_items_not_only_top_ranked(
-    tmp_path, monkeypatch
-):
+def test_compute_learning_tiers_uses_previous_items_not_only_top_ranked(tmp_path, monkeypatch):
     import scripts.compute_learning_tiers as clt
 
     repo = tmp_path

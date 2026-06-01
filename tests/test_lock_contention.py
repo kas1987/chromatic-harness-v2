@@ -81,9 +81,7 @@ def test_stale_lock_reclaimed(tmp_path, monkeypatch):
 def test_auto_intake_script_times_out_when_lock_held():
     import concurrency.session_lock as sl
 
-    owner = sl.acquire_lock(
-        "intake_queue_mutation", session_id="holder", timeout_seconds=1.0
-    )
+    owner = sl.acquire_lock("intake_queue_mutation", session_id="holder", timeout_seconds=1.0)
     try:
         proc = subprocess.run(
             [

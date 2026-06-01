@@ -110,9 +110,7 @@ async def test_openhuman_disabled_when_allow_openhuman_false():
     from router.router import ChromaticRouter
 
     router = ChromaticRouter()
-    req = make_oh_req(
-        allow_openhuman=False, confidence_score=90.0, privacy_class=PrivacyClass.P1
-    )
+    req = make_oh_req(allow_openhuman=False, confidence_score=90.0, privacy_class=PrivacyClass.P1)
     resp = await router.route(req)
     assert resp.selected_provider == "mock"
     assert resp.fallback_used is True

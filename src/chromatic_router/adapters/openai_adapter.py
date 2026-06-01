@@ -38,15 +38,11 @@ class OpenAIAdapter(BaseAdapter):
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append(
-            "OpenAIAdapter.complete() is a stub — wire openai SDK when ready."
-        )
+        logs.warnings.append("OpenAIAdapter.complete() is a stub — wire openai SDK when ready.")
         return RouteResponse(
             request_id=req.request_id,
             selected_provider=self.name,
             route_reason="openai_stub",
-            output=RouteOutput(
-                type=OutputType.TEXT, content="[OpenAI stub — not yet wired]"
-            ),
+            output=RouteOutput(type=OutputType.TEXT, content="[OpenAI stub — not yet wired]"),
             logs=logs,
         )

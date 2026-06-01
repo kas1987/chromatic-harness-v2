@@ -10,9 +10,7 @@ import yaml
 REPO = Path(__file__).resolve().parents[1]
 
 
-def test_mirror_dry_run_finds_governance(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_mirror_dry_run_finds_governance(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     wiki = tmp_path / "wiki"
     wiki.mkdir()
     (wiki / "manifest.yaml").write_text(

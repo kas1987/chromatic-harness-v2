@@ -35,9 +35,7 @@ def test_classify_git_failure(stderr: str, step: str, expected: str):
     assert classify_git_failure(stderr, step) == expected
 
 
-def test_triage_writes_digest_and_intake(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_triage_writes_digest_and_intake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
