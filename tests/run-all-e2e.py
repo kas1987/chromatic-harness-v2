@@ -228,6 +228,12 @@ SUITES = [
             "test_repo_role_registry.py",
         ],
     ),
+    (
+        "command drift detection (ulos)",
+        [
+            "test_detect_command_drift.py",
+        ],
+    ),
 ]
 
 
