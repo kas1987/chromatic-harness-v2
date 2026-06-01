@@ -276,6 +276,12 @@ SUITES = [
             "test_event_routing.py",
         ],
     ),
+    (
+        "harness_run command wrapper (OBS-005)",
+        [
+            "test_harness_run.py",
+        ],
+    ),
 ]
 
 
