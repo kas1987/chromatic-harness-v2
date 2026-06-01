@@ -186,6 +186,18 @@ SUITES = [
             "test_claim_guard.py",
         ],
     ),
+    (
+        "file-scope collision detection (P0-CC-004)",
+        [
+            "test_file_collision_gate.py",
+        ],
+    ),
+    (
+        "stale lease recovery (P0-CC-005)",
+        [
+            "test_stale_lease_recovery.py",
+        ],
+    ),
 ]
 
 
