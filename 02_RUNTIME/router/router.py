@@ -157,14 +157,10 @@ class ChromaticRouter:
                         f"provider={primary} ({len(fallback)} fallbacks)"
                     )
                     pc = req.constraints.privacy_class
-                    primary, fallback, logs = self._apply_privacy_gate(
-                        primary, fallback, pc, logs
-                    )
+                    primary, fallback, logs = self._apply_privacy_gate(primary, fallback, pc, logs)
                     return primary, fallback, logs
             except Exception as exc:
-                logs.warnings.append(
-                    f"Context routing failed ({exc}), falling back to legacy route."
-                )
+                logs.warnings.append(f"Context routing failed ({exc}), falling back to legacy route.")
 
         # ── LEGACY: task-type based route ────────────────────────────────────
         task_route = self.loader.route_for_task(req.task_type.value)
@@ -217,17 +213,13 @@ class ChromaticRouter:
             if canonical in allowed or cand in allowed or cand == "mock":
                 filtered.append(cand)
             else:
-                logs.warnings.append(
-                    f"Provider {cand} removed by privacy policy for {pc.value}."
-                )
+                logs.warnings.append(f"Provider {cand} removed by privacy policy for {pc.value}.")
         if not filtered:
             logs.errors.append("No candidate provider passed privacy gate.")
             return "mock", [], logs
         return filtered[0], filtered[1:], logs
 
-    def _provider_is_available(
-        self, name: str, req: RouteRequest | None = None
-    ) -> bool:
+    def _provider_is_available(self, name: str, req: RouteRequest | None = None) -> bool:
         adapter = self.adapters.get(self._resolve_adapter_name(name))
         if not adapter:
             return False
@@ -245,9 +237,7 @@ class ChromaticRouter:
                     return False
         return True
 
-    async def route(
-        self, req: RouteRequest | None = None, **kwargs: Any
-    ) -> RouteResponse:
+    async def route(self, req: RouteRequest | None = None, **kwargs: Any) -> RouteResponse:
         if req is None:
             req = self._build_request(**kwargs)
 
@@ -362,21 +352,20 @@ class ChromaticRouter:
                 continue
             try:
                 candidate_resp = await adapter.complete(req)
+                # Stamp the cost estimate before any early-out so that an error
+                # response surfaced from last_error_resp still carries it.
+                candidate_resp.cost_estimate_usd = est_cost
                 # An adapter that returns an ERROR-typed response (rather than
                 # raising) is still a failure — fall through to the next provider
                 # instead of breaking on it. This is what lets a broken provider
                 # (e.g. native_claude with no working CLI) hand off to a
                 # reachable one (e.g. local Ollama) instead of erroring out.
-                if (
-                    candidate_resp.output is not None
-                    and candidate_resp.output.type == OutputType.ERROR
-                ):
+                if candidate_resp.output is not None and candidate_resp.output.type == OutputType.ERROR:
                     err_text = candidate_resp.output.content
                     logs.warnings.append(f"Provider {cand} returned error: {err_text}")
                     candidate_resp.selected_provider = cand
                     last_error_resp = candidate_resp
                     continue
-                candidate_resp.cost_estimate_usd = est_cost
                 if cand != chosen:
                     fallback_used = True
                 provider_used = cand
