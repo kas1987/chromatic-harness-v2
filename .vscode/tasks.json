@@ -109,6 +109,50 @@
       ],
       "group": "none",
       "problemMatcher": []
+    },
+    {
+      "label": "Observability: Validate event logs",
+      "type": "shell",
+      "command": "python scripts/validate_event_schema.py",
+      "detail": "Validate 00_META/observability/ERROR_LOG.jsonl against the event schema.",
+      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Observability: Detect file collisions",
+      "type": "shell",
+      "command": "python scripts/detect_file_collisions.py",
+      "detail": "Report active-writer collisions from the file-claim register.",
+      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Observability: Snapshot git state",
+      "type": "shell",
+      "command": "python scripts/snapshot_git_state.py",
+      "detail": "Capture branch/commit/dirty + changed-file breakdown to .chromatic/.",
+      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Observability: Summarize error patterns",
+      "type": "shell",
+      "command": "python scripts/summarize_error_patterns.py",
+      "detail": "Aggregate recurring error signatures from the event log.",
+      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Observability: Run all checks",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Observability: Validate event logs",
+        "Observability: Detect file collisions",
+        "Observability: Snapshot git state",
+        "Observability: Summarize error patterns"
+      ],
+      "group": "none",
+      "problemMatcher": []
     }
   ]
 }
