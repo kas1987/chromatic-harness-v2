@@ -1,4 +1,4 @@
-"""Tests for bead_collision_gate.py — network-free, subprocess-mocked."""
+"""Tests for bead_collision_gate.py — network-free, run_safe-mocked."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def _seed_lease(ledger: Path, resource: str, mode: str = "write", agent: str = "
 
 def test_bd_fail_open_on_exception():
     mod = _load("bead_collision_gate", "scripts/bead_collision_gate.py")
-    with patch("subprocess.run", side_effect=Exception("bd not found")):
+    with patch("bead_collision_gate.run_safe", side_effect=Exception("bd not found")):
         rc, out = mod._bd("list")
     assert rc == -1
     assert out == ""
@@ -75,7 +75,7 @@ def test_get_in_progress_beads_parses_list():
         ]
     )
     mock_result = MagicMock(returncode=0, stdout=payload)
-    with patch("subprocess.run", return_value=mock_result):
+    with patch("bead_collision_gate.run_safe", return_value=mock_result):
         beads = mod._get_in_progress_beads()
     assert len(beads) == 1
     assert beads[0]["id"] == "proj-abc1"
@@ -84,7 +84,7 @@ def test_get_in_progress_beads_parses_list():
 def test_get_in_progress_beads_empty_on_bad_json():
     mod = _load("bead_collision_gate", "scripts/bead_collision_gate.py")
     mock_result = MagicMock(returncode=0, stdout="not-json")
-    with patch("subprocess.run", return_value=mock_result):
+    with patch("bead_collision_gate.run_safe", return_value=mock_result):
         beads = mod._get_in_progress_beads()
     assert beads == []
 
@@ -92,7 +92,7 @@ def test_get_in_progress_beads_empty_on_bad_json():
 def test_get_in_progress_beads_empty_on_nonzero_exit():
     mod = _load("bead_collision_gate", "scripts/bead_collision_gate.py")
     mock_result = MagicMock(returncode=1, stdout="")
-    with patch("subprocess.run", return_value=mock_result):
+    with patch("bead_collision_gate.run_safe", return_value=mock_result):
         beads = mod._get_in_progress_beads()
     assert beads == []
 
@@ -111,7 +111,7 @@ def test_branch_for_bead_found():
         # git branch --list
         return MagicMock(returncode=0, stdout="  clean/abc1-my-feature\n")
 
-    with patch("subprocess.run", side_effect=fake_run):
+    with patch("bead_collision_gate.run_safe", side_effect=fake_run):
         branch = mod._branch_for_bead("proj-abc1")
     assert branch == "clean/abc1-my-feature"
 
@@ -119,7 +119,7 @@ def test_branch_for_bead_found():
 def test_branch_for_bead_none_when_bead_missing():
     mod = _load("bead_collision_gate", "scripts/bead_collision_gate.py")
     mock_result = MagicMock(returncode=1, stdout="")
-    with patch("subprocess.run", return_value=mock_result):
+    with patch("bead_collision_gate.run_safe", return_value=mock_result):
         branch = mod._branch_for_bead("proj-missing")
     assert branch is None
 
@@ -137,7 +137,7 @@ def test_files_touched_by_branch_returns_list():
             return MagicMock(returncode=0, stdout="scripts/a.py\nscripts/b.py\n")
         return MagicMock(returncode=1, stdout="")
 
-    with patch("subprocess.run", side_effect=fake_run):
+    with patch("bead_collision_gate.run_safe", side_effect=fake_run):
         files = mod._files_touched_by_branch("feature-x")
     assert "scripts/a.py" in files
     assert "scripts/b.py" in files
@@ -145,7 +145,7 @@ def test_files_touched_by_branch_returns_list():
 
 def test_files_touched_by_branch_empty_on_failure():
     mod = _load("bead_collision_gate", "scripts/bead_collision_gate.py")
-    with patch("subprocess.run", return_value=MagicMock(returncode=1, stdout="")):
+    with patch("bead_collision_gate.run_safe", return_value=MagicMock(returncode=1, stdout="")):
         files = mod._files_touched_by_branch("missing-branch")
     assert files == []
 
@@ -161,7 +161,7 @@ def test_check_files_safe_no_leases_no_beads(tmp_path, monkeypatch):
     mod._lm.DEFAULT_LEDGER = ledger
 
     no_beads = MagicMock(returncode=1, stdout="")
-    with patch("subprocess.run", return_value=no_beads):
+    with patch("bead_collision_gate.run_safe", return_value=no_beads):
         result = mod.check_files(["scripts/foo.py"])
 
     assert result["status"] == "safe"
@@ -178,7 +178,7 @@ def test_check_files_blocked_by_lease(tmp_path, monkeypatch):
     mod._fcg.DEFAULT_LEDGER = ledger
 
     no_beads = MagicMock(returncode=1, stdout="")
-    with patch("subprocess.run", return_value=no_beads):
+    with patch("bead_collision_gate.run_safe", return_value=no_beads):
         result = mod.check_files(["scripts/foo.py"])
 
     assert result["status"] == "blocked"
@@ -196,7 +196,7 @@ def test_full_status_ok_when_empty(tmp_path, monkeypatch):
     mod._lm.DEFAULT_LEDGER = ledger
 
     no_beads = MagicMock(returncode=1, stdout="")
-    with patch("subprocess.run", return_value=no_beads):
+    with patch("bead_collision_gate.run_safe", return_value=no_beads):
         result = mod.full_status()
 
     assert result["status"] == "ok"
@@ -212,7 +212,7 @@ def test_full_status_ok_when_empty(tmp_path, monkeypatch):
 
 def test_main_check_bead_advisory_on_missing_bd(capsys):
     mod = _load("bead_collision_gate", "scripts/bead_collision_gate.py")
-    with patch("subprocess.run", return_value=MagicMock(returncode=1, stdout="")):
+    with patch("bead_collision_gate.run_safe", return_value=MagicMock(returncode=1, stdout="")):
         with patch("sys.argv", ["bead_collision_gate.py", "check-bead", "proj-xyz"]):
             rc = mod.main()
     captured = capsys.readouterr()
@@ -232,7 +232,7 @@ def test_main_status_json(tmp_path, capsys, monkeypatch):
     mod._lm.DEFAULT_LEDGER = ledger
 
     no_beads = MagicMock(returncode=1, stdout="")
-    with patch("subprocess.run", return_value=no_beads):
+    with patch("bead_collision_gate.run_safe", return_value=no_beads):
         with patch("sys.argv", ["bead_collision_gate.py", "status", "--json"]):
             rc = mod.main()
 
