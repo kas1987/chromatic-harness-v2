@@ -2002,6 +2002,8 @@ def main() -> int:
     result["ai_review"] = _gate_summary("ai_review_gate", fallback_key="level")
     result["agent_scoring"] = _gate_summary("agent_scoring")
     result["governance_review"] = _gate_summary("governance_review", fallback_key="decision")
+    result["queue_self_review"] = _gate_summary("queue_self_review", fallback_key="finding_counts")
+    result["collision_guard"] = _gate_summary("collision_guard", fallback_key="overall")
 
     print(json.dumps(result, indent=2))
     return 0
