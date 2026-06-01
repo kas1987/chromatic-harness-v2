@@ -294,6 +294,12 @@ SUITES = [
             "test_ide_tasks.py",
         ],
     ),
+    (
+        "observability CI workflow (OBS-008)",
+        [
+            "test_observability_ci_workflow.py",
+        ],
+    ),
 ]
 
 

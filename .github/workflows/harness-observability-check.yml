@@ -1,0 +1,57 @@
+name: Harness Observability Health Check
+
+# Runs the observability validators in CI on every PR / non-default-branch push
+# so observability tooling never silently drifts (OBS-008).
+#
+# Job id `validate-harness-observability` is referenced by the OBS-008 bead.
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: obs-health-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-harness-observability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile observability scripts
+        # compileall is resilient to scripts being added/removed over time.
+        run: python -m compileall -q scripts/
+
+      - name: Validate starter event log (schema)
+        run: |
+          python scripts/validate_event_schema.py \
+            --log 00_META/observability/ERROR_LOG.jsonl
+
+      - name: Run secret scan
+        # security_scan.py is the tuned gate scanner (matches the pre-push hook);
+        # --no-deps keeps it fast and offline. It writes the security artifact.
+        run: python scripts/security_scan.py --no-deps
+
+      - name: Run collision detector against active writers
+        run: |
+          python scripts/detect_file_collisions.py \
+            --active-writers .chromatic/active_writers.json
+
+      - name: Upload observability health artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-health
+          path: |
+            07_LOGS_AND_AUDIT/security/latest.json
+            07_LOGS_AND_AUDIT/collision/latest.json
+          if-no-files-found: ignore
