@@ -162,6 +162,18 @@ SUITES = [
             "test_lease_manager.py",
         ],
     ),
+    (
+        "service auth audit (#87)",
+        [
+            "test_service_auth_audit.py",
+        ],
+    ),
+    (
+        "log integrity check (#85)",
+        [
+            "test_log_integrity_check.py",
+        ],
+    ),
 ]
 
 

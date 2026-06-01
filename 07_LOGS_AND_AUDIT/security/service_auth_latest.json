@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "timestamp": "20260601T142556Z",
+  "overall_risk": "low",
+  "services_running": 1,
+  "critical_count": 0,
+  "findings": [
+    {
+      "service": "ollama",
+      "description": "Ollama local LLM server",
+      "port": 11434,
+      "running": true,
+      "listen_address": "127.0.0.1",
+      "risk": "ok",
+      "secure_default": true,
+      "notes": "Ollama binds 127.0.0.1 by default; OLLAMA_HOST=0.0.0.0 is insecure",
+      "recommendation": "No action required."
+    },
+    {
+      "service": "neo4j_http",
+      "description": "Neo4j HTTP browser interface",
+      "port": 7474,
+      "running": false,
+      "listen_address": null,
+      "risk": "ok",
+      "secure_default": false,
+      "notes": "Neo4j requires explicit auth config; default install may have no password",
+      "recommendation": "No action required."
+    },
+    {
+      "service": "neo4j_bolt",
+      "description": "Neo4j Bolt protocol",
+      "port": 7687,
+      "running": false,
+      "listen_address": null,
+      "risk": "ok",
+      "secure_default": false,
+      "notes": "Bolt port; ensure dbms.connector.bolt.listen_address=127.0.0.1",
+      "recommendation": "No action required."
+    },
+    {
+      "service": "chromadb",
+      "description": "ChromaDB vector store",
+      "port": 8000,
+      "running": false,
+      "listen_address": null,
+      "risk": "ok",
+      "secure_default": false,
+      "notes": "ChromaDB has no auth by default; restrict to localhost",
+      "recommendation": "No action required."
+    },
+    {
+      "service": "comfyui",
+      "description": "ComfyUI image generation",
+      "port": 8188,
+      "running": false,
+      "listen_address": null,
+      "risk": "ok",
+      "secure_default": false,
+      "notes": "ComfyUI has no built-in auth; never expose to 0.0.0.0",
+      "recommendation": "No action required."
+    }
+  ],
+  "secure_defaults_guidance": {
+    "ollama": "OLLAMA_HOST=127.0.0.1 (default); never set OLLAMA_HOST=0.0.0.0",
+    "neo4j": "Set dbms.connector.http.listen_address=127.0.0.1 and dbms.connector.bolt.listen_address=127.0.0.1",
+    "chromadb": "Pass --host 127.0.0.1 when starting chroma server",
+    "comfyui": "Pass --listen 127.0.0.1 when starting ComfyUI"
+  }
+}
