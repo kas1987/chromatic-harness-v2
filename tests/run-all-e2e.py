@@ -83,6 +83,7 @@ SUITES = [
         "queue<->github sync mutations",
         [
             "test_queue_sync_mutations.py",
+            "test_sync_queue_matching.py",
         ],
     ),
     (
