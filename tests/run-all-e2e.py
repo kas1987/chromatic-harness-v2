@@ -264,6 +264,12 @@ SUITES = [
             "test_file_claim_collision.py",
         ],
     ),
+    (
+        "schema-backed event validation (OBS-003)",
+        [
+            "test_event_schema_validation.py",
+        ],
+    ),
 ]
 
 
