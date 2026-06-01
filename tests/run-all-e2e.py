@@ -282,6 +282,12 @@ SUITES = [
             "test_harness_run.py",
         ],
     ),
+    (
+        "git state snapshots + last-known-good (OBS-006)",
+        [
+            "test_git_snapshots.py",
+        ],
+    ),
 ]
 
 
