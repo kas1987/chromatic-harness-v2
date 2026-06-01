@@ -1,0 +1,41 @@
+---
+description: Harness collision check rules for Cursor agents
+alwaysApply: true
+---
+
+# Cursor Rule: Collision & Session Awareness
+
+Before editing any file in this repo, Cursor agents must check for active write leases.
+
+## Pre-write gate
+
+Run before writing to any file:
+```
+python scripts/file_collision_gate.py check --paths <target-file> --agent cursor
+```
+
+If the result is `"status": "blocked"`, **do not write**. Surface the conflict list to the user and stop.
+
+## Session awareness
+
+To see all active sessions (terminals, agents, worktrees) at once:
+```
+python scripts/session_status.py
+```
+
+To see all currently lease-blocked paths:
+```
+python scripts/file_collision_gate.py list-blocked
+```
+
+To cross-check in-progress beads against active leases:
+```
+python scripts/bead_collision_gate.py status
+```
+
+## Rules
+
+- Never write to a file another session has an active write or exclusive lease on.
+- If `file_collision_gate.py` is unavailable (import error, missing deps), fail open and warn the user.
+- Do not acquire a lease on behalf of the user — leases are acquired by autonomous harness scripts only.
+- If two Cursor windows are open on this repo, one should be on a dedicated worktree branch.

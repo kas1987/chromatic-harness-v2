@@ -49,6 +49,24 @@ def _iter_sources(harness: Path, spec: str) -> list[Path]:
     return sorted(p for p in src.rglob("*") if p.is_file() and not p.name.startswith("."))
 
 
+def _normalize_text(text: str) -> str:
+    """Normalize text for stable comparison: LF line endings, no trailing whitespace."""
+    return "\n".join(line.rstrip() for line in text.replace("\r\n", "\n").splitlines())
+
+
+def _strip_mirror_header(text: str) -> str:
+    """Remove the MIRRORED header from existing wiki files for content comparison."""
+    lines = text.splitlines()
+    # Skip consecutive header comment lines at the top
+    idx = 0
+    while idx < len(lines) and lines[idx].strip().startswith("<!--"):
+        idx += 1
+    # Skip blank lines after header
+    while idx < len(lines) and lines[idx].strip() == "":
+        idx += 1
+    return "\n".join(lines[idx:])
+
+
 def _mirror_file(src: Path, dest: Path, *, execute: bool) -> dict:
     text = src.read_text(encoding="utf-8", errors="replace")
     ts = datetime.now(timezone.utc).isoformat()
@@ -58,9 +76,11 @@ def _mirror_file(src: Path, dest: Path, *, execute: bool) -> dict:
         body = text
     changed = True
     if dest.is_file():
-        old_hash = hashlib.sha256(dest.read_bytes()).hexdigest()
-        new_hash = hashlib.sha256(body.encode()).hexdigest()
-        changed = old_hash != new_hash
+        old_text = dest.read_text(encoding="utf-8", errors="replace")
+        # Compare normalized content, stripping volatile header from existing file
+        old_content = _normalize_text(_strip_mirror_header(old_text))
+        new_content = _normalize_text(text)
+        changed = old_content != new_content
     if execute and changed:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(body, encoding="utf-8")

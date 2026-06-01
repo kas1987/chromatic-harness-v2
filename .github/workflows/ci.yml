@@ -62,6 +62,9 @@ jobs:
       - name: Claude adapter policy validation
         run: python scripts/validate_claude_adapter_policy.py
 
+      - name: Federation repo role registry validation
+        run: python scripts/validate_repo_role_registry.py
+
       - name: Governance gate — secret scan (blocking)
         run: python scripts/security_scan.py --no-deps
 
