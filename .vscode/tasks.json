@@ -51,6 +51,64 @@
       "type": "shell",
       "command": "python scripts/harvest_rigs.py --execute ; python scripts/promote_to_wiki.py --dry-run ; python scripts/promote_to_wiki.py --execute",
       "problemMatcher": []
+    },
+    {
+      "label": "Harness: Session Status",
+      "type": "shell",
+      "command": "python scripts/session_status.py",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Check File Collision (active file)",
+      "type": "shell",
+      "command": "python scripts/file_collision_gate.py check --paths ${file} --agent interactive",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Check File Collision (workspace files)",
+      "type": "shell",
+      "command": "python scripts/file_collision_gate.py list-blocked",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Bead-Lease Cross-Check",
+      "type": "shell",
+      "command": "python scripts/bead_collision_gate.py status",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Full Collision Status (all checks)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Harness: Session Status",
+        "Harness: Bead-Lease Cross-Check"
+      ],
+      "group": "none",
+      "problemMatcher": []
     }
   ]
 }
