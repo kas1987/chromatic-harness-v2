@@ -312,6 +312,12 @@ SUITES = [
             "test_observability_reports.py",
         ],
     ),
+    (
+        "event lifecycle find/update/archive (OBS-011)",
+        [
+            "test_event_lifecycle.py",
+        ],
+    ),
 ]
 
 
