@@ -1995,6 +1995,8 @@ def main() -> int:
     result["coverage"] = _gate_summary("coverage_gate")
     result["docs_drift"] = _gate_summary("docs_drift_gate", fallback_key="risk_level")
     result["arch_compliance"] = _gate_summary("arch_compliance_gate")
+    result["drift"] = _gate_summary("drift_gate")
+    result["release_readiness"] = _gate_summary("release_readiness", fallback_key="decision")
 
     print(json.dumps(result, indent=2))
     return 0
