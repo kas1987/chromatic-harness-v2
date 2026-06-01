@@ -23,11 +23,16 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
+import sys
 from dataclasses import dataclass, asdict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
 
 SHARED_BRANCH_MARKERS = ("session/", "main", "master")
 HARD_FAIL = {"clean_index", "no_branch_sharing"}
@@ -42,11 +47,10 @@ class Check:
 
 
 def _git(args: list[str], timeout: int = 15) -> tuple[int, str]:
-    try:
-        r = subprocess.run(["git", *args], cwd=REPO, capture_output=True, text=True, timeout=timeout)
-        return r.returncode, (r.stdout or "").strip()
-    except (subprocess.TimeoutExpired, OSError) as exc:
-        return 1, str(exc)
+    # run_safe reaps the process tree on timeout (returns rc=124) and returns
+    # rc=1 on spawn error — it never raises, so no try/except is needed here.
+    r = run_safe(["git", *args], cwd=REPO, timeout=timeout)
+    return r.returncode, (r.stdout or "").strip()
 
 
 def current_branch() -> str:
@@ -141,7 +145,7 @@ def check_bead_claimed(bead_id: str) -> Check:
     if not bd:
         return Check("bead_claimed", "warn", "bd not on PATH; cannot verify claim", "")
     try:
-        r = subprocess.run([bd, "show", bead_id, "--json"], cwd=REPO, capture_output=True, text=True, timeout=20)
+        r = run_safe([bd, "show", bead_id, "--json"], cwd=REPO, timeout=20)
         if r.returncode != 0 or not r.stdout.strip():
             return Check("bead_claimed", "warn", f"bead {bead_id} not found", "")
         data = json.loads(r.stdout)
@@ -157,7 +161,9 @@ def check_bead_claimed(bead_id: str) -> Check:
             f"{bead_id} is UNCLAIMED (status={status})",
             "run `bd update " + bead_id + " --claim` before working, or pick an unclaimed bead / become a reviewer",
         )
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as exc:
+    except json.JSONDecodeError as exc:
+        # run_safe absorbs timeout/OSError (returns sentinel codes handled above);
+        # malformed bd JSON is the only remaining raisable error here.
         return Check("bead_claimed", "warn", f"claim check failed: {exc}", "")
 
 
