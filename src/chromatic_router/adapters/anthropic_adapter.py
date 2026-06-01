@@ -31,24 +31,18 @@ class AnthropicAdapter(BaseAdapter):
 
     async def health(self) -> AdapterHealth:
         return AdapterHealth(
-            reachable=bool(
-                os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))
-            ),
+            reachable=bool(os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))),
             latency_ms=0,
             error="" if self.enabled else "ANTHROPIC_API_KEY not set",
         )
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append(
-            "AnthropicAdapter.complete() is a stub — wire anthropic SDK when ready."
-        )
+        logs.warnings.append("AnthropicAdapter.complete() is a stub — wire anthropic SDK when ready.")
         return RouteResponse(
             request_id=req.request_id,
             selected_provider=self.name,
             route_reason="anthropic_stub",
-            output=RouteOutput(
-                type=OutputType.TEXT, content="[Anthropic stub — not yet wired]"
-            ),
+            output=RouteOutput(type=OutputType.TEXT, content="[Anthropic stub — not yet wired]"),
             logs=logs,
         )

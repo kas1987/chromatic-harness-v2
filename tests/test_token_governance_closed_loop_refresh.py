@@ -136,10 +136,7 @@ def test_refresh_chain_is_fail_open(monkeypatch, tmp_path):
     ]
     by_name = {s["name"]: s for s in steps}
     assert by_name["portfolio_token_telemetry"]["status"] == "fail"
-    assert (
-        "boom-portfolio_token_telemetry"
-        in by_name["portfolio_token_telemetry"]["error"]
-    )
+    assert "boom-portfolio_token_telemetry" in by_name["portfolio_token_telemetry"]["error"]
     # Downstream steps still succeed (independent, logged).
     assert by_name["controller"]["status"] == "ok"
     assert by_name["token_economy_exporter"]["status"] == "ok"
@@ -157,20 +154,14 @@ def test_main_emits_refresh_steps_and_queue_actions(monkeypatch, tmp_path, capsy
     def _ok(name):
         return clp.CheckResult(name, ["fake"], "pass", 0, "ok", {})
 
-    monkeypatch.setattr(
-        clp, "_check_session_context", lambda: _ok("session_context_report")
-    )
-    monkeypatch.setattr(
-        clp, "_check_mcp_audit", lambda profile: _ok("audit_mcp_context")
-    )
+    monkeypatch.setattr(clp, "_check_session_context", lambda: _ok("session_context_report"))
+    monkeypatch.setattr(clp, "_check_mcp_audit", lambda profile: _ok("audit_mcp_context"))
     monkeypatch.setattr(
         clp,
         "_check_workflow_token_governance",
         lambda: _ok("validate_workflow_token_governance"),
     )
-    monkeypatch.setattr(
-        clp, "_check_daily_strict", lambda: _ok("daily_harness_audit_strict")
-    )
+    monkeypatch.setattr(clp, "_check_daily_strict", lambda: _ok("daily_harness_audit_strict"))
 
     # Redirect report writes into tmp so the test never touches repo logs.
     written = {}

@@ -185,7 +185,5 @@ class TestContextGateIntegration:
         from router.context_manifest import ContextResourceManifest
 
         manifest = ContextResourceManifest.build_defaults()
-        assert all(
-            manifest.get(rid).resource_type == "tool" for rid in resp.context_resources
-        )
+        assert all(manifest.get(rid).resource_type == "tool" for rid in resp.context_resources)
         assert len(resp.context_resources) <= 8

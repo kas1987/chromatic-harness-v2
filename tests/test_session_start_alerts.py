@@ -12,9 +12,7 @@ _SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 
 
 def _load_session_start():
-    spec = importlib.util.spec_from_file_location(
-        "session_start", _SCRIPTS / "session_start.py"
-    )
+    spec = importlib.util.spec_from_file_location("session_start", _SCRIPTS / "session_start.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -107,9 +105,7 @@ def test_baseline_alerts_fail_open_on_exception(ss, capsys):
 
 
 def test_ci_health_ok_prints_nothing(ss, capsys):
-    with patch.object(
-        ss, "_call_ci_health", return_value={"status": "ok", "reasons": []}
-    ):
+    with patch.object(ss, "_call_ci_health", return_value={"status": "ok", "reasons": []}):
         ss._emit_ci_health()
     assert capsys.readouterr().out == ""
 

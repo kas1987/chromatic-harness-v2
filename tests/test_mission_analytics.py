@@ -6,9 +6,7 @@ import importlib
 import pytest
 
 _tmpdir = tempfile.mkdtemp()
-os.environ.setdefault(
-    "CHROMATIC_DB_PATH", os.path.join(_tmpdir, "analytics_test.sqlite")
-)
+os.environ.setdefault("CHROMATIC_DB_PATH", os.path.join(_tmpdir, "analytics_test.sqlite"))
 
 import api.db as db_module  # noqa: E402
 import api.main as api_module  # noqa: E402
@@ -104,9 +102,7 @@ class TestAnalyticsEndpoint:
         # Each point should be >= previous (values are 5.0, 0.0, 10.0, 2.0 deltas)
         assert trend[-1]["value"] > trend[0]["value"]
 
-    def test_magnet_breakdown_contains_expected_magnets(
-        self, client, mission_with_events
-    ):
+    def test_magnet_breakdown_contains_expected_magnets(self, client, mission_with_events):
         r = client.get(f"/missions/{mission_with_events}/analytics")
         data = r.json()
         names = {m["magnet_name"] for m in data["magnet_breakdown"]}
@@ -117,11 +113,7 @@ class TestAnalyticsEndpoint:
     def test_confidence_magnet_has_count_2(self, client, mission_with_events):
         r = client.get(f"/missions/{mission_with_events}/analytics")
         data = r.json()
-        cm = next(
-            m
-            for m in data["magnet_breakdown"]
-            if m["magnet_name"] == "confidence_magnet"
-        )
+        cm = next(m for m in data["magnet_breakdown"] if m["magnet_name"] == "confidence_magnet")
         assert cm["event_count"] == 2
 
     def test_top_actions_present(self, client, mission_with_events):

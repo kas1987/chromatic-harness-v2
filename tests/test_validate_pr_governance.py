@@ -68,10 +68,7 @@ def test_validate_pr_rejects_base_branch_mismatch() -> None:
         changed_files=[],
     )
 
-    assert (
-        "Stack base branch 'wrong/base' does not match actual base ref "
-        "'pr/closeout-telemetry-policy'"
-    ) in errors
+    assert ("Stack base branch 'wrong/base' does not match actual base ref 'pr/closeout-telemetry-policy'") in errors
 
 
 def test_validate_pr_blocks_generated_artifacts_without_override() -> None:
@@ -89,9 +86,7 @@ def test_validate_pr_blocks_generated_artifacts_without_override() -> None:
 def test_validate_pr_allows_generated_artifacts_with_override() -> None:
     errors = validator.validate_pr(
         title="Artifact refresh",
-        body=_stacked_body(
-            base_branch="pr/closeout-telemetry-policy", artifact_override="approved"
-        ),
+        body=_stacked_body(base_branch="pr/closeout-telemetry-policy", artifact_override="approved"),
         head_ref="pr/closeout-policy-tests",
         base_ref="pr/closeout-telemetry-policy",
         changed_files=["07_LOGS_AND_AUDIT/token_governance/latest.json"],
@@ -121,9 +116,7 @@ def test_validate_pr_blocks_large_pr_without_size_override() -> None:
 def test_validate_pr_allows_large_pr_with_size_override() -> None:
     errors = validator.validate_pr(
         title="Large PR",
-        body=_stacked_body(
-            base_branch="pr/closeout-telemetry-policy", size_override="approved"
-        ),
+        body=_stacked_body(base_branch="pr/closeout-telemetry-policy", size_override="approved"),
         head_ref="pr/closeout-policy-tests",
         base_ref="pr/closeout-telemetry-policy",
         changed_files=["src/foo.py"],

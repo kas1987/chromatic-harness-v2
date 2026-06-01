@@ -58,9 +58,7 @@ class TestContextGate:
         )
         result = gate.check(req, complexity_level="C3")
         # Tools like bash, read, write should be denied
-        tool_denials = [
-            d for d in result.denied_resources if d.reason == "allow_tools=False"
-        ]
+        tool_denials = [d for d in result.denied_resources if d.reason == "allow_tools=False"]
         assert len(tool_denials) > 0
         # Skills should still be allowed
         assert any(r == "test" for r in result.allowed_resources)
@@ -80,9 +78,7 @@ class TestContextGate:
             ),
         )
         result = gate.check(req, complexity_level="C3")
-        skill_denials = [
-            d for d in result.denied_resources if d.reason == "allow_skills=False"
-        ]
+        skill_denials = [d for d in result.denied_resources if d.reason == "allow_skills=False"]
         assert len(skill_denials) > 0
 
     def test_allow_mcp_false_blocks_mcp(self, gate):
@@ -100,9 +96,7 @@ class TestContextGate:
             ),
         )
         result = gate.check(req, complexity_level="C3")
-        mcp_denials = [
-            d for d in result.denied_resources if d.reason == "allow_mcp=False"
-        ]
+        mcp_denials = [d for d in result.denied_resources if d.reason == "allow_mcp=False"]
         assert len(mcp_denials) > 0
 
     def test_resource_cap(self, gate):
@@ -202,10 +196,7 @@ class TestContextGate:
         )
         result = gate.check(req, complexity_level="C1")
         # classification only allows tools, and at most 8 resources
-        assert all(
-            gate.manifest.get(r).resource_type == "tool"
-            for r in result.allowed_resources
-        )
+        assert all(gate.manifest.get(r).resource_type == "tool" for r in result.allowed_resources)
         assert len(result.allowed_resources) <= 8
 
     def test_empty_manifest_returns_ok(self):

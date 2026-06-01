@@ -5,9 +5,7 @@ import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "ci_local", _REPO / "scripts" / "ci_local.py"
-)
+_spec = importlib.util.spec_from_file_location("ci_local", _REPO / "scripts" / "ci_local.py")
 cl = importlib.util.module_from_spec(_spec)
 sys.modules["ci_local"] = cl  # required so @dataclass can resolve cls.__module__
 _spec.loader.exec_module(cl)  # type: ignore
@@ -47,9 +45,7 @@ def test_run_gates_reports_per_gate():
 
 
 def test_main_returns_failure_count(monkeypatch):
-    monkeypatch.setattr(
-        cl, "run_gates", lambda gates, **k: {"ruff-check": 0, "ruff-format": 1}
-    )
+    monkeypatch.setattr(cl, "run_gates", lambda gates, **k: {"ruff-check": 0, "ruff-format": 1})
     assert cl.main(["--stage", "pre-commit"]) == 1
 
 

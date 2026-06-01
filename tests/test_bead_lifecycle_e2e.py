@@ -34,16 +34,12 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.asyncio
-async def test_bead_lifecycle_intake_route_validate_promote(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+async def test_bead_lifecycle_intake_route_validate_promote(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import intake.queue as queue_mod
     from scripts import promote_to_wiki as p2w
 
     queue_path = tmp_path / "intake_queue.jsonl"
-    monkeypatch.setattr(
-        queue_mod, "default_queue_path", lambda repo_root=None: queue_path
-    )
+    monkeypatch.setattr(queue_mod, "default_queue_path", lambda repo_root=None: queue_path)
 
     append_entry(
         {
@@ -361,14 +357,8 @@ def test_bead_lifecycle_subprocess_poll_and_auto_intake_roundtrip(tmp_path: Path
 
     queue_path = REPO / "07_LOGS_AND_AUDIT" / "intake_queue.jsonl"
     sync_state_path = REPO / ".agents" / "intake" / "inbox_sync.state.json"
-    queue_before = (
-        queue_path.read_text(encoding="utf-8") if queue_path.is_file() else None
-    )
-    sync_before = (
-        sync_state_path.read_text(encoding="utf-8")
-        if sync_state_path.is_file()
-        else None
-    )
+    queue_before = queue_path.read_text(encoding="utf-8") if queue_path.is_file() else None
+    sync_before = sync_state_path.read_text(encoding="utf-8") if sync_state_path.is_file() else None
 
     try:
         poll_proc = subprocess.run(
