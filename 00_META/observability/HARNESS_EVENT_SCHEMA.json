@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Harness Event Record",
+  "type": "object",
+  "required": ["event_id", "timestamp", "repo", "source", "event_type", "severity", "category", "status"],
+  "additionalProperties": true,
+  "properties": {
+    "event_id": {"type": "string"},
+    "timestamp": {"type": "string"},
+    "repo": {"type": "string"},
+    "workspace": {"type": "string"},
+    "source": {"type": "object", "required": ["surface"]},
+    "event_type": {"type": "string", "enum": ["info", "error", "warning", "incident", "collision", "learning", "fix", "status_update", "command_result"]},
+    "severity": {"type": "string", "enum": ["info", "low", "medium", "high", "critical"]},
+    "category": {"type": "string", "enum": ["tool_failure", "file_collision", "test_failure", "dependency_error", "context_drift", "scope_breach", "secret_exposure", "loop_behavior", "model_misroute", "playbook_gap", "git_state", "command_failure", "manual_note", "validation_failure", "unknown"]},
+    "status": {"type": "string", "enum": ["open", "routed", "queued", "active", "resolved", "ignored", "failed", "incident_opened", "collision_opened"]}
+  }
+}
