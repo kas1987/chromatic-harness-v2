@@ -85,6 +85,15 @@ SUITES = [
             "test_queue_sync_mutations.py",
         ],
     ),
+    (
+        "governance & review layer",
+        [
+            "test_policy_engine.py",
+            "test_review_consensus.py",
+            "test_ai_review_gate.py",
+            "test_agent_scoring.py",
+        ],
+    ),
 ]
 
 
