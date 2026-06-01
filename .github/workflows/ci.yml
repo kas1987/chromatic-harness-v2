@@ -93,6 +93,19 @@ jobs:
       - name: Intake close-loop validation (dry-run)
         run: python scripts/validate_intake_loop.py
 
+      - name: Observability — schema well-formed + event-log valid
+        run: |
+          set -euo pipefail
+          # 1. HARNESS_EVENT_SCHEMA.json must be well-formed JSON.
+          python -c "import json; json.load(open('00_META/observability/HARNESS_EVENT_SCHEMA.json'))"
+          # 2. ERROR_LOG.jsonl is runtime-generated and gitignored; seed an empty
+          #    placeholder on a clean checkout so the validator runs structure
+          #    checks. When real lines are present, malformed events fail the gate.
+          LOG=00_META/observability/ERROR_LOG.jsonl
+          mkdir -p "$(dirname "$LOG")"
+          [ -f "$LOG" ] || touch "$LOG"
+          python scripts/validate_event_log.py --log "$LOG"
+
       - name: MCP context audit (fixture baseline)
         run: |
           python scripts/audit_mcp_context.py \
