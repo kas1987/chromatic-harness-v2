@@ -64,6 +64,14 @@ SUITES = [
             "test_pr_size_gate.py",
         ],
     ),
+    (
+        "architecture/docs/coverage enforcement",
+        [
+            "test_coverage_gate.py",
+            "test_docs_drift_gate.py",
+            "test_arch_compliance_gate.py",
+        ],
+    ),
 ]
 
 
