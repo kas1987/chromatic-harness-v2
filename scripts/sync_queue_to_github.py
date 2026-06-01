@@ -149,17 +149,32 @@ def sync(*, execute: bool, close_done: bool) -> list[dict]:
                             actions[-1]["issue"] = int(m.group(1))
                         actions[-1]["url"] = out.strip()
 
+    # Audit trail (eval 5 of gh-51): record every action on an --execute run.
+    if execute:
+        try:
+            import datetime
+
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from queue_sync_mutations import record_sync_action
+
+            ts = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            for a in actions:
+                record_sync_action(
+                    a.get("action", "unknown"),
+                    a.get("bead_id", ""),
+                    a.get("issue"),
+                    timestamp=ts,
+                )
+        except Exception:  # noqa: BLE001 — audit must never break the sync
+            pass
+
     return actions
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Sync handoff queue to GitHub issues")
-    parser.add_argument(
-        "--execute", action="store_true", help="Actually create/close issues"
-    )
-    parser.add_argument(
-        "--close-done", action="store_true", help="Close GH issues for done items"
-    )
+    parser.add_argument("--execute", action="store_true", help="Actually create/close issues")
+    parser.add_argument("--close-done", action="store_true", help="Close GH issues for done items")
     args = parser.parse_args()
 
     actions = sync(execute=args.execute, close_done=args.close_done)

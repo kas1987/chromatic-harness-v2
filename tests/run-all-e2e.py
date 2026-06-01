@@ -79,6 +79,12 @@ SUITES = [
             "test_release_readiness.py",
         ],
     ),
+    (
+        "queue<->github sync mutations",
+        [
+            "test_queue_sync_mutations.py",
+        ],
+    ),
 ]
 
 
