@@ -243,6 +243,32 @@ def check_active_queue() -> Check:
         return Check("active_queue", "warn", f"queue probe failed: {exc}", value=None)
 
 
+def check_leases() -> Check:
+    """Report active/stale lease counts + live conflicts (collision-control FR-8)."""
+    import importlib.util
+
+    lm_path = REPO / "scripts" / "lease_manager.py"
+    if not lm_path.is_file():
+        return Check("leases", "warn", "lease_manager.py not present", value=None)
+    try:
+        spec = importlib.util.spec_from_file_location("lease_manager", lm_path)
+        lm = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(lm)
+        s = lm.summarize()
+        if s.get("status") != "ok":
+            return Check("leases", "warn", f"lease summary error: {s.get('error')}", value=s)
+        conflicts = s.get("conflicts", 0)
+        stale = s.get("stale_leases", 0)
+        msg = f"{s.get('active_leases', 0)} active, {stale} stale, {conflicts} conflict(s)"
+        if conflicts:
+            return Check("leases", "fail", msg, value=s)  # a live overlap is a real collision
+        if stale:
+            return Check("leases", "warn", msg, value=s)
+        return Check("leases", "pass", msg, value=s)
+    except Exception as exc:  # noqa: BLE001
+        return Check("leases", "warn", f"lease probe failed: {exc}", value=None)
+
+
 # ── Aggregation ──────────────────────────────────────────────────────────────
 
 
@@ -254,6 +280,7 @@ def run_all(service_timeout: float = 0.6) -> dict:
         check_skill_inventory(),
         check_last_go_artifact(),
         check_active_queue(),
+        check_leases(),
     ]
 
     counts = {"pass": 0, "warn": 0, "fail": 0}
