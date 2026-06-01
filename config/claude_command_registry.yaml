@@ -44,8 +44,8 @@ commands:
   - name: /recover
     purpose: Inspect and recover stalled work, stale leases, or duplicate artifacts.
     authority_source: recovery_policy
-    script: scripts/lease_manager.py
-    fallback_script: scripts/harness_health_check.py
+    script: scripts/emergency_recovery.py
+    fallback_script: scripts/lease_manager.py
     mutation: inspect_by_default
     required_gates: [human_for_mutation]
     logs_to: 07_LOGS_AND_AUDIT/recovery/recovery_log.jsonl
