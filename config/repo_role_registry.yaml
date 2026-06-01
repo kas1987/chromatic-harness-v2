@@ -1,0 +1,98 @@
+schema_version: 1
+updated_at: "2026-06-01"
+authority_root: "kas1987/chromatic-harness-v2"
+repos:
+  - repo: "kas1987/chromatic-harness-v2"
+    role: "execution_authority"
+    status: "active"
+    owns:
+      - runtime_execution
+      - queue_dispatch
+      - governance_gates
+      - ci_release_readiness
+      - confidence_gate
+      - verifier_gate
+      - lease_collision_control
+      - workflow_git_shipping
+    supports:
+      - wiki_promotion
+      - skill_health_validation
+      - stack_service_health
+    forbidden:
+      - durable_canon_without_review
+
+  - repo: "kas1987/chromatic-wiki"
+    role: "durable_canon"
+    status: "active"
+    owns:
+      - promoted_playbooks
+      - reviewed_learnings
+      - approved_antipatterns
+      - durable_policy_docs
+    supports:
+      - harness_governance_memory
+    forbidden:
+      - runtime_execution
+      - queue_dispatch
+      - shipping_authority
+
+  - repo: "kas1987/chromatic-stack"
+    role: "local_service_substrate"
+    status: "active"
+    owns:
+      - service_definitions
+      - docker_compose_stack
+      - reverse_proxy_config
+      - local_infra_docs
+    supports:
+      - harness_health_dashboard
+    forbidden:
+      - go_no_go_release_decision
+      - queue_dispatch
+      - verifier_gate
+
+  - repo: "kas1987/claude-config"
+    role: "claude_adapter_config"
+    status: "active_demoted"
+    owns:
+      - claude_context
+      - slash_command_adapters
+      - global_claude_preferences
+    supports:
+      - harness_script_launching
+      - model_routing_hints
+    forbidden:
+      - independent_orchestration
+      - independent_shipping_logic
+      - bypassing_harness_gates
+      - queue_authority
+
+  - repo: "kas1987/Chromatic_Brain"
+    role: "legacy_brain_archive"
+    status: "migration_source"
+    owns:
+      - historical_planning
+      - legacy_queue_artifacts
+      - prior_brain_reports
+    supports:
+      - migration_to_harness_issues
+    forbidden:
+      - active_queue_authority
+      - active_runtime_execution
+      - shipping_authority
+
+  - repo: "kas1987/ChromaticSystems"
+    role: "registry_and_skill_governance"
+    status: "active_federated"
+    owns:
+      - skill_catalog
+      - skill_prune_plan
+      - registry_maps
+      - cross_repo_governance_inventory
+    supports:
+      - harness_skill_health
+      - wiki_registry_docs
+    forbidden:
+      - runtime_execution
+      - direct_go_mode_dispatch
+      - direct_shipping_authority
