@@ -174,6 +174,12 @@ SUITES = [
             "test_log_integrity_check.py",
         ],
     ),
+    (
+        "mutation manifest enforcement (P0-CC-002)",
+        [
+            "test_mutation_manifest.py",
+        ],
+    ),
 ]
 
 

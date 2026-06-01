@@ -254,6 +254,23 @@ def load_queue_from_bd() -> list[dict]:
 # ── Orchestration loop ───────────────────────────────────────────────────────
 
 
+def _manifest_gate(item: dict) -> tuple[bool, str]:
+    """Delegate to mutation_manifest.require_manifest (P0-CC-002). Fail-open if the
+    module is unavailable so GO-mode still runs in a partial checkout."""
+    import importlib.util
+
+    mm_path = REPO / "scripts" / "mutation_manifest.py"
+    if not mm_path.is_file():
+        return True, "manifest gate inactive (module absent)"
+    try:
+        spec = importlib.util.spec_from_file_location("mutation_manifest", mm_path)
+        mm = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mm)
+        return mm.require_manifest(item)
+    except Exception as exc:  # noqa: BLE001
+        return True, f"manifest gate skipped ({exc})"
+
+
 def run_go(items: list[dict] | None = None) -> dict:
     """The deterministic GO loop. Returns an auditable decision record. No mutation."""
     queue = items if items is not None else load_queue_from_bd()
@@ -276,6 +293,14 @@ def run_go(items: list[dict] | None = None) -> dict:
     confidence = score_confidence(factors)
     risk = str(selected.get("risk_level", "medium")).lower()
     allowed, reason = dispatch_allowed(confidence, risk)
+
+    # Mutation-manifest gate (P0-CC-002, FR-3): a write-capable task may not be
+    # dispatched without a valid mutation manifest. Read/verify tasks are exempt.
+    manifest_ok, manifest_reason = _manifest_gate(selected)
+    if not manifest_ok:
+        allowed = False
+        reason = manifest_reason
+
     packet = build_mission_packet(selected, confidence)
 
     record.update(
