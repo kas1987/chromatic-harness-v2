@@ -187,6 +187,12 @@ SUITES = [
         ],
     ),
     (
+        "command telemetry logging (dnif)",
+        [
+            "test_command_telemetry.py",
+        ],
+    ),
+    (
         "emergency recovery command (k9j7)",
         [
             "test_emergency_recovery.py",
