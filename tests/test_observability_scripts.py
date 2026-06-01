@@ -79,7 +79,7 @@ class TestRedactText:
         assert "[REDACTED_SECRET]" in out
 
     def test_keyvalue_assignment(self):
-        out, flag = redact_secrets.redact_text('api_key="supersecretvalue"')
+        out, flag = redact_secrets.redact_text('api_key="supersecretvalue"')  # pragma: allowlist secret
         assert flag is True
         assert "supersecretvalue" not in out
 
@@ -88,7 +88,7 @@ class TestRedactText:
         assert flag is True
 
     def test_private_key_block(self):
-        text = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA\n-----END RSA PRIVATE KEY-----"
+        text = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA\n-----END RSA PRIVATE KEY-----"  # pragma: allowlist secret
         out, flag = redact_secrets.redact_text(text)
         assert flag is True
         assert "[REDACTED_SECRET]" in out
