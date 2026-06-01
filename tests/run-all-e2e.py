@@ -187,6 +187,12 @@ SUITES = [
         ],
     ),
     (
+        "command drift detection (ulos)",
+        [
+            "test_command_drift_gate.py",
+        ],
+    ),
+    (
         "file-scope collision detection (P0-CC-004)",
         [
             "test_file_collision_gate.py",
