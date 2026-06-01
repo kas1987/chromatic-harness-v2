@@ -306,6 +306,12 @@ SUITES = [
             "test_secret_scan_gate.py",
         ],
     ),
+    (
+        "observability reports + learning candidates (OBS-010)",
+        [
+            "test_observability_reports.py",
+        ],
+    ),
 ]
 
 
