@@ -109,6 +109,30 @@
       ],
       "group": "none",
       "problemMatcher": []
+    },
+    {
+      "label": "Harness: Validate Observability Logs",
+      "type": "shell",
+      "command": "python scripts/validate_event_schema.py --log 00_META/observability/ERROR_LOG.jsonl",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Detect File Collisions",
+      "type": "shell",
+      "command": "python scripts/detect_file_collisions.py --active-writers .chromatic/active_writers.json",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Snapshot Git State",
+      "type": "shell",
+      "command": "python scripts/snapshot_git_state.py --out .chromatic/last_known_good.json",
+      "problemMatcher": []
+    },
+    {
+      "label": "Harness: Generate Observability Report",
+      "type": "shell",
+      "command": "python scripts/generate_observability_report.py",
+      "problemMatcher": []
     }
   ]
 }
