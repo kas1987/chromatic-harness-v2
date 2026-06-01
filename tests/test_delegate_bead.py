@@ -72,7 +72,7 @@ class _FakeRouter:
 
 def _patch_bd(mod, *, capture: dict):
     mod._bead_text = lambda bid: ("Reverse 'cat'", "mechanical")
-    mod._run_bd = lambda args, **k: (capture.__setitem__("args", args) or (0, "ok"))
+    mod._run_bd = lambda args, **k: capture.__setitem__("args", args) or (0, "ok")
 
 
 def test_c1_bead_is_delegated_and_note_written():
