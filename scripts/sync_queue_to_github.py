@@ -66,9 +66,15 @@ def _list_gh_issues_by_label(label: str) -> list[dict]:
 
 
 def _find_matching_issue(issues: list[dict], bead_id: str) -> dict | None:
+    # Delimited matching, NOT bare substring: 'trsk.1' must not match
+    # 'trsk.10'/'trsk.11'/'trsk.12' (which would mis-close the wrong issue
+    # under --close-done). The body marker is written on its own line as
+    # 'bead:<id>'; title matches require segment boundaries (no trailing
+    # word char or dot, so 'trsk.1' does not match inside 'trsk.10').
+    body_marker = re.compile(rf"(?m)^\s*bead:{re.escape(bead_id)}\s*$")
+    title_marker = re.compile(rf"(?<![\w.]){re.escape(bead_id)}(?![\w.])")
     for issue in issues:
-        body = issue.get("body") or ""
-        if f"bead:{bead_id}" in body or bead_id in (issue.get("title") or ""):
+        if body_marker.search(issue.get("body") or "") or title_marker.search(issue.get("title") or ""):
             return issue
     return None
 
