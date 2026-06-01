@@ -4,7 +4,7 @@ exclude = [
     ".beads",
     ".agents",
     "02_RUNTIME/runtime-engines",
-    ".tmp_bd_mini.py",
+    ".tmp_*.py",
     ".tmp_bd_payload.json",
 ]
 

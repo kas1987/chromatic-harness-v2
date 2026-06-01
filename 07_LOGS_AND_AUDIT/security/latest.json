@@ -1,0 +1,15 @@
+{
+  "secrets": {
+    "status": "ok",
+    "findings": [],
+    "total": 0,
+    "high_severity": 0
+  },
+  "dependencies": {
+    "status": "skipped",
+    "high_severity": 0
+  },
+  "high_severity_total": 0,
+  "passed": true,
+  "timestamp": "20260601T020733Z"
+}

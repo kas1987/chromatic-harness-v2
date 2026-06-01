@@ -52,6 +52,12 @@ SUITES = [
             "test_closeout_epic_reviews.py",
         ],
     ),
+    (
+        "security scan gate",
+        [
+            "test_security_scan.py",
+        ],
+    ),
 ]
 
 
@@ -100,6 +106,30 @@ def main() -> int:
     except subprocess.TimeoutExpired:
         print("TIMEOUT: ruff lint (>60s)")
         return 1
+
+    # Gate 0.5: secret scan (fast, no dependency audit) — block credential leaks.
+    print("\n--- secret scan ---")
+    secret_scanner = REPO / "scripts" / "security_scan.py"
+    if secret_scanner.exists():
+        try:
+            sec = subprocess.run(
+                [sys.executable, str(secret_scanner), "--no-deps"],
+                cwd=REPO,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if sec.returncode == 0:
+                print("PASS: no secrets detected")
+            else:
+                print("FAIL: secrets detected")
+                print(sec.stdout[-1000:] if sec.stdout else sec.stderr[-500:])
+                return 1
+        except subprocess.TimeoutExpired:
+            print("TIMEOUT: secret scan (>60s)")
+            return 1
+    else:
+        print("SKIP: security_scan.py not found")
 
     # Gate 1: Validate skill routes (catch dead-end SKILL.md references)
     print("\n--- Skill Route Validation ---")
