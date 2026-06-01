@@ -119,6 +119,19 @@ SUITES = [
             "test_queue_self_review.py",
         ],
     ),
+    (
+        "hook self-test + validation (#80)",
+        [
+            "test_hook_self_test.py",
+            "test_validate_hooks.py",
+        ],
+    ),
+    (
+        "skill inventory + deprecation (#83)",
+        [
+            "test_skill_inventory.py",
+        ],
+    ),
 ]
 
 
