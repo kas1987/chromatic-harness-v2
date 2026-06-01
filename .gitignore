@@ -120,3 +120,7 @@ server_stderr.txt
 07_LOGS_AND_AUDIT/issue_intake/staged_issues.jsonl
 07_LOGS_AND_AUDIT/collision/*.jsonl
 07_LOGS_AND_AUDIT/collision/*_latest.json
+
+# Timestamped budget/control-plane snapshots (session-local)
+07_LOGS_AND_AUDIT/budget/*_[0-9]*_[0-9]*.json
+07_LOGS_AND_AUDIT/control_plane/*_[0-9]*T*.json
