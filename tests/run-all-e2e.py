@@ -300,6 +300,12 @@ SUITES = [
             "test_observability_ci_workflow.py",
         ],
     ),
+    (
+        "secret scan gate + redaction hardening (OBS-009)",
+        [
+            "test_secret_scan_gate.py",
+        ],
+    ),
 ]
 
 
