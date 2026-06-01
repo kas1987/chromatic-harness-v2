@@ -49,6 +49,7 @@ SUITES = [
             "test_audit_issue_intake.py",
             "test_seed_issues.py",
             "test_epic_review.py",
+            "test_closeout_epic_reviews.py",
         ],
     ),
 ]
