@@ -360,6 +360,12 @@ SUITES = [
             "test_observability_scripts.py",
         ],
     ),
+    (
+        "observability gate smoke (PDR 0.1.0 Phase 5)",
+        [
+            "test_observability_e2e.py",
+        ],
+    ),
 ]
 
 
