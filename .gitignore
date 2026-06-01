@@ -104,3 +104,23 @@ hook_audit.json
 07_LOGS_AND_AUDIT/root_artifacts/.tmp_*
 07_LOGS_AND_AUDIT/root_artifacts/__bh_*
 07_LOGS_AND_AUDIT/root_artifacts/server_std*.txt
+
+# Root scratch artifacts (repo root)
+.tmp_*
+__bh_*
+server_stdout.txt
+server_stderr.txt
+0)
+0))
+,m.get(wiki_dest)) for m in matches[
+
+# Generated audit outputs (session-local)
+07_LOGS_AND_AUDIT/security/[0-9]*T*.json
+07_LOGS_AND_AUDIT/security/log_integrity_latest.json
+07_LOGS_AND_AUDIT/issue_intake/staged_issues.jsonl
+07_LOGS_AND_AUDIT/collision/*.jsonl
+07_LOGS_AND_AUDIT/collision/*_latest.json
+
+# Timestamped budget/control-plane snapshots (session-local)
+07_LOGS_AND_AUDIT/budget/*_[0-9]*_[0-9]*.json
+07_LOGS_AND_AUDIT/control_plane/*_[0-9]*T*.json

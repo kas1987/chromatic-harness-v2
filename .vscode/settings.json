@@ -1,0 +1,12 @@
+{
+  "emeraldwalk.runonsave": {
+    "autoClearConsole": false,
+    "commands": [
+      {
+        "match": "\\.(py|yaml|yml|json|md|ts|js)$",
+        "isAsync": true,
+        "cmd": "python scripts/file_collision_gate.py check --paths ${file} --agent interactive"
+      }
+    ]
+  }
+}

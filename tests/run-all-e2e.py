@@ -216,6 +216,12 @@ SUITES = [
             "test_collision_incidents.py",
         ],
     ),
+    (
+        "federation repo role registry (PDR-FED-001)",
+        [
+            "test_repo_role_registry.py",
+        ],
+    ),
 ]
 
 
