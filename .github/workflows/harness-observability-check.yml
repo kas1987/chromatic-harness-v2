@@ -1,0 +1,69 @@
+name: Harness Observability Health Check
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  observability-health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile observability scripts
+        run: |
+          for script in \
+            common_harness.py \
+            log_harness_event.py \
+            validate_event_log.py \
+            validate_event_schema.py \
+            claim_files.py \
+            release_files.py \
+            detect_file_collisions.py \
+            harness_run.py \
+            route_event.py \
+            snapshot_git_state.py \
+            check_dirty_state.py \
+            update_last_known_good.py \
+            scan_for_secrets.py \
+            redact_secrets.py \
+            find_event.py \
+            update_event_status.py \
+            generate_observability_report.py \
+            propose_learnings.py \
+            summarize_error_patterns.py \
+            bootstrap_observability.py; do
+            echo "Compiling scripts/$script ..."
+            python -m py_compile "scripts/$script"
+          done
+
+      - name: Validate starter event log
+        run: |
+          python scripts/validate_event_log.py \
+            --log 00_META/observability/ERROR_LOG.jsonl
+
+      - name: Run secret scan
+        run: python scripts/scan_for_secrets.py
+
+      - name: Run collision detector against active writers
+        run: |
+          python scripts/detect_file_collisions.py \
+            --active-writers .chromatic/active_writers.json
+
+      - name: Upload observability health artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: observability-health
+          path: |
+            07_LOGS_AND_AUDIT/security/latest.json
+            07_LOGS_AND_AUDIT/collision/latest.json
+          if-no-files-found: ignore
