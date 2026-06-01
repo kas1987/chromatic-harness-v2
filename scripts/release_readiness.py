@@ -31,6 +31,7 @@ _ARTIFACT_PATHS: dict[str, Path] = {
     "pr_risk": REPO / "07_LOGS_AND_AUDIT" / "pr_risk" / "latest.json",
     "preflight": REPO / "07_LOGS_AND_AUDIT" / "preflight" / "latest.json",
     "arch": REPO / "07_LOGS_AND_AUDIT" / "arch" / "latest.json",
+    "governance_review": REPO / "07_LOGS_AND_AUDIT" / "governance_review" / "latest.json",
 }
 
 # Penalty per high-severity security finding (security_score).
@@ -128,6 +129,10 @@ def collect_blockers(inputs: dict) -> list[dict]:
     pr = inputs.get("pr_risk", {})
     if not pr.get("_missing") and pr.get("risk_level") == "fail":
         blockers.append({"gate": "pr_risk", "reason": "PR risk gate at FAIL level"})
+
+    gov = inputs.get("governance_review", {})
+    if not gov.get("_missing") and gov.get("decision") == "block":
+        blockers.append({"gate": "governance_review", "reason": "Governance review decision: BLOCK"})
 
     # Open P0/P1 beads (best-effort).
     try:
