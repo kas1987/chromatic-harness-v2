@@ -26,10 +26,10 @@ def _load():
 def test_secret_patterns_detect_common_secrets():
     mod = _load()
     samples = {
-        "credential_assignment": 'api_key = "abcdef1234567890supersecret"',
-        "private_key_block": "-----BEGIN RSA PRIVATE KEY-----",
-        "github_pat": "ghp_" + "A" * 40,
-        "aws_access_key_id": "AKIAIOSFODNN7EXAMPLE",
+        "credential_assignment": 'api_key = "abcdef1234567890supersecret"',  # pragma: allowlist secret
+        "private_key_block": "-----BEGIN RSA PRIVATE KEY-----",  # pragma: allowlist secret
+        "github_pat": "ghp_" + "A" * 40,  # pragma: allowlist secret
+        "aws_access_key_id": "AKIAIOSFODNN7EXAMPLE",  # pragma: allowlist secret
     }
     for rule, text in samples.items():
         compiled = [(n, __import__("re").compile(p)) for n, p, _ in mod.SECRET_PATTERNS]

@@ -107,6 +107,10 @@ def scan_secrets() -> dict:
         for lineno, line in enumerate(text.splitlines(), 1):
             if len(line) > 1000:  # skip minified/long data lines
                 continue
+            # Standard allowlist convention: a line tagged with this pragma is a
+            # known-safe sample/fixture (e.g. test data), not a real credential.
+            if "pragma: allowlist secret" in line:
+                continue
             for name, rx, sev in compiled:
                 if rx.search(line):
                     findings.append(
