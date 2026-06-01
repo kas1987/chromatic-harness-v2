@@ -1,0 +1,2 @@
+{"command": "/go", "outcome": "ok", "run_id": "tel_696794a1", "ts": "2026-06-01T18:39:32.122908Z"}
+{"command": "/ship", "detail": "shipped cleanly", "duration_ms": 500, "mode": "execute", "outcome": "ok", "run_id": "tel_testrun1", "ts": "2026-06-01T18:39:32.151253Z"}

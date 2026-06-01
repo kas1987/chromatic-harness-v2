@@ -234,6 +234,12 @@ SUITES = [
             "test_repo_role_registry.py",
         ],
     ),
+    (
+        "adapter command telemetry (dnif)",
+        [
+            "test_adapter_telemetry.py",
+        ],
+    ),
 ]
 
 

@@ -1,0 +1,16 @@
+{
+  "by_command": {
+    "/go": 1
+  },
+  "by_outcome": {
+    "ok": 1
+  },
+  "generated_at": "2026-06-01T18:39:32.146056Z",
+  "last_record": {
+    "command": "/go",
+    "outcome": "ok",
+    "run_id": "tel_696794a1",
+    "ts": "2026-06-01T18:39:32.122908Z"
+  },
+  "total_invocations": 1
+}
