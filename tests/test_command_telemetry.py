@@ -95,6 +95,28 @@ def test_known_commands_reads_real_registry():
     assert "/go" in names and "/recover" in names
 
 
+def test_summarize_with_path_writes_beside_log_not_prod(tmp_path, monkeypatch):
+    """summarize(path=...) must write latest.json beside the log, not the prod path."""
+    m = _mod()
+    sentinel = tmp_path / "PROD_MUST_NOT_BE_WRITTEN" / "latest.json"
+    monkeypatch.setattr(m, "ARTIFACT_PATH", sentinel)
+
+    log = tmp_path / "tele" / "inv.jsonl"
+    m.log_invocation("/go", mutated=True, path=log)
+    m.summarize(log)
+
+    assert (log.parent / "latest.json").is_file()  # artifact beside the log
+    assert not sentinel.exists()  # production artifact untouched
+
+
+def test_summarize_without_path_uses_prod_path(tmp_path, monkeypatch):
+    m = _mod()
+    sentinel = tmp_path / "prod" / "latest.json"
+    monkeypatch.setattr(m, "ARTIFACT_PATH", sentinel)
+    m.summarize()  # no path -> prod artifact
+    assert sentinel.is_file()
+
+
 if __name__ == "__main__":
     import pytest
 
