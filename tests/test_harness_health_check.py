@@ -140,6 +140,15 @@ def test_optional_service_warns_do_not_make_status_yellow(monkeypatch, tmp_path)
     rd = tmp_path / "routing"
     rd.mkdir()
     (rd / "routes_20260601.jsonl").write_text('{"ok":1}\n', encoding="utf-8")
+    # Neutralise ambient-dependent integrity checks so this test isolates the
+    # optional-SERVICE aggregation it is about. In a fresh CI checkout
+    # check_active_queue (bd not installed) and check_last_go_artifact
+    # (no decision_log) legitimately warn — but they are not what this test
+    # asserts, and leaving them ambient made the test non-hermetic (green
+    # locally, yellow in CI).
+    _pass = mod.Check("x", "pass", "patched-pass", value=None)
+    for _fn in ("check_hooks", "check_skill_inventory", "check_last_go_artifact", "check_active_queue", "check_leases"):
+        monkeypatch.setattr(mod, _fn, lambda *a, _p=_pass, **k: _p)
     result = mod.run_all()
     optional_warns = [c for c in result["checks"] if c["name"] in mod.OPTIONAL_SERVICES and c["status"] == "warn"]
     assert len(optional_warns) > 0, "expected at least one optional-service warn"
