@@ -47,6 +47,7 @@ SUITES = [
         "issue->bead intake pipeline",
         [
             "test_audit_issue_intake.py",
+            "test_seed_issues.py",
         ],
     ),
 ]

@@ -133,7 +133,7 @@ def parse_issue(issue: dict) -> dict:
         "title": title,
         "ext_ref": f"gh-{issue['number']}",
         "objective": objective,
-        "scope": scope or "_(no explicit scope — see objective + eval requirements)_",
+        "scope": scope or "_(no explicit scope - see objective + eval requirements)_",
         "owner": owner,
         "slug": slug,
         "labels": [lbl.get("name") for lbl in issue.get("labels", [])],

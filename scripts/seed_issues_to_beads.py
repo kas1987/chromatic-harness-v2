@@ -58,11 +58,11 @@ EPIC_THEMES: dict[str, list[int]] = {
 }
 
 
-def _run(cmd: list[str], *, timeout: int = 60) -> tuple[int, str]:
+def _run(cmd: list[str], *, timeout: int = 60, stdin: str | None = None) -> tuple[int, str]:
     if cmd:
         cmd = [_resolve_exe(cmd[0]), *cmd[1:]]
     try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout)
+        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout, input=stdin)
         return r.returncode, (r.stdout or "") + (r.stderr or "")
     except Exception as exc:
         return 1, str(exc)
@@ -128,9 +128,9 @@ def build_bead_description(rec: dict, epic_title: str) -> str:
         f"{rec['objective']}\n\n"
         f"## Scope\n{rec['scope']}\n\n"
         f"## Eval requirements (definition of done)\n{rec['acceptance']}\n\n"
-        f"## Routing\nC-level hint: {rec['c_level']} · owner: {rec['owner'] or 'unassigned'}\n\n"
-        f"## Traceability\nEpic: {epic_title} · GitHub: {rec['ext_ref']}"
-        + (f" · slug: {rec['slug']}" if rec.get("slug") else "")
+        f"## Routing\nC-level hint: {rec['c_level']} | owner: {rec['owner'] or 'unassigned'}\n\n"
+        f"## Traceability\nEpic: {epic_title} | GitHub: {rec['ext_ref']}"
+        + (f" | slug: {rec['slug']}" if rec.get("slug") else "")
     )
 
 
@@ -144,7 +144,7 @@ def ensure_epic(title: str, issue_nums: list[int], state: dict[str, str], *, app
         print(f"  epic exists: {existing} ({title})")
         return existing
     desc = (
-        f"E2E epic — packs GitHub issues {', '.join(f'#{n}' for n in issue_nums)}.\n\n"
+        f"E2E epic - packs GitHub issues {', '.join(f'#{n}' for n in issue_nums)}.\n\n"
         f"Stays open until all child beads close, then receives a summarized E2E review "
         f"(per-child eval rollup + combined artifacts + single ship/no-ship decision). "
         f"See docs/governance/ISSUE_TO_BEAD_POLICY.md §5."
@@ -152,9 +152,13 @@ def ensure_epic(title: str, issue_nums: list[int], state: dict[str, str], *, app
     if not apply:
         print(f"  [dry-run] would create EPIC: {title}")
         return f"<dry-run-epic:{title}>"
+    # Pass the (multi-line) description via stdin: on Windows `bd` is a .cmd
+    # shim and cmd.exe mangles multi-line/special-char args, silently truncating
+    # the description to its first line. --body-file - reads it from stdin intact.
     code, out = _run(
-        ["bd", "create", title, "--type", "epic", "--priority", "P2", "--external-ref", ext_ref, "--description", desc],
+        ["bd", "create", title, "--type", "epic", "--priority", "P2", "--external-ref", ext_ref, "--body-file", "-"],
         timeout=60,
+        stdin=desc,
     )
     if code != 0:
         print(f"  ERROR creating epic {title}: {out}", file=sys.stderr)
@@ -195,12 +199,12 @@ def seed_child(rec: dict, epic_id: str | None, epic_title: str, state: dict[str,
         priority,
         "--external-ref",
         ext_ref,
-        "--description",
-        desc,
+        "--body-file",
+        "-",  # read multi-line description from stdin (Windows .cmd arg-mangle fix)
     ]
     if epic_id and not epic_id.startswith("<dry-run"):
         cmd += ["--parent", epic_id]
-    code, out = _run(cmd, timeout=60)
+    code, out = _run(cmd, timeout=60, stdin=desc)
     if code != 0:
         result["status"] = "error"
         result["error"] = out[-300:]
