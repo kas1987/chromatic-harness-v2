@@ -27,7 +27,7 @@ route_tasks:
       - tests/test_provider_matrix.py
   - route: ROUTE-004
     harness_bead: chromatic-harness-v2-15x.4
-    harness_status_expected: open
+    harness_status_expected: closed
   - route: ROUTE-005
     harness_bead: chromatic-harness-v2-15x.5
     harness_status_expected: closed
