@@ -165,7 +165,7 @@ def cmd_go_verify() -> int:
         "verifier": {"decision": "approve" if verifier_approved else "request_changes"},
         "git_pipeline": pipeline.to_dict(),
         "verdict": "ok" if record.workflow_decision != WorkflowDecision.HALT else "needs_review",
-        "next": f"python scripts/workflow_git.py ship --from-log --verifier approve --run-tests"
+        "next": "python scripts/workflow_git.py ship --from-log --verifier approve --run-tests"
         if pipeline.commit
         else f"bd show {bead_id}",
     }
