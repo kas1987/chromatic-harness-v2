@@ -198,6 +198,24 @@ SUITES = [
             "test_stale_lease_recovery.py",
         ],
     ),
+    (
+        "agent heartbeat and renewal (P1-CC-006)",
+        [
+            "test_lease_heartbeat.py",
+        ],
+    ),
+    (
+        "deadlock detection (P1-CC-008)",
+        [
+            "test_deadlock_detector.py",
+        ],
+    ),
+    (
+        "autonomous collision incidents (P1-CC-009)",
+        [
+            "test_collision_incidents.py",
+        ],
+    ),
 ]
 
 
