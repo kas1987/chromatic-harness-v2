@@ -222,6 +222,12 @@ SUITES = [
             "test_repo_role_registry.py",
         ],
     ),
+    (
+        "observability CLI scripts (PDR 0.1.0 Phase 2b)",
+        [
+            "test_observability_scripts.py",
+        ],
+    ),
 ]
 
 
