@@ -116,6 +116,36 @@ def test_summarize_fail_open_on_bad_path(tmp_path):
     assert out["status"] in {"ok", "error"}
 
 
+def test_summarize_with_root_writes_under_root_not_prod(tmp_path, monkeypatch):
+    """summarize(root=...) must write the artifact under root, never the prod path."""
+    m = _mod()
+    # Redirect the module's production artifact to a sentinel that must NOT be
+    # written when a test root is supplied.
+    sentinel = tmp_path / "PROD_MUST_NOT_BE_WRITTEN" / "latest.json"
+    monkeypatch.setattr(m, "ARTIFACT_DIR", sentinel.parent)
+    monkeypatch.setattr(m, "ARTIFACT_PATH", sentinel)
+
+    root = tmp_path / "repo"
+    (root / "scripts").mkdir(parents=True)
+    reg_path = root / "reg.yaml"
+    reg_path.write_text("version: 0.1.0\ncommands: []\n", encoding="utf-8")
+
+    m.summarize(registry_path=reg_path, root=root)
+
+    assert (root / "07_LOGS_AND_AUDIT" / "command_drift" / "latest.json").is_file()
+    assert not sentinel.exists()  # production artifact untouched during the test
+
+
+def test_summarize_without_root_uses_prod_path(tmp_path, monkeypatch):
+    """summarize() with no root falls back to the (patched) prod artifact path."""
+    m = _mod()
+    sentinel = tmp_path / "prod" / "latest.json"
+    monkeypatch.setattr(m, "ARTIFACT_DIR", sentinel.parent)
+    monkeypatch.setattr(m, "ARTIFACT_PATH", sentinel)
+    m.summarize()  # no root -> prod path
+    assert sentinel.is_file()
+
+
 if __name__ == "__main__":
     import pytest
 
