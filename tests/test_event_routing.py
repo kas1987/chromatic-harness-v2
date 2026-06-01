@@ -24,7 +24,9 @@ def _seed(root: Path, *events: dict) -> None:
 def _route(root: Path, event_id: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(ROUTER), "--repo-root", str(root), "--event-id", event_id],
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
 
 
@@ -34,8 +36,14 @@ def _read(root: Path, rel: str) -> str:
 
 
 def _ev(eid, **over) -> dict:
-    e = {"event_id": eid, "severity": "info", "category": "manual_note",
-         "status": "open", "source": {"surface": "ci"}, "raw_excerpt": "x"}
+    e = {
+        "event_id": eid,
+        "severity": "info",
+        "category": "manual_note",
+        "status": "open",
+        "source": {"surface": "ci"},
+        "raw_excerpt": "x",
+    }
     e.update(over)
     return e
 
@@ -48,8 +56,7 @@ def test_critical_event_appends_to_incident_log(tmp_path):
 
 
 def test_file_collision_event_appends_to_register(tmp_path):
-    _seed(tmp_path, _ev("evt-coll", severity="high", category="file_collision",
-                        files_touched=["src/a.py"]))
+    _seed(tmp_path, _ev("evt-coll", severity="high", category="file_collision", files_touched=["src/a.py"]))
     assert _route(tmp_path, "evt-coll").returncode == 0
     reg = _read(tmp_path, "00_META/observability/COLLISION_REGISTER.md")
     assert "evt-coll" in reg and "src/a.py" in reg
@@ -70,8 +77,7 @@ def test_resolved_error_is_not_queued(tmp_path):
 
 
 def test_downstream_records_link_source_event_id(tmp_path):
-    _seed(tmp_path, _ev("evt-link", severity="critical", category="file_collision",
-                        files_touched=["x"]))
+    _seed(tmp_path, _ev("evt-link", severity="critical", category="file_collision", files_touched=["x"]))
     _route(tmp_path, "evt-link")
     assert "evt-link" in _read(tmp_path, "00_META/observability/INCIDENT_LOG.md")
     assert "evt-link" in _read(tmp_path, "00_META/observability/COLLISION_REGISTER.md")
@@ -82,8 +88,7 @@ def test_malformed_log_line_does_not_crash_routing(tmp_path):
     log = tmp_path / "00_META" / "observability" / "ERROR_LOG.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
     (tmp_path / "00_META" / "queues").mkdir(parents=True, exist_ok=True)
-    log.write_text('{ broken json\n' + json.dumps(_ev("evt-ok", severity="critical")) + "\n",
-                   encoding="utf-8")
+    log.write_text("{ broken json\n" + json.dumps(_ev("evt-ok", severity="critical")) + "\n", encoding="utf-8")
     r = _route(tmp_path, "evt-ok")
     assert r.returncode == 0, r.stderr
     assert "evt-ok" in _read(tmp_path, "00_META/observability/INCIDENT_LOG.md")
