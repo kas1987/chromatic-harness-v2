@@ -1,6 +1,7 @@
 {
   "epic-ci-and-quality-hardening": "chromatic-harness-v2-nzn0",
   "epic-governance-and-review-layer": "chromatic-harness-v2-skqu",
+  "epic-queue-infrastructure": "chromatic-harness-v2-ls80",
   "epic-release-and-ops-readiness": "chromatic-harness-v2-v37g",
   "gh-51": "chromatic-harness-v2-zeky",
   "gh-57": "chromatic-harness-v2-j12l",

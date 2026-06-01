@@ -122,6 +122,30 @@ def bead_exists_for_ref(ext_ref: str, state: dict[str, str]) -> str | None:
 
 # ── Bead description from a staged record ─────────────────────────────────────
 
+# Common non-ASCII glyphs that sneak into descriptions -> safe ASCII. Dolt's
+# column charset rejects them with Error 1105, silently failing the write.
+_ASCII_MAP = {
+    "—": "-",
+    "–": "-",  # em/en dash
+    "·": "|",
+    "•": "-",  # middle dot, bullet
+    "§": "section ",  # section sign §
+    "→": "->",
+    "↳": "->",  # arrows
+    "“": '"',
+    "”": '"',
+    "‘": "'",
+    "’": "'",  # smart quotes
+}
+
+
+def ascii_safe(text: str) -> str:
+    """Coerce a string to ASCII so it can be stored in the bead DB. Maps known
+    glyphs, then drops anything still non-ASCII. Idempotent."""
+    for bad, good in _ASCII_MAP.items():
+        text = text.replace(bad, good)
+    return text.encode("ascii", "ignore").decode("ascii")
+
 
 def build_bead_description(rec: dict, epic_title: str) -> str:
     return (
@@ -147,7 +171,7 @@ def ensure_epic(title: str, issue_nums: list[int], state: dict[str, str], *, app
         f"E2E epic - packs GitHub issues {', '.join(f'#{n}' for n in issue_nums)}.\n\n"
         f"Stays open until all child beads close, then receives a summarized E2E review "
         f"(per-child eval rollup + combined artifacts + single ship/no-ship decision). "
-        f"See docs/governance/ISSUE_TO_BEAD_POLICY.md §5."
+        f"See docs/governance/ISSUE_TO_BEAD_POLICY.md section 5."
     )
     if not apply:
         print(f"  [dry-run] would create EPIC: {title}")
@@ -158,7 +182,7 @@ def ensure_epic(title: str, issue_nums: list[int], state: dict[str, str], *, app
     code, out = _run(
         ["bd", "create", title, "--type", "epic", "--priority", "P2", "--external-ref", ext_ref, "--body-file", "-"],
         timeout=60,
-        stdin=desc,
+        stdin=ascii_safe(desc),
     )
     if code != 0:
         print(f"  ERROR creating epic {title}: {out}", file=sys.stderr)
@@ -204,7 +228,7 @@ def seed_child(rec: dict, epic_id: str | None, epic_title: str, state: dict[str,
     ]
     if epic_id and not epic_id.startswith("<dry-run"):
         cmd += ["--parent", epic_id]
-    code, out = _run(cmd, timeout=60, stdin=desc)
+    code, out = _run(cmd, timeout=60, stdin=ascii_safe(desc))
     if code != 0:
         result["status"] = "error"
         result["error"] = out[-300:]

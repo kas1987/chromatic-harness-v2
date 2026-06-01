@@ -56,12 +56,21 @@ def test_description_carries_eval_requirements():
     assert "C-level hint: C2" in desc
 
 
+def test_ascii_safe_coerces_known_glyphs():
+    seed = _load("seed_issues_to_beads")
+    dirty = "epic — packs · items § ref → done “quote”"
+    clean = seed.ascii_safe(dirty)
+    clean.encode("ascii")  # raises on regression
+    assert "—" not in clean and "·" not in clean and "§" not in clean
+    assert seed.ascii_safe(clean) == clean  # idempotent
+
+
 def test_seeder_passes_description_via_stdin_not_arg():
     """The create path must use --body-file - + stdin, never --description <arg>
     (which truncates multi-line content on Windows bd.cmd)."""
     src = (REPO / "scripts" / "seed_issues_to_beads.py").read_text(encoding="utf-8")
     assert "--body-file" in src
-    assert "stdin=desc" in src
+    assert "stdin=ascii_safe(desc)" in src  # piped via stdin, coerced to ASCII
     # No raw --description arg in the create/update path.
     assert '"--description"' not in src
 
