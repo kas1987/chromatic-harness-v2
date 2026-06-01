@@ -94,6 +94,12 @@ SUITES = [
             "test_agent_scoring.py",
         ],
     ),
+    (
+        "governance review orchestrator",
+        [
+            "test_governance_review.py",
+        ],
+    ),
 ]
 
 
