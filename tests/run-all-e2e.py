@@ -100,6 +100,12 @@ SUITES = [
             "test_governance_review.py",
         ],
     ),
+    (
+        "harness health cockpit (#79)",
+        [
+            "test_harness_health_check.py",
+        ],
+    ),
 ]
 
 
