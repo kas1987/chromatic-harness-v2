@@ -270,6 +270,12 @@ SUITES = [
             "test_event_schema_validation.py",
         ],
     ),
+    (
+        "event routing to incident/collision/queue (OBS-004)",
+        [
+            "test_event_routing.py",
+        ],
+    ),
 ]
 
 
