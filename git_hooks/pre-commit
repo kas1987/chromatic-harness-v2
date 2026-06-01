@@ -2,4 +2,7 @@
 set -euo pipefail
 python scripts/validate_event_schema.py --log 00_META/observability/ERROR_LOG.jsonl
 python scripts/detect_file_collisions.py --active-writers .chromatic/active_writers.json
-python scripts/scan_for_secrets.py
+# Secret scan: only staged changes, so pre-existing benign matches elsewhere
+# in the tree do not block unrelated commits. Add '# pragma: allowlist secret'
+# to a line to suppress a confirmed false positive.
+python scripts/scan_for_secrets.py --staged
