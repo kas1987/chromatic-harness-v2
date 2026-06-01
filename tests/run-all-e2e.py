@@ -156,6 +156,12 @@ SUITES = [
             "test_rudalo_migration_audit.py",
         ],
     ),
+    (
+        "lease-based collision control (P0-CC-001)",
+        [
+            "test_lease_manager.py",
+        ],
+    ),
 ]
 
 

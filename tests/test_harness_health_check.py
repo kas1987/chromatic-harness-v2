@@ -112,8 +112,8 @@ def test_run_all_shape_and_exit_semantics(monkeypatch):
     result = mod.run_all()
     assert set(result) >= {"generated_at_utc", "overall_status", "readiness_score", "counts", "checks"}
     assert result["overall_status"] in {"green", "yellow", "red"}
-    # one check per service + 5 integrity checks
-    assert len(result["checks"]) == len(mod.SERVICES) + 5
+    # one check per service + 6 integrity checks (incl. lease status)
+    assert len(result["checks"]) == len(mod.SERVICES) + 6
 
 
 def test_to_markdown_renders_table(monkeypatch):
