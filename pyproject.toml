@@ -3,9 +3,14 @@ line-length = 120
 exclude = [
     ".beads",
     ".agents",
+    ".claude",
+    ".worktrees",
     "02_RUNTIME/runtime-engines",
     ".tmp_bd_mini.py",
     ".tmp_bd_payload.json",
+    ".tmp_analyze_bd.py",
+    ".tmp_bd_analyze.py",
+    "09_DEPLOYMENT/claude-relay",
 ]
 
 [tool.ruff.lint]
