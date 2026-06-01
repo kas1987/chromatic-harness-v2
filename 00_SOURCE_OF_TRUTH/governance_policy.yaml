@@ -1,0 +1,161 @@
+# Governance Policy — Chromatic Harness v2
+# Evaluated by: scripts/policy_engine.py
+# Schema version: 1.0
+# Updated: 2026-06-01
+
+policy_version: "1.0"
+description: >
+  Declarative allow/deny/ask rules for automated governance.
+  Rules are evaluated in order; first match wins.
+  Tiers: T1 (lowest risk) → T4 (highest risk, requires human approval).
+
+# Rule schema per entry:
+#   id:         unique rule identifier
+#   action:     glob pattern for action (read, write, delete, execute, push, merge)
+#   resource:   glob pattern for file/resource path
+#   tier:       T1 | T2 | T3 | T4 (or "*" for any)
+#   effect:     allow | deny | ask
+#   conditions: optional dict of extra conditions (risk_level, author_role, etc.)
+#   rationale:  human-readable reason
+
+rules:
+
+  # ── T4 hardcoded denials (security perimeter) ──────────────────────────────
+
+  - id: deny-secrets-always
+    action: "*"
+    resource: "*.pem,*.key,*.env,secrets/**,credentials/**"
+    tier: "*"
+    effect: deny
+    rationale: "Secret/credential files must never be accessed or mutated by automation."
+
+  - id: deny-force-push
+    action: "push_force"
+    resource: "*"
+    tier: "*"
+    effect: deny
+    rationale: "Force push is categorically forbidden; use PR workflow."
+
+  - id: deny-hard-reset
+    action: "git_reset_hard"
+    resource: "*"
+    tier: "*"
+    effect: deny
+    rationale: "Hard reset destroys history. Require explicit human confirmation."
+
+  # ── T4 ask rules (critical paths) ──────────────────────────────────────────
+
+  - id: ask-production-deploy
+    action: "deploy,release"
+    resource: "production/**,prod/**"
+    tier: "T4"
+    effect: ask
+    rationale: "Production deployments require human gate."
+
+  - id: ask-main-push
+    action: "push"
+    resource: "refs/heads/main,refs/heads/master"
+    tier: "T4"
+    effect: ask
+    rationale: "Direct push to main/master requires approval; use PR."
+
+  # ── T3 ask rules (moderate-risk paths) ─────────────────────────────────────
+
+  - id: ask-destructive-script
+    action: "delete,truncate"
+    resource: "**"
+    tier: "T3"
+    effect: ask
+    conditions:
+      risk_level: ["high", "critical"]
+    rationale: "Destructive mutations at T3+ require confirmation."
+
+  - id: ask-db-migration
+    action: "write,execute"
+    resource: "migrations/**,*.sql"
+    tier: "T3"
+    effect: ask
+    rationale: "Database migrations have irreversible implications."
+
+  - id: allow-t3-docs
+    action: "write"
+    resource: "docs/**,*.md"
+    tier: "T3"
+    effect: allow
+    rationale: "Documentation writes are always safe at T3."
+
+  - id: allow-t3-agents
+    action: "write,read"
+    resource: ".agents/**,.beads/**"
+    tier: "T3"
+    effect: allow
+    rationale: "Agent state is low-risk and managed by the harness."
+
+  # ── T2 allow rules (local wiring, IDE config) ──────────────────────────────
+
+  - id: allow-t2-config
+    action: "write"
+    resource: ".claude/**,.vscode/**,.cursor/**"
+    tier: "T2"
+    effect: allow
+    rationale: "IDE/agent config edits are logged but always permitted."
+
+  - id: allow-t2-scripts
+    action: "write,execute"
+    resource: "scripts/**"
+    tier: "T2"
+    effect: allow
+    rationale: "Utility scripts are T2 always-allow."
+
+  - id: allow-t2-tests
+    action: "write,execute"
+    resource: "tests/**,test_*,*_test.py"
+    tier: "T2"
+    effect: allow
+    rationale: "Test files are always safe to write/execute."
+
+  # ── T1 allow rules (beads, telemetry, agent ops — T1 baseline) ─────────────
+
+  - id: allow-t1-beads
+    action: "*"
+    resource: ".beads/**"
+    tier: "T1"
+    effect: allow
+    rationale: "Beads issue tracker writes are T1 always-allow."
+
+  - id: allow-t1-logs
+    action: "write,append"
+    resource: "07_LOGS_AND_AUDIT/**,05_REPORTS/**"
+    tier: "T1"
+    effect: allow
+    rationale: "Audit and report writes are always allowed."
+
+  - id: allow-t1-runtime-read
+    action: "read"
+    resource: "**"
+    tier: "T1"
+    effect: allow
+    rationale: "All reads are T1 safe."
+
+  # ── Catch-all fallback ─────────────────────────────────────────────────────
+
+  - id: default-allow-t1-t2
+    action: "write"
+    resource: "**"
+    tier: "T1,T2"
+    effect: allow
+    rationale: "Default: T1/T2 writes allowed unless matched by deny above."
+
+  - id: default-ask-t3
+    action: "write"
+    resource: "**"
+    tier: "T3"
+    effect: ask
+    rationale: "Default: T3 writes ask unless matched by allow above."
+
+  - id: default-deny-t4
+    action: "write,delete,execute"
+    resource: "**"
+    tier: "T4"
+    effect: deny
+    rationale: "Default: T4 mutations denied; require explicit override."
