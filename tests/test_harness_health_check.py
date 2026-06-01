@@ -116,6 +116,55 @@ def test_run_all_shape_and_exit_semantics(monkeypatch):
     assert len(result["checks"]) == len(mod.SERVICES) + 6
 
 
+# ── OPTIONAL_SERVICES: warns must not turn overall_status yellow ──────────────
+
+
+def test_optional_services_set_contains_expected(monkeypatch):
+    """rudalo, neo4j, chromadb, comfyui are optional; ollama is not."""
+    mod = _load()
+    assert {"rudalo", "neo4j", "chromadb", "comfyui"} <= mod.OPTIONAL_SERVICES
+    assert "ollama" not in mod.OPTIONAL_SERVICES
+
+
+def test_optional_service_warns_do_not_make_status_yellow(monkeypatch, tmp_path):
+    """All four optional services down → overall_status stays green."""
+    mod = _load()
+
+    # Ollama (non-optional) is up; all optional services are down.
+    def _probe(host, port, timeout=0.6):
+        return port == 11434  # only Ollama port is reachable
+
+    monkeypatch.setattr(mod, "probe_tcp", _probe)
+    # Patch integrity checks to pass
+    monkeypatch.setattr(mod, "ROUTING_DIR", tmp_path / "routing")
+    rd = tmp_path / "routing"
+    rd.mkdir()
+    (rd / "routes_20260601.jsonl").write_text('{"ok":1}\n', encoding="utf-8")
+    result = mod.run_all()
+    optional_warns = [c for c in result["checks"] if c["name"] in mod.OPTIONAL_SERVICES and c["status"] == "warn"]
+    assert len(optional_warns) > 0, "expected at least one optional-service warn"
+    assert result["overall_status"] == "green", (
+        f"optional-service warns must not turn status yellow; got {result['overall_status']}"
+    )
+
+
+def test_non_optional_service_warn_turns_status_yellow(monkeypatch, tmp_path):
+    """Ollama (non-optional) down → overall_status becomes yellow."""
+    mod = _load()
+    # All services are down (no TCP connections succeed at all)
+    monkeypatch.setattr(mod, "probe_tcp", lambda h, p, timeout=0.6: False)
+    monkeypatch.setattr(mod, "ROUTING_DIR", tmp_path / "routing")
+    rd = tmp_path / "routing"
+    rd.mkdir()
+    (rd / "routes_20260601.jsonl").write_text('{"ok":1}\n', encoding="utf-8")
+    result = mod.run_all()
+    ollama_check = next(c for c in result["checks"] if c["name"] == "ollama")
+    assert ollama_check["status"] == "warn"
+    assert result["overall_status"] == "yellow", (
+        f"non-optional ollama warn must make status yellow; got {result['overall_status']}"
+    )
+
+
 def test_to_markdown_renders_table(monkeypatch):
     mod = _load()
     monkeypatch.setattr(mod, "probe_tcp", lambda h, p, timeout=0.6: True)

@@ -57,6 +57,11 @@ SERVICES: list[tuple[str, str, str]] = [
     ("comfyui", "COMFYUI_URL", "127.0.0.1:8188"),
 ]
 
+# Optional services: warn when unreachable, but do NOT contribute to the
+# overall_status turning yellow. These are supplementary integrations that
+# may not be running in a typical dev session.
+OPTIONAL_SERVICES: frozenset[str] = frozenset({"rudalo", "neo4j", "chromadb", "comfyui"})
+
 # Integrity checks are authoritative — a failure means the harness cannot be
 # trusted, so the cockpit exits non-zero. Service probes only ever warn.
 HARD_FAIL_CHECKS = {"hooks", "routing_log", "skill_inventory"}
@@ -287,9 +292,14 @@ def run_all(service_timeout: float = 0.6) -> dict:
     for c in checks:
         counts[c.status] = counts.get(c.status, 0) + 1
 
+    # For the overall traffic-light, optional-service warns are informational
+    # only (shown in the report but excluded from the green/yellow/red decision).
+    blocking_warns = sum(1 for c in checks if c.status == "warn" and c.name not in OPTIONAL_SERVICES)
+    blocking_fails = sum(1 for c in checks if c.status == "fail")
+
     hard_fail = any(c.status == "fail" and c.name in HARD_FAIL_CHECKS for c in checks)
-    overall = "red" if hard_fail else ("yellow" if counts["warn"] or counts["fail"] else "green")
-    score = max(0, 100 - counts["fail"] * 20 - counts["warn"] * 6)
+    overall = "red" if hard_fail else ("yellow" if blocking_warns or blocking_fails else "green")
+    score = max(0, 100 - blocking_fails * 20 - blocking_warns * 6)
 
     return {
         "generated_at_utc": _ts(),
