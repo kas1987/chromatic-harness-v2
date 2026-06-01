@@ -180,6 +180,12 @@ SUITES = [
             "test_mutation_manifest.py",
         ],
     ),
+    (
+        "queue double-claim protection (P0-CC-003)",
+        [
+            "test_claim_guard.py",
+        ],
+    ),
 ]
 
 
