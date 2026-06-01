@@ -187,6 +187,12 @@ SUITES = [
         ],
     ),
     (
+        "command telemetry logging (dnif)",
+        [
+            "test_command_telemetry.py",
+        ],
+    ),
+    (
         "command drift detection (ulos)",
         [
             "test_command_drift_gate.py",
