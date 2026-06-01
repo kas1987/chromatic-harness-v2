@@ -145,7 +145,7 @@ today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 print()
 print(DIV)
-print(f" CHROMATIC HARNESS — KPI CONSOLE")
+print(" CHROMATIC HARNESS — KPI CONSOLE")
 print(f" {today}")
 print(DIV)
 

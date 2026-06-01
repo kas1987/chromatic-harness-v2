@@ -1,0 +1,122 @@
+{
+  "epic_id": "chromatic-harness-v2-nzn0",
+  "epic_title": "CI & Quality Hardening",
+  "timestamp": "2026-06-01T01:18:59.709307+00:00",
+  "children": [
+    {
+      "bead_id": "chromatic-harness-v2-j12l",
+      "ext_ref": "gh-57",
+      "title": "Security, secrets, and dependency scanning gates",
+      "status": "open",
+      "eval_items": [
+        {
+          "checked": false,
+          "text": "Detect common API keys, tokens, passwords, and secrets."
+        },
+        {
+          "checked": false,
+          "text": "Dependency audit runs automatically."
+        },
+        {
+          "checked": false,
+          "text": "High severity findings fail the gate."
+        },
+        {
+          "checked": false,
+          "text": "Scan results stored as artifacts."
+        },
+        {
+          "checked": false,
+          "text": "Security summary included in closeout report."
+        }
+      ],
+      "eval_total": 5,
+      "eval_checked": 0
+    },
+    {
+      "bead_id": "chromatic-harness-v2-a8fu",
+      "ext_ref": "gh-58",
+      "title": "Architecture, documentation, and coverage enforcement",
+      "status": "open",
+      "eval_items": [
+        {
+          "checked": false,
+          "text": "Coverage threshold enforcement."
+        },
+        {
+          "checked": false,
+          "text": "Fail when coverage decreases beyond configured tolerance."
+        },
+        {
+          "checked": false,
+          "text": "Detect API/interface changes without docs updates."
+        },
+        {
+          "checked": false,
+          "text": "Repository structure compliance audit executes."
+        },
+        {
+          "checked": false,
+          "text": "Architecture drift report generated."
+        }
+      ],
+      "eval_total": 5,
+      "eval_checked": 0
+    },
+    {
+      "bead_id": "chromatic-harness-v2-0f37",
+      "ext_ref": "gh-60",
+      "title": "PR size and change-risk analysis gate",
+      "status": "open",
+      "eval_items": [
+        {
+          "checked": false,
+          "text": "Changed-file and line-count metrics are captured."
+        },
+        {
+          "checked": false,
+          "text": "Protected path touches are detected."
+        },
+        {
+          "checked": false,
+          "text": "Configurable thresholds exist for warn/fail behavior."
+        },
+        {
+          "checked": false,
+          "text": "Large PR warning appears before push/PR creation."
+        },
+        {
+          "checked": false,
+          "text": "Risk result is saved to audit output."
+        }
+      ],
+      "eval_total": 5,
+      "eval_checked": 0
+    }
+  ],
+  "child_count": 3,
+  "ship": false,
+  "decision": "NO-SHIP",
+  "blockers": [
+    {
+      "ext_ref": "gh-57",
+      "bead_id": "chromatic-harness-v2-j12l",
+      "status": "open"
+    },
+    {
+      "ext_ref": "gh-58",
+      "bead_id": "chromatic-harness-v2-a8fu",
+      "status": "open"
+    },
+    {
+      "ext_ref": "gh-60",
+      "bead_id": "chromatic-harness-v2-0f37",
+      "status": "open"
+    }
+  ],
+  "eval_summary": {
+    "total_items": 15,
+    "checked_items": 0,
+    "percent": 0.0
+  }
+}

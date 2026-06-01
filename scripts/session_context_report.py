@@ -211,8 +211,8 @@ def render_text(report: dict) -> str:
                 f"est={row['estimated_tokens']} ok={row['ok']}"
             )
     lines.append("")
-    lines.append(f"Log append: python scripts/session_context_report.py --log")
-    lines.append(f"JSON:       python scripts/session_context_report.py --json")
+    lines.append("Log append: python scripts/session_context_report.py --log")
+    lines.append("JSON:       python scripts/session_context_report.py --json")
     lines.append("=" * 60)
     return "\n".join(lines)
 

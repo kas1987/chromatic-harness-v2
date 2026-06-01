@@ -1,0 +1,56 @@
+{
+  "epic_id": "chromatic-harness-v2-ls80",
+  "epic_title": "Queue Infrastructure",
+  "timestamp": "2026-06-01T01:21:46.002794+00:00",
+  "children": [
+    {
+      "bead_id": "chromatic-harness-v2-zeky",
+      "ext_ref": "gh-51",
+      "title": "Mirror agent queue to GitHub issues and mutations to PRs (Phase 3)",
+      "status": "open",
+      "eval_items": [
+        {
+          "checked": false,
+          "text": "`python scripts/sync_queue_to_github.py --execute` creates one GH issue per open queue bead and skips existing ones (no duplicates on re-run)."
+        },
+        {
+          "checked": false,
+          "text": "When a bead is claimed or closed, a corresponding GitHub PR or issue comment is created/updated with the new state within one sync cycle."
+        },
+        {
+          "checked": false,
+          "text": "Closing a GH issue tagged `agent-queue` triggers bead done marking (or logs a pending mutation for the next harvest cycle)."
+        },
+        {
+          "checked": false,
+          "text": "Running `sync_queue_to_github.py --execute --close-done` closes GH issues whose beads are marked done, without touching open beads."
+        },
+        {
+          "checked": false,
+          "text": "Sync history is appended to `07_LOGS_AND_AUDIT/queue_sync/history.jsonl` with timestamp, action, bead_id, and issue number on every --execute run."
+        },
+        {
+          "checked": false,
+          "text": "intake_issues.py accepts issue #51 as valid (Acceptance checks section present) and seed_issues_to_beads.py places it in the Queue Infrastructure epic."
+        }
+      ],
+      "eval_total": 6,
+      "eval_checked": 0
+    }
+  ],
+  "child_count": 1,
+  "ship": false,
+  "decision": "NO-SHIP",
+  "blockers": [
+    {
+      "ext_ref": "gh-51",
+      "bead_id": "chromatic-harness-v2-zeky",
+      "status": "open"
+    }
+  ],
+  "eval_summary": {
+    "total_items": 6,
+    "checked_items": 0,
+    "percent": 0.0
+  }
+}

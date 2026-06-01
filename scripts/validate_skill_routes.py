@@ -224,13 +224,13 @@ def main():
             if skill_md.exists():
                 total_lines += len(skill_md.read_text(encoding="utf-8").split("\n"))
 
-        print(f"Skill validation report")
+        print("Skill validation report")
         print(f"  Skills directory: {skills_dir}")
         print(f"  Installed skills: {len(installed_skills)}")
         print(f"  Lines scanned: {total_lines}")
 
         if passed:
-            print(f"\nResult: PASS - All skill references resolve")
+            print("\nResult: PASS - All skill references resolve")
         else:
             print(f"\nResult: FAIL - {len(broken_refs)} dead-end reference(s) found\n")
             for file_path, line_num, ref in sorted(broken_refs):

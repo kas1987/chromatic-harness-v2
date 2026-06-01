@@ -164,7 +164,7 @@ def generate_dashboard(*, dry_run: bool = False) -> str:
     kpis = sessions_info[0].get("kpis", {}) if sessions_info else {}
 
     # Build session labels
-    labels = [f'"Baseline (S1)"'] + [f'"S{i}"' for i in range(2, n + 1)]
+    labels = ['"Baseline (S1)"'] + [f'"S{i}"' for i in range(2, n + 1)]
     label_str = ", ".join(labels)
 
     # Coverage pct series — read from scorecard, fall back to 33%

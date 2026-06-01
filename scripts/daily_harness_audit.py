@@ -97,6 +97,44 @@ def severity_rank(sev: str) -> int:
     return {"P0": 0, "P1": 1, "P2": 2, "P3": 3}.get(sev, 9)
 
 
+def _issue_intake_step(root: Path) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    """Run Stage 1 issue intake (read-only) and report unseeded valid issues.
+
+    Returns (command_result, finding). The finding is a P3 drift signal when
+    valid issues are staged but their gh-N ext-ref is not yet in the seed ledger,
+    nudging a human to run the gated Stage 2 seeder. Never writes beads.
+    """
+    script = root / "scripts" / "intake_issues.py"
+    if not script.exists():
+        return None, None
+    result = run_cmd(root, ["python", str(script)], timeout=90)
+    finding = None
+    try:
+        staged_path = root / "07_LOGS_AND_AUDIT" / "issue_intake" / "latest.json"
+        ledger_path = root / "07_LOGS_AND_AUDIT" / "seed_state" / "issue_to_bead.json"
+        records = []
+        if staged_path.exists():
+            records = json.loads(staged_path.read_text(encoding="utf-8")).get("records", [])
+        ledger = {}
+        if ledger_path.exists():
+            ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+        unseeded = [r for r in records if r.get("valid") and r.get("ext_ref") and r["ext_ref"] not in ledger]
+        if unseeded:
+            finding = {
+                "severity": "P3",
+                "code": "issues_awaiting_seeding",
+                "message": (
+                    f"{len(unseeded)} valid issue(s) staged but not seeded: "
+                    f"{', '.join(r['ext_ref'] for r in unseeded)}. "
+                    "Run: python scripts/seed_issues_to_beads.py --apply"
+                ),
+            }
+    except Exception:
+        # Intake is advisory; a parse failure must never break the audit.
+        pass
+    return result, finding
+
+
 def audit(
     root: Path,
     strict: bool = False,
@@ -123,9 +161,7 @@ def audit(
 
     for rel in CORE_SCRIPTS:
         if not (root / rel).exists():
-            findings.append(
-                {"severity": "P1", "code": "missing_core_script", "file": rel}
-            )
+            findings.append({"severity": "P1", "code": "missing_core_script", "file": rel})
 
     command_results: list[dict[str, Any]] = []
     for cmd in OPTIONAL_COMMANDS:
@@ -146,9 +182,7 @@ def audit(
                         "severity": "P1",
                         "code": "claude_harness_not_production_ready",
                         "file": script,
-                        "message": (result.get("stderr") or result.get("stdout") or "")[
-                            :400
-                        ],
+                        "message": (result.get("stderr") or result.get("stdout") or "")[:400],
                     }
                 )
             elif result["stdout"]:
@@ -164,6 +198,15 @@ def audit(
                                 "file": script,
                             }
                         )
+
+    # Stage 1 issue intake (READ-ONLY): refresh the staged issue snapshot and
+    # emit a drift finding when valid issues are staged but not yet seeded into
+    # beads. Seeding itself stays a gated, manual Stage 2 action (--apply).
+    intake_result, intake_finding = _issue_intake_step(root)
+    if intake_result is not None:
+        command_results.append(intake_result)
+    if intake_finding is not None:
+        findings.append(intake_finding)
 
     # Optional pre-session/context scripts. Warnings only if missing, because packs may be installed incrementally.
     optional_scripts = [
@@ -206,9 +249,7 @@ def audit(
             result = run_cmd(root, args)
             command_results.append(result)
             if script.endswith("bead_hygiene_audit.py"):
-                hygiene_path = (
-                    root / ".agents" / "audits" / "bead_hygiene" / "latest.json"
-                )
+                hygiene_path = root / ".agents" / "audits" / "bead_hygiene" / "latest.json"
                 try:
                     payload = (
                         json.loads(hygiene_path.read_text(encoding="utf-8"))
@@ -220,10 +261,7 @@ def audit(
                 hygiene_status = str(payload.get("status") or "").lower()
                 active_duplicate_count = 0
                 for item in payload.get("findings") or []:
-                    if (
-                        isinstance(item, dict)
-                        and item.get("code") == "duplicate_active_titles"
-                    ):
+                    if isinstance(item, dict) and item.get("code") == "duplicate_active_titles":
                         active_duplicate_count = int(item.get("count") or 0)
                         break
 
@@ -234,10 +272,7 @@ def audit(
                 }
 
                 if hygiene_status == "red":
-                    if (
-                        active_duplicate_count
-                        <= bead_hygiene_active_duplicate_threshold
-                    ):
+                    if active_duplicate_count <= bead_hygiene_active_duplicate_threshold:
                         findings.append(
                             {
                                 "severity": "P2",
@@ -316,9 +351,7 @@ def audit(
                 lock_rollup = json.loads(rollup_result["stdout"])
                 timeout_rate = float(lock_rollup.get("timeout_rate", 0.0))
                 wait_p95 = int((lock_rollup.get("wait_ms") or {}).get("p95", 0))
-                total_events = int(
-                    (lock_rollup.get("event_counts") or {}).get("total", 0)
-                )
+                total_events = int((lock_rollup.get("event_counts") or {}).get("total", 0))
                 lock_metrics_summary = {
                     "timeout_rate": timeout_rate,
                     "wait_p95_ms": wait_p95,
@@ -351,10 +384,7 @@ def audit(
                             "severity": "P2",
                             "code": "lock_wait_p95_high",
                             "file": "docs/workflows/WORKFLOW_RUN_LOG.jsonl",
-                            "message": (
-                                f"lock wait p95={wait_p95}ms exceeds threshold="
-                                f"{lock_wait_p95_threshold_ms}ms"
-                            ),
+                            "message": (f"lock wait p95={wait_p95}ms exceeds threshold={lock_wait_p95_threshold_ms}ms"),
                         }
                     )
             except (ValueError, json.JSONDecodeError):
@@ -369,9 +399,7 @@ def audit(
     root_artifact_hygiene_summary: dict[str, Any] = {}
     root_hygiene_script = root / "scripts" / "root_artifact_hygiene.py"
     if root_hygiene_script.is_file():
-        hygiene_result = run_cmd(
-            root, ["python", "scripts/root_artifact_hygiene.py"], timeout=30
-        )
+        hygiene_result = run_cmd(root, ["python", "scripts/root_artifact_hygiene.py"], timeout=30)
         command_results.append(hygiene_result)
         for line in (hygiene_result.get("stdout") or "").splitlines():
             if line.startswith("ROOT_ARTIFACT_HYGIENE:"):
@@ -414,9 +442,7 @@ def audit(
         "lock_metrics": lock_metrics_summary,
         "bead_hygiene": bead_hygiene_summary,
         "root_artifact_hygiene": root_artifact_hygiene_summary,
-        "findings": sorted(
-            findings, key=lambda f: severity_rank(f.get("severity", "P3"))
-        ),
+        "findings": sorted(findings, key=lambda f: severity_rank(f.get("severity", "P3"))),
         "commands": command_results,
     }
 
@@ -429,9 +455,7 @@ def write_reports(root: Path, result: dict[str, Any]) -> None:
     findings_dir.mkdir(parents=True, exist_ok=True)
 
     date = datetime.now().strftime("%Y-%m-%d")
-    (out / "latest_audit.json").write_text(
-        json.dumps(result, indent=2), encoding="utf-8"
-    )
+    (out / "latest_audit.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
 
     lines = [
         "# Latest Harness Audit Summary",
@@ -501,9 +525,7 @@ def main() -> int:
     parser.add_argument(
         "--bead-hygiene-active-duplicate-threshold",
         type=int,
-        default=int(
-            os.environ.get("CHROMATIC_BEAD_HYGIENE_ACTIVE_DUPLICATE_THRESHOLD", "0")
-        ),
+        default=int(os.environ.get("CHROMATIC_BEAD_HYGIENE_ACTIVE_DUPLICATE_THRESHOLD", "0")),
     )
     args = parser.parse_args()
 

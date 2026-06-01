@@ -193,7 +193,7 @@ def render_full_doc(snapshot: dict) -> str:
         "# Pre-Session Tools, Resources, and MCP Inventory",
         "",
         f"> **Generated:** `{snapshot['generated_at']}`  ",
-        f"> **Regenerate:** `python scripts/generate_pre_session_inventory.py`  ",
+        "> **Regenerate:** `python scripts/generate_pre_session_inventory.py`  ",
         f"> **MCP path scanned:** `{snapshot['mcp_descriptors_path']}`",
         "",
         "Baseline documentation before changing tool exposure, MCP plugins, or CRG policy.",

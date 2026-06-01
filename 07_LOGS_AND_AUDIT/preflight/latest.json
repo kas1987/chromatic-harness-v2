@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-06-01T00:35:21.133765+00:00",
+  "passed": true,
+  "stages": [
+    {
+      "stage": "lint",
+      "command": "ruff check .",
+      "passed": true,
+      "output": "All checks passed!"
+    },
+    {
+      "stage": "imports",
+      "command": "import check (4 modules)",
+      "passed": true,
+      "failures": [],
+      "checked": [
+        "router.router",
+        "router.contracts",
+        "router.complexity_classifier",
+        "router.provider_selector"
+      ]
+    },
+    {
+      "stage": "tests",
+      "command": "python tests/run-all-e2e.py",
+      "passed": true,
+      "output": "SED [ 52%]\ntests/test_magnet_orchestrator.py::TestMagnetOrchestrator::test_empty_events_yields_review PASSED [ 57%]\ntests/test_magnet_orchestrator.py::TestMagnetOrchestrator::test_pipeline_stages_populated PASSED [ 61%]\ntests/test_magnet_orchestrator.py::TestMagnetOrchestrator::test_halt_on_high_risk PASSED [ 66%]\ntests/test_magnet_orchestrator.py::TestMagnetOrchestrator::test_intake_magnet_registered PASSED [ 71%]\ntests/test_magnet_orchestrator.py::TestMagnetOrchestrator::test_observe_intake_short_objective PASSED [ 76%]\ntests/test_magnet_plugins.py::test_register_custom_plugin PASSED         [ 80%]\ntests/test_magnet_plugins.py::test_default_registry_includes_plugins PASSED [ 85%]\ntests/test_magnet_plugins.py::test_orchestrator_register_plugin PASSED   [ 90%]\ntests/test_magnet_plugins.py::test_secrets_plugin_halts_on_hits PASSED   [ 95%]\ntests/test_magnet_plugins.py::test_existing_orchestrator_tests_still_pass_names PASSED [100%]\n\n============================= 21 passed in 0.15s ==============================\n============================= test session starts =============================\nplatform win32 -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\kas41\\chromatic-harness-v2\nconfigfile: pytest.ini\nplugins: anyio-4.10.0, asyncio-1.3.0, cov-7.0.0, httpx-0.36.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function\ncollecting ... collected 10 items\n\ntests/test_router_autopath.py::test_error_response_falls_through_to_next_provider PASSED [ 10%]\ntests/test_router_autopath.py::test_raised_exception_falls_through PASSED [ 20%]\ntests/test_router_autopath.py::test_ollama_local_alias_resolves_to_ollama_adapter PASSED [ 30%]\ntests/test_router_autopath.py::test_ollama_local_routes_through_alias PASSED [ 40%]\ntests/test_router_autopath.py::test_all_error_responses_surface_error_when_no_mock PASSED [ 50%]\ntests/test_delegate_bead.py::test_c1_bead_is_delegated_and_note_written PASSED [ 60%]\ntests/test_delegate_bead.py::test_c4_bead_is_kept_on_orchestrator PASSED [ 70%]\ntests/test_delegate_bead.py::test_dry_run_classifies_without_routing PASSED [ 80%]\ntests/test_delegate_bead.py::test_delegation_error_does_not_write_note PASSED [ 90%]\ntests/test_delegate_bead.py::test_max_level_widens_delegation PASSED     [100%]\n\n============================= 10 passed in 0.27s ==============================\npre-push: running harness E2E gates (pytest runner)\u2026\n\n--- ruff lint ---\nPASS: ruff lint\n\n--- model-router CORE + EDGE ---\nPASS: model-router CORE + EDGE\n\n--- magnets pipeline (7 canonical + orchestrator) ---\nPASS: magnets pipeline (7 canonical + orchestrator)\n\n--- router auto-path + bead delegation ---\nPASS: router auto-path + bead delegation\n\n============================================================\npre-push: E2E PASSED \u2014 all suites green.\n============================================================"
+    }
+  ],
+  "stages_run": 3,
+  "stages_passed": 3,
+  "stages_failed": 0
+}

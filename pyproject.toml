@@ -1,0 +1,28 @@
+[tool.ruff]
+line-length = 120
+exclude = [
+    ".beads",
+    ".agents",
+    "02_RUNTIME/runtime-engines",
+    ".tmp_bd_mini.py",
+    ".tmp_bd_payload.json",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",   # line too long — not enforced at baseline
+    "E402",   # module-level import not at top — common in sys.path scripts
+    "E701",   # multiple statements on one line (colon) — stylistic
+    "E702",   # multiple statements on one line (semicolon) — stylistic
+    "E741",   # ambiguous variable name — too noisy in harness code
+    "E731",   # lambda assignment — stylistic
+    "F401",   # unused import — too noisy across harness scripts
+    "F841",   # local variable assigned but never used — review separately
+    "W291",   # trailing whitespace — auto-fixable, not a gate blocker
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402", "F401", "F811"]
+"scripts/*" = ["E402"]
+".beads/*" = ["ALL"]

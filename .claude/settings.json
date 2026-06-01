@@ -82,22 +82,22 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Agent",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python 02_RUNTIME/router/gate.py",
-            "timeout": 10
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "python scripts/hooks/git_collision_pretooluse.py",
             "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python 02_RUNTIME/router/gate.py",
+            "timeout": 10
           }
         ]
       }

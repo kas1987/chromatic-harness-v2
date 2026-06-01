@@ -69,11 +69,7 @@ def _emit_injected_learning_outcomes() -> dict[str, Any]:
                     continue
                 etype = str(row.get("event_type", ""))
                 decision = str(row.get("workflow_decision", ""))
-                if (
-                    "error" in etype.lower()
-                    or "error" in decision.lower()
-                    or "fail" in decision.lower()
-                ):
+                if "error" in etype.lower() or "error" in decision.lower() or "fail" in decision.lower():
                     had_error = True
                     break
 
@@ -95,9 +91,7 @@ def _emit_injected_learning_outcomes() -> dict[str, Any]:
             if emitted:
                 result["emitted"].append({"name": name, "outcome": outcome})
             else:
-                result["skipped"].append(
-                    {"name": name, "reason": "duplicate or invalid"}
-                )
+                result["skipped"].append({"name": name, "reason": "duplicate or invalid"})
 
         result["ok"] = True
         result["outcome"] = outcome
@@ -190,17 +184,13 @@ def _coerce_int(value: Any, default: int, *, minimum: int = 0) -> int:
     return result
 
 
-def _sanitize_epic_swot_policy_config(
-    config: dict[str, Any], defaults: dict[str, Any]
-) -> dict[str, Any]:
+def _sanitize_epic_swot_policy_config(config: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
     sanitized = dict(config)
     sanitized["confidence_threshold"] = _coerce_float(
         config.get("confidence_threshold"),
         float(defaults["confidence_threshold"]),
     )
-    sanitized["block_penalty"] = _coerce_float(
-        config.get("block_penalty"), float(defaults["block_penalty"])
-    )
+    sanitized["block_penalty"] = _coerce_float(config.get("block_penalty"), float(defaults["block_penalty"]))
     sanitized["halt_human_penalty"] = _coerce_float(
         config.get("halt_human_penalty"), float(defaults["halt_human_penalty"])
     )
@@ -222,9 +212,7 @@ def _sanitize_epic_swot_policy_config(
     history_limits = dict(defaults.get("history_limits") or {})
     history_limits.update(config.get("history_limits") or {})
     for key, default_value in (defaults.get("history_limits") or {}).items():
-        history_limits[key] = _coerce_int(
-            history_limits.get(key), int(default_value), minimum=1
-        )
+        history_limits[key] = _coerce_int(history_limits.get(key), int(default_value), minimum=1)
     sanitized["history_limits"] = history_limits
 
     for section_name in (
@@ -241,15 +229,9 @@ def _sanitize_epic_swot_policy_config(
             bucket = dict(bucket_defaults)
             bucket.update((section.get(bucket_name) or {}))
             sanitized_section[bucket_name] = {
-                "min": _coerce_int(
-                    bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0
-                ),
-                "score": _coerce_float(
-                    bucket.get("score"), float(bucket_defaults.get("score") or 0.0)
-                ),
-                "reason": str(
-                    bucket.get("reason") or bucket_defaults.get("reason") or ""
-                ),
+                "min": _coerce_int(bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0),
+                "score": _coerce_float(bucket.get("score"), float(bucket_defaults.get("score") or 0.0)),
+                "reason": str(bucket.get("reason") or bucket_defaults.get("reason") or ""),
             }
         sanitized[section_name] = sanitized_section
 
@@ -257,9 +239,7 @@ def _sanitize_epic_swot_policy_config(
     coverage = dict(coverage_defaults)
     coverage.update(config.get("coverage") or {})
     fields = coverage.get("fields")
-    if not isinstance(fields, list) or not all(
-        isinstance(field, str) and field for field in fields
-    ):
+    if not isinstance(fields, list) or not all(isinstance(field, str) and field for field in fields):
         fields = list(coverage_defaults.get("fields") or [])
     sanitized["coverage"] = {
         "min_field_coverage": _coerce_float(
@@ -318,9 +298,7 @@ def _default_auto_turn_policy_config() -> dict[str, Any]:
     }
 
 
-def _sanitize_auto_turn_policy_config(
-    config: dict[str, Any], defaults: dict[str, Any]
-) -> dict[str, Any]:
+def _sanitize_auto_turn_policy_config(config: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
     sanitized = dict(defaults)
     sanitized["required_signal_hits"] = _coerce_int(
         config.get("required_signal_hits"),
@@ -335,9 +313,7 @@ def _sanitize_auto_turn_policy_config(
         bucket.update(user_signals.get(key) or {})
         signals[key] = {
             "enabled": bool(bucket.get("enabled", True)),
-            "min": _coerce_int(
-                bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0
-            ),
+            "min": _coerce_int(bucket.get("min"), int(bucket_defaults.get("min") or 0), minimum=0),
         }
     sanitized["signals"] = signals
     return sanitized
@@ -367,9 +343,7 @@ def _evaluate_auto_turn_trigger(
     policy_config: dict[str, Any],
 ) -> dict[str, Any]:
     loc_delta = _git_loc_delta()
-    loc_total = int(loc_delta.get("insertions") or 0) + int(
-        loc_delta.get("deletions") or 0
-    )
+    loc_total = int(loc_delta.get("insertions") or 0) + int(loc_delta.get("deletions") or 0)
     signal_cfg = policy_config.get("signals") or {}
 
     def cfg(key: str) -> dict[str, Any]:
@@ -390,12 +364,8 @@ def _evaluate_auto_turn_trigger(
     metric_values = {
         "loc_delta_total": loc_total,
         "policy_event_count": int(policy_signals.get("event_count") or 0),
-        "open_tasks": max(
-            beads_ready_count, int(policy_signals.get("open_tasks") or 0)
-        ),
-        "changed_files": max(
-            git_changed_files, int(policy_signals.get("changed_files") or 0)
-        ),
+        "open_tasks": max(beads_ready_count, int(policy_signals.get("open_tasks") or 0)),
+        "changed_files": max(git_changed_files, int(policy_signals.get("changed_files") or 0)),
     }
     hit_count = 0
     hit_signals: list[str] = []
@@ -431,9 +401,7 @@ def _evaluate_auto_turn_trigger(
     }
 
 
-def _run(
-    cmd: list[str], *, timeout: int = 120, cwd: Path | None = None
-) -> tuple[int, str]:
+def _run(cmd: list[str], *, timeout: int = 120, cwd: Path | None = None) -> tuple[int, str]:
     try:
         r = subprocess.run(
             cmd,
@@ -447,6 +415,49 @@ def _run(
         return r.returncode, out.strip()
     except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
         return 1, str(exc)
+
+
+def _run_epic_reviews() -> dict[str, Any]:
+    """Surface E2E epic ship/no-ship status at session end (fail-open).
+
+    Runs scripts/epic_review.build_review across every epic in the seed ledger
+    and returns a compact rollup so the closeout report shows which governance
+    epics are shippable (all children closed) vs still blocked. Never raises.
+    """
+    try:
+        sys.path.insert(0, str(_REPO / "scripts"))
+        import epic_review  # noqa: PLC0415
+
+        ledger = epic_review.load_ledger()
+        if not ledger:
+            return {"status": "no_ledger", "epics": []}
+        epics: list[dict[str, Any]] = []
+        for title in epic_review.EPIC_THEMES:
+            resolved = epic_review.resolve_epic(title, ledger)
+            if not resolved:
+                continue
+            epic_id, epic_title, issue_nums = resolved
+            review = epic_review.build_review(epic_id, epic_title, issue_nums, ledger)
+            evals = review.get("eval_summary", {})
+            epics.append(
+                {
+                    "epic": epic_title,
+                    "epic_id": epic_id,
+                    "decision": review.get("decision"),
+                    "gates_passed": evals.get("checked_items"),
+                    "gates_total": evals.get("total_items"),
+                    "blockers": len(review.get("blockers", [])),
+                }
+            )
+        shippable = sum(1 for e in epics if e.get("decision") == "SHIP")
+        return {
+            "status": "ok",
+            "epics": epics,
+            "shippable": shippable,
+            "total": len(epics),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"status": "error", "error": str(exc), "epics": []}
 
 
 def _run_harness_health_snapshot() -> dict[str, Any]:
@@ -513,9 +524,7 @@ def _parse_utc(ts: str) -> datetime | None:
         return None
     try:
         if s.endswith("Z"):
-            return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(
-                tzinfo=timezone.utc
-            )
+            return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         return datetime.fromisoformat(s).astimezone(timezone.utc)
     except Exception:
         return None
@@ -524,19 +533,13 @@ def _parse_utc(ts: str) -> datetime | None:
 def _fetch_swot_rows_live() -> list[dict] | None:
     """Query live bd DB for EPIC-SWOT epics. Returns None on any failure (triggers JSONL fallback)."""
     try:
-        code, out = _run_bd(
-            ["list", "--type", "epic", "--limit", "0", "--json"], timeout=15
-        )
+        code, out = _run_bd(["list", "--type", "epic", "--limit", "0", "--json"], timeout=15)
         if code != 0 or not out.strip():
             return None
         rows = json.loads(out)
         if not isinstance(rows, list):
             return None
-        return [
-            r
-            for r in rows
-            if isinstance(r, dict) and "epic-swot" in str(r.get("title") or "").lower()
-        ]
+        return [r for r in rows if isinstance(r, dict) and "epic-swot" in str(r.get("title") or "").lower()]
     except Exception:
         return None
 
@@ -572,9 +575,7 @@ def _load_issue_rows_jsonl(issues_path: Path) -> list[dict]:
 def _fetch_pending_swot_tasks_live() -> list[dict] | None:
     """Query open 'Generate next EPIC-SWOT' task beads. Returns None on failure."""
     try:
-        code, out = _run_bd(
-            ["list", "--type", "task", "--limit", "0", "--json"], timeout=15
-        )
+        code, out = _run_bd(["list", "--type", "task", "--limit", "0", "--json"], timeout=15)
         if code != 0 or not out.strip():
             return None
         rows = json.loads(out)
@@ -636,9 +637,7 @@ def _load_swot_epic_history(
             if created.timestamp() >= start_rolling:
                 stats["created_swot_rolling_window"] += 1
     if newest_open_ts is not None:
-        stats["newest_open_epic_age_hours"] = round(
-            (now_utc - newest_open_ts).total_seconds() / 3600, 2
-        )
+        stats["newest_open_epic_age_hours"] = round((now_utc - newest_open_ts).total_seconds() / 3600, 2)
     return stats
 
 
@@ -654,9 +653,7 @@ def find_latest_open_swot_epic(issues_path: Path | None = None) -> dict[str, str
         if status not in ("open", "in_progress") or issue_type != "epic":
             continue
         title = str(row.get("title") or "")
-        created = _parse_utc(
-            str(row.get("created_at") or "")
-        ) or datetime.fromtimestamp(0, tz=timezone.utc)
+        created = _parse_utc(str(row.get("created_at") or "")) or datetime.fromtimestamp(0, tz=timezone.utc)
         candidate = {
             "epic_id": str(row.get("id") or ""),
             "epic_title": title,
@@ -670,9 +667,7 @@ def find_latest_open_swot_epic(issues_path: Path | None = None) -> dict[str, str
     return best[1] if best else {}
 
 
-def find_open_swot_task_for_epic(
-    epic_id: str, issues_path: Path | None = None
-) -> dict[str, str]:
+def find_open_swot_task_for_epic(epic_id: str, issues_path: Path | None = None) -> dict[str, str]:
     if not epic_id:
         return {}
     # Live query first (all issues, not just SWOT-filtered), fall back to JSONL
@@ -706,17 +701,12 @@ def find_open_swot_task_for_epic(
             for dep in deps:
                 if not isinstance(dep, dict):
                     continue
-                if (
-                    str(dep.get("type") or "") == "parent-child"
-                    and str(dep.get("depends_on_id") or "") == epic_id
-                ):
+                if str(dep.get("type") or "") == "parent-child" and str(dep.get("depends_on_id") or "") == epic_id:
                     parent_match = True
                     break
         if not parent_match:
             continue
-        created = _parse_utc(
-            str(row.get("created_at") or "")
-        ) or datetime.fromtimestamp(0, tz=timezone.utc)
+        created = _parse_utc(str(row.get("created_at") or "")) or datetime.fromtimestamp(0, tz=timezone.utc)
         candidate = {
             "task_id": str(row.get("id") or ""),
             "task_title": title,
@@ -763,9 +753,7 @@ def evaluate_epic_swot_policy(
 ) -> dict[str, Any]:
     now = now_utc or datetime.now(timezone.utc)
     issues_file = issues_path or (_REPO / ".beads" / "issues.jsonl")
-    gov_file = governance_path or (
-        _REPO / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json"
-    )
+    gov_file = governance_path or (_REPO / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "latest.json")
     cfg = _load_epic_swot_policy_config(policy_config_path)
 
     recent_hours = int((cfg.get("history_windows") or {}).get("recent_open_hours") or 8)
@@ -809,21 +797,14 @@ def evaluate_epic_swot_policy(
 
     coverage_cfg = cfg.get("coverage") or {}
     coverage_min = float(coverage_cfg.get("min_field_coverage") or 0.85)
-    coverage_fields = list(
-        coverage_cfg.get("fields")
-        or ["provider", "model", "execution_status", "task_id"]
-    )
+    coverage_fields = list(coverage_cfg.get("fields") or ["provider", "model", "execution_status", "task_id"])
     coverage_weight = float(coverage_cfg.get("field_weight") or 0.04)
     coverage_max = float(coverage_cfg.get("max_bonus") or 0.14)
 
-    low_cov_fields = [
-        k for k in coverage_fields if _coverage_as_float(cov.get(k)) < coverage_min
-    ]
+    low_cov_fields = [k for k in coverage_fields if _coverage_as_float(cov.get(k)) < coverage_min]
     if low_cov_fields:
         score += min(coverage_max, coverage_weight * len(low_cov_fields))
-        cov_reason = str(
-            coverage_cfg.get("reason") or "telemetry coverage gaps present"
-        ).strip()
+        cov_reason = str(coverage_cfg.get("reason") or "telemetry coverage gaps present").strip()
         if cov_reason and cov_reason not in reasons:
             reasons.append(cov_reason)
 
@@ -856,9 +837,7 @@ def evaluate_epic_swot_policy(
     if history.get("open_pending_task", 0) >= 1:
         block_reasons.append("open 'Generate next EPIC-SWOT' task already exists")
     if history.get("live_query_failed"):
-        block_reasons.append(
-            "bd live query failed — blocking to prevent duplicate creation"
-        )
+        block_reasons.append("bd live query failed — blocking to prevent duplicate creation")
 
     if block_reasons:
         score -= float(cfg.get("block_penalty") or 0.8)
@@ -870,11 +849,7 @@ def evaluate_epic_swot_policy(
     threshold = float(cfg.get("confidence_threshold") or 0.55)
     allow = confidence >= threshold and not block_reasons
     decision_reason = (
-        "allow"
-        if allow
-        else (
-            ", ".join(block_reasons) if block_reasons else "confidence below threshold"
-        )
+        "allow" if allow else (", ".join(block_reasons) if block_reasons else "confidence below threshold")
     )
     return {
         "allow_create": allow,
@@ -952,9 +927,7 @@ def ensure_epic_swot_chain() -> dict[str, Any]:
 
     parent_update: dict[str, Any] = {"exit": None, "output": "", "ok": False}
     if epic_id and task_id:
-        upd_code, upd_out = _run_bd(
-            ["update", task_id, "--parent", epic_id], timeout=30
-        )
+        upd_code, upd_out = _run_bd(["update", task_id, "--parent", epic_id], timeout=30)
         parent_update = {
             "exit": upd_code,
             "output": upd_out[:1200],
@@ -1061,9 +1034,7 @@ def wiki_git_push(wiki_root: Path, *, runner=None) -> dict[str, Any]:
         ]:
             code, out = _r(cmd)
             if code != 0:
-                result["skipped_reason"] = (
-                    f"{' '.join(cmd[2:4])} failed ({code}): {out[:200]}"
-                )
+                result["skipped_reason"] = f"{' '.join(cmd[2:4])} failed ({code}): {out[:200]}"
                 return result
 
         result["branch"] = branch
@@ -1114,9 +1085,7 @@ def _build_epic_swot_summary(epic: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def _apply_epic_swot_aliases(
-    result: dict[str, Any], epic: dict[str, Any] | None
-) -> None:
+def _apply_epic_swot_aliases(result: dict[str, Any], epic: dict[str, Any] | None) -> None:
     summary = _build_epic_swot_summary(epic)
     result["epic_timestamp_utc"] = summary["timestamp_utc"]
     result["epic_title"] = summary["epic_title"]
@@ -1147,9 +1116,7 @@ def _build_closeout_telemetry_snapshot(result: dict[str, Any]) -> dict[str, Any]
 def _closeout_telemetry_timestamp(snapshot: dict[str, Any]) -> str:
     generated_at = str(snapshot.get("generated_at_utc") or "").strip()
     try:
-        dt = datetime.fromisoformat(generated_at.replace("Z", "+00:00")).astimezone(
-            timezone.utc
-        )
+        dt = datetime.fromisoformat(generated_at.replace("Z", "+00:00")).astimezone(timezone.utc)
     except ValueError:
         dt = datetime.now(timezone.utc)
     return dt.strftime("%Y%m%dT%H%M%SZ")
@@ -1159,9 +1126,7 @@ def _write_closeout_telemetry_snapshot(result: dict[str, Any]) -> dict[str, str]
     snapshot = _build_closeout_telemetry_snapshot(result)
     rel_dir = Path(".agents") / "handoffs"
     latest_rel = rel_dir / "closeout_telemetry_latest.json"
-    history_rel = (
-        rel_dir / f"closeout_telemetry_{_closeout_telemetry_timestamp(snapshot)}.json"
-    )
+    history_rel = rel_dir / f"closeout_telemetry_{_closeout_telemetry_timestamp(snapshot)}.json"
     payload = json.dumps(snapshot, indent=2)
 
     for rel in (latest_rel, history_rel):
@@ -1250,9 +1215,7 @@ def run_change_gated_quality(*, run_pytest: bool) -> dict[str, Any]:
         return summary
     py_changed = [f for f in changed if f.endswith(".py")]
     if py_changed:
-        code, out = _run(
-            [sys.executable, "-m", "ruff", "check", *py_changed], timeout=120
-        )
+        code, out = _run([sys.executable, "-m", "ruff", "check", *py_changed], timeout=120)
         summary["ruff"] = {"exit": code, "ok": code == 0, "output": out[:1500]}
     if run_pytest:
         code, out = _run([sys.executable, "-m", "pytest", "tests/", "-q"], timeout=600)
@@ -1314,11 +1277,7 @@ def _write_auto_turn_post_mortem(
 ) -> str:
     date_part, ts_part = _post_mortem_stamp()
     safe_kind = "checkpoint" if artifact_kind == "checkpoint" else "post_mortem"
-    rel = (
-        Path(".agents")
-        / "council"
-        / f"{date_part}-{safe_kind.replace('_', '-')}-auto-turn-{auto_turn_index:02d}.md"
-    )
+    rel = Path(".agents") / "council" / f"{date_part}-{safe_kind.replace('_', '-')}-auto-turn-{auto_turn_index:02d}.md"
     out = _REPO / rel
     out.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1380,30 +1339,18 @@ def _append_auto_turn_observation(result: dict[str, Any]) -> str:
     auto_turn = result.get("auto_turn") or {}
     policy = result.get("epic_swot_policy") or {}
     policy_signals = policy.get("signals") or {}
-    loc_delta = (auto_turn.get("trigger_eval") or {}).get(
-        "loc_delta"
-    ) or _git_loc_delta()
+    loc_delta = (auto_turn.get("trigger_eval") or {}).get("loc_delta") or _git_loc_delta()
     observation = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "invoked_by": result.get("invoked_by") or "",
         "auto_turn_index": int(auto_turn.get("index") or 0),
         "auto_turn_threshold": int(auto_turn.get("threshold") or 0),
         "triggered_closeout": bool(auto_turn.get("triggered_closeout")),
-        "turn_threshold_hit": bool(
-            (auto_turn.get("trigger_eval") or {}).get("turn_threshold_hit")
-        ),
-        "multi_signal_hit": bool(
-            (auto_turn.get("trigger_eval") or {}).get("multi_signal_hit")
-        ),
-        "required_signal_hits": int(
-            (auto_turn.get("trigger_eval") or {}).get("required_signal_hits") or 0
-        ),
-        "signal_hit_count": int(
-            (auto_turn.get("trigger_eval") or {}).get("signal_hit_count") or 0
-        ),
-        "hit_signals": list(
-            (auto_turn.get("trigger_eval") or {}).get("hit_signals") or []
-        ),
+        "turn_threshold_hit": bool((auto_turn.get("trigger_eval") or {}).get("turn_threshold_hit")),
+        "multi_signal_hit": bool((auto_turn.get("trigger_eval") or {}).get("multi_signal_hit")),
+        "required_signal_hits": int((auto_turn.get("trigger_eval") or {}).get("required_signal_hits") or 0),
+        "signal_hit_count": int((auto_turn.get("trigger_eval") or {}).get("signal_hit_count") or 0),
+        "hit_signals": list((auto_turn.get("trigger_eval") or {}).get("hit_signals") or []),
         "artifact_kind": auto_turn.get("artifact_kind") or "none",
         "harvest_mode": auto_turn.get("harvest_mode") or "none",
         "beads_ready_count": len(result.get("beads_ready") or []),
@@ -1426,9 +1373,7 @@ def _append_auto_turn_observation(result: dict[str, Any]) -> str:
 _SHIP_EVIDENCE = _REPO / ".agents" / "handoffs" / "ship_evidence.json"
 
 
-def evaluate_ship_completion(
-    beads_ready: list[str], *, evidence_path: Path | None = None
-) -> dict[str, Any]:
+def evaluate_ship_completion(beads_ready: list[str], *, evidence_path: Path | None = None) -> dict[str, Any]:
     """Run the ClosureMagnet ship-completion check (ship-idea S8+S10+DoD) over the
     session's beads (Gap C closeout wiring).
 
@@ -1467,9 +1412,7 @@ def evaluate_ship_completion(
     magnet = ClosureMagnet()
     per_bead_keyed = all(isinstance(v, dict) for v in evidence.values())
     for bead in beads_ready:
-        bead_signal = (
-            dict(evidence.get(bead) or {}) if per_bead_keyed else dict(evidence)
-        )
+        bead_signal = dict(evidence.get(bead) or {}) if per_bead_keyed else dict(evidence)
         if not bead_signal:
             continue
         result["applicable"] = True
@@ -1558,9 +1501,7 @@ def main() -> int:
         default="cli",
     )
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument(
-        "--harvest", action="store_true", help="Run harvest_rigs --execute"
-    )
+    parser.add_argument("--harvest", action="store_true", help="Run harvest_rigs --execute")
     parser.add_argument("--wiki-dry-run", action="store_true")
     parser.add_argument(
         "--promote-wiki",
@@ -1569,9 +1510,7 @@ def main() -> int:
         help="Promote high-confidence learnings to the Chromatic Wiki after harvest",
     )
     parser.add_argument("--git-triage", action="store_true")
-    parser.add_argument(
-        "--with-api", action="store_true", help="Phase C: optional API budget ingest"
-    )
+    parser.add_argument("--with-api", action="store_true", help="Phase C: optional API budget ingest")
     parser.add_argument(
         "--spawn-successor",
         action="store_true",
@@ -1645,14 +1584,11 @@ def main() -> int:
     ship_goals: list[str] = []
     for v in ship_completion.get("block_close", []):
         miss = ",".join(v.get("missing", [])) or "ship-idea gates"
-        ship_risks.append(
-            f"ship incomplete — bead {v['bead_id']} missing {miss}; do NOT close"
-        )
+        ship_risks.append(f"ship incomplete — bead {v['bead_id']} missing {miss}; do NOT close")
         ship_goals.append(f"Finish ship-idea {miss} for {v['bead_id']}")
 
     handoff_prep: dict[str, Any] = {
-        "directive_summary": args.summary
-        or f"Session closeout ({source}). Budget decision: {snapshot.decision}.",
+        "directive_summary": args.summary or f"Session closeout ({source}). Budget decision: {snapshot.decision}.",
         "decision": "review" if snapshot.decision != "halt_human" else "halt",
         "next_session_goals": ship_goals
         + [
@@ -1760,9 +1696,7 @@ def main() -> int:
     result["transfer_packet_path"] = ".agents/handoffs/transfer_packet.json"
 
     if args.epic_swot:
-        policy_config_path = (
-            Path(args.epic_policy_config) if args.epic_policy_config else None
-        )
+        policy_config_path = Path(args.epic_policy_config) if args.epic_policy_config else None
         policy = evaluate_epic_swot_policy(
             snapshot=snapshot,
             beads_ready=beads,
@@ -1840,9 +1774,7 @@ def main() -> int:
                 sys.path.insert(0, _scripts_dir)
             from feedback_loop import run_feedback_loop  # noqa: E402
 
-            result["feedback_loop"] = run_feedback_loop(
-                min_confidence=0.8, dry_run=args.dry_run
-            )
+            result["feedback_loop"] = run_feedback_loop(min_confidence=0.8, dry_run=args.dry_run)
         except Exception as exc:  # never block closeout on the flywheel
             result["feedback_loop"] = {
                 "status": "error",
@@ -1858,11 +1790,7 @@ def main() -> int:
         # Auto-commit + branch-push + PR if any files were actually copied (-t5ob)
         if promo.get("ok") and promo.get("promoted", 0) > 0:
             _wiki_raw = os.environ.get("CHROMATIC_WIKI_ROOT", "")
-            _wiki_root = (
-                Path(_wiki_raw).resolve()
-                if _wiki_raw
-                else Path(r"C:\Users\kas41\chromatic-wiki")
-            )
+            _wiki_root = Path(_wiki_raw).resolve() if _wiki_raw else Path(r"C:\Users\kas41\chromatic-wiki")
             result["wiki_git_push"] = wiki_git_push(_wiki_root)
         else:
             result["wiki_git_push"] = {
@@ -1922,9 +1850,7 @@ def main() -> int:
     result["quality"] = quality
     if quality.get("pytest") and not quality["pytest"]["ok"]:
         result["pytest_exit"] = quality["pytest"]["exit"]
-        handoff_prep["risks"].append(
-            f"pytest failed (exit {quality['pytest']['exit']})"
-        )
+        handoff_prep["risks"].append(f"pytest failed (exit {quality['pytest']['exit']})")
     if quality.get("ruff") and not quality["ruff"]["ok"]:
         handoff_prep["risks"].append("ruff check found issues")
 
@@ -1941,9 +1867,7 @@ def main() -> int:
 
     spawn = False
     if not args.no_spawn and snapshot.decision == "spawn":
-        if args.spawn_successor or os.environ.get(
-            "CHROMATIC_AUTO_SPAWN", ""
-        ).strip() in (
+        if args.spawn_successor or os.environ.get("CHROMATIC_AUTO_SPAWN", "").strip() in (
             "1",
             "true",
             "yes",
@@ -1964,11 +1888,7 @@ def main() -> int:
         result["spawn_output"] = out[:2000]
     else:
         result["spawn"] = "skipped"
-        result["spawn_reason"] = (
-            "budget or CHROMATIC_AUTO_SPAWN"
-            if snapshot.decision != "spawn"
-            else "not requested"
-        )
+        result["spawn_reason"] = "budget or CHROMATIC_AUTO_SPAWN" if snapshot.decision != "spawn" else "not requested"
 
     if args.auto_start_next_agent:
         packet_path = str(_REPO / ".agents" / "handoffs" / "transfer_packet.json")
@@ -1998,9 +1918,7 @@ def main() -> int:
             "session_boot_output": boot_out[:2000],
             "ok": succ_code == 0 and boot_code == 0,
         }
-    result["auto_start_ok"] = bool(
-        (result.get("next_session_auto_start") or {}).get("ok", False)
-    )
+    result["auto_start_ok"] = bool((result.get("next_session_auto_start") or {}).get("ok", False))
 
     if args.with_api:
         result["with_api"] = "not_implemented_phase_c"
@@ -2029,13 +1947,12 @@ def main() -> int:
         sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "02_RUNTIME"))
         from audit.session_events import emit_session_end
 
-        result["session_end_event"] = emit_session_end(
-            Path(__file__).resolve().parents[1], invoked_by=args.invoked_by
-        )
+        result["session_end_event"] = emit_session_end(Path(__file__).resolve().parents[1], invoked_by=args.invoked_by)
     except Exception as exc:  # noqa: BLE001
         result["session_end_event"] = {"ok": False, "error": str(exc)}
 
     result["learning_outcomes"] = _emit_injected_learning_outcomes()
+    result["epic_reviews"] = _run_epic_reviews()
 
     print(json.dumps(result, indent=2))
     return 0
