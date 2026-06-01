@@ -257,9 +257,7 @@ async def test_agent_run_log_written_for_governed_model():
     with tempfile.TemporaryDirectory() as td:
         td_path = pathlib.Path(td)
         agent_log = td_path / "AGENT_RUN_LOG.jsonl"
-        obs = observability_mod.ObservabilityLogger(
-            log_dir=td_path, agent_run_log=agent_log
-        )
+        obs = observability_mod.ObservabilityLogger(log_dir=td_path, agent_run_log=agent_log)
         r = ChromaticRouter(logger=obs)
         req = make_req(confidence_score=90.0, preferred_provider="mock")
         resp = await r.route(req)
@@ -288,9 +286,7 @@ async def test_agent_run_log_not_written_for_non_governed_model():
     with tempfile.TemporaryDirectory() as td:
         td_path = pathlib.Path(td)
         agent_log = td_path / "AGENT_RUN_LOG.jsonl"
-        obs = observability_mod.ObservabilityLogger(
-            log_dir=td_path, agent_run_log=agent_log
-        )
+        obs = observability_mod.ObservabilityLogger(log_dir=td_path, agent_run_log=agent_log)
         r = ChromaticRouter(logger=obs)
         req = make_req(confidence_score=90.0, preferred_provider="mock")
         await r.route(req)

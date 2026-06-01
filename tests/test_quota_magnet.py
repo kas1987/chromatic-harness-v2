@@ -72,9 +72,7 @@ def test_on_track_deadband_holds_positive_confidence():
 def test_lockout_risk_raises_bar_real_risk():
     st = _fresh_state(
         session_5h_pct=95.0,
-        session_5h_reset=(datetime.now(timezone.utc))
-        .replace(microsecond=0)
-        .isoformat(),
+        session_5h_reset=(datetime.now(timezone.utc)).replace(microsecond=0).isoformat(),
         status="rejected",
     )
     ev = _observe(st)
@@ -105,9 +103,7 @@ def test_action_vocab_disjoint_from_halt_set():
 def test_registered_in_default_registry():
     reg = default_registry()
     assert "quota_magnet" in reg.names()
-    ev = reg.observe(
-        "m1", "quota_magnet", "pre_dispatch", {"quota_state_obj": _fresh_state()}
-    )
+    ev = reg.observe("m1", "quota_magnet", "pre_dispatch", {"quota_state_obj": _fresh_state()})
     assert ev.magnet_name == "quota_magnet"
 
 

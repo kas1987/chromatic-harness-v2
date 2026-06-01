@@ -110,9 +110,7 @@ def ledger_file(tmp_path: Path) -> Path:
 
 # ── Report math ───────────────────────────────────────────────────────────--
 def test_report_pnl_three_axes(forecast_file: Path, ledger_file: Path) -> None:
-    report = tee.build_report(
-        tee.load_forecast(forecast_file), tee.load_ledger(ledger_file)
-    )
+    report = tee.build_report(tee.load_forecast(forecast_file), tee.load_ledger(ledger_file))
     # Axis P = prepaid quota % from the forecast block.
     assert report.pnl.axis_p_quota_pct == 62.0
     # Axis D = sum of dollar-billed rows (0.25 + 0.15).
@@ -123,12 +121,8 @@ def test_report_pnl_three_axes(forecast_file: Path, ledger_file: Path) -> None:
     assert report.cost_estimate_usd == 0.40
 
 
-def test_utilization_gauge_inverted_risk(
-    forecast_file: Path, ledger_file: Path
-) -> None:
-    report = tee.build_report(
-        tee.load_forecast(forecast_file), tee.load_ledger(ledger_file)
-    )
+def test_utilization_gauge_inverted_risk(forecast_file: Path, ledger_file: Path) -> None:
+    report = tee.build_report(tee.load_forecast(forecast_file), tee.load_ledger(ledger_file))
     assert report.gauge.target_pct == 90.0
     assert report.gauge.projected_close_pct == 74.0
     # Inverted risk: projected close < 90% line => RED (under-utilization).
@@ -137,15 +131,11 @@ def test_utilization_gauge_inverted_risk(
 
 
 def test_cost_center_roi_table(forecast_file: Path, ledger_file: Path) -> None:
-    report = tee.build_report(
-        tee.load_forecast(forecast_file), tee.load_ledger(ledger_file)
-    )
+    report = tee.build_report(tee.load_forecast(forecast_file), tee.load_ledger(ledger_file))
     keys = {cc.key for cc in report.cost_centers}
     assert "harness/router/gemini-pro" in keys
     # The two gemini-pro Axis-D rows aggregate into one cost center.
-    gemini = next(
-        cc for cc in report.cost_centers if cc.key == "harness/router/gemini-pro"
-    )
+    gemini = next(cc for cc in report.cost_centers if cc.key == "harness/router/gemini-pro")
     assert gemini.usd == 0.40
     assert gemini.tokens == 15000
     assert gemini.events == 2
@@ -153,18 +143,14 @@ def test_cost_center_roi_table(forecast_file: Path, ledger_file: Path) -> None:
 
 
 def test_unknown_band_carried(forecast_file: Path, ledger_file: Path) -> None:
-    report = tee.build_report(
-        tee.load_forecast(forecast_file), tee.load_ledger(ledger_file)
-    )
+    report = tee.build_report(tee.load_forecast(forecast_file), tee.load_ledger(ledger_file))
     # 1 of 4 rows is unknown => 25%.
     assert report.unknown_pct == 25.0
 
 
 # ── Renderers ─────────────────────────────────────────────────────────────--
 def test_prometheus_series_names(forecast_file: Path, ledger_file: Path) -> None:
-    text = tee.export(
-        forecast_path=forecast_file, ledger_path=ledger_file, fmt="prometheus"
-    )
+    text = tee.export(forecast_path=forecast_file, ledger_path=ledger_file, fmt="prometheus")
     for name in (
         tee.METRIC_COST_ESTIMATE,
         tee.METRIC_QUOTA_PCT,
@@ -185,9 +171,7 @@ def test_prometheus_series_names(forecast_file: Path, ledger_file: Path) -> None
 
 
 def test_json_shape_has_pnl_columns(forecast_file: Path, ledger_file: Path) -> None:
-    payload = json.loads(
-        tee.export(forecast_path=forecast_file, ledger_path=ledger_file, fmt="json")
-    )
+    payload = json.loads(tee.export(forecast_path=forecast_file, ledger_path=ledger_file, fmt="json"))
     pnl = payload["weekly_pnl"]
     assert set(pnl) == {
         "axis_p_quota_pct",

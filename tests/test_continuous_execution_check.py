@@ -8,9 +8,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-SCRIPT = (
-    Path(__file__).resolve().parents[1] / "scripts" / "continuous_execution_check.py"
-)
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "continuous_execution_check.py"
 
 
 def _load():

@@ -171,9 +171,7 @@ def test_route_rows_axis_stamping(routes_file, providers_file, pricing_file):
     assert mock.axis == "D"
 
 
-def test_every_row_has_decision_id(
-    today_file, pricing_file, providers_file, routes_file
-):
+def test_every_row_has_decision_id(today_file, pricing_file, providers_file, routes_file):
     rows = ptt.build_ledger_rows(
         today_path=today_file,
         pricing_path=pricing_file,
@@ -187,9 +185,7 @@ def test_every_row_has_decision_id(
     assert any(r.source == "today" for r in rows)
 
 
-def test_confidence_band_reports_unknown(
-    today_file, pricing_file, providers_file, routes_file
-):
+def test_confidence_band_reports_unknown(today_file, pricing_file, providers_file, routes_file):
     rows = ptt.build_ledger_rows(
         today_path=today_file,
         pricing_path=pricing_file,
@@ -207,25 +203,17 @@ def test_confidence_band_reports_unknown(
 def test_bridge_today_to_daily(today_file, pricing_file, tmp_path):
     budget_dir = tmp_path / "budget"
     budget_dir.mkdir()
-    total = ptt.bridge_today_to_daily(
-        today_path=today_file, pricing_path=pricing_file, budget_dir=budget_dir
-    )
+    total = ptt.bridge_today_to_daily(today_path=today_file, pricing_path=pricing_file, budget_dir=budget_dir)
     assert total == 3.0  # 3.0 known + 0.0 unknown
     daily = budget_dir / "daily.jsonl"
     assert daily.is_file()
-    lines = [
-        json.loads(ln)
-        for ln in daily.read_text(encoding="utf-8").splitlines()
-        if ln.strip()
-    ]
+    lines = [json.loads(ln) for ln in daily.read_text(encoding="utf-8").splitlines() if ln.strip()]
     assert len(lines) == 2
     assert any(r.get("note") == "unknown_usage" for r in lines)
     assert any(r["source"].startswith("today:") for r in lines)
 
 
-def test_post_ledger_writes_canonical_rows(
-    today_file, pricing_file, providers_file, routes_file, tmp_path
-):
+def test_post_ledger_writes_canonical_rows(today_file, pricing_file, providers_file, routes_file, tmp_path):
     budget_dir = tmp_path / "budget"
     rows = ptt.build_ledger_rows(
         today_path=today_file,
@@ -235,11 +223,7 @@ def test_post_ledger_writes_canonical_rows(
     )
     out = ptt.post_ledger(rows, budget_dir=budget_dir)
     assert out.is_file()
-    written = [
-        json.loads(ln)
-        for ln in out.read_text(encoding="utf-8").splitlines()
-        if ln.strip()
-    ]
+    written = [json.loads(ln) for ln in out.read_text(encoding="utf-8").splitlines() if ln.strip()]
     assert len(written) == len(rows)
     sample = written[0]
     # Canonical contract fields (spec section 3).

@@ -173,15 +173,11 @@ def test_run_once_writes_overlay_and_persists_hysteresis(tmp_path):
         encoding="utf-8",
     )
     fc = tmp_path / "forecast_latest.json"
-    fc.write_text(
-        json.dumps({"axis_prepaid": {"projected_close_pct": 70.0}}), encoding="utf-8"
-    )
+    fc.write_text(json.dumps({"axis_prepaid": {"projected_close_pct": 70.0}}), encoding="utf-8")
     overlay = tmp_path / "overlay.json"
 
     # Tick 1: pending, held at neutral 3.
-    d1 = ctrl.run_once(
-        quota_state_path=qs, forecast_path=fc, overlay_path=overlay, now=NOW
-    )
+    d1 = ctrl.run_once(quota_state_path=qs, forecast_path=fc, overlay_path=overlay, now=NOW)
     assert d1.c_to_t_threshold == 3
     assert overlay.is_file()
     saved = json.loads(overlay.read_text(encoding="utf-8"))
@@ -189,9 +185,7 @@ def test_run_once_writes_overlay_and_persists_hysteresis(tmp_path):
     assert saved["_hysteresis"]["pending_ticks"] == 1
 
     # Tick 2: streak persisted via the overlay file -> move to 2.
-    d2 = ctrl.run_once(
-        quota_state_path=qs, forecast_path=fc, overlay_path=overlay, now=NOW
-    )
+    d2 = ctrl.run_once(quota_state_path=qs, forecast_path=fc, overlay_path=overlay, now=NOW)
     assert d2.c_to_t_threshold == 2
 
 

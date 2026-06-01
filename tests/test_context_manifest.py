@@ -75,10 +75,7 @@ class TestContextResourceManifest:
     def test_filter_by_provider(self):
         manifest = ContextResourceManifest.build_defaults()
         native = manifest.filter(provider="native_claude")
-        assert all(
-            not r.provider_bindings or "native_claude" in r.provider_bindings
-            for r in native
-        )
+        assert all(not r.provider_bindings or "native_claude" in r.provider_bindings for r in native)
 
     def test_combined_filter(self):
         manifest = ContextResourceManifest.build_defaults()

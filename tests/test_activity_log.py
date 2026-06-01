@@ -28,9 +28,7 @@ def test_apply_lane_prefix_and_description():
     assert desc.startswith("lane: human")
 
 
-def test_log_activity_writes_workflow_and_execution(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_log_activity_writes_workflow_and_execution(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
@@ -55,9 +53,7 @@ def test_log_activity_writes_workflow_and_execution(
     assert any(e.get("event_type") == "activity.phase.complete" for e in lines)
 
 
-def test_log_activity_enqueues_human_intake_on_error(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_log_activity_enqueues_human_intake_on_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
@@ -76,9 +72,7 @@ def test_log_activity_enqueues_human_intake_on_error(
     assert any(e.lane == "human" for e in queued)
 
 
-def test_auto_intake_applies_lane_prefix(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_auto_intake_applies_lane_prefix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     queue = tmp_path / "07_LOGS_AND_AUDIT" / "intake_queue.jsonl"
     queue.parent.mkdir(parents=True, exist_ok=True)
 
@@ -105,9 +99,7 @@ def test_auto_intake_applies_lane_prefix(
         if "create" in cmd:
             title = cmd[2] if len(cmd) > 2 else ""
             created_titles.append(title)
-            return subprocess.CompletedProcess(
-                cmd, 0, "chromatic-harness-v2-fake01\n", ""
-            )
+            return subprocess.CompletedProcess(cmd, 0, "chromatic-harness-v2-fake01\n", "")
         return subprocess.CompletedProcess(cmd, 0, "ok\n", "")
 
     import subprocess  # noqa: E402
@@ -123,9 +115,7 @@ def test_auto_intake_applies_lane_prefix(
     assert created_titles and created_titles[0].startswith("[agent]")
 
 
-def test_emit_learning_outcome_writes_applied_success(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_emit_learning_outcome_writes_applied_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
     monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
 
@@ -162,9 +152,7 @@ def test_emit_learning_outcome_writes_applied_failure_with_category(
     assert events[0]["error_category"] == "merge_conflict"
 
 
-def test_emit_learning_outcome_deduplicates(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_emit_learning_outcome_deduplicates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     usage_log = tmp_path / ".agents" / "metrics" / "learning_usage.jsonl"
     monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(usage_log))
 
@@ -209,15 +197,11 @@ def test_log_activity_emits_applied_success_when_learning_provided(
     assert usage_log.is_file()
     events = [json.loads(ln) for ln in usage_log.read_text().splitlines() if ln.strip()]
     assert any(
-        e["event_type"] == "applied_success"
-        and e["learning_name"] == "live-query-first-pattern"
-        for e in events
+        e["event_type"] == "applied_success" and e["learning_name"] == "live-query-first-pattern" for e in events
     )
 
 
-def test_log_activity_emits_applied_failure_on_error(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_log_activity_emits_applied_failure_on_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)
@@ -241,9 +225,7 @@ def test_log_activity_emits_applied_failure_on_error(
     )
 
 
-def test_log_activity_no_learning_emission_when_not_provided(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_log_activity_no_learning_emission_when_not_provided(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     wf = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"
     monkeypatch.setattr(run_log_mod, "runtime_log_path", lambda _r: wf)
     monkeypatch.setattr(run_log_mod, "default_log_path", lambda _r: wf)

@@ -29,9 +29,7 @@ def test_escalates_ok_warn_block(tmp_path, monkeypatch):
     monkeypatch.setattr(lg, "BLOCK_THRESHOLD", 5)
     levels = []
     for _ in range(7):
-        v = lg.bump_and_check(
-            "same task", "general-purpose", repo_root=tmp_path, session_id="s1"
-        )
+        v = lg.bump_and_check("same task", "general-purpose", repo_root=tmp_path, session_id="s1")
         levels.append(v["level"])
     # counts 1,2,3 -> ok ; 4,5 -> warn ; 6,7 -> block
     assert levels == ["ok", "ok", "ok", "warn", "warn", "block", "block"]

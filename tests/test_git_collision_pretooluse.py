@@ -50,9 +50,7 @@ def test_cross_repo_cd_fails_open():
     p = _run_hook(
         {
             "tool_name": "Bash",
-            "tool_input": {
-                "command": 'cd "C:/Users/kas41/some-other-repo" && gh pr create --title x'
-            },
+            "tool_input": {"command": 'cd "C:/Users/kas41/some-other-repo" && gh pr create --title x'},
         }
     )
     assert p.returncode == 0
@@ -71,9 +69,7 @@ def test_malformed_stdin_allows():
 
 def test_push_command_is_recognized_and_fails_open_on_clean():
     # On a real clean repo with no collision, push must be allowed (exit 0).
-    p = _run_hook(
-        {"tool_name": "Bash", "tool_input": {"command": "git push origin HEAD"}}
-    )
+    p = _run_hook({"tool_name": "Bash", "tool_input": {"command": "git push origin HEAD"}})
     assert p.returncode == 0
 
 
@@ -99,11 +95,7 @@ def test_hard_block_returns_exit_2(monkeypatch, capsys):
     monkeypatch.setattr(
         hook.sys,
         "stdin",
-        io.StringIO(
-            json.dumps(
-                {"tool_name": "Bash", "tool_input": {"command": "git push origin x"}}
-            )
-        ),
+        io.StringIO(json.dumps({"tool_name": "Bash", "tool_input": {"command": "git push origin x"}})),
     )
     assert hook.main() == 2
     assert "BLOCKED" in capsys.readouterr().err
@@ -121,19 +113,13 @@ def _run_hook_inproc(monkeypatch, capsys, kind, *, strict=False):
     v = CollisionVerdict(action="push", branch="feat/x")
     v.hard_blocks.append({"kind": kind, "detail": f"{kind} detail"})
     monkeypatch.setattr(hook, "_current_branch", lambda cwd=None: "feat/x")
-    monkeypatch.setattr(
-        "concurrency.github_collision.check_github_collision", lambda **kw: v
-    )
+    monkeypatch.setattr("concurrency.github_collision.check_github_collision", lambda **kw: v)
     if strict:
         monkeypatch.setenv("CHROMATIC_COLLISION_STRICT", "1")
     monkeypatch.setattr(
         hook.sys,
         "stdin",
-        io.StringIO(
-            json.dumps(
-                {"tool_name": "Bash", "tool_input": {"command": "git push origin x"}}
-            )
-        ),
+        io.StringIO(json.dumps({"tool_name": "Bash", "tool_input": {"command": "git push origin x"}})),
     )
     return hook.main()
 
@@ -264,17 +250,11 @@ def test_override_allows_hard_block(monkeypatch):
     blocked = CollisionVerdict(action="push", branch="feat/x")
     blocked.hard_blocks.append({"kind": "non_fast_forward", "detail": "remote ahead"})
     monkeypatch.setattr(hook, "_current_branch", lambda cwd=None: "feat/x")
-    monkeypatch.setattr(
-        "concurrency.github_collision.check_github_collision", lambda **kw: blocked
-    )
+    monkeypatch.setattr("concurrency.github_collision.check_github_collision", lambda **kw: blocked)
     monkeypatch.setenv("CHROMATIC_ALLOW_COLLISION", "1")
     monkeypatch.setattr(
         hook.sys,
         "stdin",
-        io.StringIO(
-            json.dumps(
-                {"tool_name": "Bash", "tool_input": {"command": "git push origin x"}}
-            )
-        ),
+        io.StringIO(json.dumps({"tool_name": "Bash", "tool_input": {"command": "git push origin x"}})),
     )
     assert hook.main() == 0

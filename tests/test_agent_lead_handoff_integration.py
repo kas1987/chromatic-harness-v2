@@ -104,17 +104,12 @@ def sample_magnet_events(sample_mission):
 class TestAgentLeadHandoffIntegration:
     """Integration test for mission → synthesis → queue → events pipeline."""
 
-    def test_agent_lead_synthesis_produces_valid_output(
-        self, agent_lead_module, sample_mission, sample_magnet_events
-    ):
+    def test_agent_lead_synthesis_produces_valid_output(self, agent_lead_module, sample_mission, sample_magnet_events):
         """Agent Lead produces structured output with decision and bead guidance."""
         AgentLead = agent_lead_module.AgentLead
         output = AgentLead().run(sample_mission, sample_magnet_events)
 
-        assert (
-            output.final_report["synthesis"]["mission_id"]
-            == sample_mission["mission_id"]
-        )
+        assert output.final_report["synthesis"]["mission_id"] == sample_mission["mission_id"]
         assert output.decision in (
             "proceed",
             "proceed_reversible_only",
@@ -131,9 +126,7 @@ class TestAgentLeadHandoffIntegration:
         assert output.final_report.get("evaluation") is not None
         assert output.audit_log is not None
 
-    def test_high_risk_mission_creates_suggested_bead(
-        self, agent_lead_module, sample_mission
-    ):
+    def test_high_risk_mission_creates_suggested_bead(self, agent_lead_module, sample_mission):
         """High-risk synthesis produces a suggested bead for remediation."""
         from magnets.base_magnet import MagnetEvent
 
@@ -290,10 +283,7 @@ class TestAgentLeadHandoffIntegration:
         AgentLead = agent_lead_module.AgentLead
         synthesis_output = AgentLead().run(sample_mission, sample_magnet_events)
 
-        assert (
-            synthesis_output.final_report["synthesis"]["mission_id"]
-            == sample_mission["mission_id"]
-        )
+        assert synthesis_output.final_report["synthesis"]["mission_id"] == sample_mission["mission_id"]
         assert synthesis_output.decision in (
             "proceed",
             "proceed_reversible_only",
@@ -311,9 +301,7 @@ class TestAgentLeadHandoffIntegration:
                 "kind": "bead_dispatch",
                 "status": "queued",
                 "title": synthesis_output.suggested_bead.get("title", "Unknown"),
-                "priority": synthesis_output.suggested_bead.get(
-                    "priority", "P2"
-                ).upper(),
+                "priority": synthesis_output.suggested_bead.get("priority", "P2").upper(),
                 "type": "task",
                 "lane": "review",
                 "context": {
@@ -331,18 +319,14 @@ class TestAgentLeadHandoffIntegration:
                 "event_type": "synthesis_complete",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "decision": synthesis_output.decision,
-                "confidence_final": float(
-                    synthesis_output.final_report.get("confidence_score", 0)
-                ),
+                "confidence_final": float(synthesis_output.final_report.get("confidence_score", 0)),
                 "bead_suggested": synthesis_output.suggested_bead is not None,
             },
         )
 
         # Step 4: Frontend verifies visibility
         events = event_hub.replay(sample_mission["mission_id"])
-        synthesis_event = [
-            e for e in events if e.get("event_type") == "synthesis_complete"
-        ]
+        synthesis_event = [e for e in events if e.get("event_type") == "synthesis_complete"]
         assert len(synthesis_event) > 0
         assert synthesis_event[0]["decision"] == synthesis_output.decision
 
@@ -359,9 +343,7 @@ class TestAgentLeadHandoffIntegration:
             ]
             assert len(agent_lead_entries) > 0
 
-    def test_bead_queue_entry_matches_synthesis_decision(
-        self, agent_lead_module, sample_mission, sample_magnet_events
-    ):
+    def test_bead_queue_entry_matches_synthesis_decision(self, agent_lead_module, sample_mission, sample_magnet_events):
         """Queued bead priority aligns with synthesis risk assessment."""
         from magnets.base_magnet import MagnetEvent
 

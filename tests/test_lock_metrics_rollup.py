@@ -88,7 +88,5 @@ def test_markdown_trend_rows_match_lookback_days(tmp_path: Path):
     finally:
         lmr.REPO = old_repo
         lmr.OUT_DIR = old_out
-    day_rows = [
-        ln for ln in md.splitlines() if re.match(r"^\| \d{4}-\d{2}-\d{2} \|", ln)
-    ]
+    day_rows = [ln for ln in md.splitlines() if re.match(r"^\| \d{4}-\d{2}-\d{2} \|", ln)]
     assert len(day_rows) == 7

@@ -17,11 +17,7 @@ def test_audit_hooks_builds_report():
     report = build_report()
     assert "hook_registry" in report
     assert "findings" in report
-    assert any(
-        r.get("platform") == "cursor"
-        for r in report["hook_registry"]
-        if r.get("event") == "sessionStart"
-    )
+    assert any(r.get("platform") == "cursor" for r in report["hook_registry"] if r.get("event") == "sessionStart")
 
 
 def test_project_claude_settings_single_agent_gate():

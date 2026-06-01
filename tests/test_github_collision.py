@@ -47,9 +47,7 @@ def _git_ahead(n):
 
 class TestRemoteAhead:
     def test_push_blocks_non_fast_forward(self):
-        v = check_github_collision(
-            branch="feat/x", action=PUSH, gh_runner=_gh({}), git_runner=_git_ahead(3)
-        )
+        v = check_github_collision(branch="feat/x", action=PUSH, gh_runner=_gh({}), git_runner=_git_ahead(3))
         assert v.blocked
         assert any(b["kind"] == "non_fast_forward" for b in v.hard_blocks)
 
@@ -64,26 +62,20 @@ class TestRemoteAhead:
         assert any(b["kind"] == "force_overwrite" for b in v.hard_blocks)
 
     def test_clean_remote_ok(self):
-        v = check_github_collision(
-            branch="feat/x", action=PUSH, gh_runner=_gh({}), git_runner=_git_clean
-        )
+        v = check_github_collision(branch="feat/x", action=PUSH, gh_runner=_gh({}), git_runner=_git_clean)
         assert v.decision == "ok"
 
 
 class TestOpenPr:
     def test_open_pr_duplicate_hard_blocks(self):
         gh = _gh({"pr list": (0, [{"number": 7, "url": "u", "headRefName": "feat/x"}])})
-        v = check_github_collision(
-            branch="feat/x", action=OPEN_PR, gh_runner=gh, git_runner=_git_clean
-        )
+        v = check_github_collision(branch="feat/x", action=OPEN_PR, gh_runner=gh, git_runner=_git_clean)
         assert v.blocked
         assert v.hard_blocks[0]["kind"] == "duplicate_pr"
 
     def test_push_with_open_pr_is_soft(self):
         gh = _gh({"pr list": (0, [{"number": 7, "url": "u"}])})
-        v = check_github_collision(
-            branch="feat/x", action=PUSH, gh_runner=gh, git_runner=_git_clean
-        )
+        v = check_github_collision(branch="feat/x", action=PUSH, gh_runner=gh, git_runner=_git_clean)
         assert not v.blocked
         assert any(w["kind"] == "pr_in_flight" for w in v.soft_warnings)
 
@@ -98,9 +90,7 @@ class TestActions:
                 )
             }
         )
-        v = check_github_collision(
-            branch="feat/x", action=PUSH, gh_runner=gh, git_runner=_git_clean
-        )
+        v = check_github_collision(branch="feat/x", action=PUSH, gh_runner=gh, git_runner=_git_clean)
         assert v.decision == "warn"
         assert any(w["kind"] == "actions_in_flight" for w in v.soft_warnings)
 
@@ -128,9 +118,7 @@ class TestFailOpen:
         def gh_fail(cmd):
             return 127, "gh: not found"
 
-        v = check_github_collision(
-            branch="feat/x", action=OPEN_PR, gh_runner=gh_fail, git_runner=_git_clean
-        )
+        v = check_github_collision(branch="feat/x", action=OPEN_PR, gh_runner=gh_fail, git_runner=_git_clean)
         assert not v.blocked
         assert any(w["kind"] == "gh_unverified" for w in v.soft_warnings)
 

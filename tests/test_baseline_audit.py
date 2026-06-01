@@ -6,9 +6,7 @@ import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "baseline_audit", _REPO / "scripts" / "baseline_audit.py"
-)
+_spec = importlib.util.spec_from_file_location("baseline_audit", _REPO / "scripts" / "baseline_audit.py")
 ba = importlib.util.module_from_spec(_spec)
 sys.modules["baseline_audit"] = ba
 _spec.loader.exec_module(ba)  # type: ignore
@@ -55,9 +53,7 @@ class TestEvaluate:
         assert r["metrics"]["mcp_tokens"]["advice"] == "trim mcps"
 
     def test_unknown_does_not_make_overall_over(self):
-        r = ba.evaluate_baseline(
-            {"mcp_tokens": None}, {"mcp_tokens": {"warn": 1, "max": 2}}
-        )
+        r = ba.evaluate_baseline({"mcp_tokens": None}, {"mcp_tokens": {"warn": 1, "max": 2}})
         assert r["overall"] == "unknown"
 
 
@@ -119,9 +115,7 @@ class TestMeasurers:
         from datetime import datetime, timezone
 
         p = tmp_path / "m.json"
-        p.write_text(
-            json.dumps({"generated_at": "2026-05-30T10:00:00+00:00"}), encoding="utf-8"
-        )
+        p.write_text(json.dumps({"generated_at": "2026-05-30T10:00:00+00:00"}), encoding="utf-8")
         now = datetime(2026, 5, 30, 16, 0, 0, tzinfo=timezone.utc)
         assert ba.measure_manifest_age_hrs(p, now=now) == 6.0
 

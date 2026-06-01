@@ -12,17 +12,11 @@ from router.provider_selector import ProviderSelector
 
 _REPO = Path(__file__).resolve().parent.parent
 _ROUTING_TABLE = _REPO / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
-_OPENROUTER_MODELS = (
-    _REPO / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
-)
+_OPENROUTER_MODELS = _REPO / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
 EMPTY_PREFS = Path(__file__).resolve().parent / "fixtures" / "empty_prefs.yaml"
 
-CLOUD_PROVIDERS = frozenset(
-    {"gemini", "openai", "claude_api", "openrouter", "together_ai"}
-)
-LOCAL_PROVIDERS = frozenset(
-    {"ollama_local", "ollama_remote_desktop", "lmstudio", "native_claude"}
-)
+CLOUD_PROVIDERS = frozenset({"gemini", "openai", "claude_api", "openrouter", "together_ai"})
+LOCAL_PROVIDERS = frozenset({"ollama_local", "ollama_remote_desktop", "lmstudio", "native_claude"})
 
 C_LEVEL_TASKS = {
     "C1": ("json-to-table converter", "format output"),
@@ -100,21 +94,15 @@ def _desktop_online(**overrides) -> RuntimeContext:
 class TestLocalFirstRouting:
     @pytest.mark.parametrize("privacy_class", ["P0", "P1", "P2"])
     @pytest.mark.parametrize("c_level", ["C1", "C2"])
-    def test_balance_laptop_prefers_local(
-        self, selector, classifier, privacy_class, c_level
-    ):
+    def test_balance_laptop_prefers_local(self, selector, classifier, privacy_class, c_level):
         complexity = _classify(classifier, c_level)
         ctx = _laptop_online()
-        sel = selector.select(
-            complexity, ctx, speed_mode="balance", privacy_class=privacy_class
-        )
+        sel = selector.select(complexity, ctx, speed_mode="balance", privacy_class=privacy_class)
         assert sel.ranked_choices
         assert sel.ranked_choices[0].provider == "ollama_local"
 
     @pytest.mark.parametrize("privacy_class", ["P0", "P1", "P2"])
-    def test_balance_desktop_prefers_local_gpu(
-        self, selector, classifier, privacy_class
-    ):
+    def test_balance_desktop_prefers_local_gpu(self, selector, classifier, privacy_class):
         complexity = _classify(classifier, "C2")
         sel = selector.select(
             complexity,
@@ -195,9 +183,7 @@ class TestPrivacyClassMatrix:
 class TestRemoteOllamaMatrix:
     def test_laptop_remote_context_key(self, selector, classifier):
         complexity = _classify(classifier, "C2")
-        ctx = _laptop_online(
-            remote_ollama_endpoints=[{"host": "desktop.local", "port": 11434}]
-        )
+        ctx = _laptop_online(remote_ollama_endpoints=[{"host": "desktop.local", "port": 11434}])
         sel = selector.select(complexity, ctx, speed_mode="balance", privacy_class="P1")
         assert sel.context_key == "context_laptop_remote"
 
@@ -208,9 +194,7 @@ class TestRemoteOllamaMatrix:
             staticmethod(lambda eps: True),
         )
         complexity = _classify(classifier, "C2")
-        ctx = _laptop_online(
-            remote_ollama_endpoints=[{"host": "desktop.local", "port": 11434}]
-        )
+        ctx = _laptop_online(remote_ollama_endpoints=[{"host": "desktop.local", "port": 11434}])
         sel = selector.select(complexity, ctx, speed_mode="balance", privacy_class="P1")
         assert sel.ranked_choices[0].provider == "ollama_remote_desktop"
 
@@ -218,9 +202,7 @@ class TestRemoteOllamaMatrix:
 class TestSpeedModeMatrix:
     @pytest.mark.parametrize("speed_mode", ["low", "balance", "speed"])
     @pytest.mark.parametrize("c_level", ["C1", "C2", "C3", "C4"])
-    def test_all_speed_modes_return_choices(
-        self, selector, classifier, speed_mode, c_level
-    ):
+    def test_all_speed_modes_return_choices(self, selector, classifier, speed_mode, c_level):
         complexity = _classify(classifier, c_level)
         sel = selector.select(
             complexity,

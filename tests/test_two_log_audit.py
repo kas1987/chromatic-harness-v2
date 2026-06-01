@@ -56,9 +56,7 @@ def test_record_workflow_run_writes_three_logs(tmp_path: Path):
     assert decision_lines[-1]["input_score"] == 62.0
 
 
-def test_append_run_log_mirrors_two_log(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_append_run_log_mirrors_two_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import workflows.run_log as run_log_mod
 
     wf_log = tmp_path / "docs" / "workflows" / "WORKFLOW_RUN_LOG.jsonl"

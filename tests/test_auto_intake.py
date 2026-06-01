@@ -54,9 +54,7 @@ def test_process_bead_dispatch_dry_run(tmp_path: Path, monkeypatch: pytest.Monke
     assert result.bead_id == "chromatic-harness-v2-test1"
 
 
-def test_process_goal_creates_via_mock_bd(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_process_goal_creates_via_mock_bd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import intake.queue as qmod
 
     q = tmp_path / "intake_queue.jsonl"
@@ -67,9 +65,7 @@ def test_process_goal_creates_via_mock_bd(
     def fake_runner(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
         calls.append(cmd)
         if "create" in cmd:
-            return subprocess.CompletedProcess(
-                cmd, 0, "✓ Created issue: chromatic-harness-v2-abc1\n", ""
-            )
+            return subprocess.CompletedProcess(cmd, 0, "✓ Created issue: chromatic-harness-v2-abc1\n", "")
         return subprocess.CompletedProcess(cmd, 0, "✓ Updated issue\n", "")
 
     append_entry(
@@ -151,9 +147,7 @@ def test_validate_intake_loop_script():
     assert "Intake close-loop validation OK" in proc.stdout
 
 
-def test_process_epic_adds_timestamp_and_telemetry(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_process_epic_adds_timestamp_and_telemetry(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     import intake.queue as qmod
 
     q = tmp_path / "intake_queue.jsonl"
@@ -164,9 +158,7 @@ def test_process_epic_adds_timestamp_and_telemetry(
     def fake_runner(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
         calls.append(cmd)
         if "create" in cmd:
-            return subprocess.CompletedProcess(
-                cmd, 0, "✓ Created issue: chromatic-harness-v2-epic1\n", ""
-            )
+            return subprocess.CompletedProcess(cmd, 0, "✓ Created issue: chromatic-harness-v2-epic1\n", "")
         return subprocess.CompletedProcess(cmd, 0, "✓ Updated issue\n", "")
 
     append_entry(

@@ -10,14 +10,10 @@ import pytest
 from scripts import daily_harness_audit as dha
 
 
-def test_low_sample_timeout_rate_downgrades_to_p2(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_low_sample_timeout_rate_downgrades_to_p2(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     root = tmp_path
     (root / "scripts").mkdir(parents=True, exist_ok=True)
-    (root / "scripts" / "lock_metrics_rollup.py").write_text(
-        "# stub\n", encoding="utf-8"
-    )
+    (root / "scripts" / "lock_metrics_rollup.py").write_text("# stub\n", encoding="utf-8")
 
     # Keep audit focused on lock-threshold behavior.
     monkeypatch.setattr(dha, "CORE_FILES", [])

@@ -22,9 +22,7 @@ def _load(mod_name: str, rel_path: str):
     return mod
 
 
-def _write_learning(
-    d: Path, slug: str, *, confidence: str, tags: str = "[routing]"
-) -> None:
+def _write_learning(d: Path, slug: str, *, confidence: str, tags: str = "[routing]") -> None:
     (d / f"{slug}.md").write_text(
         f"---\nid: learning-{slug}\ntype: learning\nconfidence: {confidence}\n"
         f"category: process\ntags: {tags}\n---\n\n# Learning: {slug.replace('-', ' ')}\n\nbody\n",

@@ -159,9 +159,7 @@ def test_decide_rebalance_no_change_within_band() -> None:
 # --- _write_audit ---
 
 
-def test_write_audit_creates_file(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_write_audit_creates_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(cal, "CYCLES_DIR", tmp_path / "calibration-cycles")
     metrics = {
         "e1_min_score": 0.32,
@@ -171,9 +169,7 @@ def test_write_audit_creates_file(
         "e1_total": 0,
         "avg_score_e0": 0.18,
     }
-    path = cal._write_audit(
-        3, "2026-05-30", metrics, "LOWER", "test rationale", 0.30, dry_run=False
-    )
+    path = cal._write_audit(3, "2026-05-30", metrics, "LOWER", "test rationale", 0.30, dry_run=False)
     assert path.is_file()
     artifact = json.loads(path.read_text())
     assert artifact["cycle_number"] == 3
@@ -183,9 +179,7 @@ def test_write_audit_creates_file(
     assert artifact["dry_run"] is False
 
 
-def test_write_audit_dry_run_does_not_create_file(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_write_audit_dry_run_does_not_create_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(cal, "CYCLES_DIR", tmp_path / "calibration-cycles")
     metrics = {
         "e1_min_score": 0.32,
@@ -195,18 +189,14 @@ def test_write_audit_dry_run_does_not_create_file(
         "e1_total": 0,
         "avg_score_e0": 0.18,
     }
-    path = cal._write_audit(
-        1, "2026-05-30", metrics, "NO_CHANGE", "dry run", 0.32, dry_run=True
-    )
+    path = cal._write_audit(1, "2026-05-30", metrics, "NO_CHANGE", "dry run", 0.32, dry_run=True)
     assert not path.is_file()
 
 
 # --- _apply_threshold ---
 
 
-def test_apply_threshold_writes_updated_policy(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_apply_threshold_writes_updated_policy(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     policy_file = tmp_path / "learning_tier_policy.json"
     policy = _make_policy(e1_min_score=0.32)
     policy_file.write_text(json.dumps(policy))

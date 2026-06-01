@@ -68,8 +68,6 @@ class TestMagnetOrchestrator:
 
     def test_observe_intake_short_objective(self):
         orch = MagnetOrchestrator()
-        event = orch.observe(
-            "CHR-TEST", "intake_magnet", "intake", {"objective": "fix"}
-        )
+        event = orch.observe("CHR-TEST", "intake_magnet", "intake", {"objective": "fix"})
         assert event.recommended_action == "clarify_intent"
         assert event.risk_delta > 0

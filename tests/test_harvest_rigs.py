@@ -57,9 +57,7 @@ def test_run_harvest_promotes_high_confidence(tmp_path: Path):
     assert len(report.promoted) == 1
     dest = tmp_path / ".agents" / "learnings" / "promote-me.md"
     assert dest.is_file()
-    catalog = json.loads(
-        (tmp_path / ".agents" / "harvest" / "latest.json").read_text(encoding="utf-8")
-    )
+    catalog = json.loads((tmp_path / ".agents" / "harvest" / "latest.json").read_text(encoding="utf-8"))
     assert catalog["unique_count"] == 2
 
 

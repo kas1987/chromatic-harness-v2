@@ -71,7 +71,7 @@ jobs:
 
       - name: Lint
         run: |
-          pip install ruff
+          pip install ruff==0.15.15
           ruff check src/ tests/
 
       - name: Format check

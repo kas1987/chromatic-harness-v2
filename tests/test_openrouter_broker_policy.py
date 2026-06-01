@@ -15,12 +15,8 @@ from router.context_detector import RuntimeContext
 from router.provider_selector import ProviderSelector
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_ROUTING_TABLE = (
-    _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
-)
-_OPENROUTER_MODELS = (
-    _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
-)
+_ROUTING_TABLE = _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
+_OPENROUTER_MODELS = _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
 
 
 @pytest.fixture
@@ -67,12 +63,8 @@ def test_openrouter_allowlist_file_present():
 
 
 def test_p4_blocks_cloud_and_openrouter(selector, classifier, online_laptop_ctx):
-    complexity = classifier.classify(
-        "debug the failing request path", "root cause the 500 error"
-    )
-    result = selector.select(
-        complexity, online_laptop_ctx, speed_mode="speed", privacy_class="P4"
-    )
+    complexity = classifier.classify("debug the failing request path", "root cause the 500 error")
+    result = selector.select(complexity, online_laptop_ctx, speed_mode="speed", privacy_class="P4")
     names = _providers(result)
     assert "openrouter" not in names
     assert "gemini" not in names
@@ -83,36 +75,22 @@ def test_p4_blocks_cloud_and_openrouter(selector, classifier, online_laptop_ctx)
 
 
 def test_p5_blocks_cloud_and_openrouter(selector, classifier, online_laptop_ctx):
-    complexity = classifier.classify(
-        "brainstorm architecture options", "brainstorm design tradeoffs"
-    )
-    result = selector.select(
-        complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P5"
-    )
+    complexity = classifier.classify("brainstorm architecture options", "brainstorm design tradeoffs")
+    result = selector.select(complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P5")
     names = _providers(result)
-    assert not (
-        set(names) & {"openrouter", "gemini", "openai", "claude_api", "together_ai"}
-    )
+    assert not (set(names) & {"openrouter", "gemini", "openai", "claude_api", "together_ai"})
 
 
 def test_p3_blocks_all_cloud_routes(selector, classifier, online_laptop_ctx):
-    complexity = classifier.classify(
-        "multi-file integration review", "trace cross-file dependencies"
-    )
-    result = selector.select(
-        complexity, online_laptop_ctx, speed_mode="speed", privacy_class="P3"
-    )
+    complexity = classifier.classify("multi-file integration review", "trace cross-file dependencies")
+    result = selector.select(complexity, online_laptop_ctx, speed_mode="speed", privacy_class="P3")
     names = _providers(result)
     assert not (set(names) & {"openrouter", "gemini", "openai", "claude_api"})
 
 
 def test_p1_allows_allowlisted_openrouter(selector, classifier, online_laptop_ctx):
-    complexity = classifier.classify(
-        "debug the failing request path", "root cause the 500 error"
-    )
-    result = selector.select(
-        complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P1"
-    )
+    complexity = classifier.classify("debug the failing request path", "root cause the 500 error")
+    result = selector.select(complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P1")
     names = _providers(result)
     assert "openrouter" in names
     or_choice = next(c for c in result.ranked_choices if c.provider == "openrouter")
@@ -120,31 +98,21 @@ def test_p1_allows_allowlisted_openrouter(selector, classifier, online_laptop_ct
 
 
 def test_p2_blocks_openrouter_keeps_frontier(selector, classifier, online_laptop_ctx):
-    complexity = classifier.classify(
-        "debug the failing request path", "root cause the 500 error"
-    )
-    result = selector.select(
-        complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P2"
-    )
+    complexity = classifier.classify("debug the failing request path", "root cause the 500 error")
+    result = selector.select(complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P2")
     names = _providers(result)
     assert "openrouter" not in names
     assert "gemini" in names or "claude_api" in names
 
 
-def test_non_allowlisted_openrouter_model_removed(
-    selector, classifier, online_laptop_ctx
-):
-    complexity = classifier.classify(
-        "debug the failing request path", "root cause the 500 error"
-    )
+def test_non_allowlisted_openrouter_model_removed(selector, classifier, online_laptop_ctx):
+    complexity = classifier.classify("debug the failing request path", "root cause the 500 error")
     table = selector._table.copy()
     ctx = table.setdefault("context_laptop", {})
     bal = ctx.setdefault("balance", {})
     bal["C3"] = ["openrouter:vendor/unknown-model", "gemini:gemini-2.5-pro"]
     selector._table = table
-    result = selector.select(
-        complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P1"
-    )
+    result = selector.select(complexity, online_laptop_ctx, speed_mode="balance", privacy_class="P1")
     names = _providers(result)
     assert "openrouter" not in names
     assert "gemini" in names

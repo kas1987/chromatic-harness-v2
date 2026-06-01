@@ -179,9 +179,7 @@ async def test_openhuman_success_response(openhuman_config, route_request):
         mock_client_class.return_value.__aenter__.return_value = mock_client
         mock_http_response = MagicMock()
         mock_http_response.status_code = 200
-        mock_http_response.json.return_value = {
-            "context": [{"scope": "research", "summary": "Found relevant info"}]
-        }
+        mock_http_response.json.return_value = {"context": [{"scope": "research", "summary": "Found relevant info"}]}
         mock_client.post.return_value = mock_http_response
 
         response = await adapter.complete(route_request)

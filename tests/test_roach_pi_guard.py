@@ -45,12 +45,8 @@ def test_validate_scope_rejects_traversal(tmp_path: Path):
 def test_submodule_healthy_with_markers(tmp_path: Path):
     root = tmp_path / "roach-pi"
     (root / "extensions" / "agentic-harness").mkdir(parents=True)
-    (root / "extensions" / "agentic-harness" / "package.json").write_text(
-        "{}", encoding="utf-8"
-    )
-    (root / "extensions" / "agentic-harness" / "index.ts").write_text(
-        "// stub", encoding="utf-8"
-    )
+    (root / "extensions" / "agentic-harness" / "package.json").write_text("{}", encoding="utf-8")
+    (root / "extensions" / "agentic-harness" / "index.ts").write_text("// stub", encoding="utf-8")
     assert submodule_healthy(root)
     status = detect_mode(roach_root=root, root=tmp_path)
     assert status["mode"] == "submodule"

@@ -10,17 +10,12 @@ _RUNTIME = _REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
-_spec = importlib.util.spec_from_file_location(
-    "session_closeout", _REPO / "scripts" / "session_closeout.py"
-)
+_spec = importlib.util.spec_from_file_location("session_closeout", _REPO / "scripts" / "session_closeout.py")
 sc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(sc)  # type: ignore
 
 _COMPLETE = {
-    "ship_log": (
-        "[S8-LEAN] boot-tax=ok poll=ok inject=ok swappable=ok\n"
-        "[S10-LIVE] wired=plugin.py proof=trace"
-    ),
+    "ship_log": ("[S8-LEAN] boot-tax=ok poll=ok inject=ok swappable=ok\n[S10-LIVE] wired=plugin.py proof=trace"),
     "dod_ok": True,
 }
 _INCOMPLETE = {"ship_log": "[S8-LEAN] boot-tax=ok"}  # no S10, no DoD

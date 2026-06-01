@@ -48,9 +48,7 @@ def test_impact_fan_out_uses_injected_runner(monkeypatch):
         captured["files"] = files
         return "x/y.py\nx/z.py\nq/r.py\n"  # codegraph says 3 files affected
 
-    result = gate._impact_fan_out(
-        "refactor 02_RUNTIME/router/gate.py", "", runner=fake_runner
-    )
+    result = gate._impact_fan_out("refactor 02_RUNTIME/router/gate.py", "", runner=fake_runner)
     assert result == 3
     assert captured["files"] == ["02_RUNTIME/router/gate.py"]
 
@@ -59,8 +57,7 @@ def test_impact_fan_out_floor_is_referenced_count(monkeypatch):
     monkeypatch.setattr(gate, "IMPACT_ENABLED", True)
     # Runner returns nothing useful, but two real files were referenced.
     result = gate._impact_fan_out(
-        "touch 02_RUNTIME/router/gate.py and "
-        "02_RUNTIME/router/complexity_classifier.py",
+        "touch 02_RUNTIME/router/gate.py and 02_RUNTIME/router/complexity_classifier.py",
         "",
         runner=lambda files: "",
     )

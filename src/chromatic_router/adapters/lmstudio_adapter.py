@@ -57,15 +57,11 @@ class LMStudioAdapter(BaseAdapter):
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append(
-            "LMStudioAdapter.complete() is a stub — wire OpenAI-compatible client when ready."
-        )
+        logs.warnings.append("LMStudioAdapter.complete() is a stub — wire OpenAI-compatible client when ready.")
         return RouteResponse(
             request_id=req.request_id,
             selected_provider=self.name,
             route_reason="lmstudio_stub",
-            output=RouteOutput(
-                type=OutputType.TEXT, content="[LM Studio stub — not yet wired]"
-            ),
+            output=RouteOutput(type=OutputType.TEXT, content="[LM Studio stub — not yet wired]"),
             logs=logs,
         )

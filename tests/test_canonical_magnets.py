@@ -153,9 +153,7 @@ def test_full_canonical_pipeline_happy_path():
     mission = "m-e2e"
 
     events = [
-        reg.observe(
-            mission, "intake_magnet", "intake", {"objective": "Ship feature X cleanly"}
-        ),
+        reg.observe(mission, "intake_magnet", "intake", {"objective": "Ship feature X cleanly"}),
         reg.observe(
             mission,
             "plan_magnet",
@@ -227,9 +225,7 @@ def test_full_canonical_pipeline_unhappy_path():
     mission = "m-e2e-bad"
 
     events = [
-        reg.observe(
-            mission, "intake_magnet", "intake", {"objective": "x"}
-        ),  # too short
+        reg.observe(mission, "intake_magnet", "intake", {"objective": "x"}),  # too short
         reg.observe(mission, "plan_magnet", "plan", {}),  # no plan
         reg.observe(mission, "dispatch_magnet", "dispatch", {}),  # no controls
         reg.observe(

@@ -47,9 +47,7 @@ class TestSessionCompact:
             sc._HANDOFFS = tmp_repo / "12_HANDOFFS" / "sessions"
             sc._LATEST = tmp_repo / ".agents" / "handoffs" / "latest.json"
             sc._TEMPLATE = tmp_repo / "12_HANDOFFS" / "AGENT_HANDOFF_TEMPLATE.md"
-            out = sc.write_handoff(
-                handoff_prep, mission={"mission_id": "CHR-TEST-COMPACT"}
-            )
+            out = sc.write_handoff(handoff_prep, mission={"mission_id": "CHR-TEST-COMPACT"})
             assert out.exists()
             latest = json.loads(sc._LATEST.read_text(encoding="utf-8"))
             assert latest["mission_id"] == "CHR-TEST-COMPACT"

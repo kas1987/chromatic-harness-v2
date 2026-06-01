@@ -64,9 +64,7 @@ def test_from_dict_parses_full_contract():
 
 
 def test_from_dict_tolerates_partial_record():
-    state = QuotaState.from_dict(
-        {"weekly_pct": 50, "captured_at": _iso(datetime.now(timezone.utc))}
-    )
+    state = QuotaState.from_dict({"weekly_pct": 50, "captured_at": _iso(datetime.now(timezone.utc))})
     assert state.weekly_pct == 50.0
     assert state.session_5h_pct is None
     assert state.present is True

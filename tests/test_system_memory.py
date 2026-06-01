@@ -100,9 +100,7 @@ async def test_record_and_retrieve_violation(store):
 
 @pytest.mark.asyncio
 async def test_session_lifecycle(store):
-    sid = await store.start_session(
-        agent_id="test-agent", project_context={"repo": "test"}
-    )
+    sid = await store.start_session(agent_id="test-agent", project_context={"repo": "test"})
     assert sid
     await store.end_session(sid, outcome="success", injected_memory=["L-001", "R-001"])
 
@@ -111,13 +109,9 @@ def test_scope_enforcer_baseline():
     with tempfile.TemporaryDirectory() as tmp:
         # Init a git repo for testing
         os.system(f"git init -q {tmp}")
-        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(
-            parents=True, exist_ok=True
-        )
+        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(parents=True, exist_ok=True)
         (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").write_text("x")
-        (Path(tmp) / "02_RUNTIME" / "router.py").parent.mkdir(
-            parents=True, exist_ok=True
-        )
+        (Path(tmp) / "02_RUNTIME" / "router.py").parent.mkdir(parents=True, exist_ok=True)
         (Path(tmp) / "02_RUNTIME" / "router.py").write_text("y")
         os.system(f"git -C {tmp} add . && git -C {tmp} commit -q -m 'init'")
 
@@ -129,9 +123,7 @@ def test_scope_enforcer_baseline():
 def test_scope_enforcer_passes_when_no_changes():
     with tempfile.TemporaryDirectory() as tmp:
         os.system(f"git init -q {tmp}")
-        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(
-            parents=True, exist_ok=True
-        )
+        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(parents=True, exist_ok=True)
         (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").write_text("x")
         os.system(f"git -C {tmp} add . && git -C {tmp} commit -q -m 'init'")
 
@@ -144,9 +136,7 @@ def test_scope_enforcer_passes_when_no_changes():
 def test_scope_enforcer_detects_out_of_scope_file():
     with tempfile.TemporaryDirectory() as tmp:
         os.system(f"git init -q {tmp}")
-        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(
-            parents=True, exist_ok=True
-        )
+        (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").parent.mkdir(parents=True, exist_ok=True)
         (Path(tmp) / "05_FRONTEND_CONSOLE" / "file.tsx").write_text("x")
         os.system(f"git -C {tmp} add . && git -C {tmp} commit -q -m 'init'")
 

@@ -20,9 +20,7 @@ from magnets.plugins.secrets_plugin import SecretsSurfacePlugin  # noqa: E402
 class EchoPlugin(MagnetPlugin):
     name = "echo_plugin"
 
-    def observe(
-        self, mission_id: str, inflection_point: str, signal: dict
-    ) -> MagnetEvent:
+    def observe(self, mission_id: str, inflection_point: str, signal: dict) -> MagnetEvent:
         return MagnetEvent(
             mission_id=mission_id,
             magnet_name=self.name,

@@ -12,9 +12,7 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 def test_build_standard_pipeline_chain():
-    graph = build_standard_pipeline(
-        "Ship feature X", bead_id="chromatic-harness-v2-abc"
-    )
+    graph = build_standard_pipeline("Ship feature X", bead_id="chromatic-harness-v2-abc")
     assert len(graph["tasks"]) == 4
     assert graph["tasks"][0]["role"] == "scout"
     assert graph["tasks"][1]["depends_on"] == [graph["tasks"][0]["task_id"]]

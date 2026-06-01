@@ -38,15 +38,11 @@ class GoogleAdapter(BaseAdapter):
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
-        logs.warnings.append(
-            "GoogleAdapter.complete() is a stub — wire google.generativeai SDK when ready."
-        )
+        logs.warnings.append("GoogleAdapter.complete() is a stub — wire google.generativeai SDK when ready.")
         return RouteResponse(
             request_id=req.request_id,
             selected_provider=self.name,
             route_reason="google_stub",
-            output=RouteOutput(
-                type=OutputType.TEXT, content="[Google stub — not yet wired]"
-            ),
+            output=RouteOutput(type=OutputType.TEXT, content="[Google stub — not yet wired]"),
             logs=logs,
         )

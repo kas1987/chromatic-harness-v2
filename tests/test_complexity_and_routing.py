@@ -48,10 +48,7 @@ def test_complexity_fixture_has_fifty_cases(complexity_matrix):
 
 @pytest.mark.parametrize(
     "case_id",
-    [
-        c["id"]
-        for c in yaml.safe_load(COMPLEXITY_CASES.read_text(encoding="utf-8"))["cases"]
-    ],
+    [c["id"] for c in yaml.safe_load(COMPLEXITY_CASES.read_text(encoding="utf-8"))["cases"]],
     ids=lambda cid: cid,
 )
 def test_classify_matrix_case(classifier, complexity_matrix, case_id):
@@ -63,8 +60,7 @@ def test_classify_matrix_case(classifier, complexity_matrix, case_id):
     )
     expected = case["expected"]
     assert result.level == expected, (
-        f"{case_id}: expected {expected}, got {result.level} "
-        f"(matched {result.matched_keywords})"
+        f"{case_id}: expected {expected}, got {result.level} (matched {result.matched_keywords})"
     )
 
 
@@ -87,18 +83,14 @@ def test_no_impact_is_keyword_only_no_regression(classifier):
 
 def test_impact_fan_out_bumps_c1_to_c2(classifier):
     """A mechanical task that actually touches several files is not C1."""
-    result = classifier.classify(
-        "format the config", "convert to a table", impact_fan_out=8
-    )
+    result = classifier.classify("format the config", "convert to a table", impact_fan_out=8)
     assert result.level == "C2"
     assert result.evidence_source == "codegraph_impact"
 
 
 def test_large_impact_reaches_reasoning_tier(classifier):
     """Very large blast radius reaches C3 even from a mechanical description."""
-    result = classifier.classify(
-        "format the config", "convert to a table", impact_fan_out=25
-    )
+    result = classifier.classify("format the config", "convert to a table", impact_fan_out=25)
     assert result.level == "C3"
     assert result.evidence_source == "codegraph_impact"
 
@@ -117,9 +109,7 @@ def test_impact_evidence_overrides_keyword_guess(classifier):
 
 def test_keyword_hint_still_works_without_impact(classifier):
     """max_files_hint path is unchanged and reports keyword evidence."""
-    result = classifier.classify(
-        "format the config", "convert to a table", max_files_hint=8
-    )
+    result = classifier.classify("format the config", "convert to a table", max_files_hint=8)
     assert result.level == "C2"
     assert result.evidence_source == "keyword"
 
@@ -168,9 +158,7 @@ def test_provider_selector_balance_laptop_c1(selector, classifier):
 
 
 def test_provider_selector_speed_laptop_c3(selector, classifier):
-    result = classifier.classify(
-        "debug the failing request path", "root cause the 500 error"
-    )
+    result = classifier.classify("debug the failing request path", "root cause the 500 error")
     ctx = _laptop_ctx(ollama_local_models=["qwen2.5-coder:14b"])
     sel = selector.select(result, ctx, speed_mode="speed", privacy_class="P1")
     assert sel.c_level == "C3"
@@ -180,9 +168,7 @@ def test_provider_selector_speed_laptop_c3(selector, classifier):
 
 
 def test_provider_selector_offline_forces_low(selector, classifier):
-    result = classifier.classify(
-        "brainstorm architecture options", "brainstorm design tradeoffs"
-    )
+    result = classifier.classify("brainstorm architecture options", "brainstorm design tradeoffs")
     ctx = _laptop_ctx(
         ollama_local_models=["qwen2.5-coder:14b"],
         internet_reachable=False,
@@ -194,9 +180,7 @@ def test_provider_selector_offline_forces_low(selector, classifier):
 
 
 def test_provider_selector_desktop_gpu_c2(selector, classifier):
-    result = classifier.classify(
-        "scaffold a new module", "scaffold the directory layout"
-    )
+    result = classifier.classify("scaffold a new module", "scaffold the directory layout")
     ctx = RuntimeContext(
         device_type="desktop",
         gpu_model="RTX 4070",

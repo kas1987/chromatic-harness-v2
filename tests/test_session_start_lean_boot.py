@@ -6,9 +6,7 @@ import time
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "session_start", _REPO / "scripts" / "session_start.py"
-)
+_spec = importlib.util.spec_from_file_location("session_start", _REPO / "scripts" / "session_start.py")
 ss = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ss)  # type: ignore
 

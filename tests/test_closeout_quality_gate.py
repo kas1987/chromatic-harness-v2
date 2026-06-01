@@ -4,9 +4,7 @@ import importlib.util
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "session_closeout", _REPO / "scripts" / "session_closeout.py"
-)
+_spec = importlib.util.spec_from_file_location("session_closeout", _REPO / "scripts" / "session_closeout.py")
 sc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(sc)  # type: ignore
 
@@ -31,9 +29,7 @@ def test_no_change_skips_all(monkeypatch):
 
 def test_changed_py_runs_ruff_and_pytest(monkeypatch):
     monkeypatch.setattr(sc, "_changed_code_files", lambda: ["a.py"])
-    _patch_run(
-        monkeypatch, {"ruff": (0, "All checks passed"), "pytest": (0, "1 passed")}
-    )
+    _patch_run(monkeypatch, {"ruff": (0, "All checks passed"), "pytest": (0, "1 passed")})
     r = sc.run_change_gated_quality(run_pytest=True)
     assert r["ruff"]["ok"] and r["pytest"]["ok"]
 

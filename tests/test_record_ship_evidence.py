@@ -5,9 +5,7 @@ import json
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
-_spec = importlib.util.spec_from_file_location(
-    "record_ship_evidence", _REPO / "scripts" / "record_ship_evidence.py"
-)
+_spec = importlib.util.spec_from_file_location("record_ship_evidence", _REPO / "scripts" / "record_ship_evidence.py")
 rse = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(rse)  # type: ignore
 
@@ -66,18 +64,14 @@ def test_roundtrip_with_closeout_consumer(tmp_path):
     import sys
 
     sys.path.insert(0, str(_REPO / "02_RUNTIME"))
-    sc_spec = importlib.util.spec_from_file_location(
-        "session_closeout", _REPO / "scripts" / "session_closeout.py"
-    )
+    sc_spec = importlib.util.spec_from_file_location("session_closeout", _REPO / "scripts" / "session_closeout.py")
     sc = importlib.util.module_from_spec(sc_spec)
     sc_spec.loader.exec_module(sc)  # type: ignore
 
     if not hasattr(sc, "evaluate_ship_completion"):
         import pytest
 
-        pytest.skip(
-            "consumer evaluate_ship_completion not present on this branch (#28)"
-        )
+        pytest.skip("consumer evaluate_ship_completion not present on this branch (#28)")
 
     p = tmp_path / "ship.json"
     rse.record_evidence(p, bead_id="B1", lean_ok=True, live_ok=True, dod_ok=True)

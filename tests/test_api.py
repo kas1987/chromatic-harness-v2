@@ -32,9 +32,7 @@ def test_health_returns_ok(client):
 
 
 def test_create_mission_returns_dispatch(client):
-    r = client.post(
-        "/missions", json={"objective": "test mission", "required_outputs": ["report"]}
-    )
+    r = client.post("/missions", json={"objective": "test mission", "required_outputs": ["report"]})
     assert r.status_code == 200
     data = r.json()
     assert "mission_id" in data

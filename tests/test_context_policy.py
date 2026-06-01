@@ -62,22 +62,16 @@ class TestContextPolicyLoader:
 
     def test_resolve_combined_policy(self, loader):
         policy = loader.resolve(TaskType.CODING, "C3", PrivacyClass.P1)
-        assert (
-            policy.effective_max_resources() == 16
-        )  # coding=16, C3=16, global=20 → 16
+        assert policy.effective_max_resources() == 16  # coding=16, C3=16, global=20 → 16
         assert policy.effective_budget_pct() == 25
         assert policy.effective_max_risk() == "high"  # P1=high, C3=high → high
-        assert (
-            policy.is_blocked("secrets_read") is True
-        )  # blocked by both task and privacy rule
+        assert policy.is_blocked("secrets_read") is True  # blocked by both task and privacy rule
         assert policy.is_blocked("bash") is False  # not blocked for coding
         assert policy.is_type_allowed("tool") is True
 
     def test_resolve_p4_restrictive(self, loader):
         policy = loader.resolve(TaskType.RESEARCH, "C1", PrivacyClass.P4)
-        assert (
-            policy.effective_max_resources() == 8
-        )  # min of research(12), C1(8), global(20)
+        assert policy.effective_max_resources() == 8  # min of research(12), C1(8), global(20)
         assert policy.effective_max_risk() == "low"  # P4=low, C1=low → low
         assert policy.is_blocked("bash") is True
         assert policy.is_blocked("codex_team") is True

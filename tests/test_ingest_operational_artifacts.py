@@ -94,9 +94,7 @@ def test_outcome_confidence_threshold_success() -> None:
         "confidence_field": "confidence_score",
         "confidence_success_threshold": 75.0,
     }
-    assert (
-        ingest._determine_outcome({"confidence_score": 80.0}, rule) == "applied_success"
-    )
+    assert ingest._determine_outcome({"confidence_score": 80.0}, rule) == "applied_success"
 
 
 def test_outcome_confidence_threshold_miss() -> None:
@@ -184,9 +182,7 @@ def test_load_seen_keys_empty_when_no_log(tmp_path: Path) -> None:
 # --- _process_source (integration) ---
 
 
-def test_process_source_emits_success_event(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_process_source_emits_success_event(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     usage_log = tmp_path / "usage.jsonl"
     monkeypatch.setattr(ingest, "USAGE_LOG", usage_log)
     monkeypatch.setattr(ingest, "REPO", tmp_path)
@@ -213,9 +209,7 @@ def test_process_source_emits_success_event(
     assert "idempotency_key" in events[0]
 
 
-def test_process_source_deduplicates_on_rerun(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_process_source_deduplicates_on_rerun(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     usage_log = tmp_path / "usage.jsonl"
     monkeypatch.setattr(ingest, "USAGE_LOG", usage_log)
     monkeypatch.setattr(ingest, "REPO", tmp_path)
@@ -239,9 +233,7 @@ def test_process_source_deduplicates_on_rerun(
     assert stats2["skipped_dup"] == 1
 
 
-def test_process_source_dry_run_does_not_write(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_process_source_dry_run_does_not_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     usage_log = tmp_path / "usage.jsonl"
     monkeypatch.setattr(ingest, "USAGE_LOG", usage_log)
     monkeypatch.setattr(ingest, "REPO", tmp_path)
@@ -262,14 +254,10 @@ def test_process_source_dry_run_does_not_write(
     assert not usage_log.is_file()
 
 
-def test_process_source_skips_failure_rows_without_outcome(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_process_source_skips_failure_rows_without_outcome(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ingest, "REPO", tmp_path)
 
-    rows = [
-        {"timestamp": "2026-05-30T00:00:00Z", "result": "pending", "learning_name": "x"}
-    ]
+    rows = [{"timestamp": "2026-05-30T00:00:00Z", "result": "pending", "learning_name": "x"}]
     cfg = _make_source_cfg(tmp_path, rows)
     cfg["path"] = str(tmp_path / "artifact.jsonl")
 
@@ -278,9 +266,7 @@ def test_process_source_skips_failure_rows_without_outcome(
     assert stats["emitted"] == 0
 
 
-def test_process_source_skips_rows_with_skip_key(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_process_source_skips_rows_with_skip_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ingest, "REPO", tmp_path)
 
     rows = [
@@ -299,9 +285,7 @@ def test_process_source_skips_rows_with_skip_key(
     assert stats["emitted"] == 1
 
 
-def test_process_source_missing_artifact_returns_zero_stats(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_process_source_missing_artifact_returns_zero_stats(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ingest, "REPO", tmp_path)
     cfg = _make_source_cfg(tmp_path, [])
     cfg["path"] = str(tmp_path / "nonexistent.jsonl")

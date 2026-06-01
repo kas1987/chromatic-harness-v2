@@ -9,9 +9,7 @@ import pytest
 from scripts import daily_harness_audit as dha
 
 
-def test_daily_audit_emits_root_artifact_hygiene_drift(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_daily_audit_emits_root_artifact_hygiene_drift(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     root = tmp_path
     scripts_dir = root / "scripts"
     scripts_dir.mkdir(parents=True, exist_ok=True)

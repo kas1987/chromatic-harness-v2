@@ -28,9 +28,7 @@ import portfolio_token_forecast as ptf  # noqa: E402
 _NOW = datetime(2026, 5, 30, 12, 0, 0, tzinfo=timezone.utc)
 
 
-def _write_quota_state(
-    path: Path, *, weekly_pct: float, captured: datetime, reset_days: float
-) -> None:
+def _write_quota_state(path: Path, *, weekly_pct: float, captured: datetime, reset_days: float) -> None:
     path.write_text(
         json.dumps(
             {
@@ -68,15 +66,9 @@ def _write_ledger(path: Path) -> None:
     path.write_text(
         "\n".join(
             [
-                json.dumps(
-                    {"decision_id": "d1", "axis": "P", "cost_center": {"c_level": "C4"}}
-                ),
-                json.dumps(
-                    {"decision_id": "d2", "axis": "F", "cost_center": {"c_level": "C1"}}
-                ),
-                json.dumps(
-                    {"decision_id": "d3", "axis": "P", "cost_center": {"c_level": "C3"}}
-                ),
+                json.dumps({"decision_id": "d1", "axis": "P", "cost_center": {"c_level": "C4"}}),
+                json.dumps({"decision_id": "d2", "axis": "F", "cost_center": {"c_level": "C1"}}),
+                json.dumps({"decision_id": "d3", "axis": "P", "cost_center": {"c_level": "C3"}}),
             ]
         ),
         encoding="utf-8",
@@ -89,9 +81,7 @@ def test_axis_prepaid_block_and_inverted_status_under(tmp_path: Path) -> None:
     fc = tmp_path / "forecast_latest.json"
     led = tmp_path / "ledger.jsonl"
     # captured ~just now so the staleness guard passes (fresh signal).
-    _write_quota_state(
-        qs, weekly_pct=10.0, captured=_NOW - timedelta(seconds=30), reset_days=5.0
-    )
+    _write_quota_state(qs, weekly_pct=10.0, captured=_NOW - timedelta(seconds=30), reset_days=5.0)
     _write_forecast_latest(fc)
     _write_ledger(led)
 
@@ -132,9 +122,7 @@ def test_inverted_status_green_when_on_pace(tmp_path: Path) -> None:
     """High pace (60% used, 2d elapsed) projects >=90% → INVERTED green."""
     qs = tmp_path / "quota_state.json"
     fc = tmp_path / "forecast_latest.json"
-    _write_quota_state(
-        qs, weekly_pct=60.0, captured=_NOW - timedelta(seconds=10), reset_days=5.0
-    )
+    _write_quota_state(qs, weekly_pct=60.0, captured=_NOW - timedelta(seconds=10), reset_days=5.0)
     _write_forecast_latest(fc)
 
     report = ptf.build_report(now=_NOW, quota_state_path=qs, forecast_latest_path=fc)
@@ -148,9 +136,7 @@ def test_stale_quota_state_marks_status_stale(tmp_path: Path) -> None:
     """A stale quota_state (>5min) yields no fresh Axis P signal → conservative."""
     qs = tmp_path / "quota_state.json"
     fc = tmp_path / "forecast_latest.json"
-    _write_quota_state(
-        qs, weekly_pct=40.0, captured=_NOW - timedelta(hours=1), reset_days=5.0
-    )
+    _write_quota_state(qs, weekly_pct=40.0, captured=_NOW - timedelta(hours=1), reset_days=5.0)
     _write_forecast_latest(fc)
 
     report = ptf.build_report(now=_NOW, quota_state_path=qs, forecast_latest_path=fc)
@@ -164,15 +150,11 @@ def test_roi_card_and_dollar_forecast_folded_in(tmp_path: Path) -> None:
     qs = tmp_path / "quota_state.json"
     fc = tmp_path / "forecast_latest.json"
     led = tmp_path / "ledger.jsonl"
-    _write_quota_state(
-        qs, weekly_pct=10.0, captured=_NOW - timedelta(seconds=30), reset_days=5.0
-    )
+    _write_quota_state(qs, weekly_pct=10.0, captured=_NOW - timedelta(seconds=30), reset_days=5.0)
     _write_forecast_latest(fc)
     _write_ledger(led)
 
-    report = ptf.build_report(
-        now=_NOW, quota_state_path=qs, ledger_path=led, forecast_latest_path=fc
-    )
+    report = ptf.build_report(now=_NOW, quota_state_path=qs, ledger_path=led, forecast_latest_path=fc)
 
     roi = report["roi_card"]
     assert len(roi["routing_card"]) == 4

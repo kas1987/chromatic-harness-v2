@@ -81,18 +81,14 @@ def test_runtime_spine(client):
     assert r.status_code == 200, f"GET /missions failed: {r.text}"
     missions = r.json()
     mission_ids = [m["mission_id"] for m in missions]
-    assert mission_id in mission_ids, (
-        f"Created mission {mission_id} not found in GET /missions"
-    )
+    assert mission_id in mission_ids, f"Created mission {mission_id} not found in GET /missions"
 
     # ── Step 5: GET /missions/{id}/events → event retrievable ─────────────────
     r = client.get(f"/missions/{mission_id}/events")
     assert r.status_code == 200, f"GET /missions/{{id}}/events failed: {r.text}"
     events = r.json()
     event_ids = [e["event_id"] for e in events]
-    assert event_id in event_ids, (
-        f"Created event {event_id} not found in GET /missions/{{id}}/events"
-    )
+    assert event_id in event_ids, f"Created event {event_id} not found in GET /missions/{{id}}/events"
 
     # ── Step 6: GET /beads → bead retrievable ────────────────────────────────
     r = client.get("/beads")

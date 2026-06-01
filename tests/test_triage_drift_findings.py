@@ -49,9 +49,7 @@ def test_load_drift_items_jsonl(fake_repo: Path):
     assert any(i.category == "todo" for i in items)
 
 
-def test_triage_write_creates_and_updates_state(
-    fake_repo: Path, monkeypatch: pytest.MonkeyPatch
-):
+def test_triage_write_creates_and_updates_state(fake_repo: Path, monkeypatch: pytest.MonkeyPatch):
     latest = fake_repo / ".agents" / "evolve" / "drift-findings-latest.jsonl"
     latest.write_text(
         json.dumps(
