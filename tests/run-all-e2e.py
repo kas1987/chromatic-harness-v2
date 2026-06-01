@@ -222,6 +222,12 @@ SUITES = [
             "test_repo_role_registry.py",
         ],
     ),
+    (
+        "emergency recovery command (k9j7)",
+        [
+            "test_claude_recover.py",
+        ],
+    ),
 ]
 
 

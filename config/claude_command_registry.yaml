@@ -44,13 +44,20 @@ commands:
   - name: /recover
     purpose: Inspect and recover stalled work, stale leases, or duplicate artifacts.
     authority_source: recovery_policy
-    script: scripts/lease_manager.py
+    script: scripts/claude_recover.py
     fallback_script: scripts/harness_health_check.py
-    mutation: inspect_by_default
+    mutation: conditional
     required_gates: [human_for_mutation]
     logs_to: 07_LOGS_AND_AUDIT/recovery/recovery_log.jsonl
     allowed: true
     forbidden_logic: [force_delete, unapproved_override]
+    stop_conditions:
+      - state_ambiguous
+      - lease_active_owner_present
+      - secrets_affected
+      - data_loss_risk
+      - rollback_plan_missing
+      - requires_file_or_branch_delete
   - name: /queue
     purpose: Read or import queue state through approved queue tooling.
     authority_source: bd_queue
