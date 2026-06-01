@@ -1,0 +1,73 @@
+version: 0.1.0
+policy: docs/governance/CLAUDE_WORKFLOW_ADAPTER_POLICY.md
+commands:
+  - name: /go
+    purpose: Start highest-priority approved work through harness orchestration.
+    authority_source: queue_orchestrator
+    script: scripts/go_mode.py
+    fallback_script: null
+    mutation: conditional
+    required_gates: [confidence, lease, verifier_if_t3, queue]
+    logs_to: 07_LOGS_AND_AUDIT/decisions/decision_log.jsonl
+    allowed: true
+    forbidden_logic: [direct_file_mutation, direct_ship, hidden_agent_dispatch]
+  - name: /audit
+    purpose: Run or summarize health, drift, and release-readiness checks.
+    authority_source: harness_health
+    script: scripts/harness_health_check.py
+    fallback_script: scripts/release_readiness.py
+    mutation: none_by_default
+    required_gates: []
+    logs_to: reports/harness_health/latest.json
+    allowed: true
+    forbidden_logic: [approval_decision, release_override]
+  - name: /status
+    purpose: Summarize current harness state from existing artifacts.
+    authority_source: read_only_artifacts
+    script: scripts/harness_health_check.py
+    fallback_script: null
+    mutation: none
+    required_gates: []
+    logs_to: null
+    allowed: true
+    forbidden_logic: [state_mutation, queue_claim]
+  - name: /ship
+    purpose: Plan or execute shipping through confidence-gated git pipeline.
+    authority_source: workflow_git
+    script: scripts/workflow_git.py
+    fallback_script: null
+    mutation: conditional
+    required_gates: [confidence, verifier, tests, collision, ci]
+    logs_to: 07_LOGS_AND_AUDIT/workflows/run_log.jsonl
+    allowed: true
+    forbidden_logic: [direct_merge, skip_tests, skip_verifier, skip_collision]
+  - name: /recover
+    purpose: Inspect and recover stalled work, stale leases, or duplicate artifacts.
+    authority_source: recovery_policy
+    script: scripts/lease_manager.py
+    fallback_script: scripts/harness_health_check.py
+    mutation: inspect_by_default
+    required_gates: [human_for_mutation]
+    logs_to: 07_LOGS_AND_AUDIT/recovery/recovery_log.jsonl
+    allowed: true
+    forbidden_logic: [force_delete, unapproved_override]
+  - name: /queue
+    purpose: Read or import queue state through approved queue tooling.
+    authority_source: bd_queue
+    script: bd
+    fallback_script: scripts/next_work.py
+    mutation: conditional
+    required_gates: [queue_policy]
+    logs_to: 07_LOGS_AND_AUDIT/queue/queue_events.jsonl
+    allowed: true
+    forbidden_logic: [arbitrary_reprioritization, hidden_claim]
+  - name: /explain
+    purpose: Explain existing artifacts and decisions to the human.
+    authority_source: read_only_artifacts
+    script: null
+    fallback_script: null
+    mutation: none
+    required_gates: []
+    logs_to: null
+    allowed: true
+    forbidden_logic: [decision_override]

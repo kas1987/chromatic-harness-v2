@@ -1,0 +1,24 @@
+{
+  "artifact": "claude_adapter_layer_pdr",
+  "version": "0.1.0",
+  "repo": "kas1987/chromatic-harness-v2",
+  "primary_issue": 99,
+  "duplicate_issue": 100,
+  "authority_rule": "Claude commands are adapters only; harness scripts are authority.",
+  "files": [
+    "docs/pdr/PDR_CLAUDE_ADAPTER_LAYER.md",
+    "docs/governance/CLAUDE_WORKFLOW_ADAPTER_POLICY.md",
+    "docs/governance/CLAUDE_COMMAND_MATRIX.md",
+    "docs/governance/CLAUDE_AUTHORITY_MODEL.md",
+    "docs/governance/CLAUDE_RECOVERY_PROCEDURES.md",
+    "docs/governance/CLAUDE_COMMAND_SPEC.md",
+    "config/claude_command_registry.yaml",
+    "config/claude_adapter_rules.yaml",
+    "scripts/validate_claude_adapter_policy.py",
+    "tests/test_claude_adapter_policy.py"
+  ],
+  "validation": [
+    "python scripts/validate_claude_adapter_policy.py",
+    "python -m pytest tests/test_claude_adapter_policy.py -q"
+  ]
+}
