@@ -258,6 +258,12 @@ SUITES = [
             "test_observability_scaffold.py",
         ],
     ),
+    (
+        "file claim/release collision control (OBS-002)",
+        [
+            "test_file_claim_collision.py",
+        ],
+    ),
 ]
 
 
