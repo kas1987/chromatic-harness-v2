@@ -1,5 +1,5 @@
 {
-  "queued_at": "2026-06-01T01:11:02.797120+00:00",
+  "queued_at": "2026-06-01T01:17:03.345590+00:00",
   "records": [
     {
       "number": 65,
@@ -131,18 +131,18 @@
       "number": 51,
       "title": "Mirror agent queue to GitHub issues and mutations to PRs (Phase 3)",
       "ext_ref": "gh-51",
-      "objective": "Mirrored from `01_STATE/AGENT_HANDOFF_QUEUE.md`.",
-      "scope": "_(no explicit scope - see objective + eval requirements)_",
-      "owner": "",
+      "objective": "Provide full bidirectional visibility between the internal agent handoff queue and GitHub: queue items surface as issues so humans can track them, and mutations (state changes, closes, PR links) are reflected back on GitHub in near-real time.",
+      "scope": "- Queue-to-issue mirroring (Phase 3a): already shipped in `scripts/sync_queue_to_github.py` and PR #53.\n- Mutation-to-PR mirroring (Phase 3b): when a bead transitions (claim, close, fail), open or update a linked GitHub PR or comment.\n- Bidirectional close sync (Phase 3c): closing a GH issue marks the bead done; bead marked done closes the GH issue.\n- Dedup guard: re-runs must not create duplicate issues or PRs.\n- Audit trail: every sync action appended to `07_LOGS_AND_AUDIT/queue_sync/history.jsonl`.",
+      "owner": "Router + Auditor",
       "slug": "xacy.5",
       "labels": [
         "agent-queue",
         "operating-model"
       ],
-      "valid": false,
-      "reason": "no acceptance checks (policy \u00a71 \u2014 eval requirements required)",
-      "acceptance": "",
-      "c_level": null
+      "acceptance": "- [ ] `python scripts/sync_queue_to_github.py --execute` creates one GH issue per open queue bead and skips existing ones (no duplicates on re-run).\n- [ ] When a bead is claimed or closed, a corresponding GitHub PR or issue comment is created/updated with the new state within one sync cycle.\n- [ ] Closing a GH issue tagged `agent-queue` triggers bead done marking (or logs a pending mutation for the next harvest cycle).\n- [ ] Running `sync_queue_to_github.py --execute --close-done` closes GH issues whose beads are marked done, without touching open beads.\n- [ ] Sync history is appended to `07_LOGS_AND_AUDIT/queue_sync/history.jsonl` with timestamp, action, bead_id, and issue number on every --execute run.\n- [ ] intake_issues.py accepts issue #51 as valid (Acceptance checks section present) and seed_issues_to_beads.py places it in the Queue Infrastructure epic.",
+      "c_level": "C2",
+      "valid": true,
+      "reason": ""
     }
   ]
 }
