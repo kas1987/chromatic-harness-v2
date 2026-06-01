@@ -72,6 +72,13 @@ SUITES = [
             "test_arch_compliance_gate.py",
         ],
     ),
+    (
+        "release & ops readiness",
+        [
+            "test_drift_gate.py",
+            "test_release_readiness.py",
+        ],
+    ),
 ]
 
 

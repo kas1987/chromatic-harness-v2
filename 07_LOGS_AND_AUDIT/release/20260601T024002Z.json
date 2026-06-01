@@ -1,0 +1,12 @@
+{
+  "quality_score": 40,
+  "security_score": 100,
+  "coverage": {
+    "status": "unknown"
+  },
+  "blockers": [],
+  "blocker_count": 0,
+  "decision": "GO",
+  "passed": true,
+  "timestamp": "20260601T024002Z"
+}
