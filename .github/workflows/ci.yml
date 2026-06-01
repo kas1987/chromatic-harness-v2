@@ -34,7 +34,9 @@ jobs:
         run: |
           set -euo pipefail
           curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
-          for d in "$HOME/.local/bin" "$HOME/.beads/bin" /usr/local/bin; do
+          # Include $HOME/go/bin: when GitHub releases rate-limit (HTTP 403) the installer
+          # falls back to `go install`, which lands bd there — not in the release dirs.
+          for d in "$HOME/.local/bin" "$HOME/.beads/bin" /usr/local/bin "$HOME/go/bin" /home/runner/go/bin; do
             [ -x "$d/bd" ] && echo "$d" >> "$GITHUB_PATH" && export PATH="$d:$PATH"
           done
           # Hard-fail if bd did not land on PATH: the governance/intake checks must run
