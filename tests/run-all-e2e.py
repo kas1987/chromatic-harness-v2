@@ -187,6 +187,12 @@ SUITES = [
         ],
     ),
     (
+        "emergency recovery command (k9j7)",
+        [
+            "test_emergency_recovery.py",
+        ],
+    ),
+    (
         "file-scope collision detection (P0-CC-004)",
         [
             "test_file_collision_gate.py",
