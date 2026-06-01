@@ -4,7 +4,7 @@
 |---|---|
 | PDR ID | PDR-REVIEW-INTAKE-001 |
 | System | Chromatic Harness |
-| Status | Draft Ready for Implementation |
+| Status | Implemented & Proven (epic tmx5; see docs/pdr/review_intake/ACCEPTANCE_PROOF.md) |
 | Owner | Human / Chromatic Orchestrator |
 | Created | 2026-06-01 |
 | Version | 0.1.0 |
