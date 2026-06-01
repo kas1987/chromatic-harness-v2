@@ -1,0 +1,37 @@
+[
+  {
+    "id": "NW-CLAUDE-099",
+    "title": "Implement Claude workflow adapter policy and authority boundaries",
+    "status": "ready",
+    "priority": 100,
+    "repo": "kas1987/chromatic-harness-v2",
+    "issue": 99,
+    "area": "governance",
+    "specialties": ["governance", "claude", "workflow", "policy"],
+    "owner_agent": "Archivist",
+    "depends_on": [],
+    "blocked_by": [],
+    "acceptance_checks": [
+      "python scripts/validate_claude_adapter_policy.py",
+      "python -m pytest tests/test_claude_adapter_policy.py -q"
+    ],
+    "links": ["https://github.com/kas1987/chromatic-harness-v2/issues/99"],
+    "notes": "Close #100 as duplicate before or during implementation."
+  },
+  {
+    "id": "NW-CLAUDE-100-CLOSE",
+    "title": "Close duplicate Claude adapter issue #100",
+    "status": "ready",
+    "priority": 90,
+    "repo": "kas1987/chromatic-harness-v2",
+    "issue": 100,
+    "area": "backlog-hygiene",
+    "specialties": ["github", "queue", "cleanup"],
+    "owner_agent": "Janitor",
+    "depends_on": [],
+    "blocked_by": [],
+    "acceptance_checks": ["#100 closed as duplicate of #99"],
+    "links": ["https://github.com/kas1987/chromatic-harness-v2/issues/100"],
+    "notes": "Duplicate created by issue creation race."
+  }
+]
