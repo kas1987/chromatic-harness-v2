@@ -106,6 +106,12 @@ SUITES = [
             "test_harness_health_check.py",
         ],
     ),
+    (
+        "GO-mode orchestrator (#81)",
+        [
+            "test_go_mode.py",
+        ],
+    ),
 ]
 
 
