@@ -36,6 +36,13 @@ SUITES = [
             "test_magnet_plugins.py",
         ],
     ),
+    (
+        "router auto-path + bead delegation",
+        [
+            "test_router_autopath.py",
+            "test_delegate_bead.py",
+        ],
+    ),
 ]
 
 
