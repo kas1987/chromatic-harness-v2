@@ -27,8 +27,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -61,13 +63,63 @@ def _resolve_exe(name: str) -> str:
     return _EXE_CACHE[name]
 
 
+def _kill_tree(proc: subprocess.Popen) -> None:
+    """Terminate proc and ALL descendants.
+
+    A plain proc.kill() only reaps the immediate child. On Windows a child
+    that spawned its own children (e.g. `bd` driving an embedded Dolt engine)
+    leaves those grandchildren alive, still holding the DB lock and the
+    inherited stdout pipe — which wedges the next caller indefinitely. So we
+    kill the whole tree: `taskkill /T` on Windows, the process group on POSIX.
+    """
+    try:
+        if sys.platform == "win32":
+            subprocess.run(
+                ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                capture_output=True,
+                timeout=10,
+            )
+        else:
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except Exception:  # noqa: BLE001 - best-effort cleanup, never raise
+        pass
+    finally:
+        try:
+            proc.kill()
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def _run(cmd: list[str], *, timeout: int = 30, stdin: str | None = None) -> tuple[int, str]:
     if cmd:
         cmd = [_resolve_exe(cmd[0]), *cmd[1:]]
+    kwargs: dict = {
+        "cwd": REPO,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.PIPE,
+        "stdin": subprocess.PIPE if stdin is not None else None,
+        "text": True,
+    }
+    # POSIX: own session so killpg reaps descendants. Windows uses taskkill /T.
+    if sys.platform != "win32":
+        kwargs["start_new_session"] = True
     try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout, input=stdin)
-        return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except Exception as exc:
+        proc = subprocess.Popen(cmd, **kwargs)
+    except Exception as exc:  # noqa: BLE001
+        return 1, str(exc)
+    try:
+        out, err = proc.communicate(input=stdin, timeout=timeout)
+        return proc.returncode, (out or "") + (err or "")
+    except subprocess.TimeoutExpired:
+        _kill_tree(proc)
+        # Tree is dead now, so the pipes close and this drain returns promptly.
+        try:
+            out, err = proc.communicate(timeout=10)
+        except Exception:  # noqa: BLE001
+            out, err = "", ""
+        return 1, f"timeout after {timeout}s: {' '.join(cmd)}\n{(out or '')}{(err or '')}"
+    except Exception as exc:  # noqa: BLE001
+        _kill_tree(proc)
         return 1, str(exc)
 
 

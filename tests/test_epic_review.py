@@ -246,6 +246,57 @@ def test_note_text_is_ascii():
     note.encode("ascii")  # raises UnicodeEncodeError on regression
 
 
+# ---------------------------------------------------------------------------
+# _run process-tree reaping (regression for the bd/embedded-Dolt lock leak)
+# ---------------------------------------------------------------------------
+
+
+def test_run_reaps_process_tree_on_timeout(tmp_path):
+    """_run must kill the WHOLE tree on timeout, not just the direct child.
+
+    Regression for chromatic-harness-v2-bpc5: a timed-out `bd` call used to
+    orphan lock-holding grandchildren on Windows (proc.kill reaps only the
+    immediate child), wedging the next caller and hanging the pre-push gate.
+    """
+    import textwrap
+    import time
+
+    marker = tmp_path / "alive.log"
+    grandchild = tmp_path / "grandchild.py"
+    grandchild.write_text(
+        textwrap.dedent(
+            f"""
+            import time
+            for _ in range(400):
+                with open(r"{marker}", "a") as fh:
+                    fh.write("x")
+                time.sleep(0.05)
+            """
+        )
+    )
+    parent = tmp_path / "parent.py"
+    parent.write_text(
+        textwrap.dedent(
+            f"""
+            import subprocess, sys, time
+            subprocess.Popen([sys.executable, r"{grandchild}"])
+            time.sleep(60)
+            """
+        )
+    )
+
+    code, out = er._run([sys.executable, str(parent)], timeout=2)
+    assert code != 0, f"expected timeout failure, got code={code}: {out}"
+
+    size_at_kill = marker.stat().st_size if marker.exists() else 0
+    time.sleep(2.0)
+    size_later = marker.stat().st_size if marker.exists() else 0
+    assert size_later == size_at_kill, (
+        "grandchild kept writing after _run timed out -> process tree not reaped "
+        f"({size_at_kill} -> {size_later} bytes)"
+    )
+
+
 if __name__ == "__main__":
     import pytest
 

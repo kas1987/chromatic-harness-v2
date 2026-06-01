@@ -1,0 +1,14 @@
+{
+  "action": "completed",
+  "repository": {"full_name": "owner/repo"},
+  "check_run": {
+    "id": 555666,
+    "name": "pytest",
+    "conclusion": "failure",
+    "head_sha": "def789",
+    "html_url": "https://github.com/owner/repo/runs/555666",
+    "pull_requests": [
+      {"number": 43}
+    ]
+  }
+}
