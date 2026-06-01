@@ -46,10 +46,14 @@ jobs:
       # checks structure without depending on runtime artifacts.
       - name: Seed runtime log placeholders
         run: |
-          mkdir -p 07_LOGS_AND_AUDIT/execution 07_LOGS_AND_AUDIT/traces 07_LOGS_AND_AUDIT/decisions
+          mkdir -p 07_LOGS_AND_AUDIT/execution 07_LOGS_AND_AUDIT/traces 07_LOGS_AND_AUDIT/decisions \
+                   07_LOGS_AND_AUDIT/workflows 07_LOGS_AND_AUDIT/recovery 07_LOGS_AND_AUDIT/queue
           touch 07_LOGS_AND_AUDIT/execution/execution.jsonl \
                 07_LOGS_AND_AUDIT/traces/traces.jsonl \
                 07_LOGS_AND_AUDIT/decisions/decision_log.jsonl \
+                07_LOGS_AND_AUDIT/workflows/run_log.jsonl \
+                07_LOGS_AND_AUDIT/recovery/recovery_log.jsonl \
+                07_LOGS_AND_AUDIT/queue/queue_events.jsonl \
                 07_LOGS_AND_AUDIT/intake_queue.jsonl
 
       - name: Agent operations guard (mandatory docs)
