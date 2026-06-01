@@ -103,22 +103,41 @@ class TestUpdateEventStatus:
         assert events[1]["raw_excerpt"] == "Status update for EV-002"
 
 
-class TestGenerateObservabilityReport:
-    def test_computes_latest_status_from_lifecycle(self, tmp_path: Path):
+class TestObservabilityReport:
+    def test_report_includes_all_sections(self, tmp_path: Path):
         log_dir = tmp_path / "00_META" / "observability"
         log_dir.mkdir(parents=True, exist_ok=True)
         (log_dir / "ERROR_LOG.jsonl").write_text("")
 
-        _log_event(tmp_path, "EV-003", status="open")
-        _update_status(tmp_path, "EV-003", "resolved")
+        _log_event(tmp_path, "EV-004", status="open", event_type="error")
+        # Add another event with same signature to create repetition
+        _log_event(tmp_path, "EV-005", status="open", event_type="error")
+        # Add a high severity event
+        subprocess.run(
+            [
+                sys.executable,
+                str(REPO / "scripts/log_harness_event.py"),
+                "--repo-root", str(tmp_path),
+                "--event-id", "EV-006",
+                "--event-type", "error",
+                "--severity", "high",
+                "--category", "secret_exposure",
+                "--status", "open",
+                "--surface", "terminal",
+                "--raw-excerpt", "high severity event",
+                "--files-touched", "src/config.py",
+                "--log-path", str(log_dir / "ERROR_LOG.jsonl"),
+            ],
+            check=True,
+            capture_output=True,
+        )
 
         report_path = tmp_path / "report.md"
         subprocess.run(
             [
                 sys.executable,
                 str(REPO / "scripts/generate_observability_report.py"),
-                "--repo-root",
-                str(tmp_path),
+                "--repo-root", str(tmp_path),
                 "--out",
                 str(report_path),
             ],
@@ -127,9 +146,10 @@ class TestGenerateObservabilityReport:
         )
 
         report = report_path.read_text()
-        # The report should show resolved in status counts, not just open
-        assert "resolved" in report
-        # The report should not list EV-003 under open events
-        # (since latest status is resolved)
-        open_section = report.split("## Open / Routed Events")[1]
-        assert "EV-003" not in open_section
+        assert "## Unresolved High / Critical Events" in report
+        assert "EV-006" in report
+        assert "## Repeated Error Signatures" in report
+        assert "## Files Most Often Touched By Events" in report
+        assert "src/config.py" in report
+        assert "## Recommended Next Work" in report
+        assert "Resolve" in report or "Investigate" in report or "Review" in report

@@ -38,8 +38,66 @@ def main():
             seen_open.add(eid)
             deduped_open.append(e)
     open_events = list(reversed(deduped_open))  # chronological
+
+    # Repeated signatures
+    sig_counts = Counter(e.get('error_signature') or e.get('category','unknown') for e in events if e.get('error_signature'))
+    repeated_sigs = [(s, c) for s, c in sig_counts.most_common() if c >= 2]
+
+    # Noisy files
+    files_counter = Counter()
+    for e in events:
+        for f in e.get('files_touched') or []:
+            files_counter[f] += 1
+    noisy_files = files_counter.most_common(10)
+
+    # High/critical unresolved
+    high_critical_open = [e for e in open_events if e.get('severity') in {'high','critical'}]
+
     out=Path(args.out) if args.out else root/'00_META/observability/reports'/('OBSERVABILITY_REPORT_'+utc_now()[:10]+'.md'); out.parent.mkdir(parents=True, exist_ok=True)
-    lines=['# Observability Report','',f'Generated: {utc_now()}','',f'Total events: {len(events)}','','## Severity Counts (all time)','']+[f'- {k}: {v}' for k,v in sev.most_common()]+['','## Category Counts (all time)','']+[f'- {k}: {v}' for k,v in cat.most_common()]+['','## Latest Status Counts','']+[f'- {k}: {v}' for k,v in status_counts.most_common()]+['','## Open / Routed Events','']
-    for e in open_events[-20:]: lines.append(f"- {e.get('event_id')} | {e.get('severity')} | {e.get('category')} | {e.get('error_signature','')}")
-    out.write_text('\n'.join(lines)+'\n', encoding='utf-8'); print(out)
+    lines=['# Observability Report','',f'Generated: {utc_now()}','',f'Total events: {len(events)}','','## Severity Counts (all time)','']+[f'- {k}: {v}' for k,v in sev.most_common()]+['','## Category Counts (all time)','']+[f'- {k}: {v}' for k,v in cat.most_common()]+['','## Latest Status Counts','']+[f'- {k}: {v}' for k,v in status_counts.most_common()]
+
+    # High/Critical Unresolved
+    lines += ['','## Unresolved High / Critical Events','']
+    if high_critical_open:
+        for e in high_critical_open:
+            lines.append(f"- {e.get('event_id')} | {e.get('severity')} | {e.get('category')} | {e.get('error_signature','')}")
+    else:
+        lines.append('- None')
+
+    # Repeated Signatures
+    lines += ['','## Repeated Error Signatures','']
+    if repeated_sigs:
+        for sig, count in repeated_sigs:
+            lines.append(f'- {count}x: `{sig}`')
+    else:
+        lines.append('- None')
+
+    # Noisy Files
+    lines += ['','## Files Most Often Touched By Events','']
+    if noisy_files:
+        for fpath, count in noisy_files:
+            lines.append(f'- {count}x: `{fpath}`')
+    else:
+        lines.append('- None')
+
+    # Open / Routed Events
+    lines += ['','## Open / Routed Events','']
+    for e in open_events[-20:]:
+        lines.append(f"- {e.get('event_id')} | {e.get('severity')} | {e.get('category')} | {e.get('error_signature','')}")
+
+    # Recommended Next Work
+    lines += ['','## Recommended Next Work','']
+    recs = []
+    if high_critical_open:
+        recs.append(f'- Resolve {len(high_critical_open)} high/critical open event(s)')
+    if repeated_sigs:
+        recs.append(f'- Investigate repeated signature(s): {", ".join(f"`{s}`" for s, c in repeated_sigs[:3])}')
+    if noisy_files:
+        recs.append(f'- Review noisy file(s): {", ".join(f"`{f}`" for f, c in noisy_files[:3])}')
+    if not recs:
+        recs.append('- No recommended work; observability is clean.')
+    lines += recs
+    lines.append('')
+
+    out.write_text('\n'.join(lines), encoding='utf-8'); print(out)
 if __name__=='__main__': main()
