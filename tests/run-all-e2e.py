@@ -101,6 +101,30 @@ def main() -> int:
         print("TIMEOUT: ruff lint (>60s)")
         return 1
 
+    # Gate 1: Validate skill routes (catch dead-end SKILL.md references)
+    print("\n--- Skill Route Validation ---")
+    skill_validator = REPO / "scripts" / "validate_skill_routes.py"
+    if skill_validator.exists():
+        try:
+            result = subprocess.run(
+                [sys.executable, str(skill_validator), "--quiet"],
+                cwd=REPO,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if result.returncode == 0:
+                print("PASS: All skill references resolve")
+            else:
+                print("FAIL: Dead-end skill references detected")
+                print("  Run: python scripts/validate_skill_routes.py (for details)")
+                return 1
+        except subprocess.TimeoutExpired:
+            print("TIMEOUT: Skill validation exceeded 10s")
+            return 1
+    else:
+        print("SKIP: validate_skill_routes.py not found")
+
     failed = []
     for name, patterns in SUITES:
         rc = run_suite(name, patterns)
