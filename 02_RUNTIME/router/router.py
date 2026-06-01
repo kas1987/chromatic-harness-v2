@@ -5,13 +5,11 @@ import uuid
 from typing import Any
 
 from .contracts import (
-    ContextGateResult,
     RouteRequest,
     RouteResponse,
     RouteLogs,
     RouteOutput,
     OutputType,
-    ConfidenceBand,
     PrivacyClass,
 )
 from .policy import PolicyLoader
@@ -21,7 +19,7 @@ from .budget import BudgetGate
 from .observability import ObservabilityLogger
 from .adapters.base import BaseAdapter
 from .adapters.mock import MockAdapter
-from .complexity_classifier import ComplexityClassifier, ComplexityResult
+from .complexity_classifier import ComplexityClassifier
 from .context_detector import ContextDetector
 from .provider_selector import ProviderSelector
 from .context_gate import ContextGate
@@ -159,14 +157,10 @@ class ChromaticRouter:
                         f"provider={primary} ({len(fallback)} fallbacks)"
                     )
                     pc = req.constraints.privacy_class
-                    primary, fallback, logs = self._apply_privacy_gate(
-                        primary, fallback, pc, logs
-                    )
+                    primary, fallback, logs = self._apply_privacy_gate(primary, fallback, pc, logs)
                     return primary, fallback, logs
             except Exception as exc:
-                logs.warnings.append(
-                    f"Context routing failed ({exc}), falling back to legacy route."
-                )
+                logs.warnings.append(f"Context routing failed ({exc}), falling back to legacy route.")
 
         # ── LEGACY: task-type based route ────────────────────────────────────
         task_route = self.loader.route_for_task(req.task_type.value)
@@ -179,6 +173,24 @@ class ChromaticRouter:
 
         pc = req.constraints.privacy_class
         return self._apply_privacy_gate(primary, fallback, pc, logs)
+
+    # Logical provider names emitted by the routing table / provider_selector
+    # that don't have their own registered adapter — map them onto the adapter
+    # that actually serves them. routing-table uses ollama_local /
+    # ollama_remote_desktop; providers.yaml registers a single "ollama" adapter.
+    # Without this alias the auto-path picks ollama_local, finds no adapter (and
+    # gets dropped by the privacy gate, whose allowlist uses canonical names),
+    # then silently falls through to mock instead of the local model.
+    _ADAPTER_ALIASES = {
+        "ollama_local": "ollama",
+        "ollama_remote_desktop": "ollama",
+        "ollama_remote": "ollama",
+    }
+
+    def _resolve_adapter_name(self, name: str) -> str:
+        if name in self.adapters:
+            return name
+        return self._ADAPTER_ALIASES.get(name, name)
 
     def _apply_privacy_gate(
         self,
@@ -194,21 +206,21 @@ class ChromaticRouter:
         for cand in candidates:
             if cand == "local_vault":
                 cand = "mock"
-            if cand in allowed or cand == "mock":
+            # Check the allowlist against the canonical adapter name so logical
+            # aliases (ollama_local -> ollama) survive the gate. Keep the
+            # original name in the chain so the adapter alias resolves later too.
+            canonical = self._resolve_adapter_name(cand)
+            if canonical in allowed or cand in allowed or cand == "mock":
                 filtered.append(cand)
             else:
-                logs.warnings.append(
-                    f"Provider {cand} removed by privacy policy for {pc.value}."
-                )
+                logs.warnings.append(f"Provider {cand} removed by privacy policy for {pc.value}.")
         if not filtered:
             logs.errors.append("No candidate provider passed privacy gate.")
             return "mock", [], logs
         return filtered[0], filtered[1:], logs
 
-    def _provider_is_available(
-        self, name: str, req: RouteRequest | None = None
-    ) -> bool:
-        adapter = self.adapters.get(name)
+    def _provider_is_available(self, name: str, req: RouteRequest | None = None) -> bool:
+        adapter = self.adapters.get(self._resolve_adapter_name(name))
         if not adapter:
             return False
         if not adapter.enabled:
@@ -225,9 +237,7 @@ class ChromaticRouter:
                     return False
         return True
 
-    async def route(
-        self, req: RouteRequest | None = None, **kwargs: Any
-    ) -> RouteResponse:
+    async def route(self, req: RouteRequest | None = None, **kwargs: Any) -> RouteResponse:
         if req is None:
             req = self._build_request(**kwargs)
 
@@ -331,20 +341,35 @@ class ChromaticRouter:
         provider_used = chosen
         fallback_used = False
         resp: RouteResponse | None = None  # type: ignore[no-redef]
+        last_error_resp: RouteResponse | None = None
         for cand in [chosen, *fallbacks]:
             if not self._provider_is_available(cand, req):
                 logs.warnings.append(f"Provider {cand} not available or disabled.")
                 continue
-            adapter = self.adapters.get(cand)
+            adapter = self.adapters.get(self._resolve_adapter_name(cand))
             if adapter is None:
                 logs.warnings.append(f"No adapter registered for {cand}.")
                 continue
             try:
-                resp = await adapter.complete(req)
-                resp.cost_estimate_usd = est_cost
+                candidate_resp = await adapter.complete(req)
+                # Stamp the cost estimate before any early-out so that an error
+                # response surfaced from last_error_resp still carries it.
+                candidate_resp.cost_estimate_usd = est_cost
+                # An adapter that returns an ERROR-typed response (rather than
+                # raising) is still a failure — fall through to the next provider
+                # instead of breaking on it. This is what lets a broken provider
+                # (e.g. native_claude with no working CLI) hand off to a
+                # reachable one (e.g. local Ollama) instead of erroring out.
+                if candidate_resp.output is not None and candidate_resp.output.type == OutputType.ERROR:
+                    err_text = candidate_resp.output.content
+                    logs.warnings.append(f"Provider {cand} returned error: {err_text}")
+                    candidate_resp.selected_provider = cand
+                    last_error_resp = candidate_resp
+                    continue
                 if cand != chosen:
                     fallback_used = True
                 provider_used = cand
+                resp = candidate_resp
                 break
             except Exception as exc:
                 logs.errors.append(f"Provider {cand} failed: {exc}")
@@ -356,6 +381,10 @@ class ChromaticRouter:
                 resp = await mock.complete(req)
                 provider_used = "mock"
                 fallback_used = True
+            elif last_error_resp is not None:
+                # No mock, but at least one provider gave a real error — surface it.
+                resp = last_error_resp
+                resp.route_reason = "all_providers_failed"
             else:
                 resp = RouteResponse(
                     request_id=req.request_id,

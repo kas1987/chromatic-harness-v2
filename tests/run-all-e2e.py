@@ -36,6 +36,22 @@ SUITES = [
             "test_magnet_plugins.py",
         ],
     ),
+    (
+        "router auto-path + bead delegation",
+        [
+            "test_router_autopath.py",
+            "test_delegate_bead.py",
+        ],
+    ),
+    (
+        "issue->bead intake pipeline",
+        [
+            "test_audit_issue_intake.py",
+            "test_seed_issues.py",
+            "test_epic_review.py",
+            "test_closeout_epic_reviews.py",
+        ],
+    ),
 ]
 
 
@@ -64,6 +80,26 @@ def run_suite(name: str, patterns: list[str]) -> int:
 
 def main() -> int:
     print("pre-push: running harness E2E gates (pytest runner)…")
+
+    # Gate 0: ruff lint (fast, fail-fast before running tests)
+    print("\n--- ruff lint ---")
+    try:
+        lint_result = subprocess.run(
+            [sys.executable, "-m", "ruff", "check", "."],
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if lint_result.returncode == 0:
+            print("PASS: ruff lint")
+        else:
+            print("FAIL: ruff lint")
+            print(lint_result.stdout[-1000:] if lint_result.stdout else lint_result.stderr[-500:])
+            return 1
+    except subprocess.TimeoutExpired:
+        print("TIMEOUT: ruff lint (>60s)")
+        return 1
 
     # Gate 1: Validate skill routes (catch dead-end SKILL.md references)
     print("\n--- Skill Route Validation ---")
