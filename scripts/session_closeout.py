@@ -1997,6 +1997,10 @@ def main() -> int:
     result["arch_compliance"] = _gate_summary("arch_compliance_gate")
     result["drift"] = _gate_summary("drift_gate")
     result["release_readiness"] = _gate_summary("release_readiness", fallback_key="decision")
+    result["policy"] = _gate_summary("policy_engine", fallback_key="decision")
+    result["review_consensus"] = _gate_summary("review_consensus", fallback_key="verdict")
+    result["ai_review"] = _gate_summary("ai_review_gate", fallback_key="level")
+    result["agent_scoring"] = _gate_summary("agent_scoring")
 
     print(json.dumps(result, indent=2))
     return 0

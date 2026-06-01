@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "name": "harness-governance-policy",
+  "rules": [
+    {
+      "id": "large-change-set",
+      "description": "Change set touches an unusually large number of files.",
+      "severity": "warn",
+      "when": { "field": "changed_files", "op": ">", "value": 50 },
+      "message": "Change set exceeds 50 files; request additional review."
+    },
+    {
+      "id": "protected-path-touched",
+      "description": "A protected/governance path was modified.",
+      "severity": "block",
+      "when": { "field": "protected_touched", "op": "==", "value": true },
+      "message": "Protected path touched; requires human override to proceed."
+    },
+    {
+      "id": "secrets-detected",
+      "description": "Secret scanner flagged one or more findings.",
+      "severity": "block",
+      "when": { "field": "secrets_found", "op": ">", "value": 0 },
+      "message": "Potential secrets detected; resolve before proceeding."
+    },
+    {
+      "id": "risky-branch",
+      "description": "Push targets a protected branch directly.",
+      "severity": "block",
+      "when": { "field": "target_branch", "op": "in", "value": ["main", "master"] },
+      "message": "Direct push to protected branch is not allowed; use a PR."
+    },
+    {
+      "id": "missing-tests",
+      "description": "No test files touched in a code change.",
+      "severity": "info",
+      "when": { "field": "tests_touched", "op": "==", "value": 0 },
+      "message": "No tests modified; confirm coverage is adequate."
+    }
+  ]
+}
