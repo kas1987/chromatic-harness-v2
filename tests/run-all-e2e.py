@@ -193,6 +193,12 @@ SUITES = [
         ],
     ),
     (
+        "command drift detection (ulos)",
+        [
+            "test_command_drift_gate.py",
+        ],
+    ),
+    (
         "emergency recovery command (k9j7)",
         [
             "test_emergency_recovery.py",
