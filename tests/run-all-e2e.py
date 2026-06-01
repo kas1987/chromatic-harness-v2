@@ -240,6 +240,12 @@ SUITES = [
             "test_repo_role_registry.py",
         ],
     ),
+    (
+        "adapter policy validator unit tests (nprv)",
+        [
+            "test_claude_adapter_policy.py",
+        ],
+    ),
 ]
 
 
