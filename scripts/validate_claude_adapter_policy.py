@@ -4,6 +4,7 @@
 This script is intentionally dependency-light. It uses PyYAML if installed and
 falls back with a clear error if YAML parsing is unavailable.
 """
+
 from __future__ import annotations
 
 import sys
@@ -47,6 +48,9 @@ def main() -> int:
         if name not in by_name:
             fail(f"missing command registry entry: {name}")
 
+    if len(commands) != len(by_name):
+        fail("duplicate command names found in registry")
+
     forbidden_terms = set(rules.get("forbidden_logic_terms", []))
     for cmd in commands:
         name = cmd.get("name")
@@ -63,12 +67,34 @@ def main() -> int:
         if cmd.get("mutation") in {"conditional", "yes"}:
             gates = set(cmd.get("required_gates", []))
             if name == "/ship":
-                needed = {"confidence", "verifier", "tests", "collision"}
+                needed = {"confidence", "verifier", "tests", "collision", "ci"}
                 missing = needed - gates
                 if missing:
                     fail(f"/ship missing required gates: {sorted(missing)}")
             if name == "/go" and "confidence" not in gates:
                 fail("/go must require confidence gate")
+
+        script = cmd.get("script")
+        if script is not None and script != "bd":
+            script_path = ROOT / script
+            if not script_path.exists():
+                fail(f"command {name} script not found: {script}")
+
+        fallback = cmd.get("fallback_script")
+        if fallback is not None:
+            fallback_path = ROOT / fallback
+            if not fallback_path.exists():
+                fail(f"command {name} fallback_script not found: {fallback}")
+
+        logs_to = cmd.get("logs_to")
+        if logs_to is not None:
+            log_path = Path(logs_to)
+            if log_path.is_absolute():
+                log_dir = log_path.parent
+            else:
+                log_dir = ROOT / log_path.parent
+            if not log_dir.exists():
+                fail(f"command {name} logs_to directory does not exist: {log_dir}")
 
     policy = (ROOT / "docs/governance/CLAUDE_WORKFLOW_ADAPTER_POLICY.md").read_text(encoding="utf-8")
     required_phrases = [

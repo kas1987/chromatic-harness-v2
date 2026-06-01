@@ -44,6 +44,12 @@ docs/workflows/WORKFLOW_RUN_LOG.jsonl
 07_LOGS_AND_AUDIT/traces/*.jsonl
 07_LOGS_AND_AUDIT/ws_events/*.jsonl
 !07_LOGS_AND_AUDIT/ws_events/.gitkeep
+07_LOGS_AND_AUDIT/workflows/*.jsonl
+!07_LOGS_AND_AUDIT/workflows/.gitkeep
+07_LOGS_AND_AUDIT/recovery/*.jsonl
+!07_LOGS_AND_AUDIT/recovery/.gitkeep
+07_LOGS_AND_AUDIT/queue/*.jsonl
+!07_LOGS_AND_AUDIT/queue/.gitkeep
 
 # Runtime event logs (agentops, router events — never commit)
 10_RUNTIME/logs/*.jsonl
