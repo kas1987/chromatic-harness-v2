@@ -109,6 +109,70 @@ def test_lease_schema_validates_acquired_record(tmp_path):
         assert field in rec, f"missing required field {field}"
 
 
+# --- lock_ledger tests ---
+
+
+def test_lock_ledger_creates_and_removes_lock_file(tmp_path):
+    mod = _load()
+    ledger = tmp_path / "l.jsonl"
+    lock_path = Path(str(ledger) + ".lock")
+    with mod.lock_ledger(ledger):
+        assert lock_path.exists(), "lock file should exist inside context"
+    assert not lock_path.exists(), "lock file should be removed after context exits"
+
+
+def test_lock_ledger_blocks_concurrent_acquisition(tmp_path):
+    """Second lock_ledger call while first is held must raise RuntimeError (fast timeout)."""
+    import threading
+
+    mod = _load()
+    ledger = tmp_path / "l.jsonl"
+    original_timeout = mod._LOCK_TIMEOUT_S
+    mod._LOCK_TIMEOUT_S = 0.1  # speed up the test
+
+    errors = []
+
+    def try_lock():
+        try:
+            with mod.lock_ledger(ledger):
+                pass
+        except RuntimeError as exc:
+            errors.append(exc)
+
+    with mod.lock_ledger(ledger):
+        t = threading.Thread(target=try_lock)
+        t.start()
+        t.join(timeout=5)
+
+    mod._LOCK_TIMEOUT_S = original_timeout
+    assert len(errors) == 1, "concurrent lock acquisition should have raised RuntimeError"
+    assert "Timed out" in str(errors[0])
+
+
+def test_heartbeat_does_not_resurrect_expired_lease(tmp_path):
+    """Heartbeat on a TTL-expired (but not explicitly marked expired) lease must return not_found."""
+    from argparse import Namespace
+    from datetime import timedelta
+
+    mod = _load()
+    ledger = tmp_path / "l.jsonl"
+    # Acquire with a TTL already in the past
+    _acquire(mod, ledger, "t1", ["scripts/foo.py"])
+    records = mod.load_ledger(ledger)
+    lid = records[0]["lease_id"]
+    # Back-date the expiry so is_active() returns False
+    records[0]["expires_at"] = mod.iso(mod.now() - timedelta(minutes=1))
+    mod.write_ledger(ledger, records)
+
+    rc = mod.heartbeat(Namespace(ledger=str(ledger), lease_id=lid, extend_minutes=60))
+    assert rc == 1, "heartbeat should return not_found for an expired lease"
+    # The expiry timestamp must not have been pushed into the future
+    rec = mod.load_ledger(ledger)[0]
+    assert mod.now() > mod.datetime.fromisoformat(rec["expires_at"].replace("Z", "+00:00")), (
+        "heartbeat must not resurrect an expired lease"
+    )
+
+
 if __name__ == "__main__":
     import pytest
 

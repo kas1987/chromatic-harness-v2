@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
+import os
 import sys
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -13,6 +16,40 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_LEDGER = REPO / "state" / "leases" / "active_leases.jsonl"
+
+_LOCK_TIMEOUT_S = 30
+_LOCK_POLL_S = 0.05
+
+
+@contextlib.contextmanager
+def lock_ledger(ledger_path: Path):
+    """Atomic file-based lock for the shared lease ledger.
+
+    Uses O_CREAT|O_EXCL to atomically create a lock file (atomic on POSIX and
+    Windows NTFS).  Retries for up to _LOCK_TIMEOUT_S seconds under contention.
+    The lock file is unconditionally removed on exit.
+    """
+    lock_path = Path(str(ledger_path) + ".lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + _LOCK_TIMEOUT_S
+    fd = None
+    while True:
+        try:
+            fd = os.open(str(lock_path), os.O_WRONLY | os.O_CREAT | os.O_EXCL)
+            break
+        except FileExistsError:
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"Timed out waiting for ledger lock after {_LOCK_TIMEOUT_S}s: {lock_path}") from None
+            time.sleep(_LOCK_POLL_S)
+    try:
+        yield
+    finally:
+        if fd is not None:
+            os.close(fd)
+        try:
+            os.unlink(str(lock_path))
+        except OSError:
+            pass
 
 
 def now() -> datetime:
@@ -77,42 +114,44 @@ def find_conflicts(records: list[dict[str, Any]], resources: list[str], mode: st
 
 def acquire(args: argparse.Namespace) -> int:
     ledger = Path(args.ledger)
-    records = load_ledger(ledger)
-    resources = args.resources
-    conflicts = find_conflicts(records, resources, args.mode)
-    if conflicts:
-        print(json.dumps({"status": "denied", "reason": "resource_conflict", "conflicts": conflicts}, indent=2))
-        return 2
-    lease = {
-        "lease_id": f"lease-{uuid.uuid4().hex[:12]}",
-        "task_id": args.task_id,
-        "owner_agent": args.owner_agent,
-        "resources": resources,
-        "mode": args.mode,
-        "risk_tier": args.risk_tier,
-        "status": "active",
-        "created_at": iso(now()),
-        "expires_at": iso(now() + timedelta(minutes=args.ttl_minutes)),
-        "heartbeat_at": iso(now()),
-        "rollback_plan": args.rollback_plan,
-        "metadata": {},
-    }
-    records.append(lease)
-    write_ledger(ledger, records)
+    with lock_ledger(ledger):
+        records = load_ledger(ledger)
+        resources = args.resources
+        conflicts = find_conflicts(records, resources, args.mode)
+        if conflicts:
+            print(json.dumps({"status": "denied", "reason": "resource_conflict", "conflicts": conflicts}, indent=2))
+            return 2
+        lease = {
+            "lease_id": f"lease-{uuid.uuid4().hex[:12]}",
+            "task_id": args.task_id,
+            "owner_agent": args.owner_agent,
+            "resources": resources,
+            "mode": args.mode,
+            "risk_tier": args.risk_tier,
+            "status": "active",
+            "created_at": iso(now()),
+            "expires_at": iso(now() + timedelta(minutes=args.ttl_minutes)),
+            "heartbeat_at": iso(now()),
+            "rollback_plan": args.rollback_plan,
+            "metadata": {},
+        }
+        records.append(lease)
+        write_ledger(ledger, records)
     print(json.dumps({"status": "granted", "lease": lease}, indent=2))
     return 0
 
 
 def release(args: argparse.Namespace) -> int:
     ledger = Path(args.ledger)
-    records = load_ledger(ledger)
-    found = False
-    for record in records:
-        if record.get("lease_id") == args.lease_id and record.get("status") == "active":
-            record["status"] = "released"
-            record["released_at"] = iso(now())
-            found = True
-    write_ledger(ledger, records)
+    with lock_ledger(ledger):
+        records = load_ledger(ledger)
+        found = False
+        for record in records:
+            if record.get("lease_id") == args.lease_id and record.get("status") == "active":
+                record["status"] = "released"
+                record["released_at"] = iso(now())
+                found = True
+        write_ledger(ledger, records)
     print(json.dumps({"status": "released" if found else "not_found", "lease_id": args.lease_id}, indent=2))
     return 0 if found else 1
 
@@ -127,31 +166,35 @@ def inspect(args: argparse.Namespace) -> int:
 
 def expire(args: argparse.Namespace) -> int:
     ledger = Path(args.ledger)
-    records = load_ledger(ledger)
-    found = False
-    for record in records:
-        if record.get("lease_id") == args.lease_id and record.get("status") == "active":
-            record["status"] = "expired"
-            record["expired_at"] = iso(now())
-            record.setdefault("metadata", {})["expire_reason"] = args.reason
-            found = True
-    write_ledger(ledger, records)
+    with lock_ledger(ledger):
+        records = load_ledger(ledger)
+        found = False
+        for record in records:
+            if record.get("lease_id") == args.lease_id and record.get("status") == "active":
+                record["status"] = "expired"
+                record["expired_at"] = iso(now())
+                record.setdefault("metadata", {})["expire_reason"] = args.reason
+                found = True
+        write_ledger(ledger, records)
     print(json.dumps({"status": "expired" if found else "not_found", "lease_id": args.lease_id}, indent=2))
     return 0 if found else 1
 
 
 def heartbeat(args: argparse.Namespace) -> int:
     ledger = Path(args.ledger)
-    records = load_ledger(ledger)
-    found = False
-    for record in records:
-        if record.get("lease_id") == args.lease_id and record.get("status") == "active":
-            record["heartbeat_at"] = iso(now())
-            # Renew TTL on heartbeat so a live owner keeps its lease.
-            if args.extend_minutes:
-                record["expires_at"] = iso(now() + timedelta(minutes=args.extend_minutes))
-            found = True
-    write_ledger(ledger, records)
+    with lock_ledger(ledger):
+        records = load_ledger(ledger)
+        found = False
+        for record in records:
+            # Use is_active() not just status=="active" to prevent resurrection of
+            # TTL-expired leases that haven't been explicitly marked expired yet.
+            if record.get("lease_id") == args.lease_id and is_active(record):
+                record["heartbeat_at"] = iso(now())
+                # Renew TTL on heartbeat so a live owner keeps its lease.
+                if args.extend_minutes:
+                    record["expires_at"] = iso(now() + timedelta(minutes=args.extend_minutes))
+                found = True
+        write_ledger(ledger, records)
     print(json.dumps({"status": "heartbeat" if found else "not_found", "lease_id": args.lease_id}, indent=2))
     return 0 if found else 1
 
