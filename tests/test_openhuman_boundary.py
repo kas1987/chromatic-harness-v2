@@ -1,15 +1,8 @@
 """Tests enforcing OpenHuman Phase-1 read-only boundary."""
 
 import pytest
-import importlib
 
-import router.contracts as contracts_mod
-import router.adapters.openhuman_adapter as oh_mod
-
-importlib.reload(contracts_mod)
-importlib.reload(oh_mod)
-
-from router.contracts import (  # noqa: E402
+from router.contracts import (
     RouteRequest,
     RouteConstraints,
     RouteConfidence,
@@ -19,8 +12,8 @@ from router.contracts import (  # noqa: E402
     PrivacyClass,
     OutputType,
 )
-from router.adapters.openhuman_adapter import OpenHumanAdapter  # noqa: E402
-from router.confidence import ConfidenceGate  # noqa: E402
+from router.adapters.openhuman_adapter import OpenHumanAdapter
+from router.confidence import ConfidenceGate
 
 
 def make_oh_req(
