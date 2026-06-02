@@ -87,43 +87,6 @@ _conf_mod = _load_module("confidence_engine", os.path.join(_RUNTIME, "orchestrat
 NOW = lambda: datetime.now(timezone.utc).isoformat()  # noqa: E731
 
 
-async def _route_for_mission(mission: "MissionPacket", task_type: str = "planning") -> dict:
-    """Route a MissionPacket through ChromaticRouter and return a summary dict.
-
-    Composed here (api layer) rather than inside Orchestrator so that routing
-    concerns (provider selection) stay separate from mission-shaping concerns.
-    """
-    router = ChromaticRouter()
-    req = RouteRequest(
-        request_id=str(uuid.uuid4()),
-        task_id=mission.mission_id,
-        task_type=TaskType(task_type),
-        objective=mission.objective,
-        input=RouteInput(),
-        constraints=RouteConstraints(
-            privacy_class=PrivacyClass.P1,
-            allow_openhuman=False,
-        ),
-        confidence=RouteConfidence(
-            score=mission.confidence_required,
-        ),
-        preferred_provider="auto",
-        fallback_chain=[],
-        audit=RouteAudit(caller="orchestrator"),
-    )
-    resp = await router.route(req)
-    return {
-        "provider": resp.selected_provider,
-        "model": resp.selected_model,
-        "reason": resp.route_reason,
-        "fallback_used": resp.fallback_used,
-        "cost_estimate_usd": resp.cost_estimate_usd,
-        "latency_ms": resp.latency_ms,
-        "warnings": resp.logs.warnings,
-        "errors": resp.logs.errors,
-    }
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
