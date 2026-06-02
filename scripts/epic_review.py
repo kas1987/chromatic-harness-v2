@@ -29,12 +29,14 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 SEED_STATE = REPO / "07_LOGS_AND_AUDIT" / "seed_state" / "issue_to_bead.json"
 REVIEW_DIR = REPO / "07_LOGS_AND_AUDIT" / "epic_reviews"
 
@@ -64,11 +66,8 @@ def _resolve_exe(name: str) -> str:
 def _run(cmd: list[str], *, timeout: int = 30, stdin: str | None = None) -> tuple[int, str]:
     if cmd:
         cmd = [_resolve_exe(cmd[0]), *cmd[1:]]
-    try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout, input=stdin)
-        return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except Exception as exc:
-        return 1, str(exc)
+    r = run_safe(cmd, cwd=REPO, timeout=timeout, stdin=stdin)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
 def load_ledger() -> dict[str, str]:

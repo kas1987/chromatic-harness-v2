@@ -11,29 +11,22 @@ import argparse
 from collections import Counter
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 AUDIT_DIR = REPO / ".agents" / "audits" / "bead_hygiene"
 DELEGATION_AUDIT_DIR = REPO / ".agents" / "audits" / "delegation"
 CANARY_SNAPSHOT_PATH = REPO / "07_LOGS_AND_AUDIT" / "governance_intelligence" / "canary_snapshot_latest.json"
 
 
 def _run(cmd: list[str], timeout: int = 300) -> dict[str, Any]:
-    proc = subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=timeout,
-        check=False,
-    )
+    proc = run_safe(cmd, cwd=REPO, timeout=timeout)
     return {
         "cmd": cmd,
         "returncode": proc.returncode,
@@ -75,7 +68,7 @@ def _malformed_targets(commands_json: Path) -> list[str]:
 def _last_delegation_statuses(limit: int = 10) -> list[str]:
     if not DELEGATION_AUDIT_DIR.is_dir():
         return []
-    files = sorted(DELEGATION_AUDIT_DIR.glob("delegation_observability_*.json"))[-max(1, limit):]
+    files = sorted(DELEGATION_AUDIT_DIR.glob("delegation_observability_*.json"))[-max(1, limit) :]
     statuses: list[str] = []
     for path in files:
         data = _read_json(path, {})
@@ -273,19 +266,15 @@ def main() -> int:
         if not isinstance(findings, list):
             findings = []
         finding_counts = {
-            str(f.get("code")): int(f.get("count") or 0)
-            for f in findings
-            if isinstance(f, dict) and f.get("code")
+            str(f.get("code")): int(f.get("count") or 0) for f in findings if isinstance(f, dict) and f.get("code")
         }
         dup_active = int(finding_counts.get("duplicate_active_titles", 0) or 0)
         malformed = int(finding_counts.get("bead_id_hygiene_warning", 0) or 0)
 
         daily = _read_json(REPO / ".agents" / "audits" / "latest_audit.json", {})
-        daily_status = (
-            daily.get("daily_status")
-            if isinstance(daily, dict)
-            else None
-        ) or (daily.get("status") if isinstance(daily, dict) else None)
+        daily_status = (daily.get("daily_status") if isinstance(daily, dict) else None) or (
+            daily.get("status") if isinstance(daily, dict) else None
+        )
 
         cycle["status"] = {
             "bead_hygiene_status": latest.get("status") if isinstance(latest, dict) else None,
