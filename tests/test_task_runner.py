@@ -325,3 +325,32 @@ def test_dispatch_raising_is_fail_open(tmp_path):
     runner, _ = build_runner(tmp_path, raising={"dispatch"})
     r = runner.run_once()  # must not raise
     assert r.outcome == TR.Outcome.ABANDONED
+
+
+# ── worker dispatch hardening (prompt from bead fields, no shared-file leak) ──
+
+
+def test_worker_prompt_built_only_from_bead_fields(tmp_path):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path)
+    detail = {
+        "title": "Define RoutingContext",
+        "description": "Add RoutingContext dataclass in router/contracts.py.",
+        "acceptance_criteria": "dataclass defined; functions pure; tests green",
+    }
+    prompt = TR._compose_worker_prompt("u8uj.1", detail, cfg)
+    # Sourced from this bead only.
+    assert "RoutingContext dataclass" in prompt
+    assert "router/contracts.py" in prompt
+    assert "tests green" in prompt
+    assert "RUNNER_RESULT:" in prompt
+    assert "auto/u8uj.1" in prompt
+    # Must NOT depend on / leak the shared delegate handoff file.
+    assert "Claude Delegation Packet" not in prompt
+    # Audit copy written.
+    assert (tmp_path / "worker_prompt_u8uj_1.md").exists()
+
+
+def test_destructive_bead_content_is_detected():
+    assert TR._DESTRUCTIVE_RE.search(TR._bead_content({"description": "Please run rm -rf /tmp/build and continue"}))
+    assert TR._DESTRUCTIVE_RE.search(TR._bead_content({"acceptance_criteria": ["do git push --force"]}))
+    assert not TR._DESTRUCTIVE_RE.search(TR._bead_content({"description": "Refactor the router into pure functions"}))
