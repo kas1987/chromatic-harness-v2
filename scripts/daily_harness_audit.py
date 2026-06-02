@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,7 +18,9 @@ _REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = _REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(_REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from intake.bd_runner import resolve_bd_argv  # noqa: E402
 
 CORE_FILES = [
@@ -53,44 +54,23 @@ def _resolve_cmd(cmd: list[str]) -> list[str]:
 
 def run_cmd(root: Path, cmd: list[str], timeout: int = 45) -> dict[str, Any]:
     cmd = _resolve_cmd(cmd)
-    try:
-        proc = subprocess.run(
-            cmd,
-            cwd=root,
-            text=True,
-            capture_output=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=timeout,
-            shell=False,
-        )
-        stdout = proc.stdout or ""
-        stderr = proc.stderr or ""
-        return {
-            "cmd": cmd,
-            "returncode": proc.returncode,
-            "stdout": stdout[-4000:],
-            "stderr": stderr[-4000:],
-            "ok": proc.returncode == 0,
-        }
-    except FileNotFoundError as exc:
+    proc = run_safe(cmd, cwd=root, timeout=timeout)
+    if proc.returncode == 124:
         return {
             "cmd": cmd,
             "returncode": None,
-            "stdout": "",
-            "stderr": str(exc),
-            "ok": False,
-            "missing": True,
-        }
-    except subprocess.TimeoutExpired as exc:
-        return {
-            "cmd": cmd,
-            "returncode": None,
-            "stdout": exc.stdout or "",
+            "stdout": (proc.stdout or "")[-4000:],
             "stderr": "timeout",
             "ok": False,
             "timeout": True,
         }
+    return {
+        "cmd": cmd,
+        "returncode": proc.returncode,
+        "stdout": (proc.stdout or "")[-4000:],
+        "stderr": (proc.stderr or "")[-4000:],
+        "ok": proc.returncode == 0,
+    }
 
 
 def severity_rank(sev: str) -> int:
