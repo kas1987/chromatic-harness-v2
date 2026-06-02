@@ -128,17 +128,17 @@ These loose root directories duplicate a canonical home. They are **read-only le
 not add new files to the left column; write to the canonical home instead. Retirement is
 sequenced below and executed by the `v3-structure` epic.
 
-| Legacy dir | Tracked files | Canonical home | Disposition | Bead |
-|------------|--------------:|----------------|-------------|------|
-| `10_RUNTIME/` | 0 (empty) | `02_RUNTIME/` | Remove empty dir; reserve band 10 | `8lri.2` |
-| `02_DOCS/` | 1 (`GO_MODE_STARTUP_SOP.md`) | `docs/` | Move file → `docs/`, fix inbound links | `8lri.2` |
-| `agent_handoffs/` | 3 (review/impl handoffs) | `12_HANDOFFS/` | Move files → `12_HANDOFFS/` | `8lri.2` |
-| `hooks/` | 2 (`pre-commit`, `pre-push`) | `git_hooks/` | Reconcile vs `git_hooks/`; keep one canonical set | `8lri.5` |
-| `state/` | 2 (leases placeholder) | `01_STATE/` | Move placeholder → `01_STATE/leases/` | `8lri.2` |
-| `reports/` | 2 (harness_health placeholder) | `05_REPORTS/` | Move placeholder → `05_REPORTS/` | `8lri.2` |
-| `queue/` | 1 (`claude_adapter_next_work.queue.json`) | `07_LOGS_AND_AUDIT/` | Move → audit, or retire if stale | `8lri.2` |
-| `issues/` | 1 (`claude_adapter_issue_map.md`) | `07_LOGS_AND_AUDIT/` or retire | Likely stale (bd is the tracker) — confirm then retire | `8lri.2` |
-| `dashboards/` | 3 (exporter + grafana/n8n READMEs) | **triage** → `09_DEPLOYMENT/` or `05_REPORTS/` | ⚠ contains live code (`token_economy_exporter.py`) — do **not** blind-retire; triage placement | `8lri.2` |
+| Legacy dir | Tracked files | Canonical home | Disposition | Bead | Status |
+|------------|--------------:|----------------|-------------|------|--------|
+| `10_RUNTIME/` | 0 (empty) | `02_RUNTIME/` | Absent on disk; band 10 reserved | `8lri.2` | ✅ done |
+| `02_DOCS/` | 1 (`GO_MODE_STARTUP_SOP.md`) | `docs/` | Moved → `docs/`; roadmap reference is historical (left as-is) | `8lri.2` | ✅ done |
+| `agent_handoffs/` | 3 (review/impl handoffs) | `12_HANDOFFS/` | Moved → `12_HANDOFFS/` | `8lri.2` | ✅ done |
+| `hooks/` | 2 (`pre-commit`, `pre-push`) | `git_hooks/` | Reconcile vs `git_hooks/` (they **diverge**); keep one canonical set | `8lri.5` | ⏳ pending |
+| `state/` | 2 (leases placeholder) | `01_STATE/` | **Carved out → `8lri.6`**: `state/leases/active_leases.jsonl` is the live lease ledger hardcoded as `DEFAULT_LEDGER` in ~8 collision-subsystem scripts; an atomic coordinated move, not a placeholder shuffle | `8lri.6` | ⏳ deferred |
+| `reports/` | 2 (harness_health placeholder) | `05_REPORTS/` | Moved → `05_REPORTS/harness_health/`; updated `harness_health_check.OUT_DIR` + registry | `8lri.2` | ✅ done |
+| `queue/` | 1 (`claude_adapter_next_work.queue.json`) | `07_LOGS_AND_AUDIT/queue/` | Moved → audit (stale #99 bootstrap, kept for provenance) | `8lri.2` | ✅ done |
+| `issues/` | 1 (`claude_adapter_issue_map.md`) | `07_LOGS_AND_AUDIT/` | Stale (bd is the tracker) — moved to audit for provenance, not deleted | `8lri.2` | ✅ done |
+| `dashboards/` | 3 (exporter + grafana/n8n READMEs) | `09_DEPLOYMENT/dashboards/` | Moved as a unit (exporter `_REPO` depth preserved); updated test + PDR + docstrings | `8lri.2` | ✅ done |
 
 ### Phased timeline
 
@@ -155,6 +155,11 @@ phase is reversible until Phase 3.
 `02_RUNTIME/` decomposition (`8lri.3`) and `.agents/` formalization (`8lri.4`) run on their own
 tracks and are **not** part of this retirement timeline — they restructure *canonical* layers,
 not legacy ones.
+
+**Carve-outs from `8lri.2`:** `hooks/` (→ `8lri.5`, the hook sets genuinely diverge) and
+`state/leases/` (→ `8lri.6`, the live lease ledger is wired into ~8 collision-subsystem scripts
+via `DEFAULT_LEDGER`; moving it is an atomic coordinated refactor that must not be done as a
+drive-by, or collision detection silently splits across two ledger paths).
 
 ---
 
