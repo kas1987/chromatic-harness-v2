@@ -10,6 +10,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from .contracts import OllamaEndpoint, PrivacyClass, RoutingContext, SpeedMode
+
 
 @dataclasses.dataclass(frozen=True)
 class RuntimeContext:
@@ -214,10 +216,7 @@ class ContextDetector:
                     import json
 
                     data = json.loads(resp.read())
-                    models = [
-                        m.get("name", m.get("model", ""))
-                        for m in data.get("models", [])
-                    ]
+                    models = [m.get("name", m.get("model", "")) for m in data.get("models", [])]
                     return True, [m for m in models if m]
         except Exception:
             pass
@@ -292,11 +291,61 @@ class ContextDetector:
 
         try:
             # Linux /sys/class/power_supply/BAT0/status
-            bat_status = (
-                Path("/sys/class/power_supply/BAT0/status").read_text().strip().lower()
-            )
+            bat_status = Path("/sys/class/power_supply/BAT0/status").read_text().strip().lower()
             return bat_status == "discharging"
         except Exception:
             pass
 
         return False  # assume AC if we can't tell
+
+    # ── RoutingContext factory ────────────────────────────────────────────────
+
+    def build_routing_context(
+        self,
+        objective: str,
+        task_description: str = "",
+        prompt: str = "",
+        max_files_hint: int | None = None,
+        impact_fan_out: int | None = None,
+        privacy_class: PrivacyClass = PrivacyClass.P1,
+        speed_mode: SpeedMode = "balance",
+    ) -> RoutingContext:
+        """Collect runtime environment and return a sealed RoutingContext.
+
+        This is the only method that performs I/O; all downstream routing
+        stages (classify_context, select_context) are pure functions over
+        the returned value.
+        """
+        runtime = self.detect()
+
+        def _to_endpoint(ep: Any) -> OllamaEndpoint:
+            if isinstance(ep, OllamaEndpoint):
+                return ep
+            return OllamaEndpoint(
+                host=ep.get("host", ""),
+                port=int(ep.get("port", 11434)),
+                enabled=bool(ep.get("enabled", True)),
+            )
+
+        return RoutingContext(
+            objective=objective,
+            task_description=task_description,
+            prompt=prompt,
+            max_files_hint=max_files_hint,
+            impact_fan_out=impact_fan_out,
+            device_type=runtime.device_type,
+            gpu_available=runtime.gpu_available,
+            gpu_model=runtime.gpu_model,
+            gpu_vram_gb=runtime.gpu_vram_gb,
+            ollama_local_reachable=runtime.ollama_local_reachable,
+            ollama_local_models=tuple(runtime.ollama_local_models),
+            remote_ollama_endpoints=tuple(_to_endpoint(ep) for ep in runtime.remote_ollama_endpoints),
+            internet_reachable=runtime.internet_reachable,
+            connectivity=runtime.connectivity,
+            memory_pressure=runtime.memory_pressure,
+            os_family=runtime.os_family,
+            cpu_count=runtime.cpu_count,
+            is_battery=runtime.is_battery,
+            privacy_class=privacy_class,
+            speed_mode=speed_mode,
+        )

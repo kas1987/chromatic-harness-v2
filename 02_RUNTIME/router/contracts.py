@@ -1,7 +1,9 @@
 """Request/response contracts for the Chromatic Router."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 from enum import Enum
 
 
@@ -139,3 +141,58 @@ class ContextGateResult:
     denied_resources: list[DeniedResource] = field(default_factory=list)
     estimated_context_tokens: int = 0
     logs: list[str] = field(default_factory=list)
+
+
+# ── Sealed routing-pipeline contract ────────────────────────────────────────
+# RoutingContext is the single typed value passed through the pure-function
+# routing stages (classify → select). All environment data is collected once
+# by ContextDetector.build_routing_context() and frozen here; the downstream
+# stages are then free of I/O and dict[str,Any] ambiguity.
+
+
+@dataclass(frozen=True)
+class OllamaEndpoint:
+    """Typed replacement for the untyped dict used in remote_ollama_endpoints."""
+
+    host: str
+    port: int = 11434
+    enabled: bool = True
+
+
+SpeedMode = Literal["speed", "balance", "low"]
+
+
+@dataclass(frozen=True)
+class RoutingContext:
+    """Sealed contract carrying all inputs for the routing pipeline.
+
+    Constructed by ContextDetector.build_routing_context(); passed unchanged
+    through ComplexityClassifier.classify_context() and
+    ProviderSelector.select_context().  No dict[str,Any] fields.
+    """
+
+    # Task description (supplied by caller)
+    objective: str
+    task_description: str = ""
+    prompt: str = ""
+    max_files_hint: int | None = None
+    impact_fan_out: int | None = None
+
+    # Runtime environment (populated by ContextDetector)
+    device_type: str = "unknown"
+    gpu_available: bool = False
+    gpu_model: str | None = None
+    gpu_vram_gb: float | None = None
+    ollama_local_reachable: bool = False
+    ollama_local_models: tuple[str, ...] = ()
+    remote_ollama_endpoints: tuple[OllamaEndpoint, ...] = ()
+    internet_reachable: bool = True
+    connectivity: str = "full"
+    memory_pressure: str = "medium"
+    os_family: str = "unknown"
+    cpu_count: int = 1
+    is_battery: bool = False
+
+    # Routing constraints (supplied by caller, defaulting to conservative)
+    privacy_class: PrivacyClass = PrivacyClass.P1
+    speed_mode: SpeedMode = "balance"
