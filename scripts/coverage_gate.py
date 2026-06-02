@@ -18,12 +18,18 @@ import argparse
 import json
 import os
 import re
-import subprocess
+import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
+
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "coverage"
 BASELINE_FILE = ARTIFACT_DIR / "baseline.json"
 
@@ -76,13 +82,14 @@ def parse_coverage(text: str) -> float:
 
 
 def _run(cmd: list[str], *, timeout: int = 180) -> tuple[int, str]:
-    try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout)
-        return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except FileNotFoundError:
+    # Preserve the tool-not-found (127) contract: run_safe collapses a missing
+    # binary to rc=1, so pre-check with shutil.which (callers test `code == 127`).
+    if cmd and shutil.which(cmd[0]) is None:
         return 127, "tool-not-found"
-    except subprocess.TimeoutExpired:
-        return 124, f"timeout after {timeout}s"
+    try:
+        # run_safe reaps the process tree on timeout, returning rc=124.
+        r = run_safe(cmd, cwd=REPO, timeout=timeout)
+        return r.returncode, (r.stdout or "") + (r.stderr or "")
     except Exception as exc:
         return 1, str(exc)
 
