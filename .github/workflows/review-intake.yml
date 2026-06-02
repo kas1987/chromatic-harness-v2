@@ -12,6 +12,7 @@ on:
   check_run:
     types: [completed]
   workflow_run:
+    workflows: ["CI"]
     types: [completed]
 
 permissions:
