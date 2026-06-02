@@ -10,11 +10,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
+import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+from common_harness import run_safe  # noqa: E402
 
 
 ALWAYS_LOAD = [
@@ -73,11 +76,8 @@ def utc_now() -> str:
 
 
 def run_command(args: list[str], cwd: Path, timeout: int = 10) -> CommandResult:
-    try:
-        proc = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True, timeout=timeout, check=False)
-        return CommandResult(True, proc.stdout.strip(), proc.stderr.strip(), proc.returncode)
-    except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
-        return CommandResult(False, "", str(exc), None)
+    proc = run_safe(args, cwd=cwd, timeout=timeout)
+    return CommandResult(True, (proc.stdout or "").strip(), (proc.stderr or "").strip(), proc.returncode)
 
 
 def git_state(root: Path) -> dict[str, Any]:
@@ -101,9 +101,7 @@ def handoff_state(root: Path) -> dict[str, Any]:
         "latest_pointer_path": str(pointer.relative_to(root)) if pointer.exists() else None,
         "handoff_path": None,
         "transfer_packet_exists": transfer_path.is_file(),
-        "transfer_packet_path": (
-            str(transfer_path.relative_to(root)) if transfer_path.is_file() else None
-        ),
+        "transfer_packet_path": (str(transfer_path.relative_to(root)) if transfer_path.is_file() else None),
         "budget_decision": None,
         "boot_commands": [],
         "raw": None,
