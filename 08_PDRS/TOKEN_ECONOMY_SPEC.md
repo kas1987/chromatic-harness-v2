@@ -98,7 +98,7 @@ Every overlay change is logged to the routes audit for backtesting.
 
 ## 8. Dashboard & Metrics
 
-`dashboards/exporter/token_economy_exporter.py` reads `forecast_latest.json` /
+`09_DEPLOYMENT/dashboards/exporter/token_economy_exporter.py` reads `forecast_latest.json` /
 `ledger.jsonl` and emits the already-named `chromatic_*` series into the
 existing `grafana/` + `n8n/` placeholders: a **3-column weekly P&L** (quota %,
 API $, local-offload $-equivalent), a **utilization gauge vs the 90% line**, and
@@ -141,7 +141,7 @@ only as a future producer swap behind `quota_state.py`'s source abstraction.
 | **B5** | `quota_proxy.py` + `quota_state.py` (fail-open, staleness, abstraction) | B1 |
 | **B6** (mc-i1i8k) | `tools/portfolio_token_forecast.py` axis_prepaid + ROI fold-in + variance | B3, B5 |
 | **B7** | `control_plane/controller.py` + `routing_policy_overlay.json`; gate reads overlay | B5, B6 |
-| **B8** (mc-65kxl) | `dashboards/exporter/token_economy_exporter.py` chromatic_* + P&L | B3, B6 |
+| **B8** (mc-65kxl) | `09_DEPLOYMENT/dashboards/exporter/token_economy_exporter.py` chromatic_* + P&L | B3, B6 |
 | **B9** | EDIT `token_governance_closed_loop.py`: chain proxy→telemetry→forecast→controller→exporter | B3,B5,B6,B7,B8 |
 | **B10** | EDIT `agent_budget.yaml`: prepaid flags + quota reset binding | B1 |
 

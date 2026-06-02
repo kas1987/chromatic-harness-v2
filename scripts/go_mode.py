@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from dataclasses import dataclass
@@ -112,16 +113,45 @@ def confidence_band(score: float) -> tuple[str, str, bool]:
     return "halt", "Halt and escalate", False
 
 
+def _label_values(item: dict, prefix: str) -> list[str]:
+    """Extract suffixes of ``prefix``-namespaced labels (e.g. ``scope:router`` -> ``router``)."""
+    out: list[str] = []
+    for lab in item.get("labels") or []:
+        s = str(lab)
+        if s.startswith(prefix):
+            val = s[len(prefix) :].strip()
+            if val:
+                out.append(val)
+    return out
+
+
+def _as_checklist(value: Any) -> list[str]:
+    """Normalize an acceptance field to a list of non-empty items.
+
+    bd stores acceptance criteria as a single string; split on newlines/semicolons
+    and strip bullet markers. A list is passed through (markers stripped)."""
+    if isinstance(value, list):
+        return [str(c).strip(" -*\t") for c in value if str(c).strip(" -*\t")]
+    if isinstance(value, str):
+        return [c.strip(" -*\t") for c in re.split(r"[\n;]+", value) if c.strip(" -*\t")]
+    return []
+
+
 def estimate_factors(item: dict) -> dict[str, float]:
-    """Heuristic factor estimate from a queue item's metadata. Deterministic."""
+    """Heuristic factor estimate from a queue item's metadata. Deterministic.
+
+    Reads the canonical ``bd ready --json`` schema (``description``,
+    ``acceptance_criteria``, ``labels``) as fallbacks after the injected
+    DISPATCH_PLAYBOOK keys, so a real bead with a clear description + acceptance
+    criteria scores accurately instead of collapsing to the all-neutral 50."""
     title = str(item.get("title", "")).strip()
-    objective = str(item.get("objective") or item.get("notes") or "").strip()
-    checks = item.get("acceptance_checks") or item.get("acceptance") or []
-    if isinstance(checks, str):
-        checks = [checks] if checks.strip() else []
-    allowed = item.get("allowed_files") or []
-    stops = item.get("stop_conditions") or []
-    risk = str(item.get("risk_level", "")).lower()
+    objective = str(item.get("objective") or item.get("notes") or item.get("description") or "").strip()
+    checks = _as_checklist(
+        item.get("acceptance_checks") or item.get("acceptance") or item.get("acceptance_criteria") or []
+    )
+    allowed = item.get("allowed_files") or _label_values(item, "scope:")
+    stops = item.get("stop_conditions") or _label_values(item, "stop:")
+    risk = str(item.get("risk_level") or (_label_values(item, "risk:") or [""])[0]).lower()
     checks_text = " ".join(str(c).lower() for c in checks)
 
     return {

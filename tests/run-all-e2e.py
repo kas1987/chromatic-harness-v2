@@ -155,6 +155,7 @@ SUITES = [
         [
             "test_go_mode.py",
             "test_task_runner.py",
+            "test_bead_enrich.py",
         ],
     ),
     (
@@ -376,6 +377,15 @@ SUITES = [
         "agent mission packet compliance (OBS-012)",
         [
             "test_mission_packet.py",
+        ],
+    ),
+    (
+        "session-start boot (ready queue, lean boot, alerts, Windows-safe bd)",
+        [
+            "test_session_start_ready_queue.py",
+            "test_session_start_lean_boot.py",
+            "test_session_start_alerts.py",
+            "test_session_start_bd_argv.py",
         ],
     ),
     (
