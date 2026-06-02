@@ -344,16 +344,17 @@ def bridge_today_to_daily(
     # Build set of already-ingested decision_ids so we never double-count.
     seen: set[str] = set()
     if ledger.daily_log.is_file():
-        for line in ledger.daily_log.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                did = json.loads(line).get("decision_id", "")
-                if did:
-                    seen.add(did)
-            except json.JSONDecodeError:
-                continue
+        with ledger.daily_log.open(encoding="utf-8") as _fh:
+            for line in _fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    did = json.loads(line).get("decision_id", "")
+                    if did:
+                        seen.add(did)
+                except json.JSONDecodeError:
+                    continue
 
     total = 0.0
     for r in rows:
@@ -366,6 +367,7 @@ def bridge_today_to_daily(
             note=note,
             decision_id=r.decision_id,
         )
+        seen.add(r.decision_id)
         total += r.usd
     return round(total, 6)
 

@@ -51,7 +51,8 @@ def audit_router_decision(entry: dict, billing_fn=None) -> None:
     try:
         repo = _repo()
         runtime_dir = repo / "02_RUNTIME"
-        sys.path.insert(0, str(runtime_dir))
+        if str(runtime_dir) not in sys.path:
+            sys.path.insert(0, str(runtime_dir))
         from audit.two_log import TwoLogAudit  # type: ignore[import]
 
         audit = TwoLogAudit(repo)
