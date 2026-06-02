@@ -15,12 +15,15 @@ import argparse
 import hashlib
 import json
 import re
-import subprocess
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 DEFAULT_STATE = ".agents/evolve/drift-triage-state.json"
 
 
@@ -43,19 +46,9 @@ class TriageAction:
 
 
 def _run(cmd: list[str], *, cwd: Path, timeout: int = 60) -> tuple[int, str]:
-    try:
-        proc = subprocess.run(
-            cmd,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-        out = (proc.stdout or "") + (proc.stderr or "")
-        return proc.returncode, out.strip()
-    except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
-        return 1, str(exc)
+    r = run_safe(cmd, cwd=cwd, timeout=timeout)
+    out = (r.stdout or "") + (r.stderr or "")
+    return r.returncode, out.strip()
 
 
 def _run_bd(args: list[str], *, cwd: Path) -> tuple[int, str]:
@@ -104,9 +97,7 @@ def _read_jsonl(path: Path) -> list[DriftItem]:
             continue
         if not isinstance(row, dict):
             continue
-        detail = _safe_text(
-            row.get("detail") or row.get("message") or row.get("summary")
-        )
+        detail = _safe_text(row.get("detail") or row.get("message") or row.get("summary"))
         if not detail:
             continue
         file_path = _safe_text(row.get("file") or row.get("path") or "unknown")

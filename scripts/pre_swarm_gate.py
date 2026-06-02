@@ -16,26 +16,18 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
 
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 
 def _run_step(name: str, cmd: list[str]) -> tuple[bool, str]:
-    try:
-        proc = subprocess.run(
-            cmd,
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=900,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return False, "timeout"
+    proc = run_safe(cmd, cwd=REPO, timeout=900)
 
     if proc.returncode == 0:
         return True, ""
