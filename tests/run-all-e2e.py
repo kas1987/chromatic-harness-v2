@@ -394,6 +394,7 @@ SUITES = [
         [
             "test_promote_to_wiki.py",
             "test_sync_wiki_mirror.py",
+            "test_check_wiki_clone_hygiene.py",
         ],
     ),
     (
