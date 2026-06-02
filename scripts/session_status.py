@@ -18,7 +18,6 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,6 +28,7 @@ _SCRIPTS = REPO / "scripts"
 sys.path.insert(0, str(_SCRIPTS))
 
 import lease_manager as _lm  # noqa: E402
+from common_harness import run_safe  # noqa: E402
 
 LOCK_DB = REPO / ".agents" / "locks" / "session_locks.sqlite3"
 
@@ -44,14 +44,7 @@ def _now() -> datetime:
 
 def _collect_worktrees() -> list[dict[str, Any]]:
     try:
-        result = subprocess.run(
-            ["git", "worktree", "list", "--porcelain"],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
+        result = run_safe(["git", "worktree", "list", "--porcelain"], cwd=REPO, timeout=10)
         worktrees: list[dict[str, Any]] = []
         current: dict[str, Any] = {}
         for line in result.stdout.splitlines():
@@ -117,14 +110,7 @@ def _collect_locks() -> list[dict[str, Any]]:
 
 def _collect_beads() -> list[dict[str, Any]]:
     try:
-        result = subprocess.run(
-            ["bd", "list", "--status", "in_progress", "--json"],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=15,
-            check=False,
-        )
+        result = run_safe(["bd", "list", "--status", "in_progress", "--json"], cwd=REPO, timeout=15)
         if result.returncode != 0 or not result.stdout.strip():
             return []
         data = json.loads(result.stdout)
