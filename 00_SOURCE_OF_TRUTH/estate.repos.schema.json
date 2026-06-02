@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chromatic/Prism estate manifest",
+  "type": "object",
+  "required": ["version", "consolidation_target_org", "governance_parent", "repos"],
+  "properties": {
+    "version": { "type": "string" },
+    "generated": { "type": "string" },
+    "purpose": { "type": "string" },
+    "consolidation_target_org": { "type": "string" },
+    "governance_parent": { "type": "string" },
+    "branch_policy": {
+      "type": "object",
+      "properties": { "canonical_default_branch": { "type": "string" } }
+    },
+    "roles": { "type": "object" },
+    "repos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "home", "target_home", "role", "default_branch", "archived"],
+        "properties": {
+          "name": { "type": "string" },
+          "home": { "type": "string", "description": "Current GitHub owner (org or user)." },
+          "target_home": { "type": "string", "description": "Where it should live after consolidation." },
+          "role": { "enum": ["control_plane", "governance_parent", "estate_member", "published_oss", "tooling", "product", "retire"] },
+          "default_branch": { "type": "string" },
+          "visibility": { "enum": ["PUBLIC", "PRIVATE"] },
+          "keep_public": { "type": "boolean" },
+          "archived": { "type": "boolean" },
+          "disk_kb": { "type": "integer" },
+          "local_path": { "type": ["string", "null"] },
+          "action": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

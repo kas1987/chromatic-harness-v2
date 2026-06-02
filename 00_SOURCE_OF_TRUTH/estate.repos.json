@@ -1,0 +1,64 @@
+{
+  "$schema": "./estate.repos.schema.json",
+  "version": "1.0.0",
+  "generated": "2026-06-02",
+  "purpose": "Canonical, machine-readable membership for the Chromatic/Prism estate. The harness (chromatic-harness-v2) reads this to know which repos are install targets, their canonical home, default branch, and role. Replaces the implicit 5-root list in ~/.claude/governance/auto-mode-scope.yaml.",
+  "consolidation_target_org": "Poly-Chromatic",
+  "governance_parent": "Poly-Chromatic/poly-chromatic",
+  "branch_policy": { "canonical_default_branch": "main" },
+  "roles": {
+    "control_plane": "The harness scaffold / orchestration plane installed into estate repos.",
+    "governance_parent": "Estate root: governance, specs, ChromaticTrees source of truth.",
+    "estate_member": "In-estate product/subsystem the harness manages.",
+    "published_oss": "Public tool released to the world; NOT governed as internal estate.",
+    "tooling": "Local Claude Code / agent config and skill libraries.",
+    "product": "Standalone product line, governed separately.",
+    "retire": "Dead / duplicate / archived — delete or keep archived."
+  },
+  "repos": [
+    { "name": "chromatic-harness-v2", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "control_plane", "default_branch": "main", "visibility": "PUBLIC", "keep_public": true, "archived": false, "disk_kb": 42485, "local_path": "C:/Users/kas41/chromatic-harness-v2", "action": "move-to-org; KEEP public as shareable scaffold; default fixed main 2026-06-02; prune 75 branches", "notes": "Default branch was session/chromatic-harness-v2-initial until 2026-06-02. Pre-commit secret gate wired via core.hooksPath=git_hooks." },
+
+    { "name": "poly-chromatic", "home": "Poly-Chromatic", "target_home": "Poly-Chromatic", "role": "governance_parent", "default_branch": "feat/chromatic-harness-sprint-01", "visibility": "PRIVATE", "archived": false, "disk_kb": 21936, "local_path": null, "action": "FIX default branch -> main (currently a feature branch; same anti-pattern as harness had)", "notes": "Estate root: governance, specs, ChromaticTrees." },
+    { "name": "chromatic-inbox-harness", "home": "Poly-Chromatic", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 73413, "local_path": "C:/chromatic-inbox-harness", "action": "keep", "notes": "Local on laptop/local-runner branch." },
+    { "name": "prism-autonomy-harness", "home": "Poly-Chromatic", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "Main", "visibility": "PRIVATE", "archived": false, "disk_kb": 4609, "local_path": null, "action": "normalize default branch Main -> main", "notes": "Master control plane / autonomy loop. Canonical (kas1987 copy is archived dup)." },
+    { "name": "chromatic-command-center", "home": "Poly-Chromatic", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 747, "local_path": null, "action": "keep; fold kas1987/Command-Center into this", "notes": "Electron hub; consumes inbox harness API :8765." },
+    { "name": "chromatic-inbox-harness-openrouter-adapter", "home": "Poly-Chromatic", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 12, "local_path": null, "action": "keep" },
+    { "name": "Claude-Nexus", "home": "Poly-Chromatic", "target_home": "Poly-Chromatic", "role": "retire", "default_branch": "master", "visibility": "PRIVATE", "archived": true, "disk_kb": 293941, "local_path": null, "action": "keep-archived or DELETE (patterns already mined into prism-autonomy-harness)" },
+
+    { "name": "Image-Prism", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 187738, "local_path": "C:/.01_Image Org", "action": "move-to-org", "notes": "Primary Image monorepo." },
+    { "name": "Image-Org", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 16956, "local_path": null, "action": "VERIFY vs Image-Prism then archive/DELETE (suspected legacy duplicate)" },
+    { "name": "04-Prism", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 444457, "local_path": null, "action": "move-to-org" },
+    { "name": "04-prism-LAP", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "preserve/laptop-20260531", "visibility": "PRIVATE", "archived": false, "disk_kb": 46004, "local_path": "C:/.04_Prism", "action": "laptop preserve snapshot; fold into 04-Prism as a tag/branch then DELETE; fix default branch off preserve/*" },
+    { "name": "3D_Meta", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "Main", "visibility": "PRIVATE", "archived": false, "disk_kb": 114886, "local_path": null, "action": "move-to-org; normalize Main -> main" },
+    { "name": "Chromatic_Brain", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 23334, "local_path": null, "action": "move-to-org; rename Chromatic_Brain -> chromatic-brain" },
+    { "name": "ChromaticSystems", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 790, "local_path": null, "action": "move-to-org; rename -> chromatic-systems" },
+    { "name": "chromatic-devsecops", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 112, "local_path": null, "action": "move-to-org" },
+    { "name": "chromatic-stack", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "master", "visibility": "PRIVATE", "archived": false, "disk_kb": 49, "local_path": null, "action": "move-to-org; normalize master -> main" },
+    { "name": "chromatic-design-studios", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "master", "visibility": "PRIVATE", "archived": false, "disk_kb": 6848, "local_path": null, "action": "move-to-org; normalize master -> main" },
+    { "name": "chromatic-wiki", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 90, "local_path": null, "action": "move-to-org; likely harness wiki" },
+    { "name": "Chromatic_Skills", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "Main", "visibility": "PRIVATE", "archived": false, "disk_kb": 6567, "local_path": null, "action": "move-to-org; rename -> chromatic-skills; normalize Main -> main" },
+    { "name": "Chromatic_Audit", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "", "visibility": "PRIVATE", "archived": false, "disk_kb": 0, "local_path": null, "action": "DELETE (empty, 0 bytes, no default branch)" },
+    { "name": "CCP", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 102, "local_path": null, "action": "move-to-org", "notes": "Chromatic Control Plane / Prism Engine." },
+    { "name": "Claude_Master", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "tooling", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 4937, "local_path": null, "action": "evaluate vs claude-config/claude-skills for overlap; move-to-org if estate tooling" },
+    { "name": "Command-Center", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "retire", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 4434, "local_path": null, "action": "FOLD into Poly-Chromatic/chromatic-command-center then archive/DELETE (suspected duplicate)" },
+
+    { "name": "claude-config", "home": "kas1987", "target_home": "kas1987", "role": "tooling", "default_branch": "master", "visibility": "PRIVATE", "archived": false, "disk_kb": 1672, "local_path": null, "action": "keep personal; PENDING GH_TOKEN rotation T4 (leaked gho_ in settings.json + history)" },
+    { "name": "claude-skills", "home": "kas1987", "target_home": "kas1987", "role": "tooling", "default_branch": "master", "visibility": "PRIVATE", "archived": false, "disk_kb": 2328, "local_path": null, "action": "keep personal; normalize master -> main (optional)" },
+
+    { "name": "9router", "home": "kas1987", "target_home": "kas1987", "role": "published_oss", "default_branch": "master", "visibility": "PUBLIC", "archived": false, "disk_kb": 8569, "local_path": "C:/9router", "action": "keep public OSS" },
+    { "name": "claude-octopus", "home": "kas1987", "target_home": "kas1987", "role": "published_oss", "default_branch": "main", "visibility": "PUBLIC", "archived": false, "disk_kb": 11865, "local_path": null, "action": "keep public OSS" },
+    { "name": "claude-powerline", "home": "kas1987", "target_home": "kas1987", "role": "published_oss", "default_branch": "main", "visibility": "PUBLIC", "archived": false, "disk_kb": 5895, "local_path": null, "action": "keep public OSS" },
+    { "name": "dmx", "home": "kas1987", "target_home": "kas1987", "role": "published_oss", "default_branch": "main", "visibility": "PUBLIC", "archived": false, "disk_kb": 500, "local_path": null, "action": "keep public OSS" },
+
+    { "name": "The-Veil", "home": "kas1987", "target_home": "kas1987", "role": "product", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 2902, "local_path": null, "action": "keep; governed separately from estate" },
+    { "name": "Viel-Small-Town", "home": "kas1987", "target_home": "kas1987", "role": "product", "default_branch": "Main", "visibility": "PRIVATE", "archived": false, "disk_kb": 24146, "local_path": null, "action": "keep; normalize Main -> main; confirm relationship to The-Veil" },
+    { "name": "agentops", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "Main", "visibility": "PRIVATE", "archived": false, "disk_kb": 14, "local_path": null, "action": "move-to-org (AgentOps collector); normalize Main -> main" },
+    { "name": "ai-project-management-harness", "home": "kas1987", "target_home": "kas1987", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 679, "local_path": null, "action": "evaluate vs chromatic-harness-v2 / prism-autonomy-harness for overlap" },
+    { "name": "ComftyUI-Harness", "home": "kas1987", "target_home": "kas1987", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 503, "local_path": null, "action": "evaluate; sp 'Comfty' looks like a typo of ComfyUI" },
+    { "name": "fusion-computer", "home": "kas1987", "target_home": "kas1987", "role": "tooling", "default_branch": "master", "visibility": "PRIVATE", "archived": false, "disk_kb": 214, "local_path": "C:/Users/kas41/fusion-computer", "action": "keep; federation root in auto-mode-scope; normalize master -> main (optional)" },
+
+    { "name": "Master_CCC", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "main", "visibility": "PRIVATE", "archived": true, "disk_kb": 1796391, "local_path": null, "action": "DELETE — 1.79 GB archived dead weight (largest single liability)" },
+    { "name": "JOB", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "Main", "visibility": "PRIVATE", "archived": true, "disk_kb": 23117, "local_path": null, "action": "DELETE (archived)" },
+    { "name": "prism-autonomy-harness", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "Main", "visibility": "PRIVATE", "archived": true, "disk_kb": 73, "local_path": null, "action": "DELETE — archived duplicate; canonical is Poly-Chromatic/prism-autonomy-harness" }
+  ]
+}
