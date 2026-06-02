@@ -155,6 +155,7 @@ SUITES = [
         [
             "test_go_mode.py",
             "test_task_runner.py",
+            "test_bead_enrich.py",
         ],
     ),
     (
