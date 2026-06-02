@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -20,7 +19,9 @@ REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from intake.bd_runner import resolve_bd_argv  # noqa: E402
 
 from workflows.confidence import mutation_allowed, score_task  # noqa: E402
@@ -36,19 +37,7 @@ HANDOFF = REPO / ".agents" / "handoffs" / "latest.json"
 
 
 def _run_bd(args: list[str]) -> str:
-    try:
-        proc = subprocess.run(
-            [*resolve_bd_argv(), *args],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=30,
-            check=False,
-        )
-    except FileNotFoundError:
-        return ""
+    proc = run_safe([*resolve_bd_argv(), *args], cwd=REPO, timeout=30)
     return (proc.stdout or "") + (proc.stderr or "")
 
 
@@ -94,9 +83,7 @@ def _score_for_bead(bead: dict[str, str], risk: str = "low") -> object:
 def _mission_packet_for_execute(bead: dict[str, str], record: object) -> dict:
     import importlib.util
 
-    spec = importlib.util.spec_from_file_location(
-        "orchestrator_mod", _RUNTIME / "orchestrator" / "orchestrator.py"
-    )
+    spec = importlib.util.spec_from_file_location("orchestrator_mod", _RUNTIME / "orchestrator" / "orchestrator.py")
     mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
     spec.loader.exec_module(mod)  # type: ignore[union-attr]
     orch = mod.Orchestrator()
@@ -208,13 +195,9 @@ def cmd_go(mode: GoMode) -> int:
         return cmd_go_verify()
 
     if mode == GoMode.GO_SHIP:
-        import subprocess as sp
-
-        proc = sp.run(
+        proc = run_safe(
             [sys.executable, str(REPO / "scripts" / "workflow_git.py"), "ship", "--from-log", "--run-tests"],
             cwd=REPO,
-            capture_output=True,
-            text=True,
             timeout=600,
         )
         print(proc.stdout or proc.stderr)
