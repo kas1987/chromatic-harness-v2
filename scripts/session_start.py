@@ -10,11 +10,24 @@ from __future__ import annotations
 import json
 import os
 import re
-import subprocess
+import shutil
+import subprocess  # retained: the fire-and-forget `bd prime` (console passthrough) stays bare
 import sys
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
+# bd/git output (now decoded as real UTF-8 by run_safe) can contain glyphs like
+# ○ ◐ ● that the Windows cp1252 console cannot encode. Make this hook's streams
+# UTF-8/replace so printing harness output never raises on the user's terminal.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001 — older/odd stream objects; best-effort
+        pass
+
 _GUARD = _REPO / "scripts" / "session_unified_guard.py"
 _HANDOFF = _REPO / ".agents" / "handoffs" / "latest.json"
 _OPS = _REPO / "AGENT_OPERATIONS.md"
@@ -78,9 +91,7 @@ def _emit_boot(cold_start: bool) -> None:
         runtime = os.environ.get("CHROMATIC_RUNTIME", "claude")
         res = emit_session_boot(_REPO, cold_start=cold_start, invoked_by=runtime)
         if res.get("ok"):
-            print(
-                f"  telemetry: session.boot emitted (session {res['session_id'][:8]})"
-            )
+            print(f"  telemetry: session.boot emitted (session {res['session_id'][:8]})")
     except Exception as exc:  # noqa: BLE001
         print(f"  telemetry: session.boot skipped ({exc})", file=sys.stderr)
 
@@ -97,13 +108,10 @@ def _inject_learnings() -> None:
 
         terms: list[str] = []
         try:
-            br = subprocess.run(
+            br = run_safe(
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
                 cwd=_REPO,
-                capture_output=True,
-                text=True,
                 timeout=10,
-                check=False,
             ).stdout.strip()
             # branch like feat/router-loop-guard -> [router, loop, guard]
             terms = [t for t in re.split(r"[/_-]", br) if len(t) > 2]
@@ -119,30 +127,19 @@ def _inject_learnings() -> None:
 
 
 def _bd(args: list[str], *, timeout: int = 20) -> tuple[int, str]:
-    """Run bd with a Windows-safe PATH fallback (mirrors session_closeout)."""
-    try:
-        r = subprocess.run(
-            ["bd", *args],
-            cwd=_REPO,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-    except FileNotFoundError:
-        try:
-            r = subprocess.run(
-                ["cmd", "/c", "bd", *args],
-                cwd=_REPO,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                check=False,
-            )
-        except (FileNotFoundError, subprocess.SubprocessError):
-            return 127, ""
-    except subprocess.SubprocessError:
-        return 1, ""
+    """Run bd with a Windows-safe PATH fallback (mirrors session_closeout).
+
+    run_safe never raises, so the old try/except-FileNotFoundError fallback is
+    replaced with a shutil.which check: resolve bd directly when possible, else
+    route through `cmd /c` (handles a .cmd shim not found by a bare spawn). The
+    prior synthesized 127 sentinel was never consumed (callers only treat the
+    code as success/failure), so any non-zero on failure is equivalent.
+    """
+    bd = shutil.which("bd")
+    if bd is not None:
+        r = run_safe([bd, *args], cwd=_REPO, timeout=timeout)
+    else:
+        r = run_safe(["cmd", "/c", "bd", *args], cwd=_REPO, timeout=timeout)
     return r.returncode, (r.stdout or "").strip()
 
 
@@ -213,11 +210,7 @@ def _emit_baseline_alerts() -> None:
         if overall == "ok":
             print(f"  [ok] {surface} surface within baseline")
         else:
-            drifted = [
-                (name, m)
-                for name, m in metrics.items()
-                if m.get("status") in ("warn", "over")
-            ]
+            drifted = [(name, m) for name, m in metrics.items() if m.get("status") in ("warn", "over")]
             if not drifted:
                 print(f"  [ok] {surface} surface within baseline")
             else:
@@ -300,14 +293,7 @@ def main() -> int:
         if _lean_boot() and _is_fresh(_TOKEN_GOV_LATEST):
             guard_cmd.append("--skip-token-loop")
             print("  (lean boot: token-governance loop fresh <6h — skipped)")
-        r = subprocess.run(
-            guard_cmd,
-            cwd=_REPO,
-            capture_output=True,
-            text=True,
-            timeout=300,
-            check=False,
-        )
+        r = run_safe(guard_cmd, cwd=_REPO, timeout=300)
         if r.stdout.strip():
             print(r.stdout.strip())
         if r.returncode != 0 and r.stderr:
@@ -336,10 +322,7 @@ def main() -> int:
             print(f"  readiness_status: {h.get('overall_status', 'unknown')}")
             print(f"  readiness_score: {h.get('readiness_score', 0)}/100")
             counts = h.get("counts") or {}
-            print(
-                "  checks(pass/warn/fail): "
-                f"{counts.get('pass', 0)}/{counts.get('warn', 0)}/{counts.get('fail', 0)}"
-            )
+            print(f"  checks(pass/warn/fail): {counts.get('pass', 0)}/{counts.get('warn', 0)}/{counts.get('fail', 0)}")
         except (json.JSONDecodeError, OSError):
             print("  readiness_status: unknown")
             print("  readiness_score: n/a")
@@ -358,19 +341,10 @@ def main() -> int:
             printed_forecast = True
     if not printed_forecast and _BUDGET_FORECAST.is_file():
         try:
-            proc = subprocess.run(
-                [
-                    sys.executable,
-                    str(_BUDGET_FORECAST),
-                    "--write",
-                    "--format",
-                    "line",
-                ],
+            proc = run_safe(
+                [sys.executable, str(_BUDGET_FORECAST), "--write", "--format", "line"],
                 cwd=_REPO,
-                capture_output=True,
-                text=True,
                 timeout=45,
-                check=False,
             )
             if proc.returncode == 0 and proc.stdout.strip():
                 print(f"  budget_forecast: {proc.stdout.strip()}")
