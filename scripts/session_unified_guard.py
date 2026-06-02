@@ -13,24 +13,18 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
 
 
 def _run(cmd: list[str], timeout: int = 900) -> dict[str, Any]:
-    proc = subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        check=False,
-    )
+    proc = run_safe(cmd, cwd=REPO, timeout=timeout)
     return {
         "command": cmd,
         "exit_code": proc.returncode,
@@ -95,11 +89,7 @@ def _codegraph_freshness(stale_after_minutes: int = 60) -> dict[str, Any]:
         "index_lag_minutes": round(lag_minutes, 1),
         "stale_after_minutes": stale_after_minutes,
         "newest_source": rel,
-        "advice": (
-            "reindex before relying on impact: run `codegraph index .`"
-            if stale
-            else "index current"
-        ),
+        "advice": ("reindex before relying on impact: run `codegraph index .`" if stale else "index current"),
     }
 
 
@@ -128,9 +118,7 @@ def _write_receipt(payload: dict[str, Any]) -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Unified session automation guard")
-    parser.add_argument(
-        "--surface", choices=["auto", "ide", "cli", "mcp", "scheduler"], default="auto"
-    )
+    parser.add_argument("--surface", choices=["auto", "ide", "cli", "mcp", "scheduler"], default="auto")
     parser.add_argument(
         "--invoked-by",
         choices=["cursor", "claude", "scheduler", "preflight", "automation"],
@@ -141,15 +129,11 @@ def main() -> int:
         action="store_true",
         help="Force fresh boot regardless of manifest age",
     )
-    parser.add_argument(
-        "--full", action="store_true", help="Run full session boot mode"
-    )
+    parser.add_argument("--full", action="store_true", help="Run full session boot mode")
     parser.add_argument("--skip-boot", action="store_true")
     parser.add_argument("--skip-token-loop", action="store_true")
     parser.add_argument("--skip-codegraph", action="store_true")
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Do not enqueue/drain intake suggestions"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Do not enqueue/drain intake suggestions")
     parser.add_argument("extras", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
@@ -182,9 +166,7 @@ def main() -> int:
             token_cmd.append("--dry-run")
         else:
             token_cmd.extend(["--enqueue-suggestions", "--drain-intake"])
-        steps.append(
-            {"name": "token_governance_closed_loop", **_run(token_cmd, timeout=900)}
-        )
+        steps.append({"name": "token_governance_closed_loop", **_run(token_cmd, timeout=900)})
 
     cg = None
     if not args.skip_codegraph:
