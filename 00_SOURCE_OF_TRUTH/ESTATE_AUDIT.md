@@ -14,12 +14,30 @@ machine-readable membership list**. This audit establishes that.
 - `~/.claude/governance/auto-mode-scope.yaml` defined the estate as only 5 federation
   roots; the other 33 repos had **no membership marker**. `estate.repos.json` fixes this.
 
+## Reconciliation with the prior plan (IMPORTANT)
+A tiered plan **already existed**: `Poly-Chromatic/chromatic-command-center:CHROMATIC_REPO_CONSOLIDATION_MAP.md`
+**v0.5.0 (2026-05-25)**. Decision (2026-06-02): **adopt it as the source of truth**;
+`estate.repos.json` v2.0.0 is now its machine-readable, drift-refreshed form. The earlier
+"consolidate everything into Poly-Chromatic" framing is **superseded** — the plan keeps a
+deliberate **5-canonical split**:
+
+| Canonical | Owner | Role |
+|---|---|---|
+| `chromatic-command-center` | Poly-Chromatic | Portfolio command hub |
+| `prism-autonomy-harness` | Poly-Chromatic | Autonomy runtime |
+| `ChromaticSystems` | kas1987 | Governance & standards |
+| `fusion-computer` | kas1987 | Artifact factory |
+| `The-Veil` | kas1987 | Creative IP flagship |
+
+Tiers 2–3 are already DONE (Command-Center → `ARCHIVED_REDIRECT`, agentops → autonomy subsystem, etc).
+Guardrails carried over: **archive before delete; no deletes until tier 5; no force-push; no secret movement.**
+
 ## Decisions (2026-06-02)
-1. **Consolidate the estate under the `Poly-Chromatic` org.** Personal `kas1987` keeps
-   only published OSS (`9router`, `claude-octopus`, `claude-powerline`, `dmx`), local
-   tooling (`claude-config`, `claude-skills`), and standalone products (`The-Veil`).
+1. **Adopt the v0.5.0 tiered plan**; manifest = its refreshed machine-readable form (5-canonical split, not flat-org).
 2. **Keep the harness PUBLIC** as a shareable scaffold — harden instead of hide.
 3. **Canonical default branch = `main`** for every estate repo.
+4. **`Image-Org`** — v0.5.0 classified it `STANDALONE_EXTERNAL` (third-party Image MetaHub fork, MPL-2.0).
+   User override 2026-06-02: **retire & delete** anyway; knowledge harvested to `chromatic-wiki` (wiki PR #25).
 
 ## Doctrine: keep the harness clean; legacy repos → wiki → retire
 - **The harness is the control plane, not a content store.** Do NOT migrate legacy repo
