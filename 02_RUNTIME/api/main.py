@@ -632,8 +632,8 @@ async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict:
     )
     resp = await router.route(req)
     return {
-        "provider": resp.provider,
-        "model": resp.model,
+        "provider": resp.selected_provider,
+        "model": resp.selected_model,
         "task_type": task_type,
         "mission_id": getattr(mission, "mission_id", None),
     }
