@@ -132,6 +132,7 @@ SUITES = [
         [
             "test_collision_guard.py",
             "test_queue_self_review.py",
+            "test_collision_status.py",
         ],
     ),
     (
