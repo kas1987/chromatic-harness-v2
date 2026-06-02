@@ -27,8 +27,40 @@ LEARNINGS = REPO / ".agents" / "learnings"
 AUTO_TURN_REPORTS = REPO / "07_LOGS_AND_AUDIT" / "auto_turn_thresholds"
 CANDIDATES_DIR = REPO / ".agents" / "candidates"
 WIKI_LEARNINGS = "02_LEARNINGS"
+# Cross-repo promotion ledger (lives in the wiki): maps a learning's content hash
+# to the repo that first promoted it, so a second chromatic-family repo promoting
+# the same learning (even under a different slug) is deduped, not duplicated.
+PROMOTION_INDEX = "_promotion_index.json"
+# Default provenance tag for this repo (override with --repo-id).
+THIS_REPO_ID = "kas1987/chromatic-harness-v2"
 
 _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+
+def _content_key(body: str) -> str:
+    """Content identity for cross-repo dedup: hash of the learning body only.
+
+    Frontmatter (promoted_from, date, source repo) differs between repos for the
+    same learning, so it is excluded — only the normalized body decides identity.
+    """
+    return hashlib.sha256(body.strip().encode("utf-8")).hexdigest()
+
+
+def _load_promotion_index(wiki_root: Path) -> dict:
+    path = wiki_root / WIKI_LEARNINGS / PROMOTION_INDEX
+    if not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))  # may be partially written
+    except (ValueError, OSError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _save_promotion_index(wiki_root: Path, index: dict) -> None:
+    path = wiki_root / WIKI_LEARNINGS / PROMOTION_INDEX
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _wiki_root() -> Path:
@@ -86,9 +118,7 @@ def _approved_candidates() -> set[str] | None:
     candidate_files = [
         p
         for p in CANDIDATES_DIR.iterdir()
-        if p.suffix == ".md"
-        and p.name not in ("SCHEMA.md",)
-        and not p.name.startswith("_")
+        if p.suffix == ".md" and p.name not in ("SCHEMA.md",) and not p.name.startswith("_")
     ]
     if not candidate_files:
         return None  # Dir exists but empty — treat as backward-compatible
@@ -130,21 +160,37 @@ def _discover_candidates(min_conf: float) -> list[dict]:
     return out
 
 
-def _promote_one(src: Path, wiki_root: Path, *, execute: bool) -> str | None:
+def _promote_one(
+    src: Path,
+    wiki_root: Path,
+    *,
+    execute: bool,
+    index: dict | None = None,
+    repo_id: str = THIS_REPO_ID,
+    cadence: str = "manual",
+) -> str | None:
     text = src.read_text(encoding="utf-8", errors="replace")
     meta, body = _parse_frontmatter(text)
     slug = _slug(meta.get("name", src.stem))
     dest = wiki_root / WIKI_LEARNINGS / f"{slug}.md"
+
+    # Cross-repo dedup: if this learning's content was already promoted by ANY
+    # family repo (even under a different slug), and that entry still exists in
+    # the wiki, skip. Backward-compatible: legacy callers pass index=None.
+    ckey = _content_key(body)
+    if index is not None:
+        prior = index.get(ckey)
+        if prior and (wiki_root / WIKI_LEARNINGS / f"{prior.get('slug', slug)}.md").is_file():
+            return None
+
     if dest.is_file():
         existing = dest.read_text(encoding="utf-8", errors="replace")
-        if (
-            hashlib.sha256(existing.encode()).hexdigest()
-            == hashlib.sha256(text.encode()).hexdigest()
-        ):
+        if hashlib.sha256(existing.encode()).hexdigest() == hashlib.sha256(text.encode()).hexdigest():
             return None
 
     header = meta.copy()
     header.setdefault("promoted_from", src.relative_to(REPO).as_posix())
+    header.setdefault("promoted_by", repo_id)
     header.setdefault("date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     header.setdefault("status", "candidate")
     lines = ["---"]
@@ -156,6 +202,13 @@ def _promote_one(src: Path, wiki_root: Path, *, execute: bool) -> str | None:
     if execute:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(out_text, encoding="utf-8")
+        if index is not None:
+            index[ckey] = {
+                "slug": slug,
+                "repo_id": repo_id,
+                "cadence": cadence,
+                "promoted_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
     return str(dest.relative_to(wiki_root))
 
 
@@ -164,6 +217,13 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", default=True)
     parser.add_argument("--execute", action="store_true", help="Copy files to Wiki")
     parser.add_argument("--min-confidence", type=float, default=0.75)
+    parser.add_argument("--repo-id", default=THIS_REPO_ID, help="Provenance tag recorded in the promotion index")
+    parser.add_argument(
+        "--cadence",
+        default="manual",
+        help="Cadence trigger that drove this run (e.g. epic-close, weekly); recorded for traceability. "
+        "See docs/WIKI_CONVERGENCE_CADENCE.md.",
+    )
     args = parser.parse_args()
     execute = args.execute
     wiki = _wiki_root()
@@ -222,10 +282,18 @@ def main() -> int:
                 )
             )
 
+    # Cross-repo promotion ledger: loaded once, passed to every promotion, saved
+    # after. Dedupes the same learning promoted by different family repos.
+    index = _load_promotion_index(wiki)
+    index_before = len(index)
+
     promoted: list[str] = []
+    deduped = 0
     for item in candidates:
         src = REPO / item["path"]
-        rel = _promote_one(src, wiki, execute=execute)
+        rel = _promote_one(src, wiki, execute=execute, index=index, repo_id=args.repo_id, cadence=args.cadence)
+        if rel is None:
+            deduped += 1
         if rel:
             promoted.append(rel)
             if execute:
@@ -246,12 +314,19 @@ def main() -> int:
                     pass  # Registry update is best-effort; do not fail promotion
         item["wiki_dest"] = rel or "(unchanged)"
 
+    if execute and len(index) != index_before:
+        _save_promotion_index(wiki, index)
+
     report = {
         "wiki_root": str(wiki),
         "execute": execute,
+        "repo_id": args.repo_id,
+        "cadence": args.cadence,
         "min_confidence": args.min_confidence,
         "candidates": len(candidates),
         "promoted": len(promoted),
+        "deduped": deduped,
+        "index_entries": len(index),
         "items": candidates,
         "paths_written": promoted,
     }
