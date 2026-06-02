@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -20,7 +19,9 @@ REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from workflows.git_automation import run_git_pipeline  # noqa: E402
 from workflows.git_runner import VALID_BACKENDS, active_git_backend  # noqa: E402
 from workflows.run_log import append_run_log, read_last_entry  # noqa: E402
@@ -33,13 +34,7 @@ from concurrency.github_collision import (  # noqa: E402
 
 
 def _current_branch() -> str:
-    proc = subprocess.run(
-        ["git", "branch", "--show-current"],
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    proc = run_safe(["git", "branch", "--show-current"], cwd=REPO, timeout=10)
     return (proc.stdout or "").strip()
 
 
@@ -71,14 +66,7 @@ def _apply_git_backend(backend: str | None) -> None:
 
 
 def _run_pytest(repo: Path) -> bool:
-    proc = subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=line"],
-        cwd=repo,
-        capture_output=True,
-        text=True,
-        timeout=600,
-        check=False,
-    )
+    proc = run_safe([sys.executable, "-m", "pytest", "tests/", "-q", "--tb=line"], cwd=repo, timeout=600)
     return proc.returncode == 0
 
 
@@ -101,9 +89,7 @@ def _context_from_log() -> dict:
 def cmd_plan(args: argparse.Namespace) -> int:
     _apply_git_backend(args.backend)
     ctx = _context_from_log() if args.from_log else {}
-    confidence = (
-        args.confidence if args.confidence is not None else ctx.get("confidence", 0)
-    )
+    confidence = args.confidence if args.confidence is not None else ctx.get("confidence", 0)
     risk = args.risk or ctx.get("risk_level", "low")
     verifier = args.verifier == "approve" or ctx.get("verifier_approved", False)
     tests = args.tests_passed or (args.run_tests and _run_pytest(REPO))
@@ -129,34 +115,20 @@ def cmd_plan(args: argparse.Namespace) -> int:
 def cmd_ship(args: argparse.Namespace) -> int:
     _apply_git_backend(args.backend)
     ctx = _context_from_log() if args.from_log else {}
-    confidence = (
-        args.confidence if args.confidence is not None else ctx.get("confidence", 0)
-    )
+    confidence = args.confidence if args.confidence is not None else ctx.get("confidence", 0)
     if confidence <= 0:
-        print(
-            json.dumps(
-                {"error": "confidence required (--confidence or --from-log)"}, indent=2
-            )
-        )
+        print(json.dumps({"error": "confidence required (--confidence or --from-log)"}, indent=2))
         return 1
 
     risk = args.risk or ctx.get("risk_level", "low")
     verifier = args.verifier == "approve" or ctx.get("verifier_approved", False)
     if not verifier:
-        print(
-            json.dumps(
-                {"error": "verifier must approve (--verifier approve)"}, indent=2
-            )
-        )
+        print(json.dumps({"error": "verifier must approve (--verifier approve)"}, indent=2))
         return 1
 
     tests = args.tests_passed or (args.run_tests and _run_pytest(REPO))
     if not tests and not args.skip_tests:
-        print(
-            json.dumps(
-                {"error": "tests must pass (--tests-passed or --run-tests)"}, indent=2
-            )
-        )
+        print(json.dumps({"error": "tests must pass (--tests-passed or --run-tests)"}, indent=2))
         return 1
 
     bead_id = args.bead_id or ctx.get("bead_id", "")
@@ -183,9 +155,7 @@ def cmd_ship(args: argparse.Namespace) -> int:
 
     dry_run = not args.execute
     session_id = args.session_id.strip() or "script-workflow-git"
-    with session_lock(
-        "git_ship", session_id=session_id, timeout_seconds=args.lock_timeout
-    ):
+    with session_lock("git_ship", session_id=session_id, timeout_seconds=args.lock_timeout):
         result = run_git_pipeline(
             REPO,
             confidence=confidence,
@@ -229,18 +199,14 @@ def main() -> int:
 
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--confidence", type=float, default=None)
-    common.add_argument(
-        "--risk", choices=["low", "medium", "high", "critical"], default="low"
-    )
+    common.add_argument("--risk", choices=["low", "medium", "high", "critical"], default="low")
     common.add_argument("--verifier", choices=["approve", "reject"], default="reject")
     common.add_argument("--tests-passed", action="store_true")
     common.add_argument("--run-tests", action="store_true")
     common.add_argument("--bead-id", default="")
     common.add_argument("--message", default="")
     common.add_argument("--from-log", action="store_true")
-    common.add_argument(
-        "--session-id", default="", help="Session id for lock ownership"
-    )
+    common.add_argument("--session-id", default="", help="Session id for lock ownership")
     common.add_argument(
         "--lock-timeout",
         type=float,
@@ -256,15 +222,9 @@ def main() -> int:
 
     sub.add_parser("plan", parents=[common], help="Dry-run pipeline decision only")
     ship = sub.add_parser("ship", parents=[common], help="Run allowed git steps")
-    ship.add_argument(
-        "--execute", action="store_true", help="Actually run git/gh (default dry-run)"
-    )
-    ship.add_argument(
-        "--skip-tests", action="store_true", help="Skip tests gate (not recommended)"
-    )
-    ship.add_argument(
-        "--base", default="", help="Base branch for the PR (collision context)"
-    )
+    ship.add_argument("--execute", action="store_true", help="Actually run git/gh (default dry-run)")
+    ship.add_argument("--skip-tests", action="store_true", help="Skip tests gate (not recommended)")
+    ship.add_argument("--base", default="", help="Base branch for the PR (collision context)")
     ship.add_argument(
         "--no-open-pr",
         action="store_true",
