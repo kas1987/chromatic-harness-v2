@@ -1,4 +1,5 @@
 """Tests for review_intake_central_collector.py."""
+
 from __future__ import annotations
 
 import json
@@ -46,7 +47,17 @@ class TestCentralCollector:
         db = tmp_path / "test.sqlite3"
         init_db(db)
         findings = [
-            {"finding_id": "RF-1", "source": "s", "repo": "r", "body": "b", "finding_type": "bug_fix", "risk_level": "low", "status": "open", "dedupe_key": "dk1", "confidence_score": 80}
+            {
+                "finding_id": "RF-1",
+                "source": "s",
+                "repo": "r",
+                "body": "b",
+                "finding_type": "bug_fix",
+                "risk_level": "low",
+                "status": "open",
+                "dedupe_key": "dk1",
+                "confidence_score": 80,
+            }
         ]
         ingest_findings(db, findings)
         n2 = ingest_findings(db, findings)
@@ -56,16 +67,49 @@ class TestCentralCollector:
         db = tmp_path / "test.sqlite3"
         init_db(db)
         queue_path = tmp_path / "queue.json"
-        queue_path.write_text(json.dumps({"items": [{"id": "NW-1", "title": "T", "status": "ready", "priority": 80, "repo": "r", "area": "a", "specialties": ["s"], "owner_agent": "Sentinel", "acceptance_checks": ["c"], "links": ["l"], "notes": "n"}]}))
+        queue_path.write_text(
+            json.dumps(
+                {
+                    "items": [
+                        {
+                            "id": "NW-1",
+                            "title": "T",
+                            "status": "ready",
+                            "priority": 80,
+                            "repo": "r",
+                            "area": "a",
+                            "specialties": ["s"],
+                            "owner_agent": "Sentinel",
+                            "acceptance_checks": ["c"],
+                            "links": ["l"],
+                            "notes": "n",
+                        }
+                    ]
+                }
+            )
+        )
         n = ingest_queue(db, queue_path)
         assert n == 1
 
     def test_dashboard_summary(self, tmp_path: Path):
         db = tmp_path / "test.sqlite3"
         init_db(db)
-        ingest_findings(db, [
-            {"finding_id": "RF-1", "source": "s", "repo": "r", "body": "b", "finding_type": "bug_fix", "risk_level": "low", "status": "open", "dedupe_key": "dk1", "confidence_score": 80}
-        ])
+        ingest_findings(
+            db,
+            [
+                {
+                    "finding_id": "RF-1",
+                    "source": "s",
+                    "repo": "r",
+                    "body": "b",
+                    "finding_type": "bug_fix",
+                    "risk_level": "low",
+                    "status": "open",
+                    "dedupe_key": "dk1",
+                    "confidence_score": 80,
+                }
+            ],
+        )
         summary = dashboard_summary(db)
         assert summary["total_findings"] == 1
         assert "generated_at" in summary
