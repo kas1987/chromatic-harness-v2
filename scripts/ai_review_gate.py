@@ -26,11 +26,16 @@ import argparse
 import json
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
+
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "ai_review"
 DEFAULT_BASE = "origin/session/chromatic-harness-v2-initial"
 
@@ -56,9 +61,9 @@ _W_CRITICAL = 30
 
 def _run(cmd: list[str], *, timeout: int = 30) -> tuple[int, str]:
     try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout)
+        r = run_safe(cmd, cwd=REPO, timeout=timeout)
         return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except Exception as exc:
+    except Exception as exc:  # defensive; run_safe itself does not raise
         return 1, str(exc)
 
 
