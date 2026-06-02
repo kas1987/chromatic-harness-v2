@@ -439,3 +439,44 @@ def test_dispatch_cleans_up_worktree_even_on_worker_failure(tmp_path, monkeypatc
     r = TR.real_dispatch({"id": "u8uj.1"}, {}, cfg)
     assert r.ok is False
     assert removed["path"] == wt  # cleaned up despite worker failure
+
+
+def test_create_worktree_creates_missing_parent_dir(tmp_path, monkeypatch):
+    # `git worktree add` won't create .worktrees/ itself; _create_worktree must,
+    # or a fresh clone (isolate_worktree default on) would always refuse to dispatch.
+    monkeypatch.setattr(TR, "_WORKTREE_ROOT", tmp_path / ".worktrees")
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (0, ""))
+    p = TR._create_worktree("u8uj.1")
+    assert (tmp_path / ".worktrees").is_dir()
+    assert p == tmp_path / ".worktrees" / "auto-u8uj_1"
+
+
+def test_permission_hint_keys_off_marker_absence_not_summary_wording(tmp_path, monkeypatch):
+    # Worker produced NO result marker at all -> in non-autonomous mode the hint fires,
+    # driven by the raw output, not by any substring of the synthesized summary.
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True, worker_autonomous=False)
+    wt = tmp_path / ".worktrees" / "auto-x"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: None)
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (0, "worker chatter with no marker emitted"))
+    r = TR.real_dispatch({"id": "x"}, {}, cfg)
+    assert r.ok is False
+    assert "lacked permission" in r.summary
+
+
+def test_permission_hint_not_added_when_worker_emitted_marker(tmp_path, monkeypatch):
+    # Worker emitted a real ok:false result -> that's a genuine failure, not a perms
+    # issue, so the permission hint must NOT be appended.
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True, worker_autonomous=False)
+    wt = tmp_path / ".worktrees" / "auto-x"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: None)
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (0, 'RUNNER_RESULT: {"ok": false, "summary": "real failure"}'))
+    r = TR.real_dispatch({"id": "x"}, {}, cfg)
+    assert r.ok is False
+    assert "lacked permission" not in r.summary
+    assert "real failure" in r.summary

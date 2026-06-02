@@ -191,6 +191,9 @@ def _create_worktree(bead_id: str, base: str = "HEAD") -> Path | None:
     """
     path = _worktree_path(bead_id)
     branch = f"auto/{bead_id}"
+    # `git worktree add` does not create missing parent dirs; ensure .worktrees/ exists
+    # so a fresh clone (with isolate_worktree=True default) doesn't always fail to dispatch.
+    _WORKTREE_ROOT.mkdir(parents=True, exist_ok=True)
     _run(["git", "worktree", "remove", str(path), "--force"])  # ignore failure (may not exist)
     _run(["git", "worktree", "prune"])
     _run(["git", "branch", "-D", branch])  # ignore failure (branch may not exist)
@@ -361,7 +364,10 @@ def real_dispatch(bead: dict, confidence: dict, config: RunnerConfig) -> WorkerR
 
         code, out = _run(cmd, timeout=config.worker_timeout, cwd=work_dir)
         result = _parse_worker_result(out)
-        if not result.ok and not config.worker_autonomous and "RUNNER_RESULT" in result.summary:
+        # If the worker never emitted a result marker at all (checked against the raw
+        # output, not the synthesized summary wording) in non-autonomous mode, the most
+        # likely cause is that it lacked permission to edit/commit/push — surface that.
+        if not result.ok and not config.worker_autonomous and _RESULT_MARKER not in out:
             result.summary += " (no --worker-autonomous: worker likely lacked permission to edit/commit/push)"
         if code != 0 and result.ok:
             result.ok = False
