@@ -30,11 +30,13 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 STAGE_LATEST = REPO / "07_LOGS_AND_AUDIT" / "issue_intake" / "latest.json"
 SEED_STATE = REPO / "07_LOGS_AND_AUDIT" / "seed_state" / "issue_to_bead.json"
 
@@ -61,11 +63,8 @@ EPIC_THEMES: dict[str, list[int]] = {
 def _run(cmd: list[str], *, timeout: int = 60, stdin: str | None = None) -> tuple[int, str]:
     if cmd:
         cmd = [_resolve_exe(cmd[0]), *cmd[1:]]
-    try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout, input=stdin)
-        return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except Exception as exc:
-        return 1, str(exc)
+    r = run_safe(cmd, cwd=REPO, timeout=timeout, stdin=stdin)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
 # ── Staged input (Stage 1 output) ────────────────────────────────────────────
