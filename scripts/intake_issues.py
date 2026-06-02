@@ -26,11 +26,13 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 STAGE_DIR = REPO / "07_LOGS_AND_AUDIT" / "issue_intake"
 
 # Owner-agent / signal -> C-level routing hint (policy §3)
@@ -71,11 +73,8 @@ def _resolve_exe(name: str) -> str:
 def _run(cmd: list[str], *, timeout: int = 60) -> tuple[int, str]:
     if cmd:
         cmd = [_resolve_exe(cmd[0]), *cmd[1:]]
-    try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout)
-        return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except Exception as exc:
-        return 1, str(exc)
+    r = run_safe(cmd, cwd=REPO, timeout=timeout)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
 def fetch_open_issues() -> list[dict]:

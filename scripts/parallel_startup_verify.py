@@ -4,22 +4,16 @@
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
 
 
 def _run(cmd: list[str]) -> dict[str, object]:
-    proc = subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=300,
-        check=False,
-    )
+    proc = run_safe(cmd, cwd=REPO, timeout=300)
     return {
         "command": " ".join(cmd),
         "exit_code": proc.returncode,
