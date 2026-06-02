@@ -79,16 +79,49 @@ _orch_mod = _load_module(
 Orchestrator = _orch_mod.Orchestrator
 MissionPacket = _orch_mod.MissionPacket
 
-_mag_mod = _load_module(
-    "base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py")
-)
+_mag_mod = _load_module("base_magnet", os.path.join(_RUNTIME, "magnets", "base_magnet.py"))
 MagnetEvent = _mag_mod.MagnetEvent
 
-_conf_mod = _load_module(
-    "confidence_engine", os.path.join(_RUNTIME, "orchestrator", "confidence_engine.py")
-)
+_conf_mod = _load_module("confidence_engine", os.path.join(_RUNTIME, "orchestrator", "confidence_engine.py"))
 
 NOW = lambda: datetime.now(timezone.utc).isoformat()  # noqa: E731
+
+
+async def _route_for_mission(mission: "MissionPacket", task_type: str = "planning") -> dict:
+    """Route a MissionPacket through ChromaticRouter and return a summary dict.
+
+    Composed here (api layer) rather than inside Orchestrator so that routing
+    concerns (provider selection) stay separate from mission-shaping concerns.
+    """
+    router = ChromaticRouter()
+    req = RouteRequest(
+        request_id=str(uuid.uuid4()),
+        task_id=mission.mission_id,
+        task_type=TaskType(task_type),
+        objective=mission.objective,
+        input=RouteInput(),
+        constraints=RouteConstraints(
+            privacy_class=PrivacyClass.P1,
+            allow_openhuman=False,
+        ),
+        confidence=RouteConfidence(
+            score=mission.confidence_required,
+        ),
+        preferred_provider="auto",
+        fallback_chain=[],
+        audit=RouteAudit(caller="orchestrator"),
+    )
+    resp = await router.route(req)
+    return {
+        "provider": resp.selected_provider,
+        "model": resp.selected_model,
+        "reason": resp.route_reason,
+        "fallback_used": resp.fallback_used,
+        "cost_estimate_usd": resp.cost_estimate_usd,
+        "latency_ms": resp.latency_ms,
+        "warnings": resp.logs.warnings,
+        "errors": resp.logs.errors,
+    }
 
 
 @asynccontextmanager
@@ -123,17 +156,13 @@ async def route_request(payload: dict):
             metadata=payload.get("input", {}).get("metadata", {}),
         ),
         constraints=RouteConstraints(
-            privacy_class=PrivacyClass(
-                payload.get("constraints", {}).get("privacy_class", "P1")
-            ),
+            privacy_class=PrivacyClass(payload.get("constraints", {}).get("privacy_class", "P1")),
             max_cost_usd=payload.get("constraints", {}).get("max_cost_usd", 0.25),
             max_latency_ms=payload.get("constraints", {}).get("max_latency_ms", 30000),
             max_tokens=payload.get("constraints", {}).get("max_tokens", 8000),
             allow_cloud=payload.get("constraints", {}).get("allow_cloud", True),
             allow_broker=payload.get("constraints", {}).get("allow_broker", True),
-            allow_openhuman=payload.get("constraints", {}).get(
-                "allow_openhuman", False
-            ),
+            allow_openhuman=payload.get("constraints", {}).get("allow_openhuman", False),
             allow_tools=payload.get("constraints", {}).get("allow_tools", False),
         ),
         confidence=RouteConfidence(
@@ -145,9 +174,7 @@ async def route_request(payload: dict):
         audit=RouteAudit(
             caller=payload.get("audit", {}).get("caller", "api"),
             repo=payload.get("audit", {}).get("repo", ""),
-            human_gate_required=payload.get("audit", {}).get(
-                "human_gate_required", False
-            ),
+            human_gate_required=payload.get("audit", {}).get("human_gate_required", False),
         ),
     )
     resp = await router.route(req)
@@ -184,12 +211,8 @@ async def auth_status():
 
 
 @app.post("/auth/register", response_model=UserResponse, status_code=201)
-async def register_user(
-    req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)
-):
-    async with db.execute(
-        "SELECT user_id FROM users WHERE username = ?", (req.username,)
-    ) as cur:
+async def register_user(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute("SELECT user_id FROM users WHERE username = ?", (req.username,)) as cur:
         if await cur.fetchone():
             raise HTTPException(status_code=409, detail="Username already taken")
     user_id = str(uuid.uuid4())
@@ -200,9 +223,7 @@ async def register_user(
         (user_id, req.username, hashed, req.role, ts),
     )
     await db.commit()
-    return UserResponse(
-        user_id=user_id, username=req.username, role=req.role, created_at=ts
-    )
+    return UserResponse(user_id=user_id, username=req.username, role=req.role, created_at=ts)
 
 
 @app.post("/auth/token", response_model=TokenResponse)
@@ -214,8 +235,8 @@ async def login(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get
         row = await cur.fetchone()
     if not row or not verify_password(req.password, row[1]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token(user_id=row[0], role=row[2])
-    return TokenResponse(access_token=token, user_id=row[0], role=row[2])
+    token = create_access_token(user_id=row[0], role=row[2])  # pragma: allowlist secret
+    return TokenResponse(access_token=token, user_id=row[0], role=row[2])  # pragma: allowlist secret
 
 
 @app.get("/auth/me", response_model=UserResponse)
@@ -224,9 +245,7 @@ async def auth_me(
     db: aiosqlite.Connection = Depends(get_db),
 ):
     if current_user is None:
-        raise HTTPException(
-            status_code=401, detail="Auth disabled or not authenticated"
-        )
+        raise HTTPException(status_code=401, detail="Auth disabled or not authenticated")
     async with db.execute(
         "SELECT username, role, created_at FROM users WHERE user_id = ?",
         (current_user.user_id,),
@@ -234,15 +253,11 @@ async def auth_me(
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="User not found")
-    return UserResponse(
-        user_id=current_user.user_id, username=row[0], role=row[1], created_at=row[2]
-    )
+    return UserResponse(user_id=current_user.user_id, username=row[0], role=row[1], created_at=row[2])
 
 
 @app.post("/missions", response_model=MissionResponse)
-async def create_mission(
-    req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)
-):
+async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)):
     orch = Orchestrator()
     packet = orch.create_mission(req.objective)
     packet.mission_id = f"CHR-{str(uuid.uuid4())[:8].upper()}"
@@ -282,9 +297,7 @@ async def list_missions(db: aiosqlite.Connection = Depends(get_db)):
 
 @app.get("/missions/{mission_id}", response_model=MissionResponse)
 async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
-    async with db.execute(
-        "SELECT data FROM missions WHERE mission_id = ?", (mission_id,)
-    ) as cur:
+    async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Mission not found")
@@ -292,9 +305,7 @@ async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db
 
 
 @app.post("/missions/{mission_id}/events", response_model=MagnetEventResponse)
-async def create_event(
-    mission_id: str, req: CreateEventRequest, db: aiosqlite.Connection = Depends(get_db)
-):
+async def create_event(mission_id: str, req: CreateEventRequest, db: aiosqlite.Connection = Depends(get_db)):
     event_id = str(uuid.uuid4())
     ts = NOW()
     data = {
@@ -320,9 +331,7 @@ async def create_event(
 @app.get("/missions/{mission_id}/events", response_model=list[MagnetEventResponse])
 async def list_events(
     mission_id: str,
-    from_ts: Optional[str] = Query(
-        default=None, description="ISO timestamp lower bound"
-    ),
+    from_ts: Optional[str] = Query(default=None, description="ISO timestamp lower bound"),
     to_ts: Optional[str] = Query(default=None, description="ISO timestamp upper bound"),
     db: aiosqlite.Connection = Depends(get_db),
 ):
@@ -341,9 +350,7 @@ async def list_events(
 
 
 @app.get("/missions/{mission_id}/analytics", response_model=MissionAnalyticsResponse)
-async def get_mission_analytics(
-    mission_id: str, db: aiosqlite.Connection = Depends(get_db)
-):
+async def get_mission_analytics(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute(
         "SELECT data, created_at FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
         (mission_id,),
@@ -382,9 +389,7 @@ async def get_mission_analytics(
     for ev, ts in zip(events, timestamps):
         cum_confidence += ev.get("confidence_delta", 0.0)
         cum_risk += ev.get("risk_delta", 0.0)
-        confidence_trend.append(
-            TrendPoint(timestamp=ts, value=round(cum_confidence, 3))
-        )
+        confidence_trend.append(TrendPoint(timestamp=ts, value=round(cum_confidence, 3)))
         risk_trend.append(TrendPoint(timestamp=ts, value=round(cum_risk, 3)))
 
     # Magnet breakdown
@@ -408,9 +413,7 @@ async def get_mission_analytics(
 
     # Top recommended actions
     action_counts = Counter(ev.get("recommended_action", "none") for ev in events)
-    top_actions = [
-        ActionCount(action=a, count=c) for a, c in action_counts.most_common(5)
-    ]
+    top_actions = [ActionCount(action=a, count=c) for a, c in action_counts.most_common(5)]
 
     n = len(events)
     avg_risk = sum(ev.get("risk_delta", 0.0) for ev in events) / n
@@ -436,9 +439,7 @@ async def synthesize_mission(
     db: aiosqlite.Connection = Depends(get_db),
 ):
     """Run MagnetOrchestrator + Agent Lead synthesis on mission magnet events."""
-    async with db.execute(
-        "SELECT data FROM missions WHERE mission_id = ?", (mission_id,)
-    ) as cur:
+    async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
         mission_row = await cur.fetchone()
     if not mission_row:
         raise HTTPException(status_code=404, detail="Mission not found")
@@ -492,9 +493,7 @@ async def synthesize_mission(
 
 
 @app.post("/beads", response_model=BeadResponse)
-async def create_bead(
-    req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)
-):
+async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)):
     bead_id = f"BEAD-{str(uuid.uuid4())[:8].upper()}"
     ts = NOW()
     data = {
@@ -542,17 +541,11 @@ def _agent_data_to_response(data: dict) -> AgentProfileResponse:
 
 
 @app.post("/agents", response_model=AgentProfileResponse, status_code=201)
-async def register_agent(
-    req: RegisterAgentRequest, db: aiosqlite.Connection = Depends(get_db)
-):
-    async with db.execute(
-        "SELECT data FROM agent_profiles WHERE agent_id = ?", (req.agent_id,)
-    ) as cur:
+async def register_agent(req: RegisterAgentRequest, db: aiosqlite.Connection = Depends(get_db)):
+    async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (req.agent_id,)) as cur:
         existing = await cur.fetchone()
     if existing:
-        raise HTTPException(
-            status_code=409, detail=f"Agent {req.agent_id!r} already registered"
-        )
+        raise HTTPException(status_code=409, detail=f"Agent {req.agent_id!r} already registered")
 
     ts = NOW()
     data = {
@@ -564,9 +557,7 @@ async def register_agent(
         "success_rate": 0.0,
         "avg_confidence": 0.0,
         "risk_score": 0.0,
-        "promotion_history": [
-            {"level": req.initial_level, "date": ts, "reason": "initial registration"}
-        ]
+        "promotion_history": [{"level": req.initial_level, "date": ts, "reason": "initial registration"}]
         if req.initial_level > 0
         else [],
         "last_violation": None,
@@ -583,18 +574,14 @@ async def register_agent(
 
 @app.get("/agents", response_model=list[AgentProfileResponse])
 async def list_agents(db: aiosqlite.Connection = Depends(get_db)):
-    async with db.execute(
-        "SELECT data FROM agent_profiles ORDER BY created_at DESC"
-    ) as cur:
+    async with db.execute("SELECT data FROM agent_profiles ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [_agent_data_to_response(json.loads(r[0])) for r in rows]
 
 
 @app.get("/agents/{agent_id}", response_model=AgentProfileResponse)
 async def get_agent(agent_id: str, db: aiosqlite.Connection = Depends(get_db)):
-    async with db.execute(
-        "SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)
-    ) as cur:
+    async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
@@ -607,9 +594,7 @@ async def record_execution(
     req: RecordExecutionRequest,
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    async with db.execute(
-        "SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)
-    ) as cur:
+    async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
@@ -624,9 +609,7 @@ async def record_execution(
     prev_avg = data.get("avg_confidence", 0.0)
     data["avg_confidence"] = prev_avg + (req.confidence_score - prev_avg) / total
     # Risk score: exponential moving average (alpha=0.2)
-    data["risk_score"] = max(
-        0.0, min(1.0, data["risk_score"] * 0.8 + max(0.0, req.risk_delta) * 0.2)
-    )
+    data["risk_score"] = max(0.0, min(1.0, data["risk_score"] * 0.8 + max(0.0, req.risk_delta) * 0.2))
     ts = NOW()
     data["updated_at"] = ts
     await db.execute(
@@ -643,18 +626,14 @@ async def promote_agent(
     req: PromoteAgentRequest,
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    async with db.execute(
-        "SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)
-    ) as cur:
+    async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
 
     data = json.loads(row[0])
     ts = NOW()
-    data["promotion_history"].append(
-        {"level": req.new_level, "date": ts, "reason": req.reason}
-    )
+    data["promotion_history"].append({"level": req.new_level, "date": ts, "reason": req.reason})
     data["current_level"] = req.new_level
     data["updated_at"] = ts
     await db.execute(
