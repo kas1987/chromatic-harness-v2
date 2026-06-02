@@ -26,12 +26,18 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
+
 OUT_DIR = REPO / "07_LOGS_AND_AUDIT" / "queue_self_review"
 LATEST = OUT_DIR / "latest.json"
 
@@ -55,11 +61,9 @@ def _run_bd(args: list[str], timeout: int = 30) -> tuple[int, str]:
     bd = _bd()
     if not bd:
         return 1, ""
-    try:
-        r = subprocess.run([bd, *args], cwd=REPO, capture_output=True, text=True, timeout=timeout)
-        return r.returncode, (r.stdout or "")
-    except (subprocess.TimeoutExpired, OSError) as exc:
-        return 1, str(exc)
+    # run_safe reaps the process tree on timeout (rc=124) and never raises.
+    r = run_safe([bd, *args], cwd=REPO, timeout=timeout)
+    return r.returncode, (r.stdout or "")
 
 
 def load_beads() -> list[dict]:
