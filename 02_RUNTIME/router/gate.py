@@ -84,15 +84,15 @@ _count_impacted = count_impacted
 
 
 def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
-    """Gate-level wrapper — reads gate.IMPACT_ENABLED so tests can monkeypatch it."""
-    if not IMPACT_ENABLED:
+    """Gate-level wrapper — reads impact module's IMPACT_ENABLED so tests can monkeypatch it."""
+    import router.pipeline.impact as _impact
+    if not _impact.IMPACT_ENABLED:
         return None
     try:
         refs = extract_file_refs(f"{description}\n{prompt}")
         if not refs:
             return None
-        from router.pipeline.impact import _default_runner
-        run = runner or _default_runner
+        run = runner or _impact._default_runner
         count = count_impacted(run(refs))
         return max(count, len(refs))
     except Exception:
