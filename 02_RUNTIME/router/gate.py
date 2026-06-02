@@ -104,6 +104,26 @@ _log_entry = log_entry
 _audit_router_decision = audit_router_decision
 
 
+def _overlay_advisory() -> str:
+    """Backward-compat wrapper; reads from module-level _REPO so tests can monkeypatch it."""
+    import json
+
+    overlay_path = _REPO / "07_LOGS_AND_AUDIT" / "control_plane" / "routing_policy_overlay.json"
+    if not overlay_path.is_file():
+        return ""
+    try:
+        data = json.loads(overlay_path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return ""
+        thr = data.get("c_to_t_threshold")
+        spill = data.get("allow_paid_spill")
+        if data.get("staleness_fallback"):
+            return f" | overlay STALE-FALLBACK: C->T>={thr} paid_spill={spill}"
+        return f" | overlay: C->T>={thr} paid_spill={spill}"
+    except Exception:  # noqa: BLE001
+        return ""
+
+
 def _has_tool_use(haystack: str) -> bool:
     import re
 
