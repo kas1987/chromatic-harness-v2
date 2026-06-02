@@ -395,6 +395,12 @@ SUITES = [
             "test_sync_wiki_mirror.py",
         ],
     ),
+    (
+        "root hygiene allowlist gate (OMH-7)",
+        [
+            "test_root_hygiene_gate.py",
+        ],
+    ),
 ]
 
 
