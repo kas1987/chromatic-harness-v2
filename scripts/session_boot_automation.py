@@ -15,13 +15,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
 _SCRIPTS = _REPO / "scripts"
+
+sys.path.insert(0, str(_SCRIPTS))
+from common_harness import run_safe  # noqa: E402
 
 
 def _repo_root() -> Path:
@@ -124,19 +126,18 @@ def _run(
     quiet: bool = False,
 ) -> int:
     cmd = [sys.executable, *args]
-    try:
-        r = subprocess.run(
-            cmd,
-            cwd=_REPO,
-            capture_output=quiet,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-        return r.returncode
-    except subprocess.TimeoutExpired:
+    r = run_safe(cmd, cwd=_REPO, timeout=timeout)
+    if r.returncode == 124:
         print(f"TIMEOUT: {' '.join(args)}", file=sys.stderr)
         return 124
+    # run_safe always captures; when not quiet, surface the output (buffered)
+    # to preserve the prior streaming-visible behavior for callers.
+    if not quiet:
+        if r.stdout:
+            sys.stdout.write(r.stdout)
+        if r.stderr:
+            sys.stderr.write(r.stderr)
+    return r.returncode
 
 
 def run_boot(
@@ -208,18 +209,13 @@ def run_boot(
             data = json.loads(manifest.read_text(encoding="utf-8"))
             mcp_audit = data.get("mcp_audit") or {}
             if mcp_audit.get("over_warn_threshold"):
-                errors.append(
-                    "mcp_token_budget_exceeded: disable heavy MCPs (see CURSOR_CONTEXT_HYGIENE.md)"
-                )
+                errors.append("mcp_token_budget_exceeded: disable heavy MCPs (see CURSOR_CONTEXT_HYGIENE.md)")
             generated_at = data.get("generated_at", "")
             manifest_age_h: float | None = None
             ts = _parse_ts(generated_at)
             if ts:
                 manifest_age_h = round(
-                    (
-                        datetime.now(timezone.utc) - ts.astimezone(timezone.utc)
-                    ).total_seconds()
-                    / 3600,
+                    (datetime.now(timezone.utc) - ts.astimezone(timezone.utc)).total_seconds() / 3600,
                     2,
                 )
             summary = {
@@ -276,9 +272,7 @@ def main() -> int:
         default=os.environ.get("CHROMATIC_RUNTIME", "automation"),
         choices=["cursor", "claude", "scheduler", "preflight", "automation"],
     )
-    parser.add_argument(
-        "--force", action="store_true", help="Ignore manifest freshness"
-    )
+    parser.add_argument("--force", action="store_true", help="Ignore manifest freshness")
     parser.add_argument(
         "--full",
         action="store_true",
