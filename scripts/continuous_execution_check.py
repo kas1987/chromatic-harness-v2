@@ -19,18 +19,18 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
+import sys
 from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
 
 # Clusters of auto-generated beads that pollute the ready queue. Each entry is a
 # regex on the bead title; >NOISE_THRESHOLD matches in one cluster is flagged.
 NOISE_PATTERNS = {
-    "epic_swot_seed": re.compile(
-        r"Generate next EPIC-SWOT.*before final closeout", re.I
-    ),
+    "epic_swot_seed": re.compile(r"Generate next EPIC-SWOT.*before final closeout", re.I),
     "post_closeout_seed": re.compile(r"Post-Closeout SWOT Seed", re.I),
 }
 NOISE_THRESHOLD = 3
@@ -62,23 +62,12 @@ def _bd_ready_json() -> list[dict]:
         attempts.append({"args": [bd, "ready", "--json", "--quiet"], "shell": False})
     attempts.append({"args": "bd ready --json --quiet", "shell": True})
     for attempt in attempts:
-        try:
-            out = subprocess.run(
-                attempt["args"],
-                cwd=REPO,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-                shell=attempt["shell"],
-            )
-            data = _extract_json(out.stdout)
-            if isinstance(data, list):
-                return data
-            if isinstance(data, dict):
-                return data.get("issues", [])
-        except Exception:
-            continue
+        out = run_safe(attempt["args"], cwd=REPO, timeout=30, shell=attempt["shell"])
+        data = _extract_json(out.stdout)
+        if isinstance(data, list):
+            return data
+        if isinstance(data, dict):
+            return data.get("issues", [])
     return []
 
 
@@ -109,9 +98,7 @@ def analyze(items: list[dict]) -> dict:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(
-        description="Continuous Execution & Bead Review SOP check"
-    )
+    ap = argparse.ArgumentParser(description="Continuous Execution & Bead Review SOP check")
     ap.add_argument("--strict", action="store_true")
     ap.add_argument(
         "--next-steps-recorded",

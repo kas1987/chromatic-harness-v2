@@ -122,7 +122,7 @@ def _kill_tree(proc):
             pass
 
 
-def run_safe(cmd, cwd: Path | None = None, *, timeout: int = 30, stdin: str | None = None):
+def run_safe(cmd, cwd: Path | None = None, *, timeout: int = 30, stdin: str | None = None, shell: bool = False):
     """subprocess.run replacement that reaps the whole process tree on timeout.
 
     Returns a CompletedProcess-like object exposing .returncode/.stdout/.stderr.
@@ -134,6 +134,12 @@ def run_safe(cmd, cwd: Path | None = None, *, timeout: int = 30, stdin: str | No
     emit bytes that are invalid in the Windows locale codepage, and a plain
     text=True decode would raise UnicodeDecodeError mid-call. replace keeps
     the call total (never raises on output decoding).
+
+    shell=True runs cmd (a string) through the platform shell. Tree-reaping
+    still holds: on POSIX start_new_session groups the `sh -c` and its
+    descendants so _kill_tree's killpg reaps them; on Windows taskkill /T
+    walks the cmd.exe tree. Use only for callers that genuinely need shell
+    resolution (e.g. a .cmd shim a bare CreateProcess can't find).
     """
 
     class R:
@@ -143,6 +149,7 @@ def run_safe(cmd, cwd: Path | None = None, *, timeout: int = 30, stdin: str | No
         "text": True,
         "encoding": "utf-8",
         "errors": "replace",
+        "shell": shell,
         "stdout": subprocess.PIPE,
         "stderr": subprocess.PIPE,
         "stdin": subprocess.PIPE if stdin is not None else None,
@@ -175,7 +182,8 @@ def run_safe(cmd, cwd: Path | None = None, *, timeout: int = 30, stdin: str | No
         r = R()
         r.returncode = 124
         r.stdout = out or ""
-        r.stderr = f"timeout after {timeout}s: {' '.join(map(str, cmd))}"
+        _shown = cmd if isinstance(cmd, str) else " ".join(map(str, cmd))
+        r.stderr = f"timeout after {timeout}s: {_shown}"
         return r
     except Exception as e:
         _kill_tree(proc)
