@@ -155,14 +155,3 @@ schemas:
       - scripts/generate_harness_mermaid.py
     jsonl_paths: []
     notes: Singleton JSON array; validated by validate_visual_registry.py.
-
-  - id: chromatic_envelope
-    schema_path: schemas/chromatic_envelope.schema.json
-    title: Chromatic Event Envelope
-    consumers:
-      - 02_RUNTIME/intake/envelope_validator.py
-    jsonl_paths: []
-    notes: >
-      Discriminated union wrapper {kind, payload}. kind is one of harness_event /
-      magnet_event / bead; payload validation dispatches to the corresponding schema
-      via envelope_validator.validate(). Single ingest boundary for all event types.

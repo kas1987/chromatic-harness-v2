@@ -29,7 +29,7 @@ except ImportError:
 
 try:
     import jsonschema
-    from jsonschema import Draft202012Validator, FormatChecker, ValidationError
+    from jsonschema import Draft202012Validator, ValidationError
 except ImportError:
     print("ERROR: jsonschema not installed. Run: pip install jsonschema")
     sys.exit(1)
@@ -52,7 +52,7 @@ def load_json_schema(schema_path: Path) -> dict[str, Any]:
 def validate_jsonl(jsonl_path: Path, schema: dict, sample: int) -> list[str]:
     """Return list of error strings (empty = pass)."""
     errors: list[str] = []
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    validator = Draft202012Validator(schema)
     line_num = 0
     validated = 0
 

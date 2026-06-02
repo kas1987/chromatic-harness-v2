@@ -206,33 +206,11 @@ def _write_artifacts(packet: dict) -> tuple[Path, Path]:
     return packet_path, prompt_path
 
 
-def _prompt_has_destructive(text: str) -> bool:
-    """True if the assembled prompt carries any destructive command pattern."""
-    low = text.lower()
-    return any(re.search(p, low) for p in DESTRUCTIVE_PATTERNS)
-
-
-def _build_spawn_cmd(prompt_text: str, autonomous: bool) -> list[str]:
-    """Headless claude argv. Passes the prompt CONTENT (not an ``@file`` reference,
-    which ``claude -p`` takes literally) and grants full autonomy only on opt-in."""
-    cmd = ["claude", "-p", prompt_text, "--output-format", "text"]
-    if autonomous:
-        cmd.append("--dangerously-skip-permissions")
-    return cmd
-
-
-def _spawn_claude(prompt_path: Path, autonomous: bool = False) -> tuple[bool, str]:
+def _spawn_claude(prompt_path: Path) -> tuple[bool, str]:
+    cmd = ["claude", "-p", f"@{prompt_path}"]
     if shutil.which("claude") is None:
         return False, "claude CLI not found; packet created for manual use"
-    try:
-        prompt_text = prompt_path.read_text(encoding="utf-8")
-    except OSError as exc:
-        return False, f"could not read prompt: {exc}"
-    # Defense: never hand a worker a prompt that itself carries a destructive directive
-    # (e.g. stale/contaminated content in the shared handoff file).
-    if _prompt_has_destructive(prompt_text):
-        return False, "prompt contains a destructive directive; refusing to spawn"
-    code, out = _run(_build_spawn_cmd(prompt_text, autonomous), timeout=900)
+    code, out = _run(cmd, timeout=120)
     if code == 0:
         return True, (out[:1000] or "claude delegation dispatched")
     return False, out[-1000:]
@@ -290,11 +268,6 @@ def main() -> int:
     )
     parser.add_argument("--allow-t4", action="store_true", help="Allow T4 dispatch")
     parser.add_argument("--spawn-claude-cli", action="store_true", help="Run claude -p with generated prompt")
-    parser.add_argument(
-        "--spawn-autonomous",
-        action="store_true",
-        help="Grant the spawned worker full autonomy (--dangerously-skip-permissions). Off by default.",
-    )
     parser.add_argument("extras", nargs="*", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
@@ -391,7 +364,7 @@ def main() -> int:
     }
 
     if args.spawn_claude_cli and decision == "execute":
-        ok, msg = _spawn_claude(prompt_path, autonomous=args.spawn_autonomous)
+        ok, msg = _spawn_claude(prompt_path)
         packet["spawn"] = {"ok": ok, "message": msg}
 
     _emit_delegation_log(packet)

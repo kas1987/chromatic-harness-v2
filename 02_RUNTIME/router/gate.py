@@ -19,7 +19,7 @@ from typing import Any
 # ── Self-contained loader ────────────────────────────────────────────────────
 _ROUTER_DIR = Path(__file__).resolve().parent
 _RUNTIME_DIR = _ROUTER_DIR.parent
-_REPO: Path = _ROUTER_DIR.parent.parent  # repo root — patchable by tests
+_REPO = _ROUTER_DIR.parent.parent
 
 # 02_RUNTIME must be first so `router` resolves as a real package when gate.py
 # is invoked as a bare script (the PreToolUse hook invocation style).
@@ -72,7 +72,7 @@ from router.pipeline.impact import (  # noqa: E402
     impact_fan_out,
 )
 from router.pipeline.billing import billing_for_route, cost_estimate_usd  # noqa: E402
-from router.pipeline.advisory import context_gate_advisory, overlay_advisory, read_routing_overlay  # noqa: E402
+from router.pipeline.advisory import context_gate_advisory  # noqa: E402
 from router.pipeline.audit import audit_router_decision, log_entry  # noqa: E402
 
 # Backward-compat aliases — existing tests reference gate._foo directly.
@@ -100,24 +100,28 @@ def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
 _billing_for_route = billing_for_route
 _cost_estimate_usd = cost_estimate_usd
 _context_gate_advisory = context_gate_advisory
+_log_entry = log_entry
+_audit_router_decision = audit_router_decision
 
 
 def _overlay_advisory() -> str:
-    import router.pipeline.advisory as _adv
+    """Backward-compat wrapper; reads from module-level _REPO so tests can monkeypatch it."""
+    import json
 
-    _adv._REPO = _REPO
-    return overlay_advisory()
-
-
-def _read_routing_overlay() -> "dict | None":
-    import router.pipeline.advisory as _adv
-
-    _adv._REPO = _REPO
-    return read_routing_overlay()
-
-
-_log_entry = log_entry
-_audit_router_decision = audit_router_decision
+    overlay_path = _REPO / "07_LOGS_AND_AUDIT" / "control_plane" / "routing_policy_overlay.json"
+    if not overlay_path.is_file():
+        return ""
+    try:
+        data = json.loads(overlay_path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return ""
+        thr = data.get("c_to_t_threshold")
+        spill = data.get("allow_paid_spill")
+        if data.get("staleness_fallback"):
+            return f" | overlay STALE-FALLBACK: C->T>={thr} paid_spill={spill}"
+        return f" | overlay: C->T>={thr} paid_spill={spill}"
+    except Exception:  # noqa: BLE001
+        return ""
 
 
 def _has_tool_use(haystack: str) -> bool:

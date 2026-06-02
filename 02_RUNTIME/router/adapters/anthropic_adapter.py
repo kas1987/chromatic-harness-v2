@@ -37,8 +37,8 @@ class AnthropicAdapter(BaseAdapter):
                 self._client = AsyncAnthropic(
                     api_key=os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))  # pragma: allowlist secret
                 )
-            except ImportError as exc:
-                raise AdapterError("anthropic SDK not installed: pip install anthropic", provider="anthropic") from exc
+            except ImportError:
+                raise AdapterError("anthropic SDK not installed: pip install anthropic", provider="anthropic")
         return self._client
 
     async def health(self) -> AdapterHealth:

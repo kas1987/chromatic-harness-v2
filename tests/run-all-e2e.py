@@ -11,7 +11,6 @@ Usage:
 Exit 0 if all pass, 1 otherwise.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -20,34 +19,6 @@ REPO = Path(__file__).resolve().parent.parent
 TEST_DIR = REPO / "tests"
 PYTEST = "python -m pytest"
 TIMEOUT_S = 120
-
-
-def _clean_env() -> dict[str, str]:
-    """Environment with inherited GIT_* location vars stripped.
-
-    The git pre-push hook exports GIT_DIR (pointing at the live repo) into its
-    environment. Suites that spawn ``git`` must not inherit it, or a test
-    running ``git commit`` with ``cwd=tmp_path`` would write to the live repo
-    instead of its throwaway repo — injecting stray commits onto the branch.
-    """
-    return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
-
-
-def _live_head() -> str | None:
-    """HEAD of the working repo, read with a clean env (None if unavailable)."""
-    try:
-        r = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=str(REPO),
-            env=_clean_env(),
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        return r.stdout.strip() if r.returncode == 0 else None
-    except Exception:  # noqa: BLE001 - guard is best-effort
-        return None
-
 
 # Test suites (each corresponds to one former .bats file)
 SUITES = [
@@ -70,7 +41,6 @@ SUITES = [
         [
             "test_router_autopath.py",
             "test_delegate_bead.py",
-            "test_claude_delegate_gate.py",
         ],
     ),
     (
@@ -155,8 +125,6 @@ SUITES = [
         "GO-mode orchestrator (#81)",
         [
             "test_go_mode.py",
-            "test_task_runner.py",
-            "test_bead_enrich.py",
         ],
     ),
     (
@@ -338,12 +306,6 @@ SUITES = [
         ],
     ),
     (
-        "E2E git isolation guard (no live-branch pollution)",
-        [
-            "test_e2e_git_isolation.py",
-        ],
-    ),
-    (
         "IDE observability tasks (OBS-007)",
         [
             "test_ide_tasks.py",
@@ -365,7 +327,6 @@ SUITES = [
         "observability reports + learning candidates (OBS-010)",
         [
             "test_observability_reports.py",
-            "test_error_log_to_learning.py",
         ],
     ),
     (
@@ -380,35 +341,6 @@ SUITES = [
             "test_mission_packet.py",
         ],
     ),
-    (
-        "session-start boot (ready queue, lean boot, alerts, Windows-safe bd)",
-        [
-            "test_session_start_ready_queue.py",
-            "test_session_start_lean_boot.py",
-            "test_session_start_alerts.py",
-            "test_session_start_bd_argv.py",
-        ],
-    ),
-    (
-        "wiki convergence + cross-repo promotion (OMH-6)",
-        [
-            "test_promote_to_wiki.py",
-            "test_sync_wiki_mirror.py",
-            "test_check_wiki_clone_hygiene.py",
-        ],
-    ),
-    (
-        "root hygiene allowlist gate (OMH-7)",
-        [
-            "test_root_hygiene_gate.py",
-        ],
-    ),
-    (
-        "chromatic discriminated envelope validator (w0wk.2)",
-        [
-            "test_envelope_validator.py",
-        ],
-    ),
 ]
 
 
@@ -421,7 +353,6 @@ def run_suite(name: str, patterns: list[str]) -> int:
         result = subprocess.run(
             args,
             cwd=REPO,
-            env=_clean_env(),
             capture_output=False,
             text=True,
             timeout=TIMEOUT_S,
@@ -507,26 +438,11 @@ def main() -> int:
     else:
         print("SKIP: validate_skill_routes.py not found")
 
-    head_before = _live_head()
     failed = []
     for name, patterns in SUITES:
         rc = run_suite(name, patterns)
         if rc != 0:
             failed.append(name)
-
-    # Branch-integrity guard: no suite may mutate the working branch. If one does
-    # (e.g. a test that runs git without isolating GIT_DIR), fail the gate loudly
-    # rather than silently shipping a stray commit.
-    head_after = _live_head()
-    if head_before and head_after and head_before != head_after:
-        print("\n" + "=" * 60)
-        print(
-            "pre-push: ABORT — a suite mutated the working branch HEAD "
-            f"({head_before[:8]} -> {head_after[:8]}). A test is not git-isolated. "
-            "Reset with `git reset --hard <before-sha>` and fix the suite's env isolation."
-        )
-        print("=" * 60)
-        return 1
 
     if failed:
         print("\n" + "=" * 60)

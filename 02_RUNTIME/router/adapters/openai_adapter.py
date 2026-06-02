@@ -37,8 +37,8 @@ class OpenAIAdapter(BaseAdapter):
                 self._client = AsyncOpenAI(
                     api_key=os.environ.get(self.cfg.get("env_key", "OPENAI_API_KEY"))  # pragma: allowlist secret
                 )
-            except ImportError as exc:
-                raise AdapterError("openai SDK not installed: pip install openai", provider="openai") from exc
+            except ImportError:
+                raise AdapterError("openai SDK not installed: pip install openai", provider="openai")
         return self._client
 
     async def health(self) -> AdapterHealth:
