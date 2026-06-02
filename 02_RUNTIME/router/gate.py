@@ -81,7 +81,22 @@ _emit_advisory = emit_advisory
 _emit_deny = emit_deny
 _extract_file_refs = extract_file_refs
 _count_impacted = count_impacted
-_impact_fan_out = impact_fan_out
+
+
+def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
+    """Gate-level wrapper — reads gate.IMPACT_ENABLED so tests can monkeypatch it."""
+    if not IMPACT_ENABLED:
+        return None
+    try:
+        refs = extract_file_refs(f"{description}\n{prompt}")
+        if not refs:
+            return None
+        from router.pipeline.impact import _default_runner
+        run = runner or _default_runner
+        count = count_impacted(run(refs))
+        return max(count, len(refs))
+    except Exception:
+        return None
 _billing_for_route = billing_for_route
 _cost_estimate_usd = cost_estimate_usd
 _context_gate_advisory = context_gate_advisory
