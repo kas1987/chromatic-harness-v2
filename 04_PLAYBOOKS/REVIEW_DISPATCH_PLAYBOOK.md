@@ -42,3 +42,24 @@ Only dispatch `ready` items unless the user explicitly requests blocked/planned 
 - Allowed files are empty for code mutation.
 - Human gate required.
 - PR branch already has an active mutation lock.
+
+## Running the Dispatcher (live loop)
+
+`scripts/dispatch_review_work.py` selects `ready` queue items, acquires the PR branch
+lock, renders a mission packet, and writes an `agent_dispatch` record. With `--emit-beads`
+it also registers each dispatched finding as a bead so the work enters the normal
+`bd ready` loop and the GitHub-issue mirror (`AGENT_HANDOFF_QUEUE.md`).
+
+```bash
+# Dispatch up to 3 ready findings into the live bead loop:
+python scripts/dispatch_review_work.py --limit 3 --emit-beads
+
+# Inspect what would be dispatched without acting:
+python scripts/dispatch_review_work.py --limit 10 --dry-run
+```
+
+Bead creation is idempotent (an item already carrying `bead_id` is not re-created) and
+degrades gracefully: if `bd` is unavailable the dispatcher still produces the mission
+packet and dispatch record, just without a bead. After an agent finishes, close the loop
+with `scripts/post_review_resolution.py` (requires files + validation evidence) and
+`bd close <bead-id>`.

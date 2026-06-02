@@ -12,6 +12,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
+import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
@@ -76,6 +79,63 @@ def render_mission_packet(template: str, item: Dict[str, Any]) -> str:
     return out
 
 
+def _bd_priority(item: Dict[str, Any]) -> str:
+    """Map review risk/confidence onto a bd priority (P0 highest .. P4 lowest)."""
+    if item.get("risk_level") == "high":
+        return "1"
+    score = int(item.get("confidence_score", 0))
+    if score >= 75:
+        return "2"
+    if score >= 40:
+        return "3"
+    return "4"
+
+
+def create_bead(item: Dict[str, Any], bd_bin: str = "bd") -> str | None:
+    """Create a bead for a dispatched review finding so it enters the live `bd ready` loop.
+
+    Returns the new bead id, or None if bd is unavailable or the call fails. The dispatcher
+    never blocks on bd: a missing tracker degrades to mission-packet-only dispatch.
+    """
+    if not shutil.which(bd_bin):
+        return None
+    title = item.get("title") or f"Review finding {item.get('source_finding_id')}"
+    acceptance = "\n".join(f"- {c}" for c in (item.get("acceptance_checks") or []))
+    links = "\n".join(item.get("links") or [])
+    description = (
+        f"{item.get('notes', '')}\n\n"
+        f"Source finding: {item.get('source_finding_id')}\n"
+        f"Allowed files: {', '.join(item.get('allowed_files') or []) or '(PR-level)'}\n"
+        f"Links:\n{links}".strip()
+    )
+    cmd = [
+        bd_bin,
+        "create",
+        title,
+        "--priority",
+        _bd_priority(item),
+        "--description",
+        description,
+        "--acceptance",
+        acceptance or "Address the review finding and provide validation evidence.",
+        "--labels",
+        "review-intake",
+        "--external-ref",
+        str(item.get("source_finding_id") or item.get("id")),
+    ]
+    assignee = item.get("owner_agent")
+    if assignee:
+        cmd += ["--assignee", assignee]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    match = re.search(r"Created issue:\s*(\S+)", result.stdout)
+    return match.group(1) if match else None
+
+
 def dispatch_item(
     item: Dict[str, Any],
     lock_dir: Path,
@@ -83,6 +143,8 @@ def dispatch_item(
     dispatch_log: Path,
     template: str,
     ttl_minutes: int,
+    emit_beads: bool = False,
+    bd_bin: str = "bd",
 ) -> Dict[str, Any]:
     repo = item.get("repo") or "unknown/repo"
     pr_number = item.get("pr_number")
@@ -110,6 +172,14 @@ def dispatch_item(
     packet_path = packet_dir / f"{task_id}.md"
     packet_path.write_text(packet, encoding="utf-8")
 
+    # Live-loop bridge: register the finding as a bead so it enters `bd ready`.
+    # Idempotent — an item already carrying a bead_id is not re-created.
+    bead_id = item.get("bead_id")
+    if emit_beads and not bead_id:
+        bead_id = create_bead(item, bd_bin=bd_bin)
+        if bead_id:
+            item["bead_id"] = bead_id
+
     dispatch = {
         "dispatch_id": stable_id("AD", repo, pr_number, task_id, utc_now()),
         "task_id": task_id,
@@ -125,6 +195,7 @@ def dispatch_item(
         if packet_path.is_relative_to(REPO_ROOT)
         else str(packet_path),
         "lock_id": (lock_record or {}).get("lock_id"),
+        "bead_id": bead_id,
     }
     append_jsonl(dispatch_log, dispatch)
     return {
@@ -133,6 +204,7 @@ def dispatch_item(
         "dispatch_id": dispatch["dispatch_id"],
         "agent": agent,
         "mission_packet": dispatch["mission_packet"],
+        "bead_id": bead_id,
     }
 
 
@@ -150,6 +222,10 @@ def main() -> int:
     parser.add_argument("--template", default=str(DEFAULT_TEMPLATE))
     parser.add_argument("--limit", type=int, default=1, help="Max items to dispatch this run")
     parser.add_argument("--ttl-minutes", type=int, default=30)
+    parser.add_argument(
+        "--emit-beads", action="store_true", help="Register each dispatched item as a bead (enters `bd ready`)"
+    )
+    parser.add_argument("--bd-bin", default="bd", help="bd executable (override for testing)")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -174,6 +250,8 @@ def main() -> int:
             Path(args.dispatch_log),
             template,
             args.ttl_minutes,
+            emit_beads=args.emit_beads,
+            bd_bin=args.bd_bin,
         )
         results.append(result)
         if result.get("dispatched"):

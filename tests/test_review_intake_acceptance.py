@@ -25,6 +25,7 @@ FIXTURES = REPO_ROOT / "tests" / "fixtures" / "review_intake"
 sys.path.insert(0, str(SCRIPTS))
 
 import lock_pr_branch  # noqa: E402
+import dispatch_review_work  # noqa: E402
 
 ALL_SOURCES = [
     ("pull_request_review_comment", "sample_pull_request_review_comment_event.json", "github_pr_review_comment"),
@@ -360,3 +361,100 @@ def test_ac8_learning_writer_mines_reviewer_patterns(base: Path):
     patterns = read_jsonl(base / "reviewer_patterns.jsonl")
     assert len(patterns) == 1
     assert patterns[0]["occurrences"] == 2 and patterns[0]["finding_type"] == "lint_style"
+
+
+# ---------------------------------------------------------------- live-loop bridge
+def test_dispatch_emits_bead_into_live_loop(base: Path, monkeypatch):
+    """Dispatched findings become beads (enter `bd ready`); bd-unavailable degrades gracefully."""
+    captured = {}
+
+    def fake_which(name):
+        return "/usr/bin/" + name
+
+    def fake_run(cmd, capture_output, text, timeout):
+        captured["cmd"] = cmd
+        return subprocess.CompletedProcess(cmd, 0, stdout="✓ Created issue: harness-bead-42 — x\n", stderr="")
+
+    monkeypatch.setattr(dispatch_review_work.shutil, "which", fake_which)
+    monkeypatch.setattr(dispatch_review_work.subprocess, "run", fake_run)
+
+    item = {
+        "id": "NW-1",
+        "title": "Address review finding RF-1 on PR #42",
+        "status": "ready",
+        "priority": 80,
+        "repo": "owner/repo",
+        "pr_number": 42,
+        "area": "review-intake",
+        "specialties": ["testing"],
+        "owner_agent": "Sentinel",
+        "acceptance_checks": ["Run tests"],
+        "links": ["https://x"],
+        "notes": "n",
+        "confidence_score": 80,
+        "risk_level": "low",
+        "allowed_files": ["src/a.py"],
+        "source_finding_id": "RF-1",
+    }
+    result = dispatch_review_work.dispatch_item(
+        item,
+        base / "locks",
+        base / "packets",
+        base / "dispatch_log.jsonl",
+        (REPO_ROOT / "templates" / "AGENT_MISSION_PACKET_REVIEW_INTAKE.md").read_text(),
+        ttl_minutes=30,
+        emit_beads=True,
+        bd_bin="bd",
+    )
+    assert result["bead_id"] == "harness-bead-42"
+    assert item["bead_id"] == "harness-bead-42"
+    assert "create" in captured["cmd"] and "--labels" in captured["cmd"]
+    # Idempotent: a second dispatch with bead_id already set does not recreate.
+    captured.clear()
+    lock_pr_branch.release(base / "locks", "owner/repo", 42)
+    result2 = dispatch_review_work.dispatch_item(
+        item,
+        base / "locks",
+        base / "packets",
+        base / "dispatch_log.jsonl",
+        (REPO_ROOT / "templates" / "AGENT_MISSION_PACKET_REVIEW_INTAKE.md").read_text(),
+        ttl_minutes=30,
+        emit_beads=True,
+        bd_bin="bd",
+    )
+    assert result2["bead_id"] == "harness-bead-42"
+    assert "cmd" not in captured  # create_bead not called again
+
+
+def test_dispatch_without_bd_degrades_to_packet_only(base: Path, monkeypatch):
+    monkeypatch.setattr(dispatch_review_work.shutil, "which", lambda name: None)
+    item = {
+        "id": "NW-2",
+        "title": "Address review finding RF-2 on PR #7",
+        "status": "ready",
+        "priority": 80,
+        "repo": "owner/repo",
+        "pr_number": 7,
+        "area": "review-intake",
+        "specialties": ["testing"],
+        "owner_agent": "Auditor",
+        "acceptance_checks": ["x"],
+        "links": [],
+        "notes": "n",
+        "confidence_score": 80,
+        "risk_level": "low",
+        "allowed_files": [],
+        "source_finding_id": "RF-2",
+    }
+    result = dispatch_review_work.dispatch_item(
+        item,
+        base / "locks",
+        base / "packets",
+        base / "dispatch_log.jsonl",
+        (REPO_ROOT / "templates" / "AGENT_MISSION_PACKET_REVIEW_INTAKE.md").read_text(),
+        ttl_minutes=30,
+        emit_beads=True,
+        bd_bin="bd",
+    )
+    assert result["dispatched"] is True
+    assert result["bead_id"] is None  # no tracker, but dispatch still succeeds
