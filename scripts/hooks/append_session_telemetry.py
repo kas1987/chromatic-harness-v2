@@ -13,26 +13,21 @@ updated_at falls within the last 4 hours (rough session window).
 import argparse
 import json
 import shutil
-import subprocess
+import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 TELEMETRY_FILE = REPO_ROOT / "05_REPORTS" / "telemetry.jsonl"
 _SESSION_WINDOW_HOURS = 4
 
 
 def git(*args) -> str:
-    try:
-        result = subprocess.run(
-            ["git"] + list(args),
-            capture_output=True,
-            text=True,
-            cwd=REPO_ROOT,
-        )
-        return result.stdout.strip() if result.returncode == 0 else ""
-    except Exception:
-        return ""
+    result = run_safe(["git"] + list(args), cwd=REPO_ROOT, timeout=10)
+    return result.stdout.strip() if result.returncode == 0 else ""
 
 
 def _find_bd() -> str | None:
@@ -52,15 +47,7 @@ def _derive_beads_closed() -> int:
     if bd is None:
         return 0
     try:
-        result = subprocess.run(
-            [bd, "list", "--status", "closed", "--json"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            shell=False,
-            timeout=15,
-        )
+        result = run_safe([bd, "list", "--status", "closed", "--json"], timeout=15)
         if result.returncode != 0 or not result.stdout.strip():
             return 0
         rows = json.loads(result.stdout)
@@ -76,9 +63,7 @@ def _derive_beads_closed() -> int:
                 continue
             try:
                 if updated.endswith("Z"):
-                    ts = datetime.strptime(updated, "%Y-%m-%dT%H:%M:%SZ").replace(
-                        tzinfo=timezone.utc
-                    )
+                    ts = datetime.strptime(updated, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
                 else:
                     ts = datetime.fromisoformat(updated).astimezone(timezone.utc)
                 if ts.timestamp() >= cutoff:
@@ -97,10 +82,7 @@ def main():
         "--beads-closed",
         type=int,
         default=None,
-        help=(
-            "Number of beads closed this session. "
-            "When omitted, derived automatically from bd (last 4h window)."
-        ),
+        help=("Number of beads closed this session. When omitted, derived automatically from bd (last 4h window)."),
     )
     parser.add_argument("--notes", default="", help="Free-text session notes")
     args = parser.parse_args()
@@ -126,9 +108,7 @@ def main():
         fh.write(json.dumps(record) + "\n")
 
     print(f"[telemetry] appended record to {TELEMETRY_FILE.relative_to(REPO_ROOT)}")
-    print(
-        f"  date={record['date']}  branch={branch}  commit={commit[:12]}  beads_closed={args.beads_closed}"
-    )
+    print(f"  date={record['date']}  branch={branch}  commit={commit[:12]}  beads_closed={args.beads_closed}")
 
 
 if __name__ == "__main__":
