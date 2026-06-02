@@ -13,7 +13,6 @@ import argparse
 import json
 import os
 import re
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,7 +22,9 @@ _REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = _REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(_REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from budget.ledger import BudgetLedger  # noqa: E402
 from budget.transfer_packet import (  # noqa: E402
     build_transfer_packet,
@@ -402,19 +403,9 @@ def _evaluate_auto_turn_trigger(
 
 
 def _run(cmd: list[str], *, timeout: int = 120, cwd: Path | None = None) -> tuple[int, str]:
-    try:
-        r = subprocess.run(
-            cmd,
-            cwd=cwd or _REPO,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
-        out = (r.stdout or "") + (r.stderr or "")
-        return r.returncode, out.strip()
-    except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
-        return 1, str(exc)
+    r = run_safe(cmd, cwd=cwd or _REPO, timeout=timeout)
+    out = (r.stdout or "") + (r.stderr or "")
+    return r.returncode, out.strip()
 
 
 def _run_epic_reviews() -> dict[str, Any]:

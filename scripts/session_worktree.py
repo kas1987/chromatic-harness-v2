@@ -6,11 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 WORKTREES_DIR = REPO / ".worktrees"
 
 
@@ -25,14 +27,7 @@ def _safe_name(raw: str) -> str:
 
 
 def _run(cmd: list[str]) -> tuple[int, str, str]:
-    proc = subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
-    )
+    proc = run_safe(cmd, cwd=REPO, timeout=120)
     return proc.returncode, proc.stdout or "", proc.stderr or ""
 
 
