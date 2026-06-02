@@ -18,7 +18,10 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 RUNTIME = REPO / "02_RUNTIME"
-for _p in (REPO, RUNTIME, REPO / "scripts"):
+# REPO/09_DEPLOYMENT carries the `dashboards` namespace package (moved there in
+# 8lri.2); it stays importable as `dashboards.exporter.*` because the numeric
+# dir is a sys.path *entry*, never part of the dotted module name.
+for _p in (REPO, RUNTIME, REPO / "scripts", REPO / "09_DEPLOYMENT"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 

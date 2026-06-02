@@ -87,8 +87,8 @@ examples/slash_audit.md
 examples/slash_ship.md
 examples/slash_recover.md
 examples/slash_status.md
-queue/claude_adapter_next_work.queue.json
-issues/claude_adapter_issue_map.md
+07_LOGS_AND_AUDIT/queue/claude_adapter_next_work.queue.json
+07_LOGS_AND_AUDIT/claude_adapter_issue_map.md
 registry/claude_adapter_manifest.json
 ```
 
