@@ -19,7 +19,7 @@ from typing import Any
 # ── Self-contained loader ────────────────────────────────────────────────────
 _ROUTER_DIR = Path(__file__).resolve().parent
 _RUNTIME_DIR = _ROUTER_DIR.parent
-_REPO = _ROUTER_DIR.parent.parent
+_REPO: Path = _ROUTER_DIR.parent.parent  # repo root — patchable by tests
 
 # 02_RUNTIME must be first so `router` resolves as a real package when gate.py
 # is invoked as a bare script (the PreToolUse hook invocation style).
@@ -55,7 +55,6 @@ ProviderSelector = _selector.ProviderSelector
 ProviderChoice = _selector.ProviderChoice
 
 # ── Gate-level constants ─────────────────────────────────────────────────────
-_REPO: Path = Path(__file__).resolve().parents[2]  # repo root — patchable by tests
 BLOCK_ENABLED = os.environ.get("ROUTER_BLOCK_ENABLED", "true").lower() == "true"
 CONTEXT_MAX_TOKENS = int(os.environ.get("ROUTER_CONTEXT_MAX_TOKENS", "128000"))
 TOOL_USE_PATTERN = os.environ.get(
