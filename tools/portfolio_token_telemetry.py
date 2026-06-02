@@ -132,9 +132,7 @@ def _iter_jsonl(path: Path) -> Iterable[dict]:
 
 
 # ── Cost backfill ─────────────────────────────────────────────────────────--
-def estimate_usd_from_usage(
-    model: str, usage: dict, pricing: dict[str, dict]
-) -> float | None:
+def estimate_usd_from_usage(model: str, usage: dict, pricing: dict[str, dict]) -> float | None:
     """Estimate USD from a ccusage-style ``usage`` block + pricing table.
 
     Rates in ``pricing.json`` are per-MILLION tokens. Returns ``None`` when the
@@ -231,9 +229,7 @@ def route_rows(
         if cost is None:
             confidence = "unknown"  # null cost is the gate.py:427 backfill gap
 
-        decision_id = ev.get("decision_id") or _decision_id(
-            "routes", ts, ev.get("request_id"), provider, model
-        )
+        decision_id = ev.get("decision_id") or _decision_id("routes", ts, ev.get("request_id"), provider, model)
         rows.append(
             LedgerRow(
                 decision_id=str(decision_id),
@@ -329,6 +325,12 @@ def bridge_today_to_daily(
     writing the sink format by hand. Returns total USD bridged. This is the
     concrete wiring the ``ingest_claude_usage_hook()`` stub (ledger.py:228) was
     a placeholder for.
+
+    Idempotent: today.json is the *full* current-day snapshot, so this bridge
+    re-reads the same events on every governance loop. Each event's stable
+    ``decision_id`` is recorded in the sink; already-posted ids are skipped, so
+    re-runs do not N-count (the daily.jsonl inflation bug). Real event
+    timestamps are preserved so spend lands on the day it happened.
     """
     from budget.ledger import BudgetLedger  # local import: optional dep path
 
@@ -341,14 +343,33 @@ def bridge_today_to_daily(
     # Redirect the sink to the requested budget_dir (test isolation).
     ledger.daily_log = Path(budget_dir) / "daily.jsonl"
 
+    # Build the set of already-posted decision_ids so re-runs never double-count.
+    seen: set[str] = set()
+    if ledger.daily_log.is_file():
+        for line in ledger.daily_log.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                did = json.loads(line).get("decision_id", "")
+            except json.JSONDecodeError:
+                continue
+            if did:
+                seen.add(did)
+
     total = 0.0
     for r in rows:
+        if r.decision_id in seen:
+            continue
         note = "" if r.confidence == "known" else "unknown_usage"
         ledger.append_daily(
             r.usd,
             source=f"today:{r.cost_center.model or 'unknown'}",
             note=note,
+            decision_id=r.decision_id,
+            timestamp=r.ts,
         )
+        seen.add(r.decision_id)
         total += r.usd
     return round(total, 6)
 
@@ -380,9 +401,7 @@ def run(
     """Full posting run: bridge today→daily, build + post ledger, return summary."""
     bridged = 0.0
     if bridge:
-        bridged = bridge_today_to_daily(
-            today_path=today_path, pricing_path=pricing_path, budget_dir=budget_dir
-        )
+        bridged = bridge_today_to_daily(today_path=today_path, pricing_path=pricing_path, budget_dir=budget_dir)
     rows = build_ledger_rows(
         today_path=today_path,
         pricing_path=pricing_path,
