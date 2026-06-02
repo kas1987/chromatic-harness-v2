@@ -23,11 +23,13 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "preflight"
 
 # Modules that must be importable for the harness to be healthy.
@@ -47,19 +49,10 @@ TIMEOUT_TESTS = 180
 
 
 def _run(cmd: list[str], *, timeout: int, cwd: Path = REPO) -> tuple[int, str]:
-    try:
-        r = subprocess.run(
-            cmd,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-        return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except subprocess.TimeoutExpired:
+    r = run_safe(cmd, cwd=cwd, timeout=timeout)
+    if r.returncode == 124:
         return 1, f"TIMEOUT after {timeout}s"
-    except Exception as exc:
-        return 1, str(exc)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
 def stage_lint() -> dict:

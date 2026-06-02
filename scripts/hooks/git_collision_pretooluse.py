@@ -17,7 +17,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -25,6 +24,9 @@ _REPO = Path(__file__).resolve().parents[2]
 _RUNTIME = _REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(_REPO / "scripts"))
+
+from common_harness import run_safe  # noqa: E402
 
 _PUSH_RE = re.compile(r"\bgit\s+push\b")
 _PR_RE = re.compile(r"\bgh\s+pr\s+create\b")
@@ -32,18 +34,12 @@ _FORCE_RE = re.compile(r"(\s-f\b|--force\b|--force-with-lease\b|\s\+[\w/]+:)")
 
 
 def _current_branch(cwd: Path | None = None) -> str:
-    try:
-        r = subprocess.run(
-            ["git", "branch", "--show-current"],
-            cwd=str(cwd) if cwd is not None else str(_REPO),
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-        return (r.stdout or "").strip()
-    except (subprocess.SubprocessError, OSError):
-        return ""
+    r = run_safe(
+        ["git", "branch", "--show-current"],
+        cwd=cwd if cwd is not None else _REPO,
+        timeout=10,
+    )
+    return (r.stdout or "").strip()
 
 
 def _extract_command(payload: dict) -> str:
@@ -152,8 +148,7 @@ def main() -> int:
     ):
         reasons = "; ".join(b["detail"] for b in blocking)
         print(
-            "BLOCKED by GitHub session-collision guard: "
-            f"{reasons}. Override once with CHROMATIC_ALLOW_COLLISION=1.",
+            f"BLOCKED by GitHub session-collision guard: {reasons}. Override once with CHROMATIC_ALLOW_COLLISION=1.",
             file=sys.stderr,
         )
         return 2  # exit 2 → Claude Code blocks the tool, shows stderr to the model
