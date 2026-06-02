@@ -1,4 +1,4 @@
-"""BEAD B8: token economy exporter (dashboards/exporter/token_economy_exporter.py).
+"""BEAD B8: token economy exporter (09_DEPLOYMENT/dashboards/exporter/token_economy_exporter.py).
 
 Feeds a sample ``ledger.jsonl`` + ``forecast_latest.json`` and asserts that:
   * the canonical ``chromatic_*`` series names are emitted (Prometheus + JSON),
@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 _REPO = Path(__file__).resolve().parent.parent
-_EXPORTER = _REPO / "dashboards" / "exporter"
+_EXPORTER = _REPO / "09_DEPLOYMENT" / "dashboards" / "exporter"
 if str(_EXPORTER) not in sys.path:
     sys.path.insert(0, str(_EXPORTER))
 
