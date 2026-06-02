@@ -130,7 +130,7 @@ chromatic-harness-v2/
 | `reports/` | `05_REPORTS/` | V3-6 (`8lri.2`) | ✅ retired |
 | `queue/`, `issues/` | `07_LOGS_AND_AUDIT/` | V3-6 (`8lri.2`) | ✅ retired |
 | `dashboards/` | `09_DEPLOYMENT/dashboards/` | V3-6 (`8lri.2`) | ✅ retired |
-| `hooks/` | `git_hooks/` | V3-6 (`8lri.5`) | ⏳ pending (sets diverge) |
+| `hooks/` | `git_hooks/` | V3-6 (`8lri.5`) | ✅ retired (dead installer subsystem deleted) |
 | `state/` (lease ledger) | `01_STATE/` | V3-6 (`8lri.6`) | ⏳ deferred (8-script atomic move) |
 
 The left column is read-only legacy — write to the canonical home. Rows marked ⏳ still exist
