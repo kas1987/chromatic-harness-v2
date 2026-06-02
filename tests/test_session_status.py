@@ -157,7 +157,7 @@ def test_collect_worktrees_parses_porcelain():
         "worktree /repo/feature\nHEAD def9876543\nbranch refs/heads/feature-x\n"
     )
     mock_result = MagicMock(returncode=0, stdout=sample)
-    with patch("subprocess.run", return_value=mock_result):
+    with patch.object(mod, "run_safe", return_value=mock_result):
         wts = mod._collect_worktrees()
     assert len(wts) == 2
     assert wts[0]["branch"] == "main"
@@ -167,7 +167,7 @@ def test_collect_worktrees_parses_porcelain():
 
 def test_collect_worktrees_empty_on_error():
     mod = _load("session_status", "scripts/session_status.py")
-    with patch("subprocess.run", side_effect=Exception("git not found")):
+    with patch.object(mod, "run_safe", side_effect=Exception("git not found")):
         wts = mod._collect_worktrees()
     assert wts == []
 
@@ -186,7 +186,7 @@ def test_collect_beads_parses_json():
         ]
     )
     mock_result = MagicMock(returncode=0, stdout=beads_json)
-    with patch("subprocess.run", return_value=mock_result):
+    with patch.object(mod, "run_safe", return_value=mock_result):
         beads = mod._collect_beads()
     assert len(beads) == 2
     assert beads[0]["id"] == "proj-abc1"
@@ -195,7 +195,7 @@ def test_collect_beads_parses_json():
 def test_collect_beads_empty_on_unavailable():
     mod = _load("session_status", "scripts/session_status.py")
     mock_result = MagicMock(returncode=1, stdout="")
-    with patch("subprocess.run", return_value=mock_result):
+    with patch.object(mod, "run_safe", return_value=mock_result):
         beads = mod._collect_beads()
     assert beads == []
 
@@ -203,7 +203,7 @@ def test_collect_beads_empty_on_unavailable():
 def test_collect_beads_empty_on_bad_json():
     mod = _load("session_status", "scripts/session_status.py")
     mock_result = MagicMock(returncode=0, stdout="not-json")
-    with patch("subprocess.run", return_value=mock_result):
+    with patch.object(mod, "run_safe", return_value=mock_result):
         beads = mod._collect_beads()
     assert beads == []
 
@@ -228,7 +228,7 @@ def test_main_json_output(tmp_path, capsys, monkeypatch):
             return mock_result
         return bd_result
 
-    with patch("subprocess.run", side_effect=fake_run):
+    with patch.object(mod, "run_safe", side_effect=fake_run):
         with patch("sys.argv", ["session_status.py", "--json"]):
             rc = mod.main()
 
