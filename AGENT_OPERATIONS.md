@@ -61,6 +61,8 @@ bd ready   # pick work from beads, not chat
 
 Read handoff if present: `.agents/handoffs/latest.json`
 
+> **Before creating any epic or bead, read [docs/playbooks/BEAD_EPIC_AUTHORING_PROTOCOL.md](docs/playbooks/BEAD_EPIC_AUTHORING_PROTOCOL.md)** (template: [templates/EPIC_BEAD_TEMPLATE.md](templates/EPIC_BEAD_TEMPLATE.md)). Key rules: PDR→plan→epic→beads order; **serialize `bd` writes** (Dolt is single-writer — parallel/background `bd` calls fail, and you must never remove the lock); priority is **P0–P4** (not 0–100); every child needs a ```` ```validation ```` block; waves form via `bd dep add`; never hand-author `[agent]` beads.
+
 **Manual only when debugging or MCP plugins changed:**
 
 ```powershell
