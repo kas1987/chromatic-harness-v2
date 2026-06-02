@@ -29,6 +29,8 @@ VALID_KINDS = frozenset(_KIND_TO_SCHEMA_PATH)
 
 
 def _load_schema(kind: str) -> dict:
+    if kind not in _KIND_TO_SCHEMA_PATH:
+        raise ValueError(f"Unknown kind {kind!r}; valid: {sorted(VALID_KINDS)}")
     path = _KIND_TO_SCHEMA_PATH[kind]
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -55,7 +57,8 @@ def validate_envelope(data: object) -> tuple[str, dict]:
 def validate_payload(kind: str, payload: dict) -> None:
     """Validate payload against the JSON Schema for the given kind.
 
-    Raises ValueError on the first schema violation.
+    Raises ValueError on the first schema violation or unknown kind.
+    Raises RuntimeError if the jsonschema package is not installed.
     """
     try:
         from jsonschema import Draft202012Validator
