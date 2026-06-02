@@ -39,6 +39,18 @@ def test_run_safe_nonzero_exit():
     assert r.returncode == 3
 
 
+def test_run_safe_decodes_invalid_utf8_without_raising():
+    # Emit a lone 0x80 byte (invalid UTF-8 and undecodable in many locales).
+    # run_safe must decode with errors="replace" and never raise.
+    r = ch.run_safe(
+        [sys.executable, "-c", "import sys; sys.stdout.buffer.write(b'ok\\x80end')"],
+        timeout=10,
+    )
+    assert r.returncode == 0
+    assert "ok" in r.stdout and "end" in r.stdout
+    assert "�" in r.stdout  # U+FFFD replacement char for the bad byte
+
+
 def test_run_safe_reaps_process_tree_on_timeout(tmp_path):
     marker = tmp_path / "alive.log"
     grandchild = tmp_path / "grandchild.py"
