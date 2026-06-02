@@ -4,7 +4,7 @@
 > when dispatching subagents/workflows and you need the full routing table.
 > Companion: `~/.claude/governance/subagent-token-efficiency.md` (the 5 rules).
 
-**Canonical matrix:** `chromatic-harness-v2/docs/governance/multi-router-matrix.yaml`  
+**Canonical matrix:** `chromatic-harness-v2/docs/routing/multi-router-matrix.yaml`  
 (federate via `bash chromatic-harness-v2/scripts/federate-governance.sh`; this file is a federated copy).
 Global default implements tiers 0–4 via `model-router.sh` + `router-patterns.json`.
 **chromatic-harness-v2 supersedes this locally** with a typed Python router (`02_RUNTIME/router/gate.py`)

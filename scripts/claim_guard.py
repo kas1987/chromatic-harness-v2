@@ -20,7 +20,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_LEDGER = REPO / "state" / "leases" / "active_leases.jsonl"
+DEFAULT_LEDGER = REPO / "01_STATE" / "leases" / "active_leases.jsonl"
 CLAIM_LOG = REPO / "07_LOGS_AND_AUDIT" / "claim_guard" / "history.jsonl"
 
 

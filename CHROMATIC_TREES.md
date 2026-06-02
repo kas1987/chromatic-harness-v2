@@ -67,7 +67,7 @@ The numbered scheme is the intended layout. Each directory owns one layer.
 
 | Directory | Role | Status |
 |-----------|------|--------|
-| `.agents/` | The flywheel — decisions, learnings, handoffs, governance (3,406 files) | CANONICAL (meta-governance) |
+| `.agents/` | The flywheel — decisions, learnings, handoffs, governance (3,406 files) — charter: [`.agents/README.md`](.agents/README.md) | CANONICAL (meta-governance) |
 | `.claude/` | Claude hooks, settings, lite workflows | CANONICAL |
 | `scripts/` | 398 operational + audit scripts | CANONICAL ⚠ no registry yet |
 | `tests/` | 470 pytest files | CANONICAL |
@@ -131,10 +131,11 @@ chromatic-harness-v2/
 | `queue/`, `issues/` | `07_LOGS_AND_AUDIT/` | V3-6 (`8lri.2`) | ✅ retired |
 | `dashboards/` | `09_DEPLOYMENT/dashboards/` | V3-6 (`8lri.2`) | ✅ retired |
 | `hooks/` | `git_hooks/` | V3-6 (`8lri.5`) | ✅ retired (dead installer subsystem deleted) |
-| `state/` (lease ledger) | `01_STATE/` | V3-6 (`8lri.6`) | ⏳ deferred (8-script atomic move) |
+| `state/` (lease ledger) | `01_STATE/leases/` | V3-6 (`8lri.6`) | ✅ retired (atomic ledger move) |
 
-The left column is read-only legacy — write to the canonical home. Rows marked ⏳ still exist
-until their bead lands; see [`REPO_LAYERS.md`](REPO_LAYERS.md) §4 for why they were carved out.
+All legacy root dirs are now **retired** (the `v3-structure` epic `8lri` reorg, V3-6). The left
+column is kept as a historical map; none of these dirs exist anymore — write to the canonical
+home. See [`REPO_LAYERS.md`](REPO_LAYERS.md) §4 for the per-dir disposition.
 
 > **Full contract:** the normative per-directory ownership matrix, write-policies, the band
 > convention (`00_`–`13_`), and the dated deprecation timeline live in
