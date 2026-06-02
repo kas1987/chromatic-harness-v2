@@ -126,7 +126,7 @@ def _cmd_report(args: argparse.Namespace) -> int:
         flag = "READY" if r["dispatch_allowed"] else "     "
         print(f"[{flag}] {str(r['id'] or '-'):<28} score={r['score']:>5} band={r['band']}")
         if not r["dispatch_allowed"] and r["suggestions"]:
-            print(f"          → {'; '.join(r['suggestions'])}")
+            print(f"          -> {'; '.join(r['suggestions'])}")
     return 0
 
 
@@ -154,6 +154,12 @@ def _cmd_apply(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
+    # bd emits non-cp1252 glyphs (✓); keep the native encoding but never crash on them.
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except Exception:  # noqa: BLE001 - best-effort; older/replaced stdout
+        pass
+
     ap = argparse.ArgumentParser(description="Bead gate-readiness report + enricher")
     sub = ap.add_subparsers(dest="command")
 
