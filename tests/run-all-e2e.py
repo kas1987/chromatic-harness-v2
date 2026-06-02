@@ -41,6 +41,7 @@ SUITES = [
         [
             "test_router_autopath.py",
             "test_delegate_bead.py",
+            "test_claude_delegate_gate_worktree.py",
         ],
     ),
     (
