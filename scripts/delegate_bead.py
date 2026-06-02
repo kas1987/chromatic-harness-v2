@@ -24,13 +24,14 @@ import argparse
 import asyncio
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "02_RUNTIME"))
+sys.path.insert(0, str(REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from intake.bd_runner import resolve_bd_argv  # noqa: E402
 from router.router import ChromaticRouter  # noqa: E402
 from router.contracts import (  # noqa: E402
@@ -49,15 +50,9 @@ _LEVEL_ORDER = {"C1": 1, "C2": 2, "C3": 3, "C4": 4}
 
 def _run_bd(args: list[str], *, timeout: int = 60) -> tuple[int, str]:
     try:
-        proc = subprocess.run(
-            [*resolve_bd_argv(), *args],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
+        proc = run_safe([*resolve_bd_argv(), *args], cwd=REPO, timeout=timeout)
         return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
-    except Exception as exc:  # bd missing / timeout
+    except Exception as exc:  # resolve_bd_argv failure (run_safe itself never raises)
         return 1, str(exc)
 
 
