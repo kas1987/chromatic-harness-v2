@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,24 +17,17 @@ REPO = Path(__file__).resolve().parents[1]
 RUNTIME = REPO / "02_RUNTIME"
 if str(RUNTIME) not in sys.path:
     sys.path.insert(0, str(RUNTIME))
+sys.path.insert(0, str(REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from intake.bd_runner import resolve_bd_argv  # noqa: E402
 
 AUDIT_DIR = REPO / ".agents" / "audits" / "bead_hygiene"
 
 
-def _run_bd(args: list[str]) -> subprocess.CompletedProcess[str]:
+def _run_bd(args: list[str]):
     cmd = [*resolve_bd_argv(), *args]
-    return subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=120,
-        check=False,
-    )
+    return run_safe(cmd, cwd=REPO, timeout=120)
 
 
 def _load_commands(path: Path) -> list[dict[str, Any]]:
@@ -169,9 +161,7 @@ def main() -> int:
 
     if args.write:
         AUDIT_DIR.mkdir(parents=True, exist_ok=True)
-        (AUDIT_DIR / "latest_apply_report.json").write_text(
-            json.dumps(report, indent=2), encoding="utf-8"
-        )
+        (AUDIT_DIR / "latest_apply_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     print(json.dumps(report, indent=2))
     return 0 if report.get("ok") else 1
