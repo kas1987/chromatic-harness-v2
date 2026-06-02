@@ -16,12 +16,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
+
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "release"
 
 # Sibling gate artifact paths (best-effort reads; missing => "unknown").
@@ -136,13 +141,7 @@ def collect_blockers(inputs: dict) -> list[dict]:
 
     # Open P0/P1 beads (best-effort).
     try:
-        r = subprocess.run(
-            ["bd", "list", "--status", "open", "--json"],
-            capture_output=True,
-            text=True,
-            timeout=15,
-            cwd=REPO,
-        )
+        r = run_safe(["bd", "list", "--status", "open", "--json"], cwd=REPO, timeout=15)
         if r.returncode == 0 and r.stdout.strip():
             beads = json.loads(r.stdout)
             for b in beads if isinstance(beads, list) else []:
