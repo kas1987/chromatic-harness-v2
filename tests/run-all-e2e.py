@@ -378,6 +378,13 @@ SUITES = [
             "test_mission_packet.py",
         ],
     ),
+    (
+        "wiki convergence + cross-repo promotion (OMH-6)",
+        [
+            "test_promote_to_wiki.py",
+            "test_sync_wiki_mirror.py",
+        ],
+    ),
 ]
 
 
