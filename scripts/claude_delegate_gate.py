@@ -19,7 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
+import shutil
 import sys
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -29,7 +29,9 @@ REPO = Path(__file__).resolve().parents[1]
 RUNTIME = REPO / "02_RUNTIME"
 if str(RUNTIME) not in sys.path:
     sys.path.insert(0, str(RUNTIME))
+sys.path.insert(0, str(REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from router.complexity_classifier import ComplexityClassifier  # noqa: E402
 from router.context_detector import ContextDetector  # noqa: E402
 from router.provider_selector import ProviderSelector  # noqa: E402
@@ -52,14 +54,7 @@ DESTRUCTIVE_PATTERNS = (
 
 
 def _run(cmd: list[str], timeout: int = 900) -> tuple[int, str]:
-    proc = subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        check=False,
-    )
+    proc = run_safe(cmd, cwd=REPO, timeout=timeout)
     out = (proc.stdout or "") + (proc.stderr or "")
     return proc.returncode, out
 
@@ -213,10 +208,9 @@ def _write_artifacts(packet: dict) -> tuple[Path, Path]:
 
 def _spawn_claude(prompt_path: Path) -> tuple[bool, str]:
     cmd = ["claude", "-p", f"@{prompt_path}"]
-    try:
-        code, out = _run(cmd, timeout=120)
-    except FileNotFoundError:
+    if shutil.which("claude") is None:
         return False, "claude CLI not found; packet created for manual use"
+    code, out = _run(cmd, timeout=120)
     if code == 0:
         return True, (out[:1000] or "claude delegation dispatched")
     return False, out[-1000:]
