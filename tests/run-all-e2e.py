@@ -388,6 +388,13 @@ SUITES = [
             "test_session_start_bd_argv.py",
         ],
     ),
+    (
+        "wiki convergence + cross-repo promotion (OMH-6)",
+        [
+            "test_promote_to_wiki.py",
+            "test_sync_wiki_mirror.py",
+        ],
+    ),
 ]
 
 
