@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic PR Branch Lock",
+  "type": "object",
+  "required": ["lock_id", "repo", "pr_number", "branch", "holder", "queue_item_id", "started_at", "expires_at"],
+  "properties": {
+    "lock_id": {"type": "string"},
+    "repo": {"type": "string"},
+    "pr_number": {"type": "integer"},
+    "branch": {"type": "string"},
+    "holder": {"type": "string"},
+    "queue_item_id": {"type": "string"},
+    "started_at": {"type": "string"},
+    "expires_at": {"type": "string"}
+  }
+}
