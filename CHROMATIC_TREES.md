@@ -122,17 +122,19 @@ chromatic-harness-v2/
 
 ## 4. Legacy → Canonical Map (do not write to the left column)
 
-| Legacy / duplicate | Canonical home | Retire in |
-|--------------------|----------------|-----------|
-| `10_RUNTIME/` (empty) | `02_RUNTIME/` | V3-6 |
-| `02_DOCS/` (1 file) | `docs/` | V3-6 |
-| `agent_handoffs/` | `12_HANDOFFS/` | V3-6 |
-| `hooks/` | `git_hooks/` | V3-6 |
-| `state/` | `01_STATE/` | V3-6 |
-| `reports/` | `05_REPORTS/` | V3-6 |
-| `queue/`, `issues/`, `dashboards/` | `07_LOGS_AND_AUDIT/` or retire | V3-6 |
+| Legacy / duplicate | Canonical home | Retire in | Status |
+|--------------------|----------------|-----------|--------|
+| `10_RUNTIME/` (empty) | `02_RUNTIME/` | V3-6 (`8lri.2`) | ✅ retired |
+| `02_DOCS/` (1 file) | `docs/` | V3-6 (`8lri.2`) | ✅ retired |
+| `agent_handoffs/` | `12_HANDOFFS/` | V3-6 (`8lri.2`) | ✅ retired |
+| `reports/` | `05_REPORTS/` | V3-6 (`8lri.2`) | ✅ retired |
+| `queue/`, `issues/` | `07_LOGS_AND_AUDIT/` | V3-6 (`8lri.2`) | ✅ retired |
+| `dashboards/` | `09_DEPLOYMENT/dashboards/` | V3-6 (`8lri.2`) | ✅ retired |
+| `hooks/` | `git_hooks/` | V3-6 (`8lri.5`) | ⏳ pending (sets diverge) |
+| `state/` (lease ledger) | `01_STATE/` | V3-6 (`8lri.6`) | ⏳ deferred (8-script atomic move) |
 
-Until V3-6 lands, treat the left column as read-only legacy and write to the canonical home.
+The left column is read-only legacy — write to the canonical home. Rows marked ⏳ still exist
+until their bead lands; see [`REPO_LAYERS.md`](REPO_LAYERS.md) §4 for why they were carved out.
 
 > **Full contract:** the normative per-directory ownership matrix, write-policies, the band
 > convention (`00_`–`13_`), and the dated deprecation timeline live in

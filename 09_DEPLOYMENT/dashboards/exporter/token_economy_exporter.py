@@ -2,8 +2,8 @@
 
 Per ``08_PDRS/TOKEN_ECONOMY_SPEC.md`` section 8, this module reads the canonical
 ``forecast_latest.json`` (B6) and ``ledger.jsonl`` (B3) and emits the
-already-named ``chromatic_*`` metric series (see ``dashboards/grafana/README.md``
-+ ``dashboards/n8n/README.md``) plus three derived views:
+already-named ``chromatic_*`` metric series (see ``09_DEPLOYMENT/dashboards/grafana/README.md``
++ ``09_DEPLOYMENT/dashboards/n8n/README.md``) plus three derived views:
 
   * a **3-column weekly P&L** - Axis P (prepaid quota %), Axis D (dollar-billed
     API $), Axis F (free-local $-equivalent offload value);
@@ -149,11 +149,7 @@ def _axis_prepaid(forecast: dict[str, Any]) -> dict[str, Any]:
     current_pct = round((current / cap) * 100.0, 6) if cap else 0.0
     return {
         "weekly_quota_pct": current_pct,
-        "target_pct": float(
-            (weekly.get("target_policy", {}) or {}).get(
-                "target_default_pct", TARGET_PCT
-            )
-        ),
+        "target_pct": float((weekly.get("target_policy", {}) or {}).get("target_default_pct", TARGET_PCT)),
         "projected_close_pct": round(projected, 6),
         "reset_at": forecast.get("generated_at", ""),
     }
@@ -166,9 +162,7 @@ def _cost_center_key(cc: dict[str, Any]) -> str:
     return key or "unattributed"
 
 
-def build_report(
-    forecast: dict[str, Any], ledger: list[dict[str, Any]]
-) -> EconomyReport:
+def build_report(forecast: dict[str, Any], ledger: list[dict[str, Any]]) -> EconomyReport:
     """Compute the P&L, gauge, and per-cost-center ROI table from the inputs."""
     prepaid = _axis_prepaid(forecast)
     target = float(prepaid.get("target_pct", TARGET_PCT) or TARGET_PCT)
@@ -277,9 +271,7 @@ def render_prometheus(report: EconomyReport) -> str:
         "gauge",
         METRIC_PNL_LOCAL_USD,
     )
-    lines.append(
-        _metric_line(METRIC_PNL_LOCAL_USD, report.pnl.axis_f_local_offload_usd)
-    )
+    lines.append(_metric_line(METRIC_PNL_LOCAL_USD, report.pnl.axis_f_local_offload_usd))
 
     add("Unknown-attribution usage share (%).", "gauge", METRIC_UNKNOWN_PCT)
     lines.append(_metric_line(METRIC_UNKNOWN_PCT, report.unknown_pct))
@@ -354,13 +346,9 @@ def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="chromatic token economy exporter")
     parser.add_argument("--forecast", type=Path, default=_DEFAULT_FORECAST)
     parser.add_argument("--ledger", type=Path, default=_DEFAULT_LEDGER)
-    parser.add_argument(
-        "--format", choices=("prometheus", "json"), default="prometheus"
-    )
+    parser.add_argument("--format", choices=("prometheus", "json"), default="prometheus")
     args = parser.parse_args(list(argv) if argv is not None else None)
-    sys.stdout.write(
-        export(forecast_path=args.forecast, ledger_path=args.ledger, fmt=args.format)
-    )
+    sys.stdout.write(export(forecast_path=args.forecast, ledger_path=args.ledger, fmt=args.format))
     return 0
 
 
