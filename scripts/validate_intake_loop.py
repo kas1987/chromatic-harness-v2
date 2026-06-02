@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -22,7 +21,9 @@ REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from intake.auto_intake import drain_queue, simple_decompose  # noqa: E402
 from intake.queue import append_entry, list_queued, validate_entry  # noqa: E402
 
@@ -92,11 +93,9 @@ def check_drain_dry_run(queue: Path, verbose: bool) -> list[str]:
 
 def check_workflow_go_audit(verbose: bool) -> list[str]:
     errors: list[str] = []
-    proc = subprocess.run(
+    proc = run_safe(
         [PYTHON, str(REPO / "scripts" / "workflow_go.py"), "GO AUDIT"],
         cwd=REPO,
-        capture_output=True,
-        text=True,
         timeout=90,
     )
     if proc.returncode != 0:
@@ -115,11 +114,9 @@ def check_workflow_go_audit(verbose: bool) -> list[str]:
 
 def check_workflow_go_verify(verbose: bool) -> list[str]:
     errors: list[str] = []
-    proc = subprocess.run(
+    proc = run_safe(
         [PYTHON, str(REPO / "scripts" / "workflow_go.py"), "GO VERIFY"],
         cwd=REPO,
-        capture_output=True,
-        text=True,
         timeout=90,
     )
     if proc.returncode != 0 and "no prior workflow run" not in (proc.stdout + proc.stderr):
@@ -185,11 +182,9 @@ def check_self_heal_dry_run(verbose: bool) -> list[str]:
 
 def check_auto_intake_cli(verbose: bool) -> list[str]:
     errors: list[str] = []
-    proc = subprocess.run(
+    proc = run_safe(
         [PYTHON, str(REPO / "scripts" / "auto_intake.py"), "--dry-run", "--limit", "1"],
         cwd=REPO,
-        capture_output=True,
-        text=True,
         timeout=60,
     )
     if proc.returncode != 0:
