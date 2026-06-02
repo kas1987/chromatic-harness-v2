@@ -125,6 +125,7 @@ SUITES = [
         "GO-mode orchestrator (#81)",
         [
             "test_go_mode.py",
+            "test_task_runner.py",
         ],
     ),
     (
