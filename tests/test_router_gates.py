@@ -2,7 +2,6 @@
 
 import tempfile
 import pytest
-import importlib
 
 import router.contracts as contracts_mod
 import router.policy as policy_mod
@@ -12,15 +11,7 @@ import router.budget as budget_mod
 import router.observability as observability_mod
 import router.router as router_mod
 
-importlib.reload(contracts_mod)
-importlib.reload(policy_mod)
-importlib.reload(confidence_mod)
-importlib.reload(privacy_mod)
-importlib.reload(budget_mod)
-importlib.reload(observability_mod)
-importlib.reload(router_mod)
-
-from router.contracts import (  # noqa: E402
+from router.contracts import (
     RouteRequest,
     RouteConstraints,
     RouteConfidence,
@@ -30,9 +21,9 @@ from router.contracts import (  # noqa: E402
     PrivacyClass,
     ConfidenceBand,
 )
-from router.router import ChromaticRouter  # noqa: E402
-from router.confidence import ConfidenceGate  # noqa: E402
-from router.context_detector import RuntimeContext  # noqa: E402
+from router.router import ChromaticRouter
+from router.confidence import ConfidenceGate
+from router.context_detector import RuntimeContext
 
 
 @pytest.fixture
@@ -213,8 +204,8 @@ async def test_fallback_to_mock_when_provider_disabled(router):
 @pytest.mark.asyncio
 async def test_classify_text_detects_secrets():
     pg = privacy_mod.PrivacyGate()
-    assert pg.classify_text("sk-1234567890abcdef1234567890") == PrivacyClass.P3
-    assert pg.classify_text("api_key=ghp_1234567890abcdef") == PrivacyClass.P3
+    assert pg.classify_text("sk-1234567890abcdef1234567890") == PrivacyClass.P3  # pragma: allowlist secret
+    assert pg.classify_text("api_key=ghp_1234567890abcdef") == PrivacyClass.P3  # pragma: allowlist secret
     assert pg.classify_text("public README content") == PrivacyClass.P1
     assert pg.classify_text("HIPAA compliance review") == PrivacyClass.P4
 

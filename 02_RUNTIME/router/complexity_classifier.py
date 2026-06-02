@@ -5,7 +5,10 @@ from __future__ import annotations
 import yaml
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from .contracts import RoutingContext
 
 CLevel = Literal["C1", "C2", "C3", "C4"]
 
@@ -195,3 +198,18 @@ class ComplexityClassifier:
                 )
             )
         return out
+
+    # ── Pure-function stage over RoutingContext ──────────────────────────────
+
+    def classify_context(self, ctx: RoutingContext) -> ComplexityResult:
+        """Pure function: derive ComplexityResult from a sealed RoutingContext.
+
+        No I/O; all inputs are in ctx.  Call after
+        ContextDetector.build_routing_context().
+        """
+        return self.classify(
+            description=ctx.task_description,
+            prompt=ctx.prompt,
+            max_files_hint=ctx.max_files_hint,
+            impact_fan_out=ctx.impact_fan_out,
+        )
