@@ -37,8 +37,8 @@ class GoogleAdapter(BaseAdapter):
 
                 api_key = os.environ.get(self.cfg.get("env_key", "GOOGLE_API_KEY"))  # pragma: allowlist secret
                 self._client = genai.Client(api_key=api_key)  # pragma: allowlist secret
-            except ImportError:
-                raise AdapterError("google-genai not installed: pip install google-genai", provider="google")
+            except ImportError as exc:
+                raise AdapterError("google-genai not installed: pip install google-genai", provider="google") from exc
         return self._client
 
     async def health(self) -> AdapterHealth:

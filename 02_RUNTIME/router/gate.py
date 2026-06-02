@@ -65,6 +65,8 @@ TOOL_USE_PATTERN = os.environ.get(
 # ── Pipeline stage imports ───────────────────────────────────────────────────
 from router.pipeline.io import emit_advisory, emit_deny, read_stdin  # noqa: E402
 from router.pipeline.impact import (  # noqa: E402
+    IMPACT_ENABLED,
+    IMPACT_TIMEOUT,
     count_impacted,
     extract_file_refs,
     impact_fan_out,

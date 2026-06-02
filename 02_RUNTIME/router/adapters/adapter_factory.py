@@ -14,7 +14,7 @@ def _load_registry(registry_path: Path) -> dict[str, Any]:
         import yaml
     except ImportError as exc:
         raise ImportError("pyyaml required for AdapterFactory: pip install pyyaml") from exc
-    return yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    return yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
 
 
 def _instantiate(entry: dict[str, Any], name: str, cfg: dict[str, Any]):
