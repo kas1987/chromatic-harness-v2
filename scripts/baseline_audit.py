@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +29,12 @@ except ImportError:  # pragma: no cover
     yaml = None
 
 _REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
+
 _BASELINES = _REPO / "config" / "baselines.yaml"
 _MANIFEST = _REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
 _SETTINGS = _REPO / ".claude" / "settings.json"
@@ -146,11 +151,7 @@ def measure_instruction_kib(repo: Path | None = None) -> float | None:
         root / "AGENTS.md",
         Path.home() / ".claude" / "CLAUDE.md",
     ]
-    files += (
-        list((root / ".cursor" / "rules").glob("*.mdc"))
-        if (root / ".cursor" / "rules").is_dir()
-        else []
-    )
+    files += list((root / ".cursor" / "rules").glob("*.mdc")) if (root / ".cursor" / "rules").is_dir() else []
     total = 0
     found = False
     for f in files:
@@ -163,17 +164,13 @@ def measure_instruction_kib(repo: Path | None = None) -> float | None:
     return round(total / 1024, 1) if found else None
 
 
-def measure_manifest_age_hrs(
-    manifest: Path | None = None, *, now: datetime | None = None
-) -> float | None:
+def measure_manifest_age_hrs(manifest: Path | None = None, *, now: datetime | None = None) -> float | None:
     m = _read_json(manifest or _MANIFEST)
     raw = m.get("generated_at")
     if not raw:
         return None
     try:
-        ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00")).astimezone(
-            timezone.utc
-        )
+        ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00")).astimezone(timezone.utc)
     except ValueError:
         return None
     now = now or datetime.now(timezone.utc)
@@ -182,19 +179,15 @@ def measure_manifest_age_hrs(
 
 def measure_hook_high() -> float | None:
     try:
-        proc = subprocess.run(
+        proc = run_safe(
             [sys.executable, str(_REPO / "scripts" / "audit_hooks.py"), "--json"],
             cwd=_REPO,
-            capture_output=True,
-            text=True,
             timeout=60,
-            check=False,
         )
         data = json.loads(proc.stdout or "{}")
-        return float(
-            sum(1 for f in data.get("findings", []) if f.get("severity") == "HIGH")
-        )
-    except (OSError, json.JSONDecodeError, subprocess.SubprocessError):
+        return float(sum(1 for f in data.get("findings", []) if f.get("severity") == "HIGH"))
+    except json.JSONDecodeError:
+        # run_safe absorbs OSError/timeout; malformed JSON is the only raisable error.
         return None
 
 
@@ -219,9 +212,7 @@ def audit_surface(
 ) -> dict[str, Any]:
     spec = spec or load_baselines()
     measurements = measurements if measurements is not None else collect_measurements()
-    result = evaluate_baseline(
-        measurements, thresholds_for(spec, surface), spec.get("advice") or {}
-    )
+    result = evaluate_baseline(measurements, thresholds_for(spec, surface), spec.get("advice") or {})
     result["surface"] = surface
     return result
 
@@ -259,9 +250,7 @@ def main() -> int:
     if args.write:
         _OUT_DIR.mkdir(parents=True, exist_ok=True)
         for card in cards:
-            (_OUT_DIR / f"{card['surface']}.json").write_text(
-                json.dumps(card, indent=2), encoding="utf-8"
-            )
+            (_OUT_DIR / f"{card['surface']}.json").write_text(json.dumps(card, indent=2), encoding="utf-8")
 
     if args.json:
         print(json.dumps(cards if args.all else cards[0], indent=2))
