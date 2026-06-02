@@ -62,7 +62,23 @@ appends a schema-valid `review_resolution` record to `resolution_log.jsonl`.
 ## Captured live run
 
 <!-- LIVE_RUN_CAPTURE -->
-_Filled in by the live run on the OMH-4 PR — see "Captured live run" values below._
+Run on **PR [#208](https://github.com/kas1987/chromatic-harness-v2/pull/208)** (`kas1987/chromatic-harness-v2`), 2026-06-02:
+
+| Artifact | Value |
+|----------|-------|
+| Queue item | `NW-OMH4LIVE01` (finding `RF-OMH4LIVE01`) |
+| Dispatch record | `AD-3784E38B55CB` |
+| Bead emitted (`--emit-beads`) | `chromatic-harness-v2-f2it` → entered `bd ready`, then closed (demonstration) |
+| Resolution comment | [PR #208 issuecomment-4604073711](https://github.com/kas1987/chromatic-harness-v2/pull/208#issuecomment-4604073711) |
+| Resolution record | `RR-75F017C80F68` (status `Resolved`, evidence-gated) |
+
+**Bug found and fixed during the live run.** `--emit-beads` was a silent no-op on
+Windows: `create_bead` gated on `shutil.which("bd")` (which resolves `bd.CMD`) but then
+ran `subprocess.run(["bd", ...])` with the *bare* name, and `CreateProcess` does not apply
+`PATHEXT`, so it raised `FileNotFoundError` → caught → degraded to packet-only with no
+bead. Fixed by executing the which-resolved absolute path. Locked by a regression
+assertion in `test_dispatch_emits_bead_into_live_loop`. This is precisely what a "wire it
+**live**" task surfaces that fixture tests (which monkeypatch `subprocess.run`) cannot.
 <!-- /LIVE_RUN_CAPTURE -->
 
 ## Why self-referential
