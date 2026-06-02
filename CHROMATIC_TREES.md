@@ -67,7 +67,7 @@ The numbered scheme is the intended layout. Each directory owns one layer.
 
 | Directory | Role | Status |
 |-----------|------|--------|
-| `.agents/` | The flywheel — decisions, learnings, handoffs, governance (3,406 files) | CANONICAL (meta-governance) |
+| `.agents/` | The flywheel — decisions, learnings, handoffs, governance (3,406 files) — charter: [`.agents/README.md`](.agents/README.md) | CANONICAL (meta-governance) |
 | `.claude/` | Claude hooks, settings, lite workflows | CANONICAL |
 | `scripts/` | 398 operational + audit scripts | CANONICAL ⚠ no registry yet |
 | `tests/` | 470 pytest files | CANONICAL |

@@ -114,7 +114,14 @@ rather than being one of them.
 | **Contents** | `decisions/`, `learnings/`, `handoffs/`, governance scopes, dispatch state |
 | **Write-policy** | Agents append; background analysis writes **proposals to staging only** (never auto-implements) |
 | **Read-as** | Possibly partially-written JSON — every reader must wrap `json.loads`/`JSON.parse` in try/except |
-| **Status** | CANONICAL · formalization tracked by `chromatic-harness-v2-8lri.4` |
+| **Charter** | [`.agents/README.md`](.agents/README.md) — full taxonomy, write-policy, and flywheel |
+| **Status** | CANONICAL · formalized in `chromatic-harness-v2-8lri.4` |
+
+**Decision (`8lri.4`):** the tier stays **out-of-band as `.agents/`** rather than being promoted
+to a numbered layer `13_AGENTS_AND_FLYWHEEL/`; band `13` remains reserved (§1). The numbered
+layers describe the *product*; `.agents/` describes the *process that operates it* — and a
+dot-prefixed, append-heavy, machine-written tier should not carry a numbered layer's stability
+contract. Rationale and the full subdirectory map live in [`.agents/README.md`](.agents/README.md).
 
 Sibling dot-dirs (`.beads/`, `.chromatic/`, `.codegraph/`, `.cursor/`, `.github/`, `.vscode/`)
 are **tooling integration surfaces**, not governance tiers, and are owned by their respective
