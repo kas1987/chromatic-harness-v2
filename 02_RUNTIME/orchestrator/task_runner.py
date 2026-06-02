@@ -136,6 +136,7 @@ class RunnerConfig:
     worker_timeout: int = 1800
     ci_timeout: int = 1800
     worker_autonomous: bool = False  # opt-in: pass --dangerously-skip-permissions to the worker
+    isolate_worktree: bool = True  # dispatch each worker in its own `git worktree` (never the shared checkout)
     artifact_dir: Path = field(default_factory=lambda: REPO / "07_LOGS_AND_AUDIT" / "task_runner")
 
     def to_dict(self) -> dict[str, Any]:
@@ -147,12 +148,16 @@ class RunnerConfig:
 # ── Real adapters (subprocess / filesystem; not exercised by unit tests) ────────
 
 
-def _run(cmd: list[str], timeout: int = 60) -> tuple[int, str]:
-    """Best-effort subprocess via the harness-safe runner. Never raises."""
+def _run(cmd: list[str], timeout: int = 60, cwd: Path | None = None) -> tuple[int, str]:
+    """Best-effort subprocess via the harness-safe runner. Never raises.
+
+    cwd defaults to the main checkout (REPO); pass an isolated worktree path to
+    run a worker without moving the shared checkout's HEAD.
+    """
     try:
         from common_harness import run_safe  # noqa: E402
 
-        proc = run_safe(cmd, cwd=REPO, timeout=timeout)
+        proc = run_safe(cmd, cwd=cwd or REPO, timeout=timeout)
         return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
     except Exception as exc:  # noqa: BLE001
         return 1, f"run error: {exc}"
@@ -162,6 +167,44 @@ def _which(name: str) -> str | None:
     import shutil
 
     return shutil.which(name) or shutil.which(f"{name}.cmd") or shutil.which(f"{name}.exe")
+
+
+# ── Worktree isolation ─────────────────────────────────────────────────────────
+# Each worker gets its own `git worktree` checkout so its branch/commits never move
+# the shared checkout's HEAD. Without this, a concurrent autonomous worker switching
+# branches in the shared tree corrupts an interactive session's git state (and vice
+# versa). .worktrees/ is gitignored. See docs/retros/2026-06-02-omh-pr233-gate-fix.md.
+_WORKTREE_ROOT = REPO / ".worktrees"
+
+
+def _worktree_path(bead_id: str) -> Path:
+    safe = bead_id.replace("/", "_").replace(".", "_") or "task"
+    return _WORKTREE_ROOT / f"auto-{safe}"
+
+
+def _create_worktree(bead_id: str, base: str = "HEAD") -> Path | None:
+    """Add an isolated worktree checked out on a fresh `auto/<bead>` branch.
+
+    Returns the worktree path, or None on failure (caller must then refuse to
+    dispatch rather than fall back to the shared checkout). Cleans up any stale
+    worktree/branch left by a prior aborted run first.
+    """
+    path = _worktree_path(bead_id)
+    branch = f"auto/{bead_id}"
+    # `git worktree add` does not create missing parent dirs; ensure .worktrees/ exists
+    # so a fresh clone (with isolate_worktree=True default) doesn't always fail to dispatch.
+    _WORKTREE_ROOT.mkdir(parents=True, exist_ok=True)
+    _run(["git", "worktree", "remove", str(path), "--force"])  # ignore failure (may not exist)
+    _run(["git", "worktree", "prune"])
+    _run(["git", "branch", "-D", branch])  # ignore failure (branch may not exist)
+    code, _ = _run(["git", "worktree", "add", str(path), "-b", branch, base])
+    return path if code == 0 else None
+
+
+def _remove_worktree(path: Path) -> None:
+    """Tear down a worker's worktree (best-effort). The pushed branch/PR is unaffected."""
+    _run(["git", "worktree", "remove", str(path), "--force"])
+    _run(["git", "worktree", "prune"])
 
 
 def real_load_queue() -> list[dict]:
@@ -233,7 +276,12 @@ def _compose_worker_prompt(bead_id: str, detail: dict, config: RunnerConfig) -> 
             f"\n# Acceptance criteria\n{criteria or '(none specified)'}",
             "",
             "# Execute the FULL lifecycle yourself:",
-            f"1. Create branch `auto/{bead_id}` from the current branch.",
+            (
+                f"1. You are ALREADY on a fresh branch `auto/{bead_id}` in an isolated git "
+                "worktree (your working directory). Do NOT create or switch branches."
+                if config.isolate_worktree
+                else f"1. Create branch `auto/{bead_id}` from the current branch."
+            ),
             "2. Implement ONLY what this bead describes; stay strictly within its scope.",
             "3. Run `ruff check` and the relevant pytest; fix until green.",
             "4. If you add a core-subsystem test file, register it in tests/run-all-e2e.py.",
@@ -295,19 +343,41 @@ def real_dispatch(bead: dict, confidence: dict, config: RunnerConfig) -> WorkerR
     if _DESTRUCTIVE_RE.search(_bead_content(detail)):
         return WorkerResult(ok=False, summary="bead content contains a destructive directive; refusing to dispatch")
 
-    prompt = _compose_worker_prompt(bead_id, detail, config)
-    cmd = ["claude", "-p", prompt, "--output-format", "text"]
-    if config.worker_autonomous:
-        cmd.append("--dangerously-skip-permissions")
+    # Isolate the worker in its own worktree so it never moves the shared checkout's
+    # HEAD. If the worktree can't be created, refuse rather than churn the shared tree.
+    work_dir: Path = REPO
+    worktree: Path | None = None
+    if config.isolate_worktree:
+        worktree = _create_worktree(bead_id)
+        if worktree is None:
+            return WorkerResult(
+                ok=False,
+                summary="failed to create isolated git worktree; refusing to dispatch into the shared checkout",
+            )
+        work_dir = worktree
 
-    code, out = _run(cmd, timeout=config.worker_timeout)
-    result = _parse_worker_result(out)
-    if not result.ok and not config.worker_autonomous and "RUNNER_RESULT" in result.summary:
-        result.summary += " (no --worker-autonomous: worker likely lacked permission to edit/commit/push)"
-    if code != 0 and result.ok:
-        result.ok = False
-        result.summary = f"worker exited {code}: {result.summary}"
-    return result
+    try:
+        prompt = _compose_worker_prompt(bead_id, detail, config)
+        cmd = ["claude", "-p", prompt, "--output-format", "text"]
+        if config.worker_autonomous:
+            cmd.append("--dangerously-skip-permissions")
+
+        code, out = _run(cmd, timeout=config.worker_timeout, cwd=work_dir)
+        result = _parse_worker_result(out)
+        # If the worker never emitted a result marker at all (checked against the raw
+        # output, not the synthesized summary wording) in non-autonomous mode, the most
+        # likely cause is that it lacked permission to edit/commit/push — surface that.
+        if not result.ok and not config.worker_autonomous and _RESULT_MARKER not in out:
+            result.summary += " (no --worker-autonomous: worker likely lacked permission to edit/commit/push)"
+        if code != 0 and result.ok:
+            result.ok = False
+            result.summary = f"worker exited {code}: {result.summary}"
+        return result
+    finally:
+        # The worker has pushed its branch/PR to origin by now; the local worktree is
+        # disposable. Remove it regardless of outcome so worktrees never accumulate.
+        if worktree is not None:
+            _remove_worktree(worktree)
 
 
 def real_await_ci(worker: WorkerResult, config: RunnerConfig) -> bool:
