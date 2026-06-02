@@ -1,0 +1,11 @@
+{
+  "action": "synchronize",
+  "repository": {"full_name": "owner/repo"},
+  "pull_request": {
+    "number": 42,
+    "html_url": "https://github.com/owner/repo/pull/42",
+    "head": {"sha": "newsha999"}
+  },
+  "before": "abc123",
+  "after": "newsha999"
+}

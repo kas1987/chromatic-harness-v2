@@ -1,0 +1,18 @@
+{
+  "action": "submitted",
+  "repository": {"full_name": "owner/repo"},
+  "pull_request": {
+    "number": 42,
+    "html_url": "https://github.com/owner/repo/pull/42",
+    "head": {"sha": "abc123"}
+  },
+  "review": {
+    "id": 778899,
+    "state": "changes_requested",
+    "body": "There is a bug in the error handling path; the exception is swallowed. Please fix and add a regression test.",
+    "commit_id": "abc123",
+    "submitted_at": "2026-06-01T20:05:00Z",
+    "html_url": "https://github.com/owner/repo/pull/42#pullrequestreview-778899",
+    "user": {"login": "senior-reviewer"}
+  }
+}
