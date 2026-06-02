@@ -363,6 +363,7 @@ SUITES = [
         "observability reports + learning candidates (OBS-010)",
         [
             "test_observability_reports.py",
+            "test_error_log_to_learning.py",
         ],
     ),
     (
