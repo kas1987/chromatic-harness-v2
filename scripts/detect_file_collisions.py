@@ -12,6 +12,11 @@ def main():
     ap = argparse.ArgumentParser(description="Detect active writer collisions")
     ap.add_argument("--repo-root")
     ap.add_argument("--active-writers", default=".chromatic/active_writers.json")
+    ap.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress the happy-path success line; still reports + exits non-zero on a real collision.",
+    )
     args = ap.parse_args()
     root = Path(args.repo_root).resolve() if args.repo_root else repo_root()
     path = Path(args.active_writers)
@@ -37,7 +42,8 @@ def main():
         print("COLLISIONS DETECTED", file=sys.stderr)
         print(json.dumps(collisions, indent=2), file=sys.stderr)
         return 1
-    print("No active writer collisions detected.")
+    if not args.quiet:
+        print("No active writer collisions detected.")
     return 0
 
 
