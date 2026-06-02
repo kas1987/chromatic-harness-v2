@@ -89,6 +89,9 @@ def _create_worktree(worker_id: str, base: str = "HEAD") -> Path | None:
     """
     path = _worktree_path(worker_id)
     branch = f"delegate/{worker_id}"
+    # `git worktree add` does not create missing parent dirs; ensure .worktrees/ exists
+    # so a fresh clone doesn't always fail to create the worktree and refuse to spawn.
+    _WORKTREE_ROOT.mkdir(parents=True, exist_ok=True)
     _run(["git", "worktree", "remove", str(path), "--force"])  # ignore failure (may not exist)
     _run(["git", "worktree", "prune"])
     _run(["git", "branch", "-D", branch])  # ignore failure (branch may not exist)

@@ -46,6 +46,16 @@ def test_worktree_path_empty_id_falls_back():
     assert CDG._worktree_path("").name == "delegate-delegate"
 
 
+def test_create_worktree_creates_missing_parent_dir(tmp_path, monkeypatch):
+    # `git worktree add` won't create .worktrees/ itself; _create_worktree must,
+    # or a fresh clone would always fail to create the worktree and refuse to spawn.
+    monkeypatch.setattr(CDG, "_WORKTREE_ROOT", tmp_path / ".worktrees")
+    monkeypatch.setattr(CDG, "_run", lambda *a, **k: (0, ""))
+    p = CDG._create_worktree("b1")
+    assert (tmp_path / ".worktrees").is_dir()
+    assert p == tmp_path / ".worktrees" / "delegate-b1"
+
+
 # ── _spawn_claude isolation ─────────────────────────────────────────────────
 
 
