@@ -16,13 +16,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 HOME = Path.home()
 
 # Settings files to scan for hook registrations
@@ -107,16 +109,8 @@ def _resolve_path(command: str) -> Path | None:
 def _syntax_ok(path: Path) -> tuple[bool, str]:
     if path.suffix != ".py":
         return True, ""
-    try:
-        r = subprocess.run(
-            [sys.executable, "-m", "py_compile", str(path)],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        return r.returncode == 0, (r.stderr or "").strip()[:300]
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        return False, str(exc)
+    r = run_safe([sys.executable, "-m", "py_compile", str(path)], timeout=10)
+    return r.returncode == 0, (r.stderr or "").strip()[:300]
 
 
 def _probe(command: str, event: str, timeout: int) -> tuple[int | None, str]:
@@ -125,20 +119,17 @@ def _probe(command: str, event: str, timeout: int) -> tuple[int | None, str]:
     if not parts or parts[0] not in ("python", "python3", sys.executable):
         return None, "skipped"
     payload = _PAYLOADS.get(event, _PAYLOADS["default"])
-    try:
-        r = subprocess.run(
-            [sys.executable] + parts[1:],
-            input=payload,
-            capture_output=True,
-            text=True,
-            timeout=min(timeout, 10),
-            cwd=str(REPO),
-        )
-        return r.returncode, (r.stderr or "").strip()[:200]
-    except subprocess.TimeoutExpired:
+    r = run_safe(
+        [sys.executable] + parts[1:],
+        cwd=REPO,
+        timeout=min(timeout, 10),
+        stdin=payload,
+    )
+    # Preserve legacy semantics: timeout => None (not counted as a probe failure;
+    # consumer treats only non-zero ints as fail, None as skip/non-fail).
+    if r.returncode == 124:
         return None, "timeout"
-    except OSError as exc:
-        return None, str(exc)
+    return r.returncode, (r.stderr or "").strip()[:200]
 
 
 # ---------------------------------------------------------------------------

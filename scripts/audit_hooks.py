@@ -13,12 +13,14 @@ import argparse
 import json
 import os
 import re
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 HOME = Path.home()
 
 CLAUDE_SETTINGS_PATHS = [
@@ -135,21 +137,15 @@ def _resolve_exists(command: str) -> bool | None:
 
 
 def _query_schtasks(name: str) -> dict:
-    try:
-        r = subprocess.run(
-            ["schtasks", "/Query", "/TN", name, "/FO", "LIST", "/V"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-        return {
-            "name": name,
-            "installed": r.returncode == 0,
-            "detail": (r.stdout or "")[:500],
-        }
-    except (OSError, subprocess.TimeoutExpired):
-        return {"name": name, "installed": False, "detail": ""}
+    r = run_safe(
+        ["schtasks", "/Query", "/TN", name, "/FO", "LIST", "/V"],
+        timeout=10,
+    )
+    return {
+        "name": name,
+        "installed": r.returncode == 0,
+        "detail": (r.stdout or "")[:500],
+    }
 
 
 def _list_workflows() -> list[str]:
@@ -164,8 +160,7 @@ def _findings(rows: list[dict]) -> list[dict]:
     agent_cmds = [
         r["command"]
         for r in rows
-        if r.get("event") in ("PreToolUse", "preToolUse")
-        and "Agent" in str(r.get("matcher", ""))
+        if r.get("event") in ("PreToolUse", "preToolUse") and "Agent" in str(r.get("matcher", ""))
     ]
 
     # Only flag if the *same script* appears more than once (genuine duplicate that
@@ -195,9 +190,7 @@ def _findings(rows: list[dict]) -> list[dict]:
             }
         )
 
-    session_starts = [
-        r for r in rows if r.get("event") in ("SessionStart", "sessionStart")
-    ]
+    session_starts = [r for r in rows if r.get("event") in ("SessionStart", "sessionStart")]
     if len(session_starts) > 2:
         findings.append(
             {
@@ -212,9 +205,7 @@ def _findings(rows: list[dict]) -> list[dict]:
     if project_settings.is_file():
         doc = _load_json(project_settings) or {}
         end_cmds = [
-            r["command"]
-            for r in _extract_claude_hooks(doc, str(project_settings))
-            if r.get("event") == "SessionEnd"
+            r["command"] for r in _extract_claude_hooks(doc, str(project_settings)) if r.get("event") == "SessionEnd"
         ]
         if not any("session_closeout.py" in c for c in end_cmds):
             findings.append(
@@ -225,11 +216,7 @@ def _findings(rows: list[dict]) -> list[dict]:
                 }
             )
 
-    cursor_boot = [
-        r
-        for r in rows
-        if r.get("platform") == "cursor" and r.get("event") == "sessionStart"
-    ]
+    cursor_boot = [r for r in rows if r.get("platform") == "cursor" and r.get("event") == "sessionStart"]
     if not cursor_boot:
         findings.append(
             {
@@ -287,11 +274,7 @@ def build_report() -> dict[str, Any]:
 
     scheduled = [_query_schtasks(n) for n in SCHEDULED_TASK_NAMES]
     workflows = _list_workflows()
-    always_rules = (
-        list((REPO / ".cursor" / "rules").glob("*.mdc"))
-        if (REPO / ".cursor" / "rules").is_dir()
-        else []
-    )
+    always_rules = list((REPO / ".cursor" / "rules").glob("*.mdc")) if (REPO / ".cursor" / "rules").is_dir() else []
 
     return {
         "repo": str(REPO),
