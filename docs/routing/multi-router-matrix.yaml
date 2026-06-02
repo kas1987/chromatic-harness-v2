@@ -21,6 +21,11 @@ canonical_implementation:
   claude_dispatch_cli: "C:/Users/kas41/.claude/hooks/multi-provider-dispatch.sh"
   claude_router_log: "C:/Users/kas41/.claude/.agents/router/log.jsonl"
   ollama_status: "C:/Users/kas41/.claude/.agents/router/ollama-status.json"
+  # ⚠️ LEGACY workspace pointers (.04_Prism, .01_Image Org) — do NOT treat as canonical.
+  # gen_routing_matrix: VERIFIED 2026-06-02 identical to `gen_task_intents` below — that block
+  #   is canonical for the probe chains; the .04_Prism JSON is just the gen service's runtime copy.
+  # gateway doc / rudalo registry / delegation spec: live cross-refs, pending harvest.
+  # See docs/governance/LEGACY_REPO_MIGRATION_PLAN.md.
   gen_routing_matrix: "C:/.04_Prism/gen/src/routes/routing-matrix.json"
   gen_gateway_doc: "C:/.04_Prism/docs/architecture/MODEL-DISPATCH-GATEWAY.md"
   rudalo_provider_registry: "C:/.01_Image Org/rudalo/router/provider_registry.yaml"
