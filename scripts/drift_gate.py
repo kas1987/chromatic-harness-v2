@@ -24,9 +24,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
+
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
 
 REPO = Path(os.environ.get("DRIFT_GATE_REPO", str(Path(__file__).resolve().parents[1])))
 ARTIFACT_DIR = Path(os.environ.get("DRIFT_GATE_ARTIFACT_DIR", str(REPO / "07_LOGS_AND_AUDIT" / "drift")))
@@ -64,15 +69,15 @@ EXPECTED_TOP_LEVEL: list[str] = [
 
 
 # ---------------------------------------------------------------------------
-# subprocess helper
+# command helper (run_safe — tree-reap on timeout)
 # ---------------------------------------------------------------------------
 
 
 def _run(cmd: list[str], *, timeout: int = 30) -> tuple[int, str]:
     try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout)
+        r = run_safe(cmd, cwd=REPO, timeout=timeout)
         return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001 — defensive; run_safe does not raise
         return 1, str(exc)
 
 
