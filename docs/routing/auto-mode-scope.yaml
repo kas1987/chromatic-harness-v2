@@ -1,0 +1,123 @@
+# Auto-mode autonomy scope — Chromatic Harness v2 (federated copy)
+# Canonical: C:/Users/kas41/chromatic-harness-v2/docs/governance/auto-mode-scope.yaml
+# Federate:  bash C:/Users/kas41/chromatic-harness-v2/scripts/federate-governance.sh
+#
+# This is a FEDERATED COPY. Edit the canonical and re-federate — never edit here directly.
+
+policy_version: "2026-06-02"
+
+federation_roots:
+  - "C:/Users/kas41/chromatic-harness-v2"    # PRIMARY — harness canonical home
+  - "C:/Users/kas41/.claude"                  # Claude Code global root
+  - "C:/Users/kas41/.agents"                  # global AgentOps hub
+
+host_aliases:
+  harness_v2: "C:/Users/kas41/chromatic-harness-v2"
+  claude_root: "C:/Users/kas41/.claude"
+approval_min_tier: T4
+t3_warn_only: true
+
+# T1 — always proceed without approval prompts (edits, commits locally, scripts)
+tier1_always_allow:
+  path_globs:
+    - ".beads/**"
+    - ".agents/**"
+    - ".cursor/**"
+    - ".claude/**"
+    - ".dispatch/**"
+    - ".github/**"
+    - ".husky/**"
+    - ".security/**"
+    - "docs/**"
+    - "tooling/director/**"
+    - "tooling/architecture/**"
+    - "tooling/dispatch-server/**"
+    - "tooling/skills/**"
+    - "tooling/governance/**"
+    - "scripts/**"
+    - "mcp/**"
+    - "apps/**"
+    - "packages/**"
+    - "ml-pipeline/**"
+    - "rudalo/**"
+    - "gen/**"
+    - "platform/**"
+    - "architecture-intelligence/**"
+    - "mcp-router-dispatcher-pack/**"
+    - "operations/**"
+    - "harness/**"
+    - "evals/**"
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "REPO_GOVERNANCE_SETUP.md"
+    - ".env.example"
+    - ".env.*.example"
+  commands:
+    - "bd *"
+    - "pnpm *"
+    - "python tooling/director/*"
+    - "node tooling/*"
+    - "git add|commit|branch|checkout|merge|rebase|diff|log|stash|fetch|pull"
+  beads:
+    - "bd new|update|close|ready|show|export|sync|prime"
+    - ".beads/issues.jsonl export and commit for cross-machine sync"
+
+# T2 — proceed; log only (local env / IDE wiring for this monorepo)
+tier2_local_wiring:
+  path_globs:
+    - "~/.cursor/projects/**/mcps/**"
+    - "~/.cursor/mcp.json"
+    - "~/.claude/settings.json"
+    - "~/.claude/skills/**"
+    - "~/.claude/hooks/**"
+    - ".vscode/settings.json"
+    - ".vscode/mcp.json"
+  notes:
+    - "Never write real secrets; use .env.example and gitignored .env.local"
+    - "Director MCP env: DIRECTOR_IDE_TAG, DIRECTOR_HOOK_BRIDGE"
+
+# T3 — warn and proceed unless obvious external blast radius
+tier3_warn_proceed:
+  - "git push to main/master"
+  - "dependency major bumps without ci:trunk plan"
+  - "protected-path surfaces when CI label not yet applied"
+
+# T4 — explicit user approval (unchanged)
+tier4_user_approval:
+  - "git push --force*"
+  - "git reset --hard"
+  - "firewall / VPN / tailscale routing"
+  - "rm -rf on system or home absolute paths"
+  - "production credential rotation"
+  - "deleting remote branches with force"
+
+session_cost_discipline:
+  description: >
+    Cap cumulative session spend. The week of 2026-05-21 cost $1,267 with one
+    day at $716, driven by long Opus 4.7 (1M context) sessions in
+    prism-autonomy-harness where /loop + /crank + /rpi accumulated 100M-176M
+    tokens via cache-read amplification. Per-turn context-guard does not catch
+    this; session-cost-guard.sh (UserPromptSubmit) does.
+  rules:
+    - "Default to sonnet for /crank, /rpi, /evolve, /loop, /swarm; opus only on explicit user opt-in for design/pre-mortem gates"
+    - "No session may cross 100M tokens — when session-cost-guard fires CRITICAL, /handoff and start fresh"
+    - "/loop intervals: ≥10m for cloud-routed prompts; <10m only when target is local OL/pi-agent"
+    - "Long-running RPI work belongs in a worktree session recycled every ~3 hours, not a single 8-hour session"
+    - "Opus 4.7 1M context: never silently enabled inside an autonomy loop"
+  thresholds:
+    warn:     { turns: 200, tokens_m: 25, cost_usd: 10 }
+    critical: { turns: 500, tokens_m: 75, cost_usd: 40 }
+  hook: "~/.claude/hooks/session-cost-guard.sh (UserPromptSubmit)"
+
+local_commit_bypass:
+  status: NOT_IMPLEMENTED  # pre-commit.sh has no protected-path guard; bypass signals are aspirational only
+  description: >
+    Protected-path pre-commit guard must not block agent auto-mode locally.
+    CI/PR still requires protected-change-approved label.
+  signals:
+    - env: AUTO_MODE_ENFORCED=1
+    - env: NO_PERMISSION_ASKING_EVER=1
+    - env: AGENT_AUTO_MODE=1
+    - file: .security/AGENT_AUTO_MODE
+    - file: .security/LOCAL_APPROVAL
+    - env: ALLOW_PROTECTED_CHANGES=1

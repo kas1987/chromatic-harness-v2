@@ -7,6 +7,7 @@ scripts as subprocesses against it.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -15,8 +16,18 @@ REPO = Path(__file__).resolve().parents[1]
 SCRIPTS = REPO / "scripts"
 
 
+def _clean_env() -> dict[str, str]:
+    """Environment with inherited GIT_* location vars stripped.
+
+    The pre-push hook exports GIT_DIR (and friends) pointing at the live repo.
+    Without this, `git` run with cwd=tmp_path would still operate on the live
+    repo, so this 'hermetic' fixture would commit a.txt onto the active branch.
+    """
+    return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+
+
 def _git(root: Path, *args: str) -> None:
-    subprocess.run(["git", *args], cwd=str(root), check=True, capture_output=True, text=True)
+    subprocess.run(["git", *args], cwd=str(root), env=_clean_env(), check=True, capture_output=True, text=True)
 
 
 def _init_repo(root: Path) -> None:
@@ -31,6 +42,7 @@ def _init_repo(root: Path) -> None:
 def _run(script: str, root: Path, *extra: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, str(SCRIPTS / script), "--repo-root", str(root), *extra],
+        env=_clean_env(),
         capture_output=True,
         text=True,
         timeout=60,
