@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -19,10 +18,11 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 RUNTIME = REPO / "02_RUNTIME"
-for _p in (REPO, RUNTIME):
+for _p in (REPO, RUNTIME, REPO / "scripts"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
+from common_harness import run_safe  # noqa: E402
 from intake.queue import append_entry, list_entries  # noqa: E402
 
 
@@ -37,14 +37,7 @@ class CheckResult:
 
 
 def _run(command: list[str], timeout: int = 600) -> tuple[int, str, str]:
-    proc = subprocess.run(
-        command,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        check=False,
-    )
+    proc = run_safe(command, cwd=REPO, timeout=timeout)
     return proc.returncode, proc.stdout or "", proc.stderr or ""
 
 
@@ -80,9 +73,7 @@ def _check_session_context() -> CheckResult:
             data,
         )
     if warnings:
-        return CheckResult(
-            "session_context_report", cmd, "warn", code, "; ".join(warnings), data
-        )
+        return CheckResult("session_context_report", cmd, "warn", code, "; ".join(warnings), data)
     return CheckResult("session_context_report", cmd, "pass", code, "no warnings", data)
 
 
@@ -138,9 +129,7 @@ def _check_workflow_token_governance() -> CheckResult:
     code, out, err = _run(cmd, timeout=120)
     msg = (err or out).strip()
     if code != 0:
-        return CheckResult(
-            "validate_workflow_token_governance", cmd, "fail", code, msg or "failed", {}
-        )
+        return CheckResult("validate_workflow_token_governance", cmd, "fail", code, msg or "failed", {})
     return CheckResult(
         "validate_workflow_token_governance",
         cmd,
@@ -173,12 +162,8 @@ def _check_daily_strict() -> CheckResult:
             data,
         )
     if status != "green":
-        return CheckResult(
-            "daily_harness_audit_strict", cmd, "warn", code, f"status={status}", data
-        )
-    return CheckResult(
-        "daily_harness_audit_strict", cmd, "pass", code, "status=green", data
-    )
+        return CheckResult("daily_harness_audit_strict", cmd, "warn", code, f"status={status}", data)
+    return CheckResult("daily_harness_audit_strict", cmd, "pass", code, "status=green", data)
 
 
 def _refresh_step(name: str, fn) -> dict[str, Any]:
@@ -367,9 +352,7 @@ def _build_suggestions(checks: list[CheckResult]) -> list[dict[str, Any]]:
     return unique
 
 
-def _enqueue_suggestions(
-    suggestions: list[dict[str, Any]], dry_run: bool
-) -> list[dict[str, Any]]:
+def _enqueue_suggestions(suggestions: list[dict[str, Any]], dry_run: bool) -> list[dict[str, Any]]:
     existing = {e.id: e for e in list_entries(repo_root=REPO)}
     queued: list[dict[str, Any]] = []
 
@@ -443,9 +426,7 @@ def _write_reports(report: dict[str, Any]) -> tuple[Path, Path, Path]:
     if report.get("refresh_steps"):
         for r in report["refresh_steps"]:
             extra = r.get("error", "")
-            lines.append(
-                f"- {r['status'].upper()} {r['name']}" + (f": {extra}" if extra else "")
-            )
+            lines.append(f"- {r['status'].upper()} {r['name']}" + (f": {extra}" if extra else ""))
     else:
         lines.append("- Refresh chain skipped.")
     lines += ["", "## Suggestions", ""]
@@ -485,12 +466,8 @@ def _drain_intake(limit: int, dry_run: bool) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Token governance closed loop audit + suggestions"
-    )
-    parser.add_argument(
-        "--profile", default="harness_dev", help="MCP profile for audit_mcp_context"
-    )
+    parser = argparse.ArgumentParser(description="Token governance closed loop audit + suggestions")
+    parser.add_argument("--profile", default="harness_dev", help="MCP profile for audit_mcp_context")
     parser.add_argument(
         "--enqueue-suggestions",
         action="store_true",
@@ -549,9 +526,7 @@ def main() -> int:
     intake_result: dict[str, Any] | None = None
     if args.drain_intake and args.enqueue_suggestions:
         # Use number of generated suggestions as a practical processing cap.
-        intake_result = _drain_intake(
-            limit=max(len(suggestions), 1), dry_run=args.dry_run
-        )
+        intake_result = _drain_intake(limit=max(len(suggestions), 1), dry_run=args.dry_run)
 
     report = {
         "audit": "token_governance_closed_loop",
@@ -583,9 +558,7 @@ def main() -> int:
                 **report,
                 "artifacts": {
                     "run_json": str(run_path.relative_to(REPO)).replace("\\", "/"),
-                    "latest_json": str(latest_path.relative_to(REPO)).replace(
-                        "\\", "/"
-                    ),
+                    "latest_json": str(latest_path.relative_to(REPO)).replace("\\", "/"),
                     "latest_md": str(summary_md.relative_to(REPO)).replace("\\", "/"),
                 },
             },
