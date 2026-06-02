@@ -12,6 +12,11 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
 
 REQUIRED_FILES = [
     "AGENT_OPERATIONS.md",
@@ -224,43 +229,20 @@ def main() -> int:
                         if isinstance(h, dict) and h.get("command"):
                             end_cmds.append(str(h["command"]))
             if not any("session_closeout.py" in c for c in end_cmds):
-                errors.append(
-                    ".claude/settings.json: SessionEnd must run session_closeout.py --invoked-by claude_code"
-                )
+                errors.append(".claude/settings.json: SessionEnd must run session_closeout.py --invoked-by claude_code")
         except json.JSONDecodeError as exc:
             errors.append(f".claude/settings.json invalid JSON: {exc}")
 
     gov_script = REPO / "scripts" / "validate_instruction_governance.py"
     if gov_script.is_file():
-        import subprocess
-
-        proc = subprocess.run(
-            [sys.executable, str(gov_script)],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
+        proc = run_safe([sys.executable, str(gov_script)], cwd=REPO, timeout=30)
         if proc.returncode != 0:
-            errors.append(
-                "validate_instruction_governance.py failed: "
-                + (proc.stderr or proc.stdout)[:500]
-            )
+            errors.append("validate_instruction_governance.py failed: " + (proc.stderr or proc.stdout)[:500])
 
     dolt_health = REPO / "scripts" / "check_beads_dolt_health.py"
     if dolt_health.is_file():
-        import subprocess
-
-        proc = subprocess.run(
-            [sys.executable, str(dolt_health)],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-        if proc.returncode != 0 or any(
-            line.startswith("FAIL:") for line in (proc.stdout or "").splitlines()
-        ):
+        proc = run_safe([sys.executable, str(dolt_health)], cwd=REPO, timeout=60)
+        if proc.returncode != 0 or any(line.startswith("FAIL:") for line in (proc.stdout or "").splitlines()):
             print("WARN: beads Dolt health check reported issues:", file=sys.stderr)
             print((proc.stdout or proc.stderr)[:600], file=sys.stderr)
             print("See docs/beads/DOLT_SYNC_TROUBLESHOOTING.md", file=sys.stderr)
