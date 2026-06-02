@@ -16,12 +16,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 HOME = Path.home()
 
 SETTINGS_PATHS = [
@@ -111,18 +113,10 @@ def _check_syntax(script_path: Path) -> tuple[bool, str]:
     """Check Python syntax via py_compile."""
     if script_path.suffix != ".py":
         return True, ""
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", "py_compile", str(script_path)],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if result.returncode == 0:
-            return True, ""
-        return False, (result.stderr or "syntax error").strip()
-    except (subprocess.TimeoutExpired, OSError) as e:
-        return False, str(e)
+    result = run_safe([sys.executable, "-m", "py_compile", str(script_path)], timeout=10)
+    if result.returncode == 0:
+        return True, ""
+    return False, (result.stderr or "syntax error").strip()
 
 
 def _probe_exit_code(command: str, event: str, timeout: int = 5) -> tuple[int | None, str]:
@@ -137,20 +131,12 @@ def _probe_exit_code(command: str, event: str, timeout: int = 5) -> tuple[int | 
     if not parts or parts[0] not in ("python", "python3", sys.executable):
         return None, "skipped (non-python)"
 
-    try:
-        result = subprocess.run(
-            [sys.executable] + parts[1:],
-            input=stdin_data,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            cwd=str(REPO),
-        )
-        return result.returncode, (result.stderr or "").strip()[:200]
-    except subprocess.TimeoutExpired:
+    result = run_safe([sys.executable] + parts[1:], cwd=REPO, timeout=timeout, stdin=stdin_data)
+    # Preserve legacy semantics: timeout => None (consumer treats only
+    # non-zero ints as a probe failure; None is skip/non-fail).
+    if result.returncode == 124:
         return None, f"timeout after {timeout}s"
-    except OSError as e:
-        return None, str(e)
+    return result.returncode, (result.stderr or "").strip()[:200]
 
 
 def validate_all(*, probe: bool = False) -> list[dict[str, Any]]:
