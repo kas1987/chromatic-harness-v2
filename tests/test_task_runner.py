@@ -354,3 +354,129 @@ def test_destructive_bead_content_is_detected():
     assert TR._DESTRUCTIVE_RE.search(TR._bead_content({"description": "Please run rm -rf /tmp/build and continue"}))
     assert TR._DESTRUCTIVE_RE.search(TR._bead_content({"acceptance_criteria": ["do git push --force"]}))
     assert not TR._DESTRUCTIVE_RE.search(TR._bead_content({"description": "Refactor the router into pure functions"}))
+
+
+# ── worktree isolation (worker never moves the shared checkout's HEAD) ────────
+
+
+def test_isolate_worktree_defaults_on():
+    assert TR.RunnerConfig().isolate_worktree is True
+
+
+def test_worktree_path_sanitizes_bead_id():
+    p = TR._worktree_path("epic/u8uj.1")
+    assert p.name == "auto-epic_u8uj_1"
+    assert p.parent.name == ".worktrees"
+
+
+def test_prompt_isolated_tells_worker_not_to_switch_branches(tmp_path):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    detail = {"title": "t", "description": "d", "acceptance_criteria": "c"}
+    prompt = TR._compose_worker_prompt("u8uj.1", detail, cfg)
+    assert "isolated git worktree" in prompt
+    assert "Do NOT create or switch branches" in prompt
+    assert "auto/u8uj.1" in prompt
+
+
+def test_prompt_non_isolated_keeps_create_branch(tmp_path):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=False)
+    detail = {"title": "t", "description": "d", "acceptance_criteria": "c"}
+    prompt = TR._compose_worker_prompt("u8uj.1", detail, cfg)
+    assert "Create branch `auto/u8uj.1`" in prompt
+    assert "isolated git worktree" not in prompt
+
+
+def test_dispatch_refuses_when_worktree_creation_fails(tmp_path, monkeypatch):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: None)
+    called = {"run": False}
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (called.__setitem__("run", True), (0, ""))[1])
+    r = TR.real_dispatch({"id": "u8uj.1"}, {}, cfg)
+    assert r.ok is False
+    assert "refusing to dispatch into the shared checkout" in r.summary
+    assert called["run"] is False  # never touched the shared checkout
+
+
+def test_dispatch_runs_worker_in_worktree_and_cleans_up(tmp_path, monkeypatch):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    wt = tmp_path / ".worktrees" / "auto-u8uj_1"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d", "acceptance_criteria": "c"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    seen: dict = {}
+
+    def fake_run(cmd, timeout=60, cwd=None):
+        seen["cwd"] = cwd
+        seen["cmd"] = cmd
+        return (
+            0,
+            'RUNNER_RESULT: {"ok": true, "pr_number": 7, "branch": "auto/u8uj.1", "tests_passed": true, "summary": "done"}',
+        )
+
+    monkeypatch.setattr(TR, "_run", fake_run)
+    removed: dict = {}
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: removed.__setitem__("path", p))
+
+    r = TR.real_dispatch({"id": "u8uj.1"}, {}, cfg)
+    assert r.ok is True and r.pr_number == 7
+    assert seen["cwd"] == wt  # worker ran INSIDE the worktree, not the shared checkout
+    assert seen["cmd"][0] == "claude"
+    assert removed["path"] == wt  # worktree torn down afterwards
+
+
+def test_dispatch_cleans_up_worktree_even_on_worker_failure(tmp_path, monkeypatch):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    wt = tmp_path / ".worktrees" / "auto-u8uj_1"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (1, "boom"))
+    removed: dict = {}
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: removed.__setitem__("path", p))
+
+    r = TR.real_dispatch({"id": "u8uj.1"}, {}, cfg)
+    assert r.ok is False
+    assert removed["path"] == wt  # cleaned up despite worker failure
+
+
+def test_create_worktree_creates_missing_parent_dir(tmp_path, monkeypatch):
+    # `git worktree add` won't create .worktrees/ itself; _create_worktree must,
+    # or a fresh clone (isolate_worktree default on) would always refuse to dispatch.
+    monkeypatch.setattr(TR, "_WORKTREE_ROOT", tmp_path / ".worktrees")
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (0, ""))
+    p = TR._create_worktree("u8uj.1")
+    assert (tmp_path / ".worktrees").is_dir()
+    assert p == tmp_path / ".worktrees" / "auto-u8uj_1"
+
+
+def test_permission_hint_keys_off_marker_absence_not_summary_wording(tmp_path, monkeypatch):
+    # Worker produced NO result marker at all -> in non-autonomous mode the hint fires,
+    # driven by the raw output, not by any substring of the synthesized summary.
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True, worker_autonomous=False)
+    wt = tmp_path / ".worktrees" / "auto-x"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: None)
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (0, "worker chatter with no marker emitted"))
+    r = TR.real_dispatch({"id": "x"}, {}, cfg)
+    assert r.ok is False
+    assert "lacked permission" in r.summary
+
+
+def test_permission_hint_not_added_when_worker_emitted_marker(tmp_path, monkeypatch):
+    # Worker emitted a real ok:false result -> that's a genuine failure, not a perms
+    # issue, so the permission hint must NOT be appended.
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True, worker_autonomous=False)
+    wt = tmp_path / ".worktrees" / "auto-x"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: None)
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (0, 'RUNNER_RESULT: {"ok": false, "summary": "real failure"}'))
+    r = TR.real_dispatch({"id": "x"}, {}, cfg)
+    assert r.ok is False
+    assert "lacked permission" not in r.summary
+    assert "real failure" in r.summary
