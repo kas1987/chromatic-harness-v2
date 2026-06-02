@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import uuid
 
 from collections import Counter
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, Depends, Query
 import aiosqlite
@@ -610,3 +610,30 @@ async def promote_agent(
 @app.get("/agents/meta/level-thresholds")
 async def level_thresholds():
     return {"data": _LEVEL_THRESHOLDS}
+
+
+async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict:
+    """Route a MissionPacket through ChromaticRouter and return a summary dict."""
+    router = ChromaticRouter()
+    req = RouteRequest(
+        request_id=str(uuid.uuid4()),
+        task_id=getattr(mission, "mission_id", "unknown"),
+        task_type=TaskType(task_type),
+        objective=getattr(mission, "objective", ""),
+        input=RouteInput(
+            messages=getattr(mission, "messages", []),
+            files=getattr(mission, "files", []),
+            metadata=getattr(mission, "metadata", {}),
+        ),
+        constraints=RouteConstraints(
+            privacy_class=getattr(mission, "privacy_class", PrivacyClass.P1),
+            max_cost_usd=getattr(mission, "max_cost_usd", 0.25),
+        ),
+    )
+    resp = await router.route(req)
+    return {
+        "provider": resp.provider,
+        "model": resp.model,
+        "task_type": task_type,
+        "mission_id": getattr(mission, "mission_id", None),
+    }
