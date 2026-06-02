@@ -51,6 +51,7 @@ def build_config(args: argparse.Namespace) -> RunnerConfig:
         dry_run=args.dry_run,
         worker_timeout=args.worker_timeout,
         ci_timeout=args.ci_timeout,
+        worker_autonomous=args.worker_autonomous,
     )
 
 
@@ -76,6 +77,12 @@ def main() -> int:
     ap.add_argument("--max-consecutive-failures", type=int, default=3)
     ap.add_argument("--no-auto-merge", action="store_true", help="Implement -> PR but do not squash-merge/close")
     ap.add_argument("--dry-run", action="store_true", help="Score + decide only; never claim, dispatch, or merge")
+    ap.add_argument(
+        "--worker-autonomous",
+        action="store_true",
+        help="Grant the worker full autonomy (--dangerously-skip-permissions) so it can edit/commit/push. "
+        "Off by default; required for the worker to complete the implement->PR lifecycle.",
+    )
     ap.add_argument("--worker-timeout", type=int, default=1800)
     ap.add_argument("--ci-timeout", type=int, default=1800)
     ap.add_argument("--json", action="store_true", help="Print full JSON results")
