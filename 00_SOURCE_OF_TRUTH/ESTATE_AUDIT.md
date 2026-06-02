@@ -21,6 +21,16 @@ machine-readable membership list**. This audit establishes that.
 2. **Keep the harness PUBLIC** as a shareable scaffold — harden instead of hide.
 3. **Canonical default branch = `main`** for every estate repo.
 
+## Doctrine: keep the harness clean; legacy repos → wiki → retire
+- **The harness is the control plane, not a content store.** Do NOT migrate legacy repo
+  contents into `chromatic-harness-v2`. Keep it minimal.
+- **Stop using legacy repos** (`Image-Org` and other `role: retire` repos). They are not
+  active; the default assumption is that *little* in them is worth keeping.
+- **Migration flow:** `harvest-code → preserve-knowledge-to-wiki → archive → delete`.
+  Take only the small amount of still-valuable code into the canonical target repo;
+  preserve decisions/learnings/docs into **`chromatic-wiki`** (the estate knowledge base);
+  then archive and delete the source. Per-repo `harvest_target` in the manifest names the destination.
+
 ## Done in this change
 - ✅ Created `main` on `chromatic-harness-v2` from the de-facto trunk
   (`session/chromatic-harness-v2-initial`, which already contained merged PR #203) and

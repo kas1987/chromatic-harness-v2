@@ -6,7 +6,14 @@
   "consolidation_target_org": "Poly-Chromatic",
   "governance_parent": "Poly-Chromatic/poly-chromatic",
   "branch_policy": { "canonical_default_branch": "main" },
+  "doctrine": {
+    "harness_stays_clean": "chromatic-harness-v2 is the CONTROL PLANE, not a content or knowledge store. Do NOT migrate legacy repo contents into the harness. Keep it minimal.",
+    "legacy_repos": "Repos flagged legacy (role=retire, or notes mention legacy/duplicate) are NOT actively developed. Take only the small amount of still-valuable CODE into the canonical target repo; preserve their KNOWLEDGE (docs, decisions, learnings) into chromatic-wiki; then archive/delete. Default assumption: little is worth keeping.",
+    "knowledge_home": "chromatic-wiki (estate knowledge base, target_home Poly-Chromatic). Narrative/audit docs and harvested learnings land here — not in the harness.",
+    "migration_flow": "harvest-code -> preserve-knowledge-to-wiki -> archive -> delete"
+  },
   "roles": {
+    "knowledge_base": "Estate wiki — destination for preserved knowledge harvested from retiring repos.",
     "control_plane": "The harness scaffold / orchestration plane installed into estate repos.",
     "governance_parent": "Estate root: governance, specs, ChromaticTrees source of truth.",
     "estate_member": "In-estate product/subsystem the harness manages.",
@@ -26,7 +33,7 @@
     { "name": "Claude-Nexus", "home": "Poly-Chromatic", "target_home": "Poly-Chromatic", "role": "retire", "default_branch": "master", "visibility": "PRIVATE", "archived": true, "disk_kb": 293941, "local_path": null, "action": "keep-archived or DELETE (patterns already mined into prism-autonomy-harness)" },
 
     { "name": "Image-Prism", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 187738, "local_path": "C:/.01_Image Org", "action": "move-to-org", "notes": "Primary Image monorepo." },
-    { "name": "Image-Org", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 16956, "local_path": null, "action": "VERIFY vs Image-Prism then archive/DELETE (suspected legacy duplicate)" },
+    { "name": "Image-Org", "home": "kas1987", "target_home": "kas1987", "role": "retire", "harvest_target": "chromatic-wiki", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 16956, "local_path": null, "action": "LEGACY — stop using. Harvest only what's still valuable into Image-Prism; preserve knowledge to chromatic-wiki; then archive/DELETE. Diff vs Image-Prism first.", "notes": "Suspected legacy duplicate of Image-Prism. Not active." },
     { "name": "04-Prism", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 444457, "local_path": null, "action": "move-to-org" },
     { "name": "04-prism-LAP", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "preserve/laptop-20260531", "visibility": "PRIVATE", "archived": false, "disk_kb": 46004, "local_path": "C:/.04_Prism", "action": "laptop preserve snapshot; fold into 04-Prism as a tag/branch then DELETE; fix default branch off preserve/*" },
     { "name": "3D_Meta", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "Main", "visibility": "PRIVATE", "archived": false, "disk_kb": 114886, "local_path": null, "action": "move-to-org; normalize Main -> main" },
@@ -35,7 +42,7 @@
     { "name": "chromatic-devsecops", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 112, "local_path": null, "action": "move-to-org" },
     { "name": "chromatic-stack", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "master", "visibility": "PRIVATE", "archived": false, "disk_kb": 49, "local_path": null, "action": "move-to-org; normalize master -> main" },
     { "name": "chromatic-design-studios", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "master", "visibility": "PRIVATE", "archived": false, "disk_kb": 6848, "local_path": null, "action": "move-to-org; normalize master -> main" },
-    { "name": "chromatic-wiki", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 90, "local_path": null, "action": "move-to-org; likely harness wiki" },
+    { "name": "chromatic-wiki", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "knowledge_base", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 90, "local_path": null, "action": "move-to-org; THIS is the estate knowledge home — harvested knowledge from retiring repos lands here, keeping the harness clean", "notes": "Destination for the harvest->wiki->retire flow." },
     { "name": "Chromatic_Skills", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "Main", "visibility": "PRIVATE", "archived": false, "disk_kb": 6567, "local_path": null, "action": "move-to-org; rename -> chromatic-skills; normalize Main -> main" },
     { "name": "Chromatic_Audit", "home": "kas1987", "target_home": "kas1987", "role": "retire", "default_branch": "", "visibility": "PRIVATE", "archived": false, "disk_kb": 0, "local_path": null, "action": "DELETE (empty, 0 bytes, no default branch)" },
     { "name": "CCP", "home": "kas1987", "target_home": "Poly-Chromatic", "role": "estate_member", "default_branch": "main", "visibility": "PRIVATE", "archived": false, "disk_kb": 102, "local_path": null, "action": "move-to-org", "notes": "Chromatic Control Plane / Prism Engine." },
