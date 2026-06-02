@@ -10,7 +10,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-from .contracts import OllamaEndpoint, PrivacyClass, RoutingContext, SpeedMode
+from router.contracts import OllamaEndpoint, PrivacyClass, RoutingContext, SpeedMode
 
 
 @dataclasses.dataclass(frozen=True)
