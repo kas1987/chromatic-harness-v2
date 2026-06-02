@@ -25,13 +25,15 @@ from __future__ import annotations
 import argparse
 import json
 import socket
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "security"
 
 # Service definitions: name → (default_host, port, auth_check_fn_name)
@@ -105,28 +107,25 @@ def _get_listening_address(port: int) -> str | None:
     ]
     port_str = f":{port}"
     for cmd in commands:
-        try:
-            r = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-            if r.returncode != 0 and not r.stdout:
-                continue
-            for line in r.stdout.splitlines():
-                # Match lines containing the port
-                if port_str not in line:
-                    continue
-                # Extract address:port token
-                parts = line.split()
-                for part in parts:
-                    if port_str in part:
-                        addr = part.rsplit(":", 1)[0]
-                        # Normalize IPv6 brackets
-                        addr = addr.lstrip("[").rstrip("]")
-                        if addr in ("0.0.0.0", "*", ""):
-                            return "0.0.0.0"
-                        if addr in ("127.0.0.1", "::1", "localhost"):
-                            return "127.0.0.1"
-                        return addr
-        except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        r = run_safe(cmd, timeout=10)
+        if r.returncode != 0 and not r.stdout:
             continue
+        for line in r.stdout.splitlines():
+            # Match lines containing the port
+            if port_str not in line:
+                continue
+            # Extract address:port token
+            parts = line.split()
+            for part in parts:
+                if port_str in part:
+                    addr = part.rsplit(":", 1)[0]
+                    # Normalize IPv6 brackets
+                    addr = addr.lstrip("[").rstrip("]")
+                    if addr in ("0.0.0.0", "*", ""):
+                        return "0.0.0.0"
+                    if addr in ("127.0.0.1", "::1", "localhost"):
+                        return "127.0.0.1"
+                    return addr
     return None
 
 
