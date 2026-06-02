@@ -36,13 +36,19 @@ import argparse
 import json
 import os
 import socket
-import subprocess
+import sys
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
+
 LOGS = REPO / "07_LOGS_AND_AUDIT"
 ROUTING_DIR = LOGS / "routing"
 DECISION_LOG = LOGS / "decisions" / "decision_log.jsonl"
@@ -238,13 +244,15 @@ def check_active_queue() -> Check:
     if not bd:
         return Check("active_queue", "warn", "bd not on PATH; queue status unknown", value=None)
     try:
-        r = subprocess.run([bd, "ready", "--json"], cwd=REPO, capture_output=True, text=True, timeout=20)
+        r = run_safe([bd, "ready", "--json"], cwd=REPO, timeout=20)
         if r.returncode != 0:
             return Check("active_queue", "warn", "bd ready returned non-zero", value=None)
         data = json.loads(r.stdout) if r.stdout.strip() else []
         items = data if isinstance(data, list) else data.get("issues", [])
         return Check("active_queue", "pass", f"{len(items)} ready item(s) in queue", value=len(items))
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError) as exc:
+    except json.JSONDecodeError as exc:
+        # run_safe absorbs timeout/OSError (rc handled above); malformed bd JSON
+        # is the only remaining raisable error.
         return Check("active_queue", "warn", f"queue probe failed: {exc}", value=None)
 
 
