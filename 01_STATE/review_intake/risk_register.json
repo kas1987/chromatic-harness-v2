@@ -1,0 +1,40 @@
+{
+  "risks": [
+    {
+      "risk": "Duplicate findings",
+      "impact": "Agent rework",
+      "mitigation": "Dedupe key and stale-event checks",
+      "likelihood": "medium"
+    },
+    {
+      "risk": "Vague review comments",
+      "impact": "Bad patches",
+      "mitigation": "Confidence gate and reviewer clarification status",
+      "likelihood": "medium"
+    },
+    {
+      "risk": "Multi-agent collision",
+      "impact": "Broken PR branch",
+      "mitigation": "PR branch lock",
+      "likelihood": "low"
+    },
+    {
+      "risk": "Overbroad fixes",
+      "impact": "Repo churn",
+      "mitigation": "Allowed files and stop conditions",
+      "likelihood": "low"
+    },
+    {
+      "risk": "CI noise",
+      "impact": "Queue spam",
+      "mitigation": "Failure grouping and dedupe by workflow/check/path",
+      "likelihood": "medium"
+    },
+    {
+      "risk": "Security-sensitive changes",
+      "impact": "Unsafe mutation",
+      "mitigation": "Human gate",
+      "likelihood": "low"
+    }
+  ]
+}

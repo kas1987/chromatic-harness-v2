@@ -1,0 +1,49 @@
+name: Harness Review Intake Check
+
+on:
+  push:
+    paths:
+      - "scripts/review_intake.py"
+      - "scripts/classify_review_finding.py"
+      - "scripts/dispatch_review_work.py"
+      - "scripts/lock_pr_branch.py"
+      - "scripts/post_review_resolution.py"
+      - "scripts/review_learning.py"
+      - "schemas/**"
+      - "tests/test_review_intake*.py"
+      - "tests/fixtures/review_intake/**"
+      - ".github/workflows/harness-review-intake-check.yml"
+  pull_request:
+    paths:
+      - "scripts/review_intake.py"
+      - "scripts/classify_review_finding.py"
+      - "scripts/dispatch_review_work.py"
+      - "scripts/lock_pr_branch.py"
+      - "scripts/post_review_resolution.py"
+      - "scripts/review_learning.py"
+      - "schemas/**"
+      - "tests/test_review_intake*.py"
+      - "tests/fixtures/review_intake/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-intake-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: pip install pytest jsonschema
+
+      - name: Run review-intake test suite (all acceptance criteria)
+        run: python -m pytest tests/test_review_intake.py tests/test_review_intake_acceptance.py tests/test_review_intake_central_collector.py -q
+
+      - name: Smoke — run every event fixture through intake + dispatcher
+        run: bash tests/test_review_intake_smoke.sh

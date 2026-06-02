@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Review Resolution",
+  "type": "object",
+  "required": ["resolution_id", "finding_id", "task_id", "agent", "status", "files_changed", "validation", "resolved_at"],
+  "properties": {
+    "resolution_id": {"type": "string"},
+    "finding_id": {"type": "string"},
+    "task_id": {"type": "string"},
+    "agent": {"type": "string"},
+    "status": {"enum": ["Resolved", "Blocked", "NeedsFollowUp"]},
+    "confidence": {"type": ["string", "integer", "null"]},
+    "change": {"type": "string"},
+    "files_changed": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "validation": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "resolved_at": {"type": "string"},
+    "links": {"type": "array", "items": {"type": "string"}}
+  }
+}
