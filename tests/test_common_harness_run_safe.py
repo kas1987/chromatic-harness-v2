@@ -39,6 +39,14 @@ def test_run_safe_nonzero_exit():
     assert r.returncode == 3
 
 
+def test_run_safe_shell_true_runs_string_command():
+    # shell=True takes a string and resolves it through the platform shell.
+    # Use a cross-platform one-liner (echo works on both cmd.exe and sh).
+    r = ch.run_safe("echo shell_ok", timeout=10, shell=True)
+    assert r.returncode == 0
+    assert "shell_ok" in r.stdout
+
+
 def test_run_safe_decodes_invalid_utf8_without_raising():
     # Emit a lone 0x80 byte (invalid UTF-8 and undecodable in many locales).
     # run_safe must decode with errors="replace" and never raise.
