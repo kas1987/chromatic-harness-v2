@@ -5,22 +5,16 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
 
 
-def _run(cmd: list[str], timeout: int = 180) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-        check=False,
-    )
+def _run(cmd: list[str], timeout: int = 180):
+    return run_safe(cmd, cwd=REPO, timeout=timeout)
 
 
 def _log_activity(summary: str, *, decision: str) -> None:

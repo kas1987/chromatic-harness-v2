@@ -14,7 +14,6 @@ import argparse
 import hashlib
 import json
 import os
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +22,7 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
+from common_harness import run_safe  # noqa: E402
 from pre_session_common import (  # noqa: E402
     REPO,
     load_profile,
@@ -65,39 +65,19 @@ def _output_dir(repo: Path) -> Path:
 
 
 def _git_branch(repo: Path) -> str:
-    try:
-        r = subprocess.run(
-            ["git", "branch", "--show-current"],
-            cwd=repo,
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-        if r.returncode == 0:
-            return (r.stdout or "").strip() or "unknown"
-    except (OSError, subprocess.TimeoutExpired):
-        pass
+    r = run_safe(["git", "branch", "--show-current"], cwd=repo, timeout=10)
+    if r.returncode == 0:
+        return (r.stdout or "").strip() or "unknown"
     return "unknown"
 
 
 def _git_status_summary(repo: Path) -> dict:
-    try:
-        r = subprocess.run(
-            ["git", "status", "--short"],
-            cwd=repo,
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-        lines = [ln for ln in (r.stdout or "").splitlines() if ln.strip()]
-        return {
-            "dirty": len(lines) > 0,
-            "changed_file_count": len(lines),
-        }
-    except (OSError, subprocess.TimeoutExpired):
-        return {"dirty": False, "changed_file_count": 0}
+    r = run_safe(["git", "status", "--short"], cwd=repo, timeout=10)
+    lines = [ln for ln in (r.stdout or "").splitlines() if ln.strip()]
+    return {
+        "dirty": len(lines) > 0,
+        "changed_file_count": len(lines),
+    }
 
 
 def _pack_version(repo: Path) -> str:
@@ -115,26 +95,19 @@ def _active_beads(repo: Path) -> list[dict]:
         ["bd", "ready", "--json"],
         ["bd", "ready", "-json"],
     ):
-        try:
-            r = subprocess.run(
-                cmd,
-                cwd=repo,
-                capture_output=True,
-                text=True,
-                timeout=15,
-                check=False,
-            )
-            if r.returncode != 0 or not (r.stdout or "").strip():
-                continue
-            data = json.loads(r.stdout)
-            if isinstance(data, list):
-                return data
-            if isinstance(data, dict) and "issues" in data:
-                return data["issues"]
-            if isinstance(data, dict):
-                return [data]
-        except (json.JSONDecodeError, OSError, subprocess.TimeoutExpired):
+        r = run_safe(cmd, cwd=repo, timeout=15)
+        if r.returncode != 0 or not (r.stdout or "").strip():
             continue
+        try:
+            data = json.loads(r.stdout)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, list):
+            return data
+        if isinstance(data, dict) and "issues" in data:
+            return data["issues"]
+        if isinstance(data, dict):
+            return [data]
     return []
 
 
