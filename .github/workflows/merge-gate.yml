@@ -1,0 +1,45 @@
+name: Merge confidence gate
+
+# Option B, Phase 1 — ADVISORY. This job composes the existing PR gates
+# (ai_review_gate, pr_size_gate, secret/privacy diff scan) into a single
+# confidence verdict and posts it as a PR comment. It always exits 0 and is
+# NOT a required status check, so it cannot block a merge yet. Once the
+# thresholds are validated on live PRs, flip to enforcing by adding `--enforce`
+# to the step below and appending "merge-gate" to the branch-protection contexts.
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write   # post the advisory verdict comment
+
+jobs:
+  merge-gate:
+    runs-on: ubuntu-latest
+    env:
+      # Match harness-governance.yml: declare the relay so the router import
+      # chain (PrivacyGate → PolicyLoader) resolves deterministically on a runner.
+      NATIVE_CLAUDE_RELAY_URL: "http://localhost:11434"
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0   # full history so merge-base / diff vs base works
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Merge confidence gate (advisory)
+        run: |
+          python scripts/merge_confidence_gate.py \
+            --base "${{ github.base_ref }}" \
+            --pr "${{ github.event.pull_request.number }}" \
+            --comment \
+            --json
