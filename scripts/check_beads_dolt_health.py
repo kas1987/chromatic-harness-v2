@@ -4,32 +4,28 @@
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(REPO / "scripts"))
 
+from common_harness import run_safe  # noqa: E402
 from intake.bd_runner import resolve_bd_argv  # noqa: E402
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 
 
-def _run(cmd: list[str], *, cwd: Path | None = None, timeout: int = 30) -> subprocess.CompletedProcess[str]:
+def _run(cmd: list[str], *, cwd: Path | None = None, timeout: int = 30):
     if cmd and cmd[0] == "bd":
         cmd = resolve_bd_argv() + cmd[1:]
         if cmd[0] == "bd":
-            return subprocess.CompletedProcess(cmd, returncode=127, stdout="", stderr="bd not on PATH")
-    return subprocess.run(
-        cmd,
-        cwd=cwd or REPO,
-        text=True,
-        capture_output=True,
-        timeout=timeout,
-    )
+            return SimpleNamespace(returncode=127, stdout="", stderr="bd not on PATH")
+    return run_safe(cmd, cwd=cwd or REPO, timeout=timeout)
 
 
 def _git_dir_cache() -> Path | None:
@@ -94,9 +90,7 @@ def check(*, try_push: bool = False, push_timeout: int = 180) -> tuple[bool, lis
         messages.append(f"FAIL: bd dolt remote list: {(remote_list.stderr or remote_list.stdout).strip()}")
         ok = False
     elif "origin" not in (remote_list.stdout or ""):
-        messages.append(
-            "WARN: no Dolt remote 'origin' — run: bd dolt remote add origin <git-url>"
-        )
+        messages.append("WARN: no Dolt remote 'origin' — run: bd dolt remote add origin <git-url>")
 
     if try_push:
         push = _run(["bd", "dolt", "push"], timeout=push_timeout)
@@ -109,13 +103,9 @@ def check(*, try_push: bool = False, push_timeout: int = 180) -> tuple[bool, lis
             if "ambiguous argument 'HEAD'" in err:
                 messages.append("HINT: repair cache HEAD (this script does automatically on next run)")
             if "direct push to main/master is blocked" in err:
-                messages.append(
-                    "HINT: ensure pre-push allows refs/dolt/* — see .beads/hooks/pre-push.sh"
-                )
+                messages.append("HINT: ensure pre-push allows refs/dolt/* — see .beads/hooks/pre-push.sh")
             if "credential" in err.lower() or "authentication" in err.lower():
-                messages.append(
-                    "HINT: configure non-interactive HTTPS (GCM) or SSH for GitHub"
-                )
+                messages.append("HINT: configure non-interactive HTTPS (GCM) or SSH for GitHub")
 
     return ok, messages
 
