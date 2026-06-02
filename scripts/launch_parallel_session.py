@@ -6,12 +6,14 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
 import sys
 import uuid
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 WORKTREE_SCRIPT = REPO / "scripts" / "session_worktree.py"
 ACTIVE_SCRIPT = REPO / "scripts" / "active_sessions.py"
 LOCKS_DIR = REPO / ".agents" / "locks"
@@ -23,14 +25,7 @@ def _clean_argv(argv: list[str]) -> list[str]:
 
 
 def _run(cmd: list[str]) -> tuple[int, str, str]:
-    proc = subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=120,
-        check=False,
-    )
+    proc = run_safe(cmd, cwd=REPO, timeout=120)
     return proc.returncode, proc.stdout or "", proc.stderr or ""
 
 
@@ -111,14 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_open and worktree_path:
         cmd = _vscode_cmd()
         if cmd:
-            proc = subprocess.run(
-                [cmd, "-n", worktree_path],
-                cwd=REPO,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
-            )
+            proc = run_safe([cmd, "-n", worktree_path], cwd=REPO, timeout=30)
             opened = proc.returncode == 0
             if not opened:
                 open_error = (proc.stderr or proc.stdout or "failed to open VS Code")[-1000:]
