@@ -1,1 +1,6 @@
 * text=auto
+
+# Git hooks execute under bash; a CRLF shebang ("#!/usr/bin/env bash\r") fails
+# on Git Bash. Pin them to LF regardless of core.autocrlf so a Windows checkout
+# can't corrupt them. (pre-commit had already drifted to CRLF.)
+git_hooks/** text eol=lf

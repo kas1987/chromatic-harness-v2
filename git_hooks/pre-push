@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python -m py_compile scripts/*.py
-python scripts/generate_observability_report.py >/dev/null
+
+# ── Local fast checks ──────────────────────────────────────────────────
+# Redirect stdin from /dev/null so the push ref lines git feeds on stdin
+# survive intact for the canonical gate below (these checks read no stdin).
+python -m py_compile scripts/*.py </dev/null
+python scripts/generate_observability_report.py >/dev/null </dev/null
+
+# ── Canonical gate: main/master block + pytest E2E suite ───────────────
+# Setting core.hooksPath=git_hooks bypassed the auto-installed
+# .git/hooks/pre-push that used to delegate to ~/.claude/hooks/pre-push.sh,
+# silently dropping the direct-push branch block AND the run-all-e2e.py gate
+# (the real pre-push test gate). Re-delegate here so both layers run again.
+# Pass args ($1 remote, $2 url) and stdin (push ref lines) straight through;
+# exec hands the remaining stdin to the canonical hook untouched.
+CANON="$HOME/.claude/hooks/pre-push.sh"
+if [ -x "$CANON" ]; then
+  exec "$CANON" "$@"
+fi
