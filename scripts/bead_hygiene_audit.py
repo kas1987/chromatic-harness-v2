@@ -11,33 +11,27 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
+import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 OUT_DIR = REPO / ".agents" / "audits" / "bead_hygiene"
 
 
-def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+def _run(cmd: list[str]):
     if cmd and cmd[0] == "bd":
         for name in ("bd.cmd", "bd.exe", "bd"):
             path = shutil.which(name)
             if path:
                 cmd = [path, *cmd[1:]]
                 break
-    return subprocess.run(
-        cmd,
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=120,
-        check=False,
-    )
+    return run_safe(cmd, cwd=REPO, timeout=120)
 
 
 def _load_rows() -> list[dict[str, Any]]:
@@ -110,9 +104,7 @@ def _build_remediation_plan(
         )
         canonical = ranked[0]
         others = ranked[1:]
-        active_others = [
-            r for r in others if r.get("status") in {"OPEN", "READY", "IN_PROGRESS"}
-        ]
+        active_others = [r for r in others if r.get("status") in {"OPEN", "READY", "IN_PROGRESS"}]
 
         actions = [
             {
@@ -200,18 +192,14 @@ def build_report() -> dict[str, Any]:
     for title_key, group in title_groups.items():
         if len(group) <= 1:
             continue
-        per_status = Counter(
-            _pick(r, "status", "state", "workflow_status").upper() or "UNKNOWN"
-            for r in group
-        )
+        per_status = Counter(_pick(r, "status", "state", "workflow_status").upper() or "UNKNOWN" for r in group)
         items = []
         for row in group:
             items.append(
                 {
                     "id": _pick(row, "id", "issue_id", "key", "ticket_id"),
                     "title": _pick(row, "title", "name", "summary", "subject"),
-                    "status": _pick(row, "status", "state", "workflow_status").upper()
-                    or "UNKNOWN",
+                    "status": _pick(row, "status", "state", "workflow_status").upper() or "UNKNOWN",
                 }
             )
         duplicate_groups.append(
@@ -220,9 +208,7 @@ def build_report() -> dict[str, Any]:
                 "count": len(group),
                 "status_counts": dict(per_status),
                 "items": items,
-                "sample_ids": [
-                    _pick(r, "id", "issue_id", "key", "ticket_id") for r in group[:8]
-                ],
+                "sample_ids": [_pick(r, "id", "issue_id", "key", "ticket_id") for r in group[:8]],
             }
         )
 
@@ -239,9 +225,7 @@ def build_report() -> dict[str, Any]:
             }
         )
     hot_duplicates = [
-        g
-        for g in duplicate_groups
-        if any(s in g["status_counts"] for s in ("OPEN", "READY", "IN_PROGRESS"))
+        g for g in duplicate_groups if any(s in g["status_counts"] for s in ("OPEN", "READY", "IN_PROGRESS"))
     ]
     if hot_duplicates:
         findings.append(
@@ -288,9 +272,7 @@ def build_report() -> dict[str, Any]:
     }
 
 
-def write_reports(
-    report: dict[str, Any], *, write_remediation_plan: bool = False
-) -> dict[str, str]:
+def write_reports(report: dict[str, Any], *, write_remediation_plan: bool = False) -> dict[str, str]:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_json = OUT_DIR / f"bead_hygiene_{ts}.json"
@@ -318,18 +300,14 @@ def write_reports(
     ]
     if report.get("findings"):
         for finding in report["findings"]:
-            lines.append(
-                f"- {finding.get('severity')} {finding.get('code')}: {finding.get('message')}"
-            )
+            lines.append(f"- {finding.get('severity')} {finding.get('code')}: {finding.get('message')}")
     else:
         lines.append("- none")
 
     latest_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     if write_remediation_plan:
-        latest_remediation_json.write_text(
-            json.dumps(report.get("remediation_plan", []), indent=2), encoding="utf-8"
-        )
+        latest_remediation_json.write_text(json.dumps(report.get("remediation_plan", []), indent=2), encoding="utf-8")
 
     artifacts = {
         "run_json": str(run_json.relative_to(REPO)).replace("\\", "/"),
@@ -337,9 +315,7 @@ def write_reports(
         "latest_md": str(latest_md.relative_to(REPO)).replace("\\", "/"),
     }
     if write_remediation_plan:
-        artifacts["latest_remediation_plan_json"] = str(
-            latest_remediation_json.relative_to(REPO)
-        ).replace("\\", "/")
+        artifacts["latest_remediation_plan_json"] = str(latest_remediation_json.relative_to(REPO)).replace("\\", "/")
     return artifacts
 
 
@@ -359,9 +335,7 @@ def main() -> int:
 
     report = build_report()
     if args.write:
-        report["artifacts"] = write_reports(
-            report, write_remediation_plan=args.write_remediation_plan
-        )
+        report["artifacts"] = write_reports(report, write_remediation_plan=args.write_remediation_plan)
 
     print(json.dumps(report, indent=2))
     return 1 if report.get("status") == "red" else 0
