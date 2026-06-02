@@ -403,16 +403,17 @@ def test_dispatch_runs_worker_in_worktree_and_cleans_up(tmp_path, monkeypatch):
     cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
     wt = tmp_path / ".worktrees" / "auto-u8uj_1"
     monkeypatch.setattr(TR, "_which", lambda n: "claude")
-    monkeypatch.setattr(
-        TR, "_bead_detail", lambda bid: {"title": "t", "description": "d", "acceptance_criteria": "c"}
-    )
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d", "acceptance_criteria": "c"})
     monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
     seen: dict = {}
 
     def fake_run(cmd, timeout=60, cwd=None):
         seen["cwd"] = cwd
         seen["cmd"] = cmd
-        return 0, 'RUNNER_RESULT: {"ok": true, "pr_number": 7, "branch": "auto/u8uj.1", "tests_passed": true, "summary": "done"}'
+        return (
+            0,
+            'RUNNER_RESULT: {"ok": true, "pr_number": 7, "branch": "auto/u8uj.1", "tests_passed": true, "summary": "done"}',
+        )
 
     monkeypatch.setattr(TR, "_run", fake_run)
     removed: dict = {}
