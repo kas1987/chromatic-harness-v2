@@ -13,13 +13,15 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
 import yaml
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 SYNC_PATH = REPO / "config" / "wiki_harness_sync.yaml"
 ISSUES_JSONL = REPO / ".beads" / "issues.jsonl"
 
@@ -42,18 +44,10 @@ def _load_bead_statuses() -> dict[str, str]:
 
 
 def _github_issue_states(repo: str) -> dict[int, str]:
-    try:
-        proc = subprocess.run(
-            ["gh", "issue", "list", "--repo", repo, "--state", "all", "--limit", "100", "--json", "number,state"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=60,
-            check=False,
-        )
-    except FileNotFoundError:
-        return {}
+    proc = run_safe(
+        ["gh", "issue", "list", "--repo", repo, "--state", "all", "--limit", "100", "--json", "number,state"],
+        timeout=60,
+    )
     if proc.returncode != 0:
         return {}
     try:
