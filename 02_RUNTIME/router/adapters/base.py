@@ -7,6 +7,20 @@ from typing import Any
 from ..contracts import RouteRequest, RouteResponse, OutputType, RouteOutput, RouteUsage
 
 
+class AdapterError(Exception):
+    """Raised by any adapter for SDK-missing, blocked, or empty-response errors."""
+
+    def __init__(
+        self,
+        message: str,
+        provider: str = "",
+        cause: BaseException | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.provider = provider
+        self.cause = cause
+
+
 @dataclass
 class AdapterHealth:
     reachable: bool

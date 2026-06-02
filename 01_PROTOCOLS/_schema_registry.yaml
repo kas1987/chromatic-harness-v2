@@ -1,0 +1,157 @@
+# Chromatic Harness v2 — Schema Registry
+# Single source of truth for all JSON Schema files.
+# Fields:
+#   schema_path   — path relative to repo root
+#   title         — human label
+#   consumers     — scripts/modules that read/write this schema
+#   jsonl_paths   — runtime JSONL files validated by this schema (relative to repo root)
+#                   empty list = schema has no JSONL counterpart (JSON singletons, API payloads)
+#   notes         — why this schema exists / special validation rules
+
+schemas:
+
+  # ── 01_PROTOCOLS ────────────────────────────────────────────────────────────
+
+  - id: bead
+    schema_path: 01_PROTOCOLS/BEADS/bead.schema.json
+    title: Chromatic Bead
+    consumers:
+      - 02_RUNTIME/intake/auto_intake.py
+      - scripts/validate_intake_loop.py
+    jsonl_paths: []
+    notes: >
+      API-layer schema for bead creation payloads. bd CLI export (.beads/issues.jsonl)
+      uses a different shape (id, not bead_id) and is not validated here.
+
+  - id: confidence_gate
+    schema_path: 01_PROTOCOLS/CMP/confidence_gate.schema.json
+    title: Confidence Gate Output
+    consumers:
+      - 02_RUNTIME/magnets/confidence_magnet.py
+      - 02_RUNTIME/router/gate.py
+    jsonl_paths: []
+    notes: Emitted as JSON singleton per gate evaluation; no JSONL stream.
+
+  - id: mission_packet
+    schema_path: 01_PROTOCOLS/CMP/mission_packet.schema.json
+    title: Mission Packet
+    consumers:
+      - 02_RUNTIME/api/models.py
+      - 02_RUNTIME/router/gate.py
+    jsonl_paths: []
+    notes: CMP mission envelope; validated at API intake boundary.
+
+  - id: intake_queue
+    schema_path: 01_PROTOCOLS/INTAKE/intake_queue.schema.json
+    title: Intake Queue Entry
+    consumers:
+      - 02_RUNTIME/intake/queue.py
+      - 02_RUNTIME/chromatic_mcp/handlers.py
+      - scripts/validate_intake_loop.py
+    jsonl_paths:
+      - 07_LOGS_AND_AUDIT/intake_queue.jsonl
+    notes: Append-only; each line is one queued item before auto_intake drains it.
+
+  - id: magnet_event
+    schema_path: 01_PROTOCOLS/MAGNETS/magnet_event.schema.json
+    title: Magnet Event
+    consumers:
+      - 02_RUNTIME/magnets/base_magnet.py
+      - 02_RUNTIME/magnets/magnet_orchestrator.py
+      - 02_RUNTIME/console_api/harness_events.py
+    jsonl_paths: []
+    notes: >
+      In-memory only; MagnetEvents are not serialised to a JSONL stream
+      (execution.jsonl is a stub placeholder). Schema validates API payloads at
+      the CreateEventRequest boundary.
+
+  # ── schemas/ ────────────────────────────────────────────────────────────────
+
+  - id: agent_dispatch
+    schema_path: schemas/agent_dispatch.schema.json
+    title: Agent Dispatch Record
+    consumers:
+      - scripts/dispatch_review_work.py
+    jsonl_paths:
+      - 07_LOGS_AND_AUDIT/review_intake/dispatch_log.jsonl
+    notes: Written by dispatch_review_work.py on each review agent spawn.
+
+  - id: harness_event
+    schema_path: schemas/harness_event.schema.json
+    title: Chromatic Harness Event
+    consumers:
+      - 02_RUNTIME/console_api/harness_events.py
+    jsonl_paths:
+      - 07_LOGS_AND_AUDIT/harness_events.jsonl
+    notes: Primary observability stream; required fields enforced by emitter.
+
+  - id: lease
+    schema_path: schemas/lease.schema.json
+    title: Lock Lease
+    consumers:
+      - 02_RUNTIME/chromatic_mcp/handlers.py
+      - tests/test_lease_manager.py
+    jsonl_paths: []
+    notes: JSON singleton per lock; no JSONL stream.
+
+  - id: mutation_manifest
+    schema_path: schemas/mutation_manifest.schema.json
+    title: Mutation Manifest
+    consumers:
+      - scripts/mutation_manifest.py
+    jsonl_paths: []
+    notes: Singleton JSON describing a planned file mutation batch.
+
+  - id: next_work_item
+    schema_path: schemas/next_work_item.schema.json
+    title: Next Work Item
+    consumers:
+      - scripts/go_mode.py
+      - 02_RUNTIME/magnets/magnet_orchestrator.py
+    jsonl_paths: []
+    notes: Returned by orchestrator decide(); not persisted as JSONL.
+
+  - id: pr_branch_lock
+    schema_path: schemas/pr_branch_lock.schema.json
+    title: PR Branch Lock
+    consumers:
+      - scripts/validate_pr_governance.py
+    jsonl_paths: []
+    notes: Per-PR JSON singleton written during branch lock acquisition.
+
+  - id: repo_role_registry
+    schema_path: schemas/repo_role_registry.schema.json
+    title: Repo Role Registry
+    consumers:
+      - scripts/validate_repo_role_registry.py
+    jsonl_paths: []
+    notes: Singleton YAML/JSON; validated by validate_repo_role_registry.py in CI.
+
+  - id: review_finding
+    schema_path: schemas/review_finding.schema.json
+    title: Review Finding
+    consumers:
+      - scripts/review_intake.py
+      - scripts/post_review_resolution.py
+      - scripts/dispatch_review_work.py
+    jsonl_paths:
+      - 07_LOGS_AND_AUDIT/review/findings.jsonl
+    notes: One record per review finding; append-only.
+
+  - id: review_resolution
+    schema_path: schemas/review_resolution.schema.json
+    title: Review Resolution
+    consumers:
+      - scripts/post_review_resolution.py
+    jsonl_paths:
+      - 07_LOGS_AND_AUDIT/review/resolutions.jsonl
+    notes: Written when a finding is acted on; references finding_id.
+
+  - id: visual_node
+    schema_path: schemas/visual_node.schema.json
+    title: Visual Control Plane Node
+    consumers:
+      - scripts/validate_visual_registry.py
+      - scripts/generate_harness_mermaid.py
+    jsonl_paths: []
+    notes: Singleton JSON array; validated by validate_visual_registry.py.
