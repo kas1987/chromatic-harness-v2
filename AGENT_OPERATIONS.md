@@ -251,6 +251,7 @@ POST /missions/{mission_id}/synthesize?create_bead=true
 
 | Role | Playbook |
 |------|----------|
+| **Workflows (operating model)** | [04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md](04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md) — `/audit → /plan → /go → /close-issue` |
 | GO / autonomous | [04_PLAYBOOKS/GO_MODE_PLAYBOOK.md](04_PLAYBOOKS/GO_MODE_PLAYBOOK.md) |
 | Orchestrator | [04_PLAYBOOKS/ORCHESTRATOR_PLAYBOOK.md](04_PLAYBOOKS/ORCHESTRATOR_PLAYBOOK.md) |
 | Magnets | [04_PLAYBOOKS/MAGNETS_PLAYBOOK.md](04_PLAYBOOKS/MAGNETS_PLAYBOOK.md) |

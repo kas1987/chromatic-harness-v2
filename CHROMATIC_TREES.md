@@ -159,6 +159,14 @@ Until V3-6 lands, treat the left column as read-only legacy and write to the can
 | **Understand execution flow** | [`00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md`](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md) | — |
 | **Find which file is authoritative** | §1 + [`00_SOURCE_OF_TRUTH/_AUTHORITY.yaml`](00_SOURCE_OF_TRUTH/_AUTHORITY.yaml) | — |
 | **See all templates** | [`templates/README.md`](templates/README.md) | — |
+| **Operate via workflows (lifecycle)** | [`04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md`](04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md) | `/audit → /plan → /go → /close-issue` |
+| **Audit the harness** | [`.claude/workflows/audit.js`](.claude/workflows/audit.js) | `/audit [slices]` |
+| **Plan an epic from a goal** | [`.claude/workflows/plan.js`](.claude/workflows/plan.js) | `/plan <goal\|roadmap>` |
+| **Execute / ship one bead** | [`.claude/workflows/go.js`](.claude/workflows/go.js) | `/go` · `/close-issue <id>` |
+
+> **The harness operates as Claude workflows.** The lifecycle (audit → plan → execute →
+> ship) is the chain of bounded workflows in `.claude/workflows/`. See the
+> [Workflows Playbook](04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md).
 
 ---
 
