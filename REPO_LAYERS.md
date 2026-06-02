@@ -134,7 +134,7 @@ sequenced below and executed by the `v3-structure` epic.
 | `02_DOCS/` | 1 (`GO_MODE_STARTUP_SOP.md`) | `docs/` | Moved → `docs/`; roadmap reference is historical (left as-is) | `8lri.2` | ✅ done |
 | `agent_handoffs/` | 3 (review/impl handoffs) | `12_HANDOFFS/` | Moved → `12_HANDOFFS/` | `8lri.2` | ✅ done |
 | `hooks/` | 2 (`pre-commit`, `pre-push`) | `git_hooks/` | Retired: `git_hooks/` is the documented, `core.hooksPath`-active canonical set. `hooks/` + orphaned `install_git_hooks.py` (the dead `ci_local` installer that *refused* to run over the tracked `git_hooks/`) deleted; `ci_local.py` kept as a manual/CI tool | `8lri.5` | ✅ done |
-| `state/` | 2 (leases placeholder) | `01_STATE/` | **Carved out → `8lri.6`**: `state/leases/active_leases.jsonl` is the live lease ledger hardcoded as `DEFAULT_LEDGER` in ~8 collision-subsystem scripts; an atomic coordinated move, not a placeholder shuffle | `8lri.6` | ⏳ deferred |
+| `state/` | 2 (leases placeholder) | `01_STATE/leases/` | Atomic move done: `git mv state/leases → 01_STATE/leases`; `DEFAULT_LEDGER` updated in `lease_manager.py` (propagates to ~8 importers), the duplicate in `claim_guard.py`, and the `collision_check.py` CLI default — all 3 changed identically so the ledger never splits | `8lri.6` | ✅ done |
 | `reports/` | 2 (harness_health placeholder) | `05_REPORTS/` | Moved → `05_REPORTS/harness_health/`; updated `harness_health_check.OUT_DIR` + registry | `8lri.2` | ✅ done |
 | `queue/` | 1 (`claude_adapter_next_work.queue.json`) | `07_LOGS_AND_AUDIT/queue/` | Moved → audit (stale #99 bootstrap, kept for provenance) | `8lri.2` | ✅ done |
 | `issues/` | 1 (`claude_adapter_issue_map.md`) | `07_LOGS_AND_AUDIT/` | Stale (bd is the tracker) — moved to audit for provenance, not deleted | `8lri.2` | ✅ done |
@@ -157,10 +157,10 @@ tracks and are **not** part of this retirement timeline — they restructure *ca
 not legacy ones.
 
 **Carve-outs from `8lri.2`:** `hooks/` (→ `8lri.5`, ✅ done — `git_hooks/` is canonical, the
-`hooks/`+installer subsystem was dead and is deleted) and `state/leases/` (→ `8lri.6`, the live
-lease ledger is wired into ~8 collision-subsystem scripts via `DEFAULT_LEDGER`; moving it is an
-atomic coordinated refactor that must not be done as a drive-by, or collision detection silently
-splits across two ledger paths).
+`hooks/`+installer subsystem was dead and is deleted) and `state/leases/` (→ `8lri.6`, ✅ done —
+the lease ledger was wired into ~8 collision-subsystem scripts via `DEFAULT_LEDGER`; moved
+atomically by updating both `DEFAULT_LEDGER` constants + the `collision_check` CLI default to
+`01_STATE/leases/` in one commit, so collision detection never splits across two ledger paths).
 
 ---
 

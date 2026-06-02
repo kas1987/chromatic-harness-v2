@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_LEDGER = REPO / "state" / "leases" / "active_leases.jsonl"
+DEFAULT_LEDGER = REPO / "01_STATE" / "leases" / "active_leases.jsonl"
 
 
 def now() -> datetime:
