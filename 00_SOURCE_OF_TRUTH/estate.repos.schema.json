@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chromatic/Prism estate manifest (tiered-consolidation model)",
+  "type": "object",
+  "required": ["version", "governance_parent", "canonical_repos", "repos"],
+  "properties": {
+    "version": { "type": "string" },
+    "generated": { "type": "string" },
+    "supersedes": { "type": "string", "description": "The prose plan this manifest is the machine-readable form of." },
+    "purpose": { "type": "string" },
+    "model": { "type": "string" },
+    "canonical_split_intentional": { "type": "boolean" },
+    "governance_parent": { "type": "string" },
+    "branch_policy": { "type": "object", "properties": { "canonical_default_branch": { "type": "string" } } },
+    "guardrails": { "type": "array", "items": { "type": "string" } },
+    "doctrine": { "type": "object" },
+    "canonical_repos": { "type": "array", "items": { "type": "string" } },
+    "status_key": { "type": "object" },
+    "drift_since_v0_5_0": { "type": "array", "items": { "type": "string" } },
+    "repos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "home", "role", "status", "tier", "default_branch", "archived"],
+        "properties": {
+          "name": { "type": "string" },
+          "github_name": { "type": "string", "description": "Actual GitHub repo name when 'name' is disambiguated (e.g. a duplicate across owners)." },
+          "home": { "type": "string", "description": "Current GitHub owner (org or user)." },
+          "role": { "enum": ["control_plane", "governance_parent", "estate_member", "knowledge_base", "published_oss", "tooling", "product", "retire"] },
+          "status": { "enum": ["CANONICAL", "ACTIVE", "ACTIVE_NICHE", "MERGE_CANDIDATE", "ADAPTER", "STANDALONE_CANONICAL", "STANDALONE_EXTERNAL", "ARCHIVED_REDIRECT", "ARCHIVED", "ARCHIVE_CANDIDATE", "RENAME_CANDIDATE", "PUBLISHED_OSS"] },
+          "tier": { "type": "integer", "minimum": 0, "maximum": 5, "description": "Consolidation tier (0 safe -> 5 structural/delete)." },
+          "merge_target": { "type": ["string", "null"], "description": "Repo this one's content migrates into (for MERGE_CANDIDATE / ARCHIVED_REDIRECT)." },
+          "harvest_target": { "type": "string", "description": "For retiring repos: where preserved knowledge is harvested to (usually chromatic-wiki)." },
+          "default_branch": { "type": "string" },
+          "visibility": { "enum": ["PUBLIC", "PRIVATE"] },
+          "keep_public": { "type": "boolean" },
+          "archived": { "type": "boolean" },
+          "disk_kb": { "type": "integer" },
+          "local_path": { "type": ["string", "null"] },
+          "action": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

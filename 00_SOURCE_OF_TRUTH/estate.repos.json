@@ -1,0 +1,98 @@
+{
+  "$schema": "./estate.repos.schema.json",
+  "version": "2.0.0",
+  "generated": "2026-06-02",
+  "supersedes": "Poly-Chromatic/chromatic-command-center:CHROMATIC_REPO_CONSOLIDATION_MAP.md v0.5.0 (2026-05-25)",
+  "purpose": "Canonical, machine-readable form of the tiered Chromatic repo consolidation plan. Refreshed 2026-06-02 for current reality (dead repos removed, harness/wiki/governance-parent added). The harness reads this to know estate membership, canonical homes, and consolidation targets.",
+  "model": "tiered-consolidation",
+  "canonical_split_intentional": true,
+  "governance_parent": "Poly-Chromatic/poly-chromatic",
+  "branch_policy": { "canonical_default_branch": "main" },
+  "guardrails": [
+    "Archive before deletion",
+    "No deletes in tiers 0-4 (deletes only at tier 5)",
+    "No force-pushes",
+    "No secret movement",
+    "The Veil stays product/lore-focused; generic tooling moves out of product repos"
+  ],
+  "doctrine": {
+    "harness_stays_clean": "chromatic-harness-v2 is the CONTROL PLANE, not a content/knowledge store. Do not migrate legacy repo contents into it.",
+    "knowledge_home": "chromatic-wiki — narrative docs and harvested learnings from retiring repos land here.",
+    "migration_flow": "harvest-code -> preserve-knowledge-to-wiki -> archive -> delete (deletes gated to tier 5)"
+  },
+  "canonical_repos": [
+    "Poly-Chromatic/chromatic-command-center",
+    "Poly-Chromatic/prism-autonomy-harness",
+    "kas1987/ChromaticSystems",
+    "kas1987/fusion-computer",
+    "kas1987/The-Veil"
+  ],
+  "status_key": {
+    "CANONICAL": "The canonical repo for this system — stays",
+    "ACTIVE": "Actively maintained — stays",
+    "ACTIVE_NICHE": "Actively used niche repo — keep standalone",
+    "MERGE_CANDIDATE": "Content should migrate to merge_target",
+    "ADAPTER": "Bridge/adapter — stays as-is",
+    "STANDALONE_CANONICAL": "Stays as its own canonical repo (not merged)",
+    "STANDALONE_EXTERNAL": "Third-party OSS fork — not part of the Chromatic platform",
+    "ARCHIVED_REDIRECT": "Archived; content already redirected to merge_target",
+    "ARCHIVED": "Already archived (read-only)",
+    "ARCHIVE_CANDIDATE": "No active use — archive, then delete at tier 5",
+    "RENAME_CANDIDATE": "Needs rename before tier execution",
+    "PUBLISHED_OSS": "Public tool released to the world; not governed as internal estate"
+  },
+  "drift_since_v0_5_0": [
+    "kas1987/prism-plugins — 404 (no longer exists)",
+    "kas1987/Persona_Metadata_Atlas — 404 (no longer exists; was MERGE_CANDIDATE -> The-Veil)"
+  ],
+  "repos": [
+    { "name": "poly-chromatic", "home": "Poly-Chromatic", "role": "governance_parent", "status": "CANONICAL", "tier": 1, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "action": "Estate root: governance, specs, ChromaticTrees. Default branch fixed feat/* -> main 2026-06-02.", "notes": "Newer than v0.5.0 plan." },
+    { "name": "chromatic-harness-v2", "home": "kas1987", "role": "control_plane", "status": "ACTIVE", "tier": 1, "default_branch": "main", "visibility": "PUBLIC", "keep_public": true, "archived": false, "merge_target": null, "local_path": "C:/Users/kas41/chromatic-harness-v2", "action": "Control-plane scaffold; KEEP public. Default fixed session/* -> main, pre-commit secret gate wired, pre-push E2E scoped+watchdogged 2026-06-02.", "notes": "Newer than v0.5.0 plan; hosts this manifest." },
+    { "name": "chromatic-wiki", "home": "kas1987", "role": "knowledge_base", "status": "ACTIVE", "tier": 1, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "action": "Estate knowledge home; harvested knowledge from retiring repos lands here (e.g. 05_ARCHIVE/image-org/ via wiki PR #25)." },
+
+    { "name": "chromatic-command-center", "home": "Poly-Chromatic", "role": "estate_member", "status": "CANONICAL", "tier": 2, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "action": "Portfolio command hub (Electron). One operational front door. Holds the original v0.5.0 consolidation map + archived planning.", "notes": "Tier 2 DONE 2026-05-24." },
+    { "name": "prism-autonomy-harness", "home": "Poly-Chromatic", "role": "estate_member", "status": "CANONICAL", "tier": 3, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "action": "Autonomy runtime. Default normalized Main -> main 2026-06-02.", "notes": "Tier 3 DONE 2026-05-25." },
+    { "name": "ChromaticSystems", "home": "kas1987", "role": "estate_member", "status": "CANONICAL", "tier": 4, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "action": "Governance & standards canonical home; receives CCP, Chromatic_Brain, chromatic-devsecops content.", "notes": "Stays under kas1987 per plan (NOT moved to org)." },
+    { "name": "fusion-computer", "home": "kas1987", "role": "estate_member", "status": "CANONICAL", "tier": 1, "default_branch": "master", "visibility": "PRIVATE", "archived": false, "merge_target": null, "local_path": "C:/Users/kas41/fusion-computer", "action": "Artifact factory. Federation root. Optional: normalize master -> main.", "notes": "Stays under kas1987 per plan." },
+    { "name": "The-Veil", "home": "kas1987", "role": "product", "status": "CANONICAL", "tier": 4, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "action": "Creative IP flagship. Stays product/lore-focused; generic tooling stays out.", "notes": "Stays under kas1987 per plan." },
+
+    { "name": "Image-Prism", "home": "kas1987", "role": "product", "status": "CANONICAL", "tier": 4, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 187738, "local_path": "C:/.01_Image Org", "action": "MetaChromatic monorepo IS the product. Canonical.", "notes": "Built around the Image MetaHub concept; see Image-Org." },
+    { "name": "Image-Org", "home": "kas1987", "role": "retire", "status": "STANDALONE_EXTERNAL", "tier": 5, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "harvest_target": "chromatic-wiki", "disk_kb": 16956, "local_path": null, "action": "Third-party OSS fork (Image MetaHub, MPL-2.0). USER OVERRIDE 2026-06-02: stop tracking upstream -> archive then DELETE. Knowledge harvested to chromatic-wiki/05_ARCHIVE/image-org/ (wiki PR #25).", "notes": "v0.5.0 had this STANDALONE_EXTERNAL (keep); user directed retirement. MPL-2.0 — deletion loses upstream link." },
+    { "name": "04-Prism", "home": "kas1987", "role": "estate_member", "status": "ACTIVE_NICHE", "tier": 5, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 444457, "local_path": null, "action": "MetaChromatic/ComfyUI ops workspace; active. Relates to Image-Prism.", "notes": "Keep standalone." },
+    { "name": "04-prism-LAP", "home": "kas1987", "role": "retire", "status": "ARCHIVE_CANDIDATE", "tier": 5, "default_branch": "preserve/laptop-20260531", "visibility": "PRIVATE", "archived": false, "merge_target": "04-Prism", "disk_kb": 46004, "local_path": "C:/.04_Prism", "action": "Laptop preserve snapshot (created 2026-05-31, after v0.5.0). Fold into 04-Prism as tag/branch, then DELETE.", "notes": "Not in v0.5.0 plan (drift)." },
+    { "name": "3D_Meta", "home": "kas1987", "role": "estate_member", "status": "ACTIVE_NICHE", "tier": 5, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 114886, "action": "The Veil 3D visual asset pipeline; active. Default normalized Main -> main 2026-06-02.", "notes": "Keep standalone; rename to 3d-meta optional." },
+
+    { "name": "CCP", "home": "kas1987", "role": "estate_member", "status": "MERGE_CANDIDATE", "tier": 5, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "ChromaticSystems", "disk_kb": 102, "action": "Governance docs superseded; migrate ADRs into ChromaticSystems, then archive." },
+    { "name": "Chromatic_Brain", "home": "kas1987", "role": "estate_member", "status": "MERGE_CANDIDATE", "tier": 5, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "ChromaticSystems", "disk_kb": 23334, "action": "Inactive since 2026-05-06; migrate governance artifacts into ChromaticSystems, then archive." },
+    { "name": "chromatic-devsecops", "home": "kas1987", "role": "estate_member", "status": "MERGE_CANDIDATE", "tier": 1, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "ChromaticSystems", "disk_kb": 112, "action": "Merge into ChromaticSystems." },
+
+    { "name": "Chromatic_Skills", "home": "kas1987", "role": "tooling", "status": "STANDALONE_CANONICAL", "tier": 4, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 6567, "action": "Full doctrine + 13 skills — own canonical repo. Receives claude-skills. Default normalized Main -> main 2026-06-02.", "notes": "Rename to chromatic-skills optional." },
+    { "name": "claude-skills", "home": "kas1987", "role": "tooling", "status": "MERGE_CANDIDATE", "tier": 4, "default_branch": "master", "visibility": "PRIVATE", "archived": false, "merge_target": "Chromatic_Skills", "disk_kb": 2328, "action": "Merge into Chromatic_Skills, then archive." },
+    { "name": "claude-config", "home": "kas1987", "role": "tooling", "status": "STANDALONE_CANONICAL", "tier": 4, "default_branch": "master", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 1672, "action": "Canonical Claude tooling home. Claude-Nexus dropped (archived, not reviving). Receives Claude_Master. PENDING GH_TOKEN rotation T4 (leaked gho_ in settings.json + history).", "notes": "Decision 2026-06-02: keep claude-config independent; do not use Claude-Nexus." },
+    { "name": "Claude_Master", "home": "kas1987", "role": "tooling", "status": "MERGE_CANDIDATE", "tier": 4, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "claude-config", "disk_kb": 4937, "action": "Merge into claude-config (re-targeted from Claude-Nexus, decision 2026-06-02)." },
+
+    { "name": "Command-Center", "home": "kas1987", "role": "retire", "status": "ARCHIVED_REDIRECT", "tier": 2, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "chromatic-command-center", "disk_kb": 4434, "action": "Planning already migrated to chromatic-command-center/docs/archive/command-center/. Set REPO_STATUS ARCHIVED_REDIRECT, then archive. (Earlier 'fold' rec is essentially DONE.)" },
+    { "name": "ai-project-management-harness", "home": "kas1987", "role": "retire", "status": "ARCHIVED", "tier": 2, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "chromatic-command-center", "disk_kb": 679, "action": "Content archived to chromatic-command-center/docs/archive/ai-project-management-harness/. Archive repo." },
+    { "name": "Master_CCC", "home": "kas1987", "role": "retire", "status": "ARCHIVED", "tier": 5, "default_branch": "main", "visibility": "PRIVATE", "archived": true, "merge_target": null, "disk_kb": 1796391, "action": "No unique content (per v0.5.0). 1.79 GB. Tree-diff verify -> DELETE at tier 5." },
+    { "name": "JOB", "home": "kas1987", "role": "retire", "status": "ARCHIVE_CANDIDATE", "tier": 2, "default_branch": "main", "visibility": "PRIVATE", "archived": true, "merge_target": null, "disk_kb": 23117, "action": "Personal career tool — no platform role. Archived; DELETE at tier 5." },
+    { "name": "prism-autonomy-harness@kas1987", "github_name": "prism-autonomy-harness", "home": "kas1987", "role": "retire", "status": "ARCHIVED", "tier": 3, "default_branch": "main", "visibility": "PRIVATE", "archived": true, "merge_target": "Poly-Chromatic/prism-autonomy-harness", "disk_kb": 73, "action": "Archived duplicate; canonical is the org repo. Default normalized Main -> main 2026-06-02. DELETE at tier 5." },
+    { "name": "agentops", "home": "kas1987", "role": "retire", "status": "ARCHIVED", "tier": 3, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "Poly-Chromatic/prism-autonomy-harness", "disk_kb": 14, "action": "Scaffolded at prism-autonomy-harness/subsystems/agentops/. Default normalized Main -> main 2026-06-02. Archive." },
+
+    { "name": "chromatic-inbox-harness", "home": "Poly-Chromatic", "role": "estate_member", "status": "ADAPTER", "tier": 3, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "Poly-Chromatic/prism-autonomy-harness", "disk_kb": 73413, "local_path": "C:/chromatic-inbox-harness", "action": "Intake adapter; stays as-is, bridges to prism-autonomy-harness." },
+    { "name": "chromatic-inbox-harness-openrouter-adapter", "home": "Poly-Chromatic", "role": "estate_member", "status": "ADAPTER", "tier": 3, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "Poly-Chromatic/prism-autonomy-harness", "disk_kb": 12, "action": "Dispatch adapter; stays as-is." },
+    { "name": "Claude-Nexus", "home": "Poly-Chromatic", "role": "retire", "status": "ARCHIVED", "tier": 4, "default_branch": "master", "visibility": "PRIVATE", "archived": true, "merge_target": null, "disk_kb": 293941, "action": "Archived. NOT a merge target — decision 2026-06-02: claude-config is the canonical Claude tooling home; Claude_Master merges there instead." },
+
+    { "name": "ComftyUI-Harness", "home": "kas1987", "role": "estate_member", "status": "RENAME_CANDIDATE", "tier": 4, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 503, "action": "Rename typo ComftyUI -> ComfyUI-Harness; standalone harness." },
+
+    { "name": "chromatic-stack", "home": "kas1987", "role": "estate_member", "status": "ACTIVE_NICHE", "tier": 4, "default_branch": "master", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 49, "action": "Local Docker agent stack. Not in v0.5.0 (drift) — classify ACTIVE_NICHE; normalize master -> main." },
+    { "name": "chromatic-design-studios", "home": "kas1987", "role": "estate_member", "status": "ACTIVE_NICHE", "tier": 4, "default_branch": "master", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 6848, "action": "Design system rig. Not in v0.5.0 (drift) — classify ACTIVE_NICHE; normalize master -> main." },
+    { "name": "Viel-Small-Town", "home": "kas1987", "role": "product", "status": "ACTIVE_NICHE", "tier": 4, "default_branch": "main", "visibility": "PRIVATE", "archived": false, "merge_target": "The-Veil", "disk_kb": 24146, "action": "The Veil universe content. Default normalized Main -> main 2026-06-02. Confirm relationship to The-Veil." },
+
+    { "name": "9router", "home": "kas1987", "role": "published_oss", "status": "PUBLISHED_OSS", "tier": 5, "default_branch": "master", "visibility": "PUBLIC", "archived": false, "merge_target": null, "disk_kb": 8569, "local_path": "C:/9router", "action": "Public OSS tool — keep." },
+    { "name": "claude-octopus", "home": "kas1987", "role": "published_oss", "status": "PUBLISHED_OSS", "tier": 5, "default_branch": "main", "visibility": "PUBLIC", "archived": false, "merge_target": null, "disk_kb": 11865, "action": "Public OSS tool — keep." },
+    { "name": "claude-powerline", "home": "kas1987", "role": "published_oss", "status": "PUBLISHED_OSS", "tier": 5, "default_branch": "main", "visibility": "PUBLIC", "archived": false, "merge_target": null, "disk_kb": 5895, "action": "Public OSS tool — keep." },
+    { "name": "dmx", "home": "kas1987", "role": "published_oss", "status": "ARCHIVE_CANDIDATE", "tier": 5, "default_branch": "main", "visibility": "PUBLIC", "archived": false, "merge_target": null, "disk_kb": 500, "action": "v0.5.0 marks ARCHIVE_CANDIDATE. Confirm, then archive.", "notes": "GitOps for model weights." },
+
+    { "name": "Chromatic_Audit", "home": "kas1987", "role": "retire", "status": "ARCHIVE_CANDIDATE", "tier": 5, "default_branch": "", "visibility": "PRIVATE", "archived": false, "merge_target": null, "disk_kb": 0, "action": "Empty (0 bytes, no default branch). Not in v0.5.0 (drift). DELETE at tier 5." }
+  ]
+}
