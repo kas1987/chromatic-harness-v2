@@ -14,9 +14,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 
 # Load scripts/merge_confidence_gate.py by path (scripts/ is not a package).
-_spec = importlib.util.spec_from_file_location(
-    "merge_confidence_gate", REPO / "scripts" / "merge_confidence_gate.py"
-)
+_spec = importlib.util.spec_from_file_location("merge_confidence_gate", REPO / "scripts" / "merge_confidence_gate.py")
 mcg = importlib.util.module_from_spec(_spec)
 sys.modules["merge_confidence_gate"] = mcg
 _spec.loader.exec_module(mcg)
@@ -86,9 +84,7 @@ def test_p4_content_requires_human_ack():
 # --- score-driven bands map to verdicts --------------------------------------
 def test_warn_size_plus_risk_lands_in_human_ack_band():
     # pr-size warn (-15) + ai risk 30 (-15) = 70 → reversible → human_ack
-    v = mcg.compute_verdict(
-        {"pr_size": {"risk_level": "warn"}, "ai_review": {"risk_score": 30, "level": "warn"}}
-    )
+    v = mcg.compute_verdict({"pr_size": {"risk_level": "warn"}, "ai_review": {"risk_score": 30, "level": "warn"}})
     assert v["score"] == 70
     assert v["band"] == "reversible"
     assert v["verdict"] == "human_ack"
@@ -96,9 +92,7 @@ def test_warn_size_plus_risk_lands_in_human_ack_band():
 
 def test_failed_size_gate_blocks():
     # pr-size fail (-40) + protected (-20) = 40 → escalate → block
-    v = mcg.compute_verdict(
-        {"pr_size": {"risk_level": "fail", "protected_paths": ["settings.json"]}}
-    )
+    v = mcg.compute_verdict({"pr_size": {"risk_level": "fail", "protected_paths": ["settings.json"]}})
     assert v["score"] == 40
     assert v["verdict"] == "block"
 

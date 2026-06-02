@@ -104,14 +104,10 @@ def compute_verdict(signals: dict[str, Any]) -> dict[str, Any]:
     priv = signals.get("privacy") or {}
     if priv.get("p3_hits"):
         hard_block = True
-        reasons.append(
-            f"P3/secret-shaped content in diff: {', '.join(priv['p3_hits'][:3])} (HARD BLOCK)"
-        )
+        reasons.append(f"P3/secret-shaped content in diff: {', '.join(priv['p3_hits'][:3])} (HARD BLOCK)")
     if priv.get("p4_hits"):
         human_ack = True
-        reasons.append(
-            f"P4/compliance content in diff: {', '.join(priv['p4_hits'][:3])} (needs human ack)"
-        )
+        reasons.append(f"P4/compliance content in diff: {', '.join(priv['p4_hits'][:3])} (needs human ack)")
 
     gov = signals.get("pr_governance")
     if gov is not None and gov.get("passed") is False:
@@ -251,22 +247,33 @@ def _gh_signals(pr: int, base: str) -> dict[str, Any]:
         )
         repo = os.environ.get("GITHUB_REPOSITORY", "")
         owner, name = (repo.split("/", 1) + [""])[:2] if "/" in repo else ("", "")
-        raw = _run([
-            "gh", "api", "graphql", "-f", f"query={q}",
-            "-F", f"o={owner}", "-F", f"n={name}", "-F", f"p={pr}",
-        ])
+        raw = _run(
+            [
+                "gh",
+                "api",
+                "graphql",
+                "-f",
+                f"query={q}",
+                "-F",
+                f"o={owner}",
+                "-F",
+                f"n={name}",
+                "-F",
+                f"p={pr}",
+            ]
+        )
         data = json.loads(raw) if raw.strip() else {}
         nodes = (
-            data.get("data", {}).get("repository", {}).get("pullRequest", {})
-            .get("reviewThreads", {}).get("nodes", [])
+            data.get("data", {}).get("repository", {}).get("pullRequest", {}).get("reviewThreads", {}).get("nodes", [])
         )
         out["unresolved_reviews"] = sum(1 for t in nodes if not t.get("isResolved"))
     except Exception:
         pass
     # Conflicting sibling PRs on the same base.
     try:
-        raw = _run(["gh", "pr", "list", "--base", base, "--state", "open",
-                    "--json", "number,mergeable", "--limit", "100"])
+        raw = _run(
+            ["gh", "pr", "list", "--base", base, "--state", "open", "--json", "number,mergeable", "--limit", "100"]
+        )
         peers = json.loads(raw) if raw.strip() else []
         out["conflicting_peers"] = sum(
             1 for p in peers if p.get("number") != pr and p.get("mergeable") == "CONFLICTING"
@@ -341,8 +348,9 @@ def write_artifact(report: dict[str, Any], ts: str) -> Path:
 
 def _post_comment(pr: int, body: str) -> None:
     try:
-        subprocess.run(["gh", "pr", "comment", str(pr), "--body-file", "-"],
-                       cwd=str(REPO), input=body, text=True, check=False)
+        subprocess.run(
+            ["gh", "pr", "comment", str(pr), "--body-file", "-"], cwd=str(REPO), input=body, text=True, check=False
+        )
     except Exception:
         pass
 
