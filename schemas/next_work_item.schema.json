@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Next Work Item",
+  "type": "object",
+  "required": ["id", "title", "status", "priority", "repo", "area", "specialties", "owner_agent", "acceptance_checks", "links", "notes"],
+  "properties": {
+    "id": {"type": "string"},
+    "title": {"type": "string"},
+    "status": {"enum": ["ready", "blocked", "needs-human-decision", "in-progress", "review-required", "done"]},
+    "priority": {"type": "integer", "minimum": 0, "maximum": 100},
+    "repo": {"type": "string"},
+    "area": {"type": "string"},
+    "specialties": {"type": "array", "items": {"type": "string"}},
+    "owner_agent": {"type": "string"},
+    "depends_on": {"type": "array", "items": {"type": "string"}},
+    "blocked_by": {"type": "array", "items": {"type": "string"}},
+    "risk_level": {"type": "string"},
+    "confidence_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "acceptance_checks": {"type": "array", "items": {"type": "string"}},
+    "links": {"type": "array", "items": {"type": "string"}},
+    "notes": {"type": "string"}
+  }
+}

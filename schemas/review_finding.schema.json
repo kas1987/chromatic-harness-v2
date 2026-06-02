@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Review Finding",
+  "type": "object",
+  "required": ["finding_id", "source", "repo", "status", "body", "dedupe_key", "confidence_score", "risk_level"],
+  "properties": {
+    "finding_id": {"type": "string"},
+    "source": {"type": "string"},
+    "repo": {"type": "string"},
+    "pr_number": {"type": ["integer", "null"]},
+    "review_id": {"type": ["string", "integer", "null"]},
+    "comment_id": {"type": ["string", "integer", "null"]},
+    "thread_id": {"type": ["string", "null"]},
+    "author": {"type": ["string", "null"]},
+    "created_at": {"type": ["string", "null"]},
+    "commit_sha": {"type": ["string", "null"]},
+    "path": {"type": ["string", "null"]},
+    "line": {"type": ["integer", "null"]},
+    "side": {"type": ["string", "null"]},
+    "body": {"type": "string"},
+    "finding_type": {"type": "string"},
+    "severity": {"type": "string"},
+    "risk_level": {"type": "string"},
+    "status": {"type": "string"},
+    "dedupe_key": {"type": "string"},
+    "suggested_agent": {"type": "string"},
+    "confidence_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "acceptance_checks": {"type": "array", "items": {"type": "string"}},
+    "links": {"type": "object"}
+  }
+}
