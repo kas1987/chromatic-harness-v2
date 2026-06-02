@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -19,8 +18,10 @@ REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = REPO / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
+sys.path.insert(0, str(REPO / "scripts"))
 
 from activity.lanes import lane_title_prefix  # noqa: E402
+from common_harness import run_safe  # noqa: E402
 
 _PREFIX_RE = re.compile(r"^\[(agent|human|review)\]", re.IGNORECASE)
 
@@ -35,18 +36,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    try:
-        proc = subprocess.run(
-            ["bd", "ready"],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-    except FileNotFoundError:
-        print("bd not found on PATH", file=sys.stderr)
-        return 1
+    proc = run_safe(["bd", "ready"], cwd=REPO, timeout=30)
 
     out = proc.stdout or ""
     if proc.returncode != 0:

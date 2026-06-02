@@ -7,7 +7,6 @@ import argparse
 import json
 import os
 import sqlite3
-import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -15,6 +14,9 @@ from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 DB_PATH = REPO / "07_LOGS_AND_AUDIT" / "active_sessions.sqlite3"
 
 
@@ -40,34 +42,20 @@ def _ensure_db() -> sqlite3.Connection:
         )
         """
     )
-    cols = {
-        row[1] for row in conn.execute("PRAGMA table_info(active_sessions)").fetchall()
-    }
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(active_sessions)").fetchall()}
     if "worktree_path" not in cols:
         conn.execute("ALTER TABLE active_sessions ADD COLUMN worktree_path TEXT NOT NULL DEFAULT ''")
     if "lock_path" not in cols:
         conn.execute("ALTER TABLE active_sessions ADD COLUMN lock_path TEXT NOT NULL DEFAULT ''")
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_active_sessions_updated_at ON active_sessions(updated_at)"
-    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_active_sessions_updated_at ON active_sessions(updated_at)")
     conn.commit()
     return conn
 
 
 def _git_branch() -> str:
-    try:
-        proc = subprocess.run(
-            ["git", "branch", "--show-current"],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-        branch = (proc.stdout or "").strip()
-        return branch or "unknown"
-    except (OSError, subprocess.TimeoutExpired):
-        return "unknown"
+    proc = run_safe(["git", "branch", "--show-current"], cwd=REPO, timeout=10)
+    branch = (proc.stdout or "").strip()
+    return branch or "unknown"
 
 
 def _clean_argv(argv: list[str]) -> list[str]:
