@@ -3,12 +3,14 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
+
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
 
 GATES: list[tuple[str, list[str]]] = [
     ("agent_operations", [PYTHON, str(REPO / "scripts" / "check_agent_operations.py")]),
@@ -67,7 +69,7 @@ def main() -> int:
         )
 
     for name, cmd in gates:
-        proc = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=600)
+        proc = run_safe(cmd, cwd=REPO, timeout=600)
         ok = proc.returncode == 0
         if name == "context_trim" and ok:
             combined = proc.stdout + proc.stderr
