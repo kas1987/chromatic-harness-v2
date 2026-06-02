@@ -354,3 +354,87 @@ def test_destructive_bead_content_is_detected():
     assert TR._DESTRUCTIVE_RE.search(TR._bead_content({"description": "Please run rm -rf /tmp/build and continue"}))
     assert TR._DESTRUCTIVE_RE.search(TR._bead_content({"acceptance_criteria": ["do git push --force"]}))
     assert not TR._DESTRUCTIVE_RE.search(TR._bead_content({"description": "Refactor the router into pure functions"}))
+
+
+# ── worktree isolation (worker never moves the shared checkout's HEAD) ────────
+
+
+def test_isolate_worktree_defaults_on():
+    assert TR.RunnerConfig().isolate_worktree is True
+
+
+def test_worktree_path_sanitizes_bead_id():
+    p = TR._worktree_path("epic/u8uj.1")
+    assert p.name == "auto-epic_u8uj_1"
+    assert p.parent.name == ".worktrees"
+
+
+def test_prompt_isolated_tells_worker_not_to_switch_branches(tmp_path):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    detail = {"title": "t", "description": "d", "acceptance_criteria": "c"}
+    prompt = TR._compose_worker_prompt("u8uj.1", detail, cfg)
+    assert "isolated git worktree" in prompt
+    assert "Do NOT create or switch branches" in prompt
+    assert "auto/u8uj.1" in prompt
+
+
+def test_prompt_non_isolated_keeps_create_branch(tmp_path):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=False)
+    detail = {"title": "t", "description": "d", "acceptance_criteria": "c"}
+    prompt = TR._compose_worker_prompt("u8uj.1", detail, cfg)
+    assert "Create branch `auto/u8uj.1`" in prompt
+    assert "isolated git worktree" not in prompt
+
+
+def test_dispatch_refuses_when_worktree_creation_fails(tmp_path, monkeypatch):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: None)
+    called = {"run": False}
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (called.__setitem__("run", True), (0, ""))[1])
+    r = TR.real_dispatch({"id": "u8uj.1"}, {}, cfg)
+    assert r.ok is False
+    assert "refusing to dispatch into the shared checkout" in r.summary
+    assert called["run"] is False  # never touched the shared checkout
+
+
+def test_dispatch_runs_worker_in_worktree_and_cleans_up(tmp_path, monkeypatch):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    wt = tmp_path / ".worktrees" / "auto-u8uj_1"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(
+        TR, "_bead_detail", lambda bid: {"title": "t", "description": "d", "acceptance_criteria": "c"}
+    )
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    seen: dict = {}
+
+    def fake_run(cmd, timeout=60, cwd=None):
+        seen["cwd"] = cwd
+        seen["cmd"] = cmd
+        return 0, 'RUNNER_RESULT: {"ok": true, "pr_number": 7, "branch": "auto/u8uj.1", "tests_passed": true, "summary": "done"}'
+
+    monkeypatch.setattr(TR, "_run", fake_run)
+    removed: dict = {}
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: removed.__setitem__("path", p))
+
+    r = TR.real_dispatch({"id": "u8uj.1"}, {}, cfg)
+    assert r.ok is True and r.pr_number == 7
+    assert seen["cwd"] == wt  # worker ran INSIDE the worktree, not the shared checkout
+    assert seen["cmd"][0] == "claude"
+    assert removed["path"] == wt  # worktree torn down afterwards
+
+
+def test_dispatch_cleans_up_worktree_even_on_worker_failure(tmp_path, monkeypatch):
+    cfg = TR.RunnerConfig(artifact_dir=tmp_path, isolate_worktree=True)
+    wt = tmp_path / ".worktrees" / "auto-u8uj_1"
+    monkeypatch.setattr(TR, "_which", lambda n: "claude")
+    monkeypatch.setattr(TR, "_bead_detail", lambda bid: {"title": "t", "description": "d"})
+    monkeypatch.setattr(TR, "_create_worktree", lambda bid: wt)
+    monkeypatch.setattr(TR, "_run", lambda *a, **k: (1, "boom"))
+    removed: dict = {}
+    monkeypatch.setattr(TR, "_remove_worktree", lambda p: removed.__setitem__("path", p))
+
+    r = TR.real_dispatch({"id": "u8uj.1"}, {}, cfg)
+    assert r.ok is False
+    assert removed["path"] == wt  # cleaned up despite worker failure
