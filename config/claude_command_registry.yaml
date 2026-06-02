@@ -18,7 +18,7 @@ commands:
     fallback_script: scripts/release_readiness.py
     mutation: none_by_default
     required_gates: []
-    logs_to: 05_REPORTS/harness_health/latest.json
+    logs_to: reports/harness_health/latest.json
     allowed: true
     forbidden_logic: [approval_decision, release_override]
   - name: /status
