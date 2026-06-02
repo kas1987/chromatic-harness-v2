@@ -12,13 +12,15 @@ def read_stdin() -> dict[str, Any]:
     if not data:
         return {}
     try:
-        return json.loads(data)  # type: ignore[return-value]
+        result = json.loads(data)
+        return result if isinstance(result, dict) else {}
     except Exception:
         return {}
 
 
 def emit_advisory(advisory: str) -> None:
-    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     sys.stdout.write(
         json.dumps(
             {"hookSpecificOutput": {"additionalContext": advisory}},
@@ -28,7 +30,8 @@ def emit_advisory(advisory: str) -> None:
 
 
 def emit_deny(advisory: str) -> None:
-    sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     sys.stdout.write(
         json.dumps(
             {
