@@ -12,11 +12,15 @@ powershell -File scripts/sync_claude_workflows.ps1
 
 | Command | What it does | Est. tokens |
 |---------|--------------|-------------|
+| `/audit [slices]` | Bounded parallel read-only Explore fan-out → findings | ~60–90k |
+| `/plan <goal>` | Decompose goal/roadmap → one epic + child beads (no code) | ~40–60k |
 | `/ship [feature]` | Discovery + plan → beads; **no crank** | ~50–150k |
 | `/close-issue <id>` | Implement one bead → pytest → push | ~30–80k |
 | `/qa` | `pytest` + `ruff` summary only | ~10–30k |
 | `/hotfix [bug]` | bug-hunt → minimal patch → pytest → push | ~40–100k |
 | `/go [mode]` | `workflow_go.py` → one bead → verify | ~30–80k |
+
+Full operating model: [`04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md`](../../04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md). Lifecycle: `/audit → /plan → /go → /close-issue`.
 
 ## Rules
 
