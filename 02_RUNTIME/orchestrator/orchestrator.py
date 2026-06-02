@@ -13,17 +13,6 @@ _REPO = os.path.dirname(_RUNTIME)
 sys.path.insert(0, _REPO)
 sys.path.insert(0, _RUNTIME)
 
-from router.router import ChromaticRouter  # noqa: E402
-from router.observability import ObservabilityLogger  # noqa: E402
-from router.contracts import (  # noqa: E402
-    RouteRequest,
-    TaskType,
-    PrivacyClass,
-    RouteConstraints,
-    RouteConfidence,
-    RouteAudit,
-    RouteInput,
-)
 from scope.guard import DispatchGuard  # noqa: E402
 from magnets.base_magnet import MagnetEvent  # noqa: E402
 from magnets.magnet_orchestrator import MagnetOrchestrator  # noqa: E402
@@ -63,9 +52,7 @@ class Orchestrator:
         """Build a mission packet from a workflow task-graph node or CLI task dict."""
         title = task.get("title") or task.get("objective", "")
         allowed_files = task.get("allowed_files") or []
-        confidence_required = float(
-            task.get("confidence_required", task.get("confidence_score", 75))
-        )
+        confidence_required = float(task.get("confidence_required", task.get("confidence_score", 75)))
         stop_conditions = list(
             task.get(
                 "stop_conditions",
@@ -110,9 +97,7 @@ class Orchestrator:
         """Run magnet pipeline + Agent Lead synthesis on mission events."""
         import importlib.util
 
-        spec = importlib.util.spec_from_file_location(
-            "agent_lead", os.path.join(_HERE, "agent_lead.py")
-        )
+        spec = importlib.util.spec_from_file_location("agent_lead", os.path.join(_HERE, "agent_lead.py"))
         mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
         sys.modules["agent_lead"] = mod
         spec.loader.exec_module(mod)  # type: ignore[union-attr]
@@ -143,16 +128,10 @@ class Orchestrator:
             "mission_id": mission.mission_id,
             "status": "guarded_and_ready",
             "scope_baseline": {
-                "expected_scope": guarded.scope_baseline.expected_scope
-                if guarded.scope_baseline
-                else "",
-                "baseline_count": guarded.scope_baseline.baseline_count
-                if guarded.scope_baseline
-                else 0,
+                "expected_scope": guarded.scope_baseline.expected_scope if guarded.scope_baseline else "",
+                "baseline_count": guarded.scope_baseline.baseline_count if guarded.scope_baseline else 0,
             },
-            "injected_rules": [
-                r["name"] for r in guarded.injected_context.get("governance_rules", [])
-            ],
+            "injected_rules": [r["name"] for r in guarded.injected_context.get("governance_rules", [])],
             "scope_header_present": bool(guarded.scope_header),
         }
 
@@ -187,40 +166,6 @@ class Orchestrator:
             "magnets": self.attach_magnets(mission),
         }
 
-    async def route_to_provider(
-        self, mission: MissionPacket, task_type: str = "planning"
-    ) -> dict[str, Any]:
-        """Route a mission objective through ChromaticRouter to select a model/provider."""
-        router = ChromaticRouter()
-        req = RouteRequest(
-            request_id=str(uuid.uuid4()),
-            task_id=mission.mission_id,
-            task_type=TaskType(task_type),
-            objective=mission.objective,
-            input=RouteInput(),
-            constraints=RouteConstraints(
-                privacy_class=PrivacyClass.P1,
-                allow_openhuman=False,
-            ),
-            confidence=RouteConfidence(
-                score=mission.confidence_required,
-            ),
-            preferred_provider="auto",
-            fallback_chain=[],
-            audit=RouteAudit(caller="orchestrator"),
-        )
-        resp = await router.route(req)
-        return {
-            "provider": resp.selected_provider,
-            "model": resp.selected_model,
-            "reason": resp.route_reason,
-            "fallback_used": resp.fallback_used,
-            "cost_estimate_usd": resp.cost_estimate_usd,
-            "latency_ms": resp.latency_ms,
-            "warnings": resp.logs.warnings,
-            "errors": resp.logs.errors,
-        }
-
     def complete_mission(
         self,
         mission: MissionPacket,
@@ -240,6 +185,7 @@ class Orchestrator:
         """
         from router.confidence import ConfidenceGate
         from router.contracts import ConfidenceBand, RouteConfidence
+        from router.observability import ObservabilityLogger
 
         band = ConfidenceGate.band_from_score(mission.confidence_required)
         logger = ObservabilityLogger()
@@ -270,9 +216,7 @@ class Orchestrator:
                 self.confidence_score = s
                 self.output = out
 
-        fake_req = _FakeReq(
-            mission.mission_id, _FakeConf(band, mission.confidence_required)
-        )
+        fake_req = _FakeReq(mission.mission_id, _FakeConf(band, mission.confidence_required))
         fake_resp = _FakeResp(model, mission.confidence_required, _FakeOutput(result))
         logger._log_agent_run(
             fake_req,  # type: ignore[arg-type]
