@@ -61,12 +61,12 @@ def validate_payload(kind: str, payload: dict) -> None:
     Raises RuntimeError if the jsonschema package is not installed.
     """
     try:
-        from jsonschema import Draft202012Validator
+        from jsonschema import Draft202012Validator, FormatChecker
     except ImportError as exc:
         raise RuntimeError("jsonschema is required for envelope validation: pip install jsonschema") from exc
 
     schema = _load_schema(kind)
-    validator = Draft202012Validator(schema)
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
     errors = sorted(validator.iter_errors(payload), key=lambda e: e.path)
     if errors:
         first = errors[0]
