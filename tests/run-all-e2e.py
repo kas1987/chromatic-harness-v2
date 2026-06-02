@@ -70,6 +70,7 @@ SUITES = [
         [
             "test_router_autopath.py",
             "test_delegate_bead.py",
+            "test_claude_delegate_gate.py",
         ],
     ),
     (
@@ -393,6 +394,12 @@ SUITES = [
         [
             "test_promote_to_wiki.py",
             "test_sync_wiki_mirror.py",
+        ],
+    ),
+    (
+        "root hygiene allowlist gate (OMH-7)",
+        [
+            "test_root_hygiene_gate.py",
         ],
     ),
 ]

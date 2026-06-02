@@ -1,5 +1,5 @@
 # Multi-router matrix — Chromatic Harness v2 (federated copy)
-# Canonical: C:/Users/kas41/chromatic-harness-v2/docs/governance/multi-router-matrix.yaml
+# Canonical: C:/Users/kas41/chromatic-harness-v2/docs/routing/multi-router-matrix.yaml
 # Federate:  bash C:/Users/kas41/chromatic-harness-v2/scripts/federate-governance.sh
 #
 # This is a FEDERATED COPY. Edit the canonical and re-federate — never edit here directly.
@@ -21,6 +21,9 @@ canonical_implementation:
   claude_dispatch_cli: "C:/Users/kas41/.claude/hooks/multi-provider-dispatch.sh"
   claude_router_log: "C:/Users/kas41/.claude/.agents/router/log.jsonl"
   ollama_status: "C:/Users/kas41/.claude/.agents/router/ollama-status.json"
+  # ⚠️ LEGACY workspace pointers (.04_Prism, .01_Image Org) — pending harvest into the harness.
+  # Retained only because these artifacts are still live there; do NOT treat as canonical.
+  # See docs/governance/LEGACY_REPO_MIGRATION_PLAN.md.
   gen_routing_matrix: "C:/.04_Prism/gen/src/routes/routing-matrix.json"
   gen_gateway_doc: "C:/.04_Prism/docs/architecture/MODEL-DISPATCH-GATEWAY.md"
   rudalo_provider_registry: "C:/.01_Image Org/rudalo/router/provider_registry.yaml"
