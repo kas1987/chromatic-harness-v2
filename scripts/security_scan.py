@@ -22,11 +22,14 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import subprocess
+import shutil
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "security"
 
 # Secret patterns — mirrors ~/.claude/hooks/pre-commit.sh SECRET_PATTERN so the
@@ -64,15 +67,12 @@ SELF = Path(__file__).name
 
 
 def _run(cmd: list[str], *, timeout: int = 120) -> tuple[int, str]:
-    try:
-        r = subprocess.run(cmd, cwd=REPO, capture_output=True, text=True, timeout=timeout)
-        return r.returncode, (r.stdout or "") + (r.stderr or "")
-    except FileNotFoundError:
+    # Preserve the 127 "tool-not-found" sentinel that run_safe would otherwise
+    # collapse to rc=1 (the consumer keys on code == 127).
+    if cmd and shutil.which(cmd[0]) is None:
         return 127, "tool-not-found"
-    except subprocess.TimeoutExpired:
-        return 124, f"timeout after {timeout}s"
-    except Exception as exc:
-        return 1, str(exc)
+    r = run_safe(cmd, cwd=REPO, timeout=timeout)
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
 
 
 def _tracked_files() -> list[Path]:
