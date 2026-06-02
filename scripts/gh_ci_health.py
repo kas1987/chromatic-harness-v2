@@ -21,22 +21,26 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
+from pathlib import Path
 from typing import Any, Callable
+
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
 
 Runner = Callable[[list[str]], "tuple[int, str]"]
 _REPO_SLUG = "kas1987/chromatic-harness-v2"
 
 
 def _default_runner(cmd: list[str]) -> tuple[int, str]:
-    try:
-        proc = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=30, check=False
-        )
-        return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
-    except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
-        return 127, str(exc)
+    # run_safe reaps the process tree on timeout (rc=124) and returns rc=1 on a
+    # missing binary; both are non-zero, which the callers' `code != 0` checks
+    # treat identically (the 127 value was never inspected downstream).
+    proc = run_safe(cmd, timeout=30)
+    return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
 
 
 def _json(code: int, out: str) -> Any:
