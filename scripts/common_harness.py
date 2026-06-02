@@ -129,6 +129,11 @@ def run_safe(cmd, cwd: Path | None = None, *, timeout: int = 30, stdin: str | No
     On Windows, subprocess.run(timeout=) only kills the immediate child, so a
     hung git/bd/dolt call orphans lock-holding grandchildren — this kills the
     tree instead. returncode is 124 on timeout, 1 on spawn/other error.
+
+    Output is decoded as UTF-8 with errors="replace": bd/git/dolt occasionally
+    emit bytes that are invalid in the Windows locale codepage, and a plain
+    text=True decode would raise UnicodeDecodeError mid-call. replace keeps
+    the call total (never raises on output decoding).
     """
 
     class R:
@@ -136,6 +141,8 @@ def run_safe(cmd, cwd: Path | None = None, *, timeout: int = 30, stdin: str | No
 
     kwargs: dict = {
         "text": True,
+        "encoding": "utf-8",
+        "errors": "replace",
         "stdout": subprocess.PIPE,
         "stderr": subprocess.PIPE,
         "stdin": subprocess.PIPE if stdin is not None else None,
