@@ -403,6 +403,12 @@ SUITES = [
             "test_root_hygiene_gate.py",
         ],
     ),
+    (
+        "chromatic discriminated envelope validator (w0wk.2)",
+        [
+            "test_envelope_validator.py",
+        ],
+    ),
 ]
 
 
