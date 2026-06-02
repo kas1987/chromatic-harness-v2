@@ -27,8 +27,15 @@ REPO = Path(__file__).resolve().parents[1]
 DEFAULT_LEDGER = REPO / "07_LOGS_AND_AUDIT" / "budget" / "ledger.jsonl"
 
 # Generous defaults so --check passes unless a real ceiling is set (env or flag).
-DEFAULT_MAX_USD = float(os.environ.get("LOOP_BUDGET_MAX_USD", "0") or 0)  # 0 = no USD ceiling
-DEFAULT_MAX_TOKENS = int(os.environ.get("LOOP_BUDGET_MAX_TOKENS", "0") or 0)  # 0 = no token ceiling
+# Wrap in try/except: a non-numeric env var must not raise at module level and strand the loop.
+try:
+    DEFAULT_MAX_USD = float(os.environ.get("LOOP_BUDGET_MAX_USD", "0") or 0)
+except (ValueError, TypeError):
+    DEFAULT_MAX_USD = 0.0  # 0 = no USD ceiling (fail-open)
+try:
+    DEFAULT_MAX_TOKENS = int(os.environ.get("LOOP_BUDGET_MAX_TOKENS", "0") or 0)
+except (ValueError, TypeError):
+    DEFAULT_MAX_TOKENS = 0  # 0 = no token ceiling (fail-open)
 WARN_FRACTION = 0.8
 
 

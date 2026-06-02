@@ -1,0 +1,48 @@
+# Adapter registry — maps provider names to Python adapter classes.
+# Loaded by AdapterFactory; replaces the hardcoded _register_default_adapters().
+#
+# Keys under `adapters` match exact provider names from providers.yaml.
+# Keys under `prefixes` match providers whose name *starts with* the key;
+# use pass_name: true when the constructor signature is (name, cfg) rather
+# than just (cfg).
+
+version: "1.0"
+
+adapters:
+  openhuman:
+    module: "router.adapters.openhuman_adapter"
+    class: "OpenHumanAdapter"
+  lmstudio:
+    module: "router.adapters.lmstudio_adapter"
+    class: "LMStudioAdapter"
+  openai:
+    module: "router.adapters.openai_adapter"
+    class: "OpenAIAdapter"
+  anthropic:
+    module: "router.adapters.anthropic_adapter"
+    class: "AnthropicAdapter"
+  google:
+    module: "router.adapters.google_adapter"
+    class: "GoogleAdapter"
+  openrouter:
+    module: "router.adapters.openrouter_adapter"
+    class: "OpenRouterAdapter"
+  featherless:
+    module: "router.adapters.featherless_adapter"
+    class: "FeatherlessAdapter"
+  kimi:
+    module: "router.adapters.kimi_adapter"
+    class: "KimiAdapter"
+  prism-orchestrator:
+    module: "router.adapters.prism_orchestrator_adapter"
+    class: "PrismOrchestratorAdapter"
+  native_claude:
+    module: "router.adapters.native_claude_adapter"
+    class: "NativeClaudeAdapter"
+
+prefixes:
+  # OllamaRemoteAdapter matches "ollama", "ollama_local", "ollama_remote_desktop", etc.
+  ollama:
+    module: "router.adapters.ollama_remote"
+    class: "OllamaRemoteAdapter"
+    pass_name: true

@@ -6,7 +6,7 @@ import os
 import time
 from typing import Any
 
-from .base import BaseAdapter, AdapterHealth
+from .base import AdapterError, BaseAdapter, AdapterHealth
 from ..contracts import (
     RouteRequest,
     RouteResponse,
@@ -22,7 +22,7 @@ _DEFAULT_MODEL = "gemini-2.0-flash"
 class GoogleAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
         cfg = dict(cfg) if cfg else {}
-        api_key = os.environ.get(cfg.get("env_key", "GOOGLE_API_KEY"), "")
+        api_key = os.environ.get(cfg.get("env_key", "GOOGLE_API_KEY"), "")  # pragma: allowlist secret
         cfg.setdefault("enabled", bool(api_key))
         cfg.setdefault("env_key", "GOOGLE_API_KEY")
         cfg.setdefault("model", _DEFAULT_MODEL)
@@ -35,27 +35,21 @@ class GoogleAdapter(BaseAdapter):
             try:
                 from google import genai
 
-                api_key = os.environ.get(self.cfg.get("env_key", "GOOGLE_API_KEY"))
-                self._client = genai.Client(api_key=api_key)
+                api_key = os.environ.get(self.cfg.get("env_key", "GOOGLE_API_KEY"))  # pragma: allowlist secret
+                self._client = genai.Client(api_key=api_key)  # pragma: allowlist secret
             except ImportError:
-                raise RuntimeError(
-                    "google-genai not installed: pip install google-genai"
-                )
+                raise AdapterError("google-genai not installed: pip install google-genai", provider="google")
         return self._client
 
     async def health(self) -> AdapterHealth:
         if not self.enabled:
-            return AdapterHealth(
-                reachable=False, latency_ms=0, error="GOOGLE_API_KEY not set"
-            )
+            return AdapterHealth(reachable=False, latency_ms=0, error="GOOGLE_API_KEY not set")
         try:
             start = time.time()
             client = self._get_client()
             # Lightweight check — list first model
             next(iter(client.models.list()), None)
-            return AdapterHealth(
-                reachable=True, latency_ms=int((time.time() - start) * 1000)
-            )
+            return AdapterHealth(reachable=True, latency_ms=int((time.time() - start) * 1000))
         except Exception as e:
             return AdapterHealth(reachable=False, latency_ms=0, error=str(e)[:200])
 
@@ -66,9 +60,7 @@ class GoogleAdapter(BaseAdapter):
         try:
             client = self._get_client()
             prompt = (
-                "\n".join(m.get("content", "") for m in req.input.messages)
-                if req.input.messages
-                else req.objective
+                "\n".join(m.get("content", "") for m in req.input.messages) if req.input.messages else req.objective
             )
             model = self.cfg.get("model", _DEFAULT_MODEL)
             start = time.time()
@@ -78,13 +70,11 @@ class GoogleAdapter(BaseAdapter):
             )
             latency_ms = int((time.time() - start) * 1000)
             # Re-raise rate limit / quota errors so the router falls back
-            if hasattr(response, "prompt_feedback") and getattr(
-                response.prompt_feedback, "block_reason", None
-            ):
-                raise RuntimeError(f"Blocked: {response.prompt_feedback.block_reason}")
+            if hasattr(response, "prompt_feedback") and getattr(response.prompt_feedback, "block_reason", None):
+                raise AdapterError(f"Blocked: {response.prompt_feedback.block_reason}", provider="google")
             content = response.text or ""
             if not content:
-                raise RuntimeError("Empty response from Gemini")
+                raise AdapterError("Empty response from Gemini", provider="google")
             usage = getattr(response, "usage_metadata", None)
             return RouteResponse(
                 request_id=req.request_id,
