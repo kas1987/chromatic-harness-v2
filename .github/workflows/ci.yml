@@ -96,6 +96,9 @@ jobs:
           python scripts/audit_hooks.py --json > hook_audit.json
           python -c "import json; d=json.load(open('hook_audit.json')); high=[f for f in d.get('findings',[]) if f.get('severity')=='HIGH']; assert not high, high"
 
+      - name: Schema registry validation
+        run: python scripts/validate_schema_registry.py
+
       - name: Intake close-loop validation (dry-run)
         run: python scripts/validate_intake_loop.py
 

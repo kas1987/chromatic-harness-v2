@@ -6,7 +6,7 @@ import os
 import time
 from typing import Any
 
-from .base import BaseAdapter, AdapterHealth
+from .base import AdapterError, BaseAdapter, AdapterHealth
 import httpx
 from ..contracts import (
     RouteRequest,
@@ -35,10 +35,10 @@ class AnthropicAdapter(BaseAdapter):
                 from anthropic import AsyncAnthropic
 
                 self._client = AsyncAnthropic(
-                    api_key=os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))
+                    api_key=os.environ.get(self.cfg.get("env_key", "ANTHROPIC_API_KEY"))  # pragma: allowlist secret
                 )
             except ImportError:
-                raise RuntimeError("anthropic SDK not installed: pip install anthropic")
+                raise AdapterError("anthropic SDK not installed: pip install anthropic", provider="anthropic")
         return self._client
 
     async def health(self) -> AdapterHealth:
@@ -64,18 +64,12 @@ class AnthropicAdapter(BaseAdapter):
         logs = RouteLogs()
         try:
             if not self.enabled:
-                return self.normalize_error(
-                    req.request_id, "ANTHROPIC_API_KEY not configured"
-                )
+                return self.normalize_error(req.request_id, "ANTHROPIC_API_KEY not configured")
 
             client = self._get_client()
             start = time.time()
 
-            messages = (
-                req.input.messages
-                if req.input.messages
-                else [{"role": "user", "content": req.objective}]
-            )
+            messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
             response = await client.messages.create(
                 model=self.cfg.get("model", "claude-3-5-sonnet-20241022"),
                 max_tokens=req.constraints.max_tokens or 2048,
@@ -93,8 +87,7 @@ class AnthropicAdapter(BaseAdapter):
                 usage=RouteUsage(
                     input_tokens=response.usage.input_tokens,
                     output_tokens=response.usage.output_tokens,
-                    total_tokens=response.usage.input_tokens
-                    + response.usage.output_tokens,
+                    total_tokens=response.usage.input_tokens + response.usage.output_tokens,
                 ),
                 latency_ms=latency_ms,
                 logs=logs,

@@ -206,26 +206,14 @@ class BudgetLedger:
 
         return 25_000
 
-    def append_daily(
-        self,
-        amount_usd: float,
-        *,
-        source: str,
-        note: str = "",
-        decision_id: str = "",
-        timestamp: str = "",
-    ) -> None:
+    def append_daily(self, amount_usd: float, *, source: str, note: str = "", decision_id: str = "") -> None:
         self._ensure_dir()
         row: dict[str, Any] = {
-            # Use the event's real timestamp when supplied so daily/weekly
-            # windowing reflects when spend happened, not when it was bridged.
-            "timestamp": timestamp or datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "amount_usd": round(amount_usd, 6),
             "source": source,
             "note": note,
         }
-        # decision_id makes the sink idempotent: callers can skip already-posted
-        # events instead of re-appending them (the daily.jsonl inflation bug).
         if decision_id:
             row["decision_id"] = decision_id
         with open(self.daily_log, "a", encoding="utf-8") as f:

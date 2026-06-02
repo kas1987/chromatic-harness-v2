@@ -326,11 +326,9 @@ def bridge_today_to_daily(
     concrete wiring the ``ingest_claude_usage_hook()`` stub (ledger.py:228) was
     a placeholder for.
 
-    Idempotent: today.json is the *full* current-day snapshot, so this bridge
-    re-reads the same events on every governance loop. Each event's stable
-    ``decision_id`` is recorded in the sink; already-posted ids are skipped, so
-    re-runs do not N-count (the daily.jsonl inflation bug). Real event
-    timestamps are preserved so spend lands on the day it happened.
+    Dedup: each row's ``decision_id`` is stored in the sink. On subsequent calls
+    (same or new session) already-seen ids are skipped, preventing the 2.5M-line
+    re-ingestion bloat caused by re-reading today.json on every governance loop.
     """
     from budget.ledger import BudgetLedger  # local import: optional dep path
 
@@ -343,19 +341,20 @@ def bridge_today_to_daily(
     # Redirect the sink to the requested budget_dir (test isolation).
     ledger.daily_log = Path(budget_dir) / "daily.jsonl"
 
-    # Build the set of already-posted decision_ids so re-runs never double-count.
+    # Build set of already-ingested decision_ids so we never double-count.
     seen: set[str] = set()
     if ledger.daily_log.is_file():
-        for line in ledger.daily_log.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                did = json.loads(line).get("decision_id", "")
-            except json.JSONDecodeError:
-                continue
-            if did:
-                seen.add(did)
+        with ledger.daily_log.open(encoding="utf-8") as _fh:
+            for line in _fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    did = json.loads(line).get("decision_id", "")
+                    if did:
+                        seen.add(did)
+                except json.JSONDecodeError:
+                    continue
 
     total = 0.0
     for r in rows:
@@ -367,7 +366,6 @@ def bridge_today_to_daily(
             source=f"today:{r.cost_center.model or 'unknown'}",
             note=note,
             decision_id=r.decision_id,
-            timestamp=r.ts,
         )
         seen.add(r.decision_id)
         total += r.usd
