@@ -10,20 +10,20 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 PYTHON = sys.executable
 
 
 def _run_go() -> dict:
-    proc = subprocess.run(
+    proc = run_safe(
         [PYTHON, str(REPO / "scripts" / "workflow_go.py"), "GO"],
         cwd=REPO,
-        capture_output=True,
-        text=True,
         timeout=120,
     )
     raw = (proc.stdout or "").strip()
@@ -37,11 +37,9 @@ def _run_go() -> dict:
 
 
 def _run_auto_intake(limit: int) -> dict:
-    proc = subprocess.run(
+    proc = run_safe(
         [PYTHON, str(REPO / "scripts" / "auto_intake.py"), "--limit", str(limit)],
         cwd=REPO,
-        capture_output=True,
-        text=True,
         timeout=180,
     )
     raw = (proc.stdout or "").strip()
