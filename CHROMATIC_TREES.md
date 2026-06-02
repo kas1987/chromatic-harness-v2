@@ -134,6 +134,11 @@ chromatic-harness-v2/
 
 Until V3-6 lands, treat the left column as read-only legacy and write to the canonical home.
 
+> **Full contract:** the normative per-directory ownership matrix, write-policies, the band
+> convention (`00_`–`13_`), and the dated deprecation timeline live in
+> [`REPO_LAYERS.md`](REPO_LAYERS.md) — the subordinate canonical-layout contract this section
+> summarizes. The `v3-structure` epic (`8lri`) executes against it.
+
 ---
 
 ## 5. Agent Quick Reference — operation → file
@@ -156,6 +161,7 @@ Until V3-6 lands, treat the left column as read-only legacy and write to the can
 | **Start / end a session** | [`AGENT_OPERATIONS.md`](AGENT_OPERATIONS.md) | `bd prime` → `bd ready` |
 | **Pick next work** | `bd ready` | never from chat |
 | **Understand the directory layout** | this file (§2, §3) | — |
+| **Per-dir ownership / write-policy / deprecation timeline** | [`REPO_LAYERS.md`](REPO_LAYERS.md) | the normative layout contract |
 | **Understand execution flow** | [`00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md`](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md) | — |
 | **Find which file is authoritative** | §1 + [`00_SOURCE_OF_TRUTH/_AUTHORITY.yaml`](00_SOURCE_OF_TRUTH/_AUTHORITY.yaml) | — |
 | **See all templates** | [`templates/README.md`](templates/README.md) | — |
