@@ -6,12 +6,15 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
-import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO / "scripts"))
+from common_harness import run_safe  # noqa: E402
+
 SESSIONS_DB = REPO / "07_LOGS_AND_AUDIT" / "active_sessions.sqlite3"
 LOCKS_DB = REPO / ".agents" / "locks" / "session_locks.sqlite3"
 WORKTREES_DIR = REPO / ".worktrees"
@@ -95,14 +98,7 @@ def _list_locks() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
 
 
 def _git_worktrees() -> list[str]:
-    proc = subprocess.run(
-        ["git", "worktree", "list", "--porcelain"],
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-        timeout=30,
-        check=False,
-    )
+    proc = run_safe(["git", "worktree", "list", "--porcelain"], cwd=REPO, timeout=30)
     if proc.returncode != 0:
         return []
 
@@ -154,14 +150,7 @@ def _prune_orphaned_worktrees(orphaned_worktrees: list[str]) -> tuple[int, list[
         if WORKTREES_DIR.resolve() not in resolved.parents:
             errors.append(f"refused (outside .worktrees): {path}")
             continue
-        proc = subprocess.run(
-            ["git", "worktree", "remove", "--force", str(resolved)],
-            cwd=REPO,
-            capture_output=True,
-            text=True,
-            timeout=60,
-            check=False,
-        )
+        proc = run_safe(["git", "worktree", "remove", "--force", str(resolved)], cwd=REPO, timeout=60)
         if proc.returncode == 0:
             removed += 1
         else:
@@ -185,13 +174,9 @@ def main() -> int:
     declared_worktrees = _declared_worktrees()
 
     active_worktree_paths = {
-        str(Path(item.get("worktree_path", "")).resolve())
-        for item in sessions
-        if item.get("worktree_path")
+        str(Path(item.get("worktree_path", "")).resolve()) for item in sessions if item.get("worktree_path")
     }
-    orphaned_worktrees = sorted(
-        path for path in declared_worktrees if path not in active_worktree_paths
-    )
+    orphaned_worktrees = sorted(path for path in declared_worktrees if path not in active_worktree_paths)
 
     pruned_locks = 0
     pruned_worktrees = 0
@@ -202,9 +187,7 @@ def main() -> int:
         active_locks, stale_locks = _list_locks()
         declared_worktrees = _declared_worktrees()
         git_worktrees = _git_worktrees()
-        orphaned_worktrees = sorted(
-            path for path in declared_worktrees if path not in active_worktree_paths
-        )
+        orphaned_worktrees = sorted(path for path in declared_worktrees if path not in active_worktree_paths)
 
     out = {
         "ok": True,
