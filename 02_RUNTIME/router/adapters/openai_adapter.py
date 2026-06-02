@@ -6,7 +6,7 @@ import os
 import time
 from typing import Any
 
-from .base import BaseAdapter, AdapterHealth
+from .base import AdapterError, BaseAdapter, AdapterHealth
 import httpx
 from ..contracts import (
     RouteRequest,
@@ -35,10 +35,10 @@ class OpenAIAdapter(BaseAdapter):
                 from openai import AsyncOpenAI
 
                 self._client = AsyncOpenAI(
-                    api_key=os.environ.get(self.cfg.get("env_key", "OPENAI_API_KEY"))
+                    api_key=os.environ.get(self.cfg.get("env_key", "OPENAI_API_KEY"))  # pragma: allowlist secret
                 )
             except ImportError:
-                raise RuntimeError("openai SDK not installed: pip install openai")
+                raise AdapterError("openai SDK not installed: pip install openai", provider="openai")
         return self._client
 
     async def health(self) -> AdapterHealth:
@@ -61,18 +61,12 @@ class OpenAIAdapter(BaseAdapter):
         logs = RouteLogs()
         try:
             if not self.enabled:
-                return self.normalize_error(
-                    req.request_id, "OPENAI_API_KEY not configured"
-                )
+                return self.normalize_error(req.request_id, "OPENAI_API_KEY not configured")
 
             client = self._get_client()
             start = time.time()
 
-            messages = (
-                req.input.messages
-                if req.input.messages
-                else [{"role": "user", "content": req.objective}]
-            )
+            messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
             response = await client.chat.completions.create(
                 model=self.cfg.get("model", "gpt-4o-mini"),
                 messages=messages,
