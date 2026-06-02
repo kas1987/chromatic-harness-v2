@@ -31,13 +31,19 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
+_SCRIPTS = Path(__file__).resolve().parent
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
+from common_harness import run_safe  # noqa: E402
+
 OUT_DIR = REPO / "07_LOGS_AND_AUDIT" / "go_mode"
 MISSIONS_DIR = OUT_DIR / "missions"
 
@@ -240,14 +246,16 @@ def load_queue_from_bd() -> list[dict]:
     if not bd:
         return []
     try:
-        r = subprocess.run([bd, "ready", "--json"], cwd=REPO, capture_output=True, text=True, timeout=20)
+        r = run_safe([bd, "ready", "--json"], cwd=REPO, timeout=20)
         if r.returncode != 0 or not r.stdout.strip():
             return []
         data = json.loads(r.stdout)
         items = data if isinstance(data, list) else data.get("issues", [])
         # Filter out epics — GO-mode dispatches leaf tasks, not containers.
         return [it for it in items if str(it.get("issue_type", it.get("type", ""))).lower() != "epic"]
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, OSError):
+    except json.JSONDecodeError:
+        # run_safe absorbs timeout/OSError (rc handled above); malformed bd JSON
+        # is the only remaining raisable error.
         return []
 
 
