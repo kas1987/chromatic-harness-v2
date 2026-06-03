@@ -1,0 +1,29 @@
+name: Feature Request
+description: Propose an improvement to the harness
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem this solves
+      description: What workflow pain does this address?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Suggested priority
+      options:
+        - P0 — blocking
+        - P1 — high value
+        - P2 — nice to have
+    validations:
+      required: true

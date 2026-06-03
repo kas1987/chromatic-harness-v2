@@ -16,9 +16,17 @@ jobs:
     env:
       NATIVE_CLAUDE_RELAY_URL: "http://localhost:11434"
     steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
+
       - uses: actions/checkout@v5
         with:
           submodules: recursive
+          token: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
 
       - uses: actions/setup-python@v6
         with:
@@ -75,6 +83,8 @@ jobs:
         run: python scripts/security_scan.py --no-deps
 
       - name: Governance gates — advisory reports (non-blocking)
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
         continue-on-error: true
         run: |
           python scripts/pr_size_gate.py --base origin/${{ github.base_ref || 'session/chromatic-harness-v2-initial' }} || true

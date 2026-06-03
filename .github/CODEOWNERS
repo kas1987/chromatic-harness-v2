@@ -1,0 +1,7 @@
+# Global owner — all PRs require review from @kas1987
+* @kas1987
+
+# CI / governance — changes here require explicit sign-off
+.github/workflows/ @kas1987
+scripts/ @kas1987
+00_SOURCE_OF_TRUTH/ @kas1987
