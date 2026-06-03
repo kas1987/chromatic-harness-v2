@@ -262,3 +262,36 @@ def test_forecast_coasts_to_reset():
     # low usage => time_to_cap >> hours_to_reset => verdict ok
     fc = C._forecast("five_hour", latest, used_wtok=30000, cap_wtok=1000000)
     assert fc["verdict"] == "ok"
+
+
+# ── Dashboard (P4) ───────────────────────────────────────────────────────────
+import usage_dashboard as D  # noqa: E402
+
+
+def test_dashboard_builds_with_empty_artifacts(tmp_path, monkeypatch):
+    # All artifacts missing -> still renders a valid report, no crash.
+    _point_paths_to_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(L, "ROLLUP", tmp_path / "rollup.json")
+    md = D.build_dashboard()
+    assert "# Usage Calibration Dashboard" in md
+    assert "Current Windows" in md
+    assert "collecting" in md or "Not enough" in md  # cold-start trend message
+
+
+def test_dashboard_renders_caps_and_trend(tmp_path, monkeypatch):
+    _point_paths_to_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(L, "ROLLUP", tmp_path / "rollup.json")
+    L.write_json(L.CALIBRATED_CAPS, {
+        "updated_at": "2026-06-03T00:00:00+00:00", "epoch_id": "e1",
+        "weight_table_version": "2026-06-pricing",
+        "five_hour": {"cap_wtok": 200_000_000, "used_wtok": 50_000_000, "confidence": "ok",
+                      "forecast": {"time_to_cap_hr": 3.0, "verdict": "ok"}},
+        "seven_day": {"cap_wtok": 900_000_000, "used_wtok": 100_000_000, "confidence": "ok"},
+    })
+    for cap in (180_000_000, 190_000_000, 200_000_000):
+        L.append_jsonl(L.CALIBRATION_HISTORY, {"five_hour": {"cap_wtok": cap, "confidence": "ok"}})
+    L.write_json(L.ROLLUP, {"weekly": {"2026-06-02T13:00:00-04:00": {"wtok": 50_000_000, "events": 10}},
+                            "monthly": {"2026-06": {"wtok": 50_000_000, "events": 10}}})
+    md = D.build_dashboard()
+    assert "200.0M" in md and "xychart-beta" in md            # cap value + trend chart
+    assert "| 5-hour | 50.0M | 200.0M | ok |" in md           # current-windows row
