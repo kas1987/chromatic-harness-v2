@@ -24,7 +24,7 @@ jobs:
       NATIVE_CLAUDE_RELAY_URL: "http://localhost:11434"
       GH_TOKEN: ${{ github.token }}  # pragma: allowlist secret (ephemeral Actions token, not a stored secret)
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0   # full history so merge-base / diff vs base works
