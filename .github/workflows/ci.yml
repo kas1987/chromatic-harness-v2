@@ -24,7 +24,7 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           token: ${{ steps.app-token.outputs.token || github.token }}  # pragma: allowlist secret
@@ -96,7 +96,7 @@ jobs:
 
       - name: Upload governance artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: governance-reports
           path: 07_LOGS_AND_AUDIT/{security,pr_risk,arch,drift,ai_review,release}/latest.json
@@ -160,7 +160,7 @@ jobs:
 
       - name: Upload lock metrics artifact
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lock-metrics-linux
           path: .agents/audits/locks/
@@ -168,7 +168,7 @@ jobs:
 
       - name: Upload coverage report
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: htmlcov/
@@ -192,7 +192,7 @@ jobs:
 
       - name: Upload git plan artifact
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: workflow-git-plan
           path: workflow_git_plan.json
@@ -206,7 +206,7 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -240,7 +240,7 @@ jobs:
 
       - name: Upload lock metrics artifact
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lock-metrics-windows-py${{ matrix.python-version }}
           path: .agents/audits/locks/
