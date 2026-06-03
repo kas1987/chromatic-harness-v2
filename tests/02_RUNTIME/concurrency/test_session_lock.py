@@ -16,7 +16,9 @@ _RUNTIME = Path(__file__).resolve().parents[4] / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
-# Stub out workflows.run_log before importing session_lock so no real file I/O
+# Stub out workflows.run_log as a fallback in case the real module is unavailable.
+# The conftest pre-loads the real workflows package; setdefault is a no-op when real
+# workflows is already present, so this only fires in isolated runs without conftest.
 _fake_workflows = MagicMock()
 _fake_run_log = MagicMock()
 _fake_run_log.append_run_log = MagicMock()
