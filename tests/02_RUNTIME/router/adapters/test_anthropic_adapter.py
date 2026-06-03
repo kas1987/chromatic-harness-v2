@@ -1,4 +1,4 @@
-﻿"""Unit tests for the AnthropicAdapter."""
+"""Unit tests for the AnthropicAdapter."""
 
 from __future__ import annotations
 
@@ -38,9 +38,7 @@ def _make_request(
     )
 
 
-def _fake_response(
-    content: str = "Hello!", input_tokens: int = 10, output_tokens: int = 5
-):
+def _fake_response(content: str = "Hello!", input_tokens: int = 10, output_tokens: int = 5):
     """Build a minimal fake Anthropic SDK response object."""
     usage = SimpleNamespace(input_tokens=input_tokens, output_tokens=output_tokens)
     msg = SimpleNamespace(content=[SimpleNamespace(text=content)], usage=usage)
@@ -131,9 +129,7 @@ class TestAnthropicAdapterHealth:
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-test"}):
             adapter = AnthropicAdapter()
         mock_client = MagicMock()
-        mock_client.messages.count_tokens = AsyncMock(
-            side_effect=RuntimeError("network error")
-        )
+        mock_client.messages.count_tokens = AsyncMock(side_effect=RuntimeError("network error"))
         adapter._client = mock_client
 
         health = await adapter.health()
@@ -159,9 +155,7 @@ class TestAnthropicAdapterComplete:
     async def test_complete_success_text_response(self):
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-test"}):
             adapter = AnthropicAdapter()
-        fake_resp = _fake_response(
-            "Hello from Claude!", input_tokens=15, output_tokens=6
-        )
+        fake_resp = _fake_response("Hello from Claude!", input_tokens=15, output_tokens=6)
         mock_client = MagicMock()
         mock_client.messages.create = AsyncMock(return_value=fake_resp)
         adapter._client = mock_client
@@ -273,9 +267,7 @@ class TestAnthropicAdapterCaching:
         """role=system is extracted and sent via system=, not in messages=."""
         adapter = self._adapter()
         mock_client = MagicMock()
-        mock_client.messages.create = AsyncMock(
-            return_value=_fake_response_with_cache()
-        )
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
         adapter._client = mock_client
 
         msgs = [
@@ -293,9 +285,7 @@ class TestAnthropicAdapterCaching:
         """role=system must not appear inside messages= (Anthropic rejects it)."""
         adapter = self._adapter()
         mock_client = MagicMock()
-        mock_client.messages.create = AsyncMock(
-            return_value=_fake_response_with_cache()
-        )
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
         adapter._client = mock_client
 
         msgs = [
@@ -312,9 +302,7 @@ class TestAnthropicAdapterCaching:
         """System messages are filtered regardless of position."""
         adapter = self._adapter()
         mock_client = MagicMock()
-        mock_client.messages.create = AsyncMock(
-            return_value=_fake_response_with_cache()
-        )
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
         adapter._client = mock_client
 
         msgs = [
@@ -333,9 +321,7 @@ class TestAnthropicAdapterCaching:
         """system content as list-of-blocks is joined into a string."""
         adapter = self._adapter()
         mock_client = MagicMock()
-        mock_client.messages.create = AsyncMock(
-            return_value=_fake_response_with_cache()
-        )
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
         adapter._client = mock_client
 
         msgs = [
@@ -358,15 +344,11 @@ class TestAnthropicAdapterCaching:
         """If only system messages are present, fall back to req.objective."""
         adapter = self._adapter()
         mock_client = MagicMock()
-        mock_client.messages.create = AsyncMock(
-            return_value=_fake_response_with_cache()
-        )
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
         adapter._client = mock_client
 
         msgs = [{"role": "system", "content": "Only a system prompt."}]
-        await adapter.complete(
-            _make_request(objective="fallback objective", messages=msgs)
-        )
+        await adapter.complete(_make_request(objective="fallback objective", messages=msgs))
 
         kwargs = mock_client.messages.create.call_args.kwargs
         assert kwargs["messages"] == [{"role": "user", "content": "fallback objective"}]
@@ -375,9 +357,7 @@ class TestAnthropicAdapterCaching:
         """cache_read_tokens and cache_write_tokens surface in RouteUsage."""
         adapter = self._adapter()
         mock_client = MagicMock()
-        mock_client.messages.create = AsyncMock(
-            return_value=_fake_response_with_cache(cache_read=120, cache_write=300)
-        )
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache(cache_read=120, cache_write=300))
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())
@@ -388,14 +368,10 @@ class TestAnthropicAdapterCaching:
         """Without a system message, system= is not added to the API call."""
         adapter = self._adapter()
         mock_client = MagicMock()
-        mock_client.messages.create = AsyncMock(
-            return_value=_fake_response_with_cache()
-        )
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
         adapter._client = mock_client
 
-        await adapter.complete(
-            _make_request(messages=[{"role": "user", "content": "hello"}])
-        )
+        await adapter.complete(_make_request(messages=[{"role": "user", "content": "hello"}]))
 
         kwargs = mock_client.messages.create.call_args.kwargs
         assert "system" not in kwargs

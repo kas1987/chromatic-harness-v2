@@ -1,4 +1,4 @@
-﻿"""Unit tests for OllamaRemoteAdapter (and OllamaAdapter which wraps it)."""
+"""Unit tests for OllamaRemoteAdapter (and OllamaAdapter which wraps it)."""
 
 from __future__ import annotations
 
@@ -36,9 +36,7 @@ def _make_request(
     )
 
 
-def _make_remote_adapter(
-    host: str = "localhost", port: int = 11434, model: str = "llama3.1:8b"
-) -> OllamaRemoteAdapter:
+def _make_remote_adapter(host: str = "localhost", port: int = 11434, model: str = "llama3.1:8b") -> OllamaRemoteAdapter:
     cfg = {"enabled": True, "host": host, "port": port, "model": model}
     return OllamaRemoteAdapter("ollama-remote", cfg)
 
@@ -104,9 +102,7 @@ class TestOllamaRemoteHealth:
     async def test_health_connection_error(self):
         adapter = _make_remote_adapter()
         mock_client = MagicMock()
-        mock_client.get = AsyncMock(
-            side_effect=httpx.ConnectError("Connection refused")
-        )
+        mock_client.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
         adapter._client = mock_client
 
         health = await adapter.health()
@@ -195,9 +191,7 @@ class TestOllamaRemoteComplete:
 
         await adapter.complete(_make_request(objective="define recursion", messages=[]))
         call_kwargs = mock_client.post.call_args.kwargs
-        assert call_kwargs["json"]["messages"] == [
-            {"role": "user", "content": "define recursion"}
-        ]
+        assert call_kwargs["json"]["messages"] == [{"role": "user", "content": "define recursion"}]
 
     async def test_complete_exception_returns_error(self):
         adapter = _make_remote_adapter()
@@ -380,7 +374,5 @@ class TestOllamaAdapterWrapper:
         assert adapter.port == 11434
 
     def test_custom_cfg_passed_through(self):
-        adapter = OllamaAdapter(
-            {"enabled": True, "base_url": "http://192.168.1.5:11434", "model": "phi3"}
-        )
+        adapter = OllamaAdapter({"enabled": True, "base_url": "http://192.168.1.5:11434", "model": "phi3"})
         assert adapter.model == "phi3"
