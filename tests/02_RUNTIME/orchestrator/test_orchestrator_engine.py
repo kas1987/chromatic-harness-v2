@@ -57,6 +57,10 @@ def _ensure_stubs():
     from unittest.mock import MagicMock as MM
 
     rc = sys.modules["router.contracts"]
+    # Only patch attributes when rc is our MagicMock stub.
+    # If router.contracts is the real module (already imported by another test),
+    # patching it would corrupt RouteConstraints for the rest of the session.
+    _rc_is_stub = isinstance(rc, MagicMock)
 
     class _TaskType:
         PLANNING = "planning"
@@ -101,27 +105,30 @@ def _ensure_stubs():
             for k, v in kw.items():
                 setattr(self, k, v)
 
-    rc.TaskType = _TaskType
-    rc.PrivacyClass = _PrivacyClass
-    rc.RouteConfidence = _RouteConfidence
-    rc.RouteConstraints = _RouteConstraints
-    rc.RouteAudit = _RouteAudit
-    rc.RouteInput = _RouteInput
-    rc.RouteRequest = _RouteRequest
-    rc.ConfidenceBand = _ConfidenceBand
+    if _rc_is_stub:
+        rc.TaskType = _TaskType
+        rc.PrivacyClass = _PrivacyClass
+        rc.RouteConfidence = _RouteConfidence
+        rc.RouteConstraints = _RouteConstraints
+        rc.RouteAudit = _RouteAudit
+        rc.RouteInput = _RouteInput
+        rc.RouteRequest = _RouteRequest
+        rc.ConfidenceBand = _ConfidenceBand
 
     # router.confidence.ConfidenceGate
     cg = MagicMock()
     cg.band_from_score.return_value = _ConfidenceBand("high")
-    sys.modules["router.confidence"].ConfidenceGate = cg
+    if isinstance(sys.modules.get("router.confidence"), MagicMock):
+        sys.modules["router.confidence"].ConfidenceGate = cg
 
     # magnets.magnet_orchestrator.MagnetOrchestrator
     mag_orch_cls = MagicMock()
     mag_orch_instance = MagicMock()
     mag_orch_instance.registered_magnets.return_value = ["scope_magnet", "security_magnet"]
     mag_orch_cls.return_value = mag_orch_instance
-    sys.modules["magnets.magnet_orchestrator"].MagnetOrchestrator = mag_orch_cls
-    sys.modules["magnets.magnet_orchestrator"].MagnetReport = MagicMock
+    if isinstance(sys.modules.get("magnets.magnet_orchestrator"), MagicMock):
+        sys.modules["magnets.magnet_orchestrator"].MagnetOrchestrator = mag_orch_cls
+        sys.modules["magnets.magnet_orchestrator"].MagnetReport = MagicMock
 
     # scope.guard.DispatchGuard
     dg_cls = MagicMock()
@@ -133,13 +140,15 @@ def _ensure_stubs():
     guarded.scope_header = "FILE_SCOPE: 02_RUNTIME/"
     dg_instance.guard.return_value = guarded
     dg_cls.return_value = dg_instance
-    sys.modules["scope.guard"].DispatchGuard = dg_cls
+    if isinstance(sys.modules.get("scope.guard"), MagicMock):
+        sys.modules["scope.guard"].DispatchGuard = dg_cls
 
     # router.observability.ObservabilityLogger
     obs_cls = MagicMock()
     obs_instance = MagicMock()
     obs_cls.return_value = obs_instance
-    sys.modules["router.observability"].ObservabilityLogger = obs_cls
+    if isinstance(sys.modules.get("router.observability"), MagicMock):
+        sys.modules["router.observability"].ObservabilityLogger = obs_cls
 
 
 # ---------------------------------------------------------------------------

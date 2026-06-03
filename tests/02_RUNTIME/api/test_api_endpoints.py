@@ -181,7 +181,8 @@ class TestHealth:
 
 
 class TestAuthStatus:
-    def test_auth_disabled_by_default(self, client: TestClient) -> None:
+    def test_auth_disabled_by_default(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AUTH_ENABLED", raising=False)
         resp = client.get("/auth/status")
         assert resp.status_code == 200
         assert resp.json()["auth_enabled"] is False
