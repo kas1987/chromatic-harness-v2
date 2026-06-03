@@ -148,6 +148,7 @@ class TestQuotaMagnetActuation:
     def test_actuate_false_does_not_run_once(self):
         """Without actuate=True, no filesystem side-effects are attempted."""
         from unittest.mock import patch
+
         state = _state(weekly_pct=50.0, present=True)
         with patch("magnets.quota_magnet.run_once") as mock_run:
             _observe(quota_state=state, actuate=False)
@@ -155,6 +156,7 @@ class TestQuotaMagnetActuation:
 
     def test_actuate_true_calls_run_once(self):
         from unittest.mock import patch
+
         state = _state(weekly_pct=50.0, present=True)
         with patch("magnets.quota_magnet.run_once") as mock_run:
             _observe(quota_state=state, actuate=True)

@@ -16,6 +16,7 @@ from magnets.base_magnet import BaseMagnet, MagnetEvent
 # MagnetEvent dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestMagnetEvent:
     def test_required_fields_set(self):
         e = MagnetEvent(
@@ -70,6 +71,7 @@ class TestMagnetEvent:
 # ---------------------------------------------------------------------------
 # BaseMagnet
 # ---------------------------------------------------------------------------
+
 
 class TestBaseMagnet:
     def _magnet(self) -> BaseMagnet:

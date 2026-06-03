@@ -23,6 +23,7 @@ from magnets.plugin import (
 # Fixtures / helpers
 # ---------------------------------------------------------------------------
 
+
 class _ConcretePlugin(MagnetPlugin):
     name = "test_concrete_plugin"
 
@@ -55,6 +56,7 @@ class _ConcreteBaseMagnet(BaseMagnet):
 # MagnetPlugin (ABC interface)
 # ---------------------------------------------------------------------------
 
+
 class TestMagnetPluginABC:
     def test_cannot_instantiate_abstract(self):
         with pytest.raises(TypeError):
@@ -80,6 +82,7 @@ class TestMagnetPluginABC:
 # BaseMagnetPluginAdapter
 # ---------------------------------------------------------------------------
 
+
 class TestBaseMagnetPluginAdapter:
     def _adapter(self):
         return BaseMagnetPluginAdapter(_ConcreteBaseMagnet())
@@ -100,6 +103,7 @@ class TestBaseMagnetPluginAdapter:
 # ---------------------------------------------------------------------------
 # MagnetRegistry
 # ---------------------------------------------------------------------------
+
 
 class TestMagnetRegistry:
     def _reg(self) -> MagnetRegistry:

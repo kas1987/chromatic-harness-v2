@@ -106,7 +106,8 @@ class TestDispatchMagnetAllControlsPresent:
 class TestDispatchMagnetPartialControls:
     def test_missing_agent_only_medium_risk(self):
         event = DispatchMagnet().observe(
-            "m1", "dispatch",
+            "m1",
+            "dispatch",
             {
                 "allowed_tools": ["git"],
                 "budget": 500,
@@ -119,7 +120,8 @@ class TestDispatchMagnetPartialControls:
     def test_agent_alias_assigned_agent(self):
         """assigned_agent key should be recognized as well as agent."""
         event = DispatchMagnet().observe(
-            "m1", "dispatch",
+            "m1",
+            "dispatch",
             {
                 "assigned_agent": "worker-2",
                 "allowed_tools": ["git"],
@@ -131,21 +133,15 @@ class TestDispatchMagnetPartialControls:
         assert not any("No agent assigned" in e for e in event.evidence)
 
     def test_zero_budget_raises_risk(self):
-        event = DispatchMagnet().observe(
-            "m1", "dispatch", {"agent": "w1", "budget": 0}
-        )
+        event = DispatchMagnet().observe("m1", "dispatch", {"agent": "w1", "budget": 0})
         assert any("Budget not set" in e for e in event.evidence)
 
     def test_negative_budget_raises_risk(self):
-        event = DispatchMagnet().observe(
-            "m1", "dispatch", {"agent": "w1", "budget": -100}
-        )
+        event = DispatchMagnet().observe("m1", "dispatch", {"agent": "w1", "budget": -100})
         assert any("Budget not set" in e for e in event.evidence)
 
     def test_positive_budget_no_budget_evidence(self):
-        event = DispatchMagnet().observe(
-            "m1", "dispatch", {"agent": "w1", "budget": 1}
-        )
+        event = DispatchMagnet().observe("m1", "dispatch", {"agent": "w1", "budget": 1})
         assert not any("Budget not set" in e for e in event.evidence)
 
 

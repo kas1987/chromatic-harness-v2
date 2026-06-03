@@ -30,7 +30,8 @@ class TestDisciplineMagnetWriteWithoutRead:
 
     def test_write_without_read_raises_risk(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": [],
                 "modified_paths": ["src/app.py"],
@@ -40,7 +41,8 @@ class TestDisciplineMagnetWriteWithoutRead:
 
     def test_write_without_read_evidence(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": [],
                 "modified_paths": ["src/app.py"],
@@ -50,7 +52,8 @@ class TestDisciplineMagnetWriteWithoutRead:
 
     def test_write_after_read_no_read_evidence(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": ["src/app.py"],
                 "modified_paths": ["src/app.py"],
@@ -60,7 +63,8 @@ class TestDisciplineMagnetWriteWithoutRead:
 
     def test_multiple_writes_without_read_each_penalized(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": [],
                 "modified_paths": ["a.py", "b.py"],
@@ -73,21 +77,24 @@ class TestDisciplineMagnetWriteWithoutRead:
 class TestDisciplineMagnetSuccessCriteria:
     def test_no_success_criteria_raises_risk(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {"has_success_criteria": False},
         )
         assert event.risk_delta > 0
 
     def test_missing_success_criteria_evidence(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {"has_success_criteria": False},
         )
         assert any("success criteria" in e for e in event.evidence)
 
     def test_success_criteria_present_no_evidence(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "has_success_criteria": True,
                 "read_paths": ["a.py"],
@@ -101,7 +108,8 @@ class TestDisciplineMagnetSuccessCriteria:
 class TestDisciplineMagnetAssumptions:
     def test_assumptions_not_stated_at_pre_implementation_raises_risk(self):
         event = DisciplineMagnet().observe(
-            "m1", "pre_implementation",
+            "m1",
+            "pre_implementation",
             {"assumptions_stated": False},
         )
         assert event.risk_delta > 0
@@ -109,14 +117,16 @@ class TestDisciplineMagnetAssumptions:
 
     def test_assumptions_not_stated_at_other_point_no_risk(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {"assumptions_stated": False, "has_success_criteria": True},
         )
         assert not any("Assumptions" in e for e in event.evidence)
 
     def test_assumptions_at_discipline_check_raises_risk(self):
         event = DisciplineMagnet().observe(
-            "m1", "discipline_check",
+            "m1",
+            "discipline_check",
             {"assumptions_stated": False},
         )
         assert any("Assumptions" in e for e in event.evidence)
@@ -125,7 +135,8 @@ class TestDisciplineMagnetAssumptions:
 class TestDisciplineMagnetVerification:
     def test_modified_without_verification_at_post_implementation(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": ["a.py"],
                 "modified_paths": ["a.py"],
@@ -137,7 +148,8 @@ class TestDisciplineMagnetVerification:
 
     def test_verified_no_verification_evidence(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": ["a.py"],
                 "modified_paths": ["a.py"],
@@ -151,7 +163,8 @@ class TestDisciplineMagnetVerification:
 class TestDisciplineMagnetScopeCreep:
     def test_unexpected_modification_raises_risk(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": ["a.py", "b.py"],
                 "modified_paths": ["a.py", "b.py"],
@@ -164,7 +177,8 @@ class TestDisciplineMagnetScopeCreep:
 
     def test_scope_creep_many_files(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": [f"f{i}.py" for i in range(5)],
                 "modified_paths": [f"f{i}.py" for i in range(5)],
@@ -177,7 +191,8 @@ class TestDisciplineMagnetScopeCreep:
 
     def test_within_expected_paths_no_scope_creep(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "read_paths": ["a.py"],
                 "modified_paths": ["a.py"],
@@ -192,7 +207,8 @@ class TestDisciplineMagnetScopeCreep:
 class TestDisciplineMagnetOversizedDiff:
     def test_oversized_diff_raises_risk(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "lines_changed": 500,
                 "max_lines_hint": 100,
@@ -203,7 +219,8 @@ class TestDisciplineMagnetOversizedDiff:
 
     def test_within_hint_no_oversized_evidence(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {
                 "lines_changed": 50,
                 "max_lines_hint": 100,
@@ -214,7 +231,8 @@ class TestDisciplineMagnetOversizedDiff:
 
     def test_no_hint_no_oversized_check(self):
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {"lines_changed": 9999, "has_success_criteria": True},
         )
         assert not any("OVERSIZED diff" in e for e in event.evidence)
@@ -252,7 +270,8 @@ class TestDisciplineMagnetRecommendations:
     def test_high_risk_halt_and_review(self):
         # write without read on many files -> risk >= 0.3
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {"modified_paths": ["a.py", "b.py", "c.py"], "read_paths": []},
         )
         assert event.recommended_action == "halt_and_review"
@@ -260,7 +279,8 @@ class TestDisciplineMagnetRecommendations:
     def test_medium_risk_narrow_scope(self):
         # One write-without-read + no success criteria -> between 0.15 and 0.3
         event = DisciplineMagnet().observe(
-            "m1", "post_implementation",
+            "m1",
+            "post_implementation",
             {"modified_paths": ["a.py"], "read_paths": [], "has_success_criteria": False},
         )
         assert event.recommended_action in ("narrow_scope", "halt_and_review")

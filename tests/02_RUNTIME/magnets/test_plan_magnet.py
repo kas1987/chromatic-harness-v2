@@ -45,15 +45,14 @@ class TestPlanMagnetPlanSteps:
         assert any("No plan steps" in e for e in event.evidence)
 
     def test_empty_step_raises_risk(self):
-        event = PlanMagnet().observe(
-            "m1", "plan", {"plan_steps": ["design", ""], "subtasks": [{"id": "0"}]}
-        )
+        event = PlanMagnet().observe("m1", "plan", {"plan_steps": ["design", ""], "subtasks": [{"id": "0"}]})
         assert event.risk_delta > 0
         assert any("empty steps" in e for e in event.evidence)
 
     def test_valid_steps_add_confidence(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {"plan_steps": ["design", "implement", "test"], "subtasks": [{"id": "0"}]},
         )
         assert event.confidence_delta > 0
@@ -71,30 +70,25 @@ class TestPlanMagnetSubtasks:
 
     def test_excessive_subtasks_raises_risk(self):
         subtasks = [{"id": str(i)} for i in range(51)]
-        event = PlanMagnet().observe(
-            "m1", "plan", {"plan_steps": ["a"], "subtasks": subtasks}
-        )
+        event = PlanMagnet().observe("m1", "plan", {"plan_steps": ["a"], "subtasks": subtasks})
         assert any("Excessive" in e for e in event.evidence)
 
     def test_valid_subtask_count_adds_confidence(self):
         subtasks = [{"id": str(i)} for i in range(5)]
-        event = PlanMagnet().observe(
-            "m1", "plan", {"plan_steps": ["a"], "subtasks": subtasks}
-        )
+        event = PlanMagnet().observe("m1", "plan", {"plan_steps": ["a"], "subtasks": subtasks})
         assert event.confidence_delta > 0
 
     def test_exactly_50_subtasks_is_valid(self):
         subtasks = [{"id": str(i)} for i in range(50)]
-        event = PlanMagnet().observe(
-            "m1", "plan", {"plan_steps": ["a"], "subtasks": subtasks}
-        )
+        event = PlanMagnet().observe("m1", "plan", {"plan_steps": ["a"], "subtasks": subtasks})
         assert not any("Excessive" in e for e in event.evidence)
 
 
 class TestPlanMagnetToolFeasibility:
     def test_infeasible_tools_raises_risk(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["a"],
                 "subtasks": [{"id": "0"}],
@@ -106,7 +100,8 @@ class TestPlanMagnetToolFeasibility:
 
     def test_feasible_tools_add_confidence(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["a"],
                 "subtasks": [{"id": "0"}],
@@ -118,7 +113,8 @@ class TestPlanMagnetToolFeasibility:
 
     def test_tool_requirements_without_available_raises_risk(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["a"],
                 "subtasks": [{"id": "0"}],
@@ -132,7 +128,8 @@ class TestPlanMagnetToolFeasibility:
 class TestPlanMagnetGraphValidation:
     def test_cycle_in_graph_detected(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["a", "b"],
                 "subtasks": [{"id": "0"}, {"id": "1"}],
@@ -143,7 +140,8 @@ class TestPlanMagnetGraphValidation:
 
     def test_dangling_edge_detected(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["a", "b"],
                 "subtasks": [{"id": "0"}, {"id": "1"}],
@@ -154,7 +152,8 @@ class TestPlanMagnetGraphValidation:
 
     def test_valid_acyclic_graph_no_graph_risk(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["a", "b", "c"],
                 "subtasks": [{"id": "0"}, {"id": "1"}, {"id": "2"}],
@@ -165,7 +164,8 @@ class TestPlanMagnetGraphValidation:
 
     def test_malformed_edge_detected(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["a"],
                 "subtasks": [{"id": "0"}],
@@ -192,14 +192,16 @@ class TestPlanMagnetRecommendedActions:
     def test_moderate_risk_recommends_refine(self):
         # Only one issue — no plan steps but good subtasks
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {"plan_steps": [], "subtasks": [{"id": "0"}]},
         )
         assert event.recommended_action in ("refine_plan", "replan")
 
     def test_clean_plan_recommends_proceed(self):
         event = PlanMagnet().observe(
-            "m1", "plan",
+            "m1",
+            "plan",
             {
                 "plan_steps": ["design", "implement"],
                 "subtasks": [{"id": "0"}, {"id": "1"}],

@@ -45,11 +45,7 @@ class TestPyramidCheckPluginNonPyramidPoint:
 
 class TestPyramidCheckPluginActivation:
     def _balanced_tests(self):
-        return (
-            [{"layer": "unit"}] * 7
-            + [{"layer": "integration"}] * 2
-            + [{"layer": "e2e"}] * 1
-        )
+        return [{"layer": "unit"}] * 7 + [{"layer": "integration"}] * 2 + [{"layer": "e2e"}] * 1
 
     def test_pyramid_analysis_at_test_results(self):
         event = PyramidCheckPlugin().observe("m1", "test_results", {"tests": self._balanced_tests()})
@@ -106,11 +102,7 @@ class TestPyramidCheckPluginModerateImbalance:
 
 class TestPyramidCheckPluginBalanced:
     def _balanced(self):
-        return (
-            [{"layer": "unit"}] * 7
-            + [{"layer": "integration"}] * 2
-            + [{"layer": "e2e"}] * 1
-        )
+        return [{"layer": "unit"}] * 7 + [{"layer": "integration"}] * 2 + [{"layer": "e2e"}] * 1
 
     def test_balanced_no_risk(self):
         event = PyramidCheckPlugin().observe("m1", "test_results", {"tests": self._balanced()})

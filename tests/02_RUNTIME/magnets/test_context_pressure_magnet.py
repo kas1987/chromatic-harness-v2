@@ -55,7 +55,8 @@ class TestContextPressureMagnetNoPctSignal:
 
     def test_invalid_window_adds_evidence(self):
         event = ContextPressureMagnet().observe(
-            "m1", "pre_dispatch",
+            "m1",
+            "pre_dispatch",
             {"used_tokens": 1000, "window_tokens": 0},
         )
         assert any("unknown" in e for e in event.evidence)
@@ -132,15 +133,11 @@ class TestContextPressureMagnetCompactNowBand:
 
 class TestContextPressureMagnetCustomBands:
     def test_custom_soft_pct(self):
-        event = ContextPressureMagnet().observe(
-            "m1", "pre_dispatch", {"context_pct": 30, "soft_pct": 25}
-        )
+        event = ContextPressureMagnet().observe("m1", "pre_dispatch", {"context_pct": 30, "soft_pct": 25})
         assert event.recommended_action == ACTION_CHECKPOINT
 
     def test_custom_hard_pct(self):
-        event = ContextPressureMagnet().observe(
-            "m1", "pre_dispatch", {"context_pct": 70, "hard_pct": 60}
-        )
+        event = ContextPressureMagnet().observe("m1", "pre_dispatch", {"context_pct": 70, "hard_pct": 60})
         assert event.recommended_action == ACTION_NOW
 
 
@@ -150,7 +147,8 @@ class TestContextPressureMagnetTokensInput:
     def test_computed_pct_below_soft(self):
         # 20k / 100k = 20% -> hold
         event = ContextPressureMagnet().observe(
-            "m1", "pre_dispatch",
+            "m1",
+            "pre_dispatch",
             {"used_tokens": 20000, "window_tokens": 100000},
         )
         assert event.recommended_action == ACTION_HOLD
@@ -158,7 +156,8 @@ class TestContextPressureMagnetTokensInput:
     def test_computed_pct_above_hard(self):
         # 85k / 100k = 85% -> compact_now
         event = ContextPressureMagnet().observe(
-            "m1", "pre_dispatch",
+            "m1",
+            "pre_dispatch",
             {"used_tokens": 85000, "window_tokens": 100000},
         )
         assert event.recommended_action == ACTION_NOW

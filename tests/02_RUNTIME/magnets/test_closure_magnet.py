@@ -99,41 +99,29 @@ class TestClosureMagnetValidationPassed:
     def test_validation_passed_no_ship_flags_closes_mission(self):
         """Without ship flags or log, check_ship_completion returns applicable=False
         so closure proceeds normally."""
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_passed": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_passed": True})
         assert event.recommended_action == "close_mission"
 
     def test_ship_completion_key_in_signal(self):
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_passed": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_passed": True})
         assert "ship_completion" in event.observed_signal
 
 
 class TestClosureMagnetValidationFailed:
     def test_validation_failed_recommends_replan(self):
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_failed": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_failed": True})
         assert event.recommended_action == "replan"
 
     def test_validation_failed_risk_positive(self):
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_failed": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_failed": True})
         assert event.risk_delta == 0.2
 
     def test_validation_failed_confidence_negative(self):
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_failed": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_failed": True})
         assert event.confidence_delta == -10.0
 
     def test_validation_failed_evidence(self):
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_failed": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_failed": True})
         assert "validation_failed" in event.evidence
 
 
@@ -159,22 +147,16 @@ class TestClosureMagnetShipLog:
     def test_ship_log_with_both_stages_closes_mission(self):
         """Both S8 and S10 present plus dod_ok=True -> close_mission."""
         log = "[S8-LEAN] stage passed\n[S10-LIVE] wired=https://example.com proof=deploy-123"
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_passed": True, "ship_log": log, "dod_ok": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_passed": True, "ship_log": log, "dod_ok": True})
         assert event.recommended_action == "close_mission"
 
     def test_ship_log_missing_dod_recommends_replan(self):
         """S8 + S10 present but dod_ok not set -> ship incomplete -> replan."""
         log = "[S8-LEAN] stage passed\n[S10-LIVE] wired=https://example.com proof=deploy-123"
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_passed": True, "ship_log": log}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_passed": True, "ship_log": log})
         assert event.recommended_action == "replan"
 
     def test_ship_log_missing_live_recommends_replan(self):
         log = "[S8-LEAN] stage passed\n# no S10 marker"
-        event = ClosureMagnet().observe(
-            "m1", "closure", {"validation_passed": True, "ship_log": log, "dod_ok": True}
-        )
+        event = ClosureMagnet().observe("m1", "closure", {"validation_passed": True, "ship_log": log, "dod_ok": True})
         assert event.recommended_action == "replan"

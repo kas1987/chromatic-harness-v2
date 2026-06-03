@@ -105,9 +105,7 @@ class TestConfidenceMagnetPyramidIntegration:
 
     def test_severe_imbalance_triggers_review_action(self):
         tests = self._all_unit_tests(10)
-        event = ConfidenceMagnet().observe(
-            "m1", "test_results", {"tests": tests, "recommended_action": "none"}
-        )
+        event = ConfidenceMagnet().observe("m1", "test_results", {"tests": tests, "recommended_action": "none"})
         assert event.recommended_action == "review"
 
     def test_severe_imbalance_adds_warnings_to_evidence(self):

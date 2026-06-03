@@ -79,9 +79,7 @@ class TestScopeMagnetPostExecutionNoBaseline:
     """post_execution with file_scope but without scope_baseline returns plain event."""
 
     def test_no_baseline_no_risk(self):
-        event = ScopeMagnet().observe(
-            "m1", "post_execution", {"file_scope": ["src/a.py"]}
-        )
+        event = ScopeMagnet().observe("m1", "post_execution", {"file_scope": ["src/a.py"]})
         assert event.risk_delta == 0.0
 
     def test_no_file_scope_no_enforcement(self):

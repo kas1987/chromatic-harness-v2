@@ -148,27 +148,19 @@ class TestDecisionMagnetRiskOverride:
     """High risk_score forces escalation even when confidence is high."""
 
     def test_high_risk_overrides_high_confidence(self):
-        event = DecisionMagnet().observe(
-            "m1", "decision", {"confidence_score": 95, "risk_score": 0.5}
-        )
+        event = DecisionMagnet().observe("m1", "decision", {"confidence_score": 95, "risk_score": 0.5})
         assert event.recommended_action == "escalate"
 
     def test_high_risk_next_step_is_escalate_high_risk(self):
-        event = DecisionMagnet().observe(
-            "m1", "decision", {"confidence_score": 95, "risk_score": 0.6}
-        )
+        event = DecisionMagnet().observe("m1", "decision", {"confidence_score": 95, "risk_score": 0.6})
         assert event.observed_signal["next_step"] == "escalate_high_risk"
 
     def test_risk_exactly_0_5_overrides(self):
-        event = DecisionMagnet().observe(
-            "m1", "decision", {"confidence_score": 95, "risk_score": 0.5}
-        )
+        event = DecisionMagnet().observe("m1", "decision", {"confidence_score": 95, "risk_score": 0.5})
         assert event.recommended_action == "escalate"
 
     def test_risk_below_0_5_does_not_override(self):
-        event = DecisionMagnet().observe(
-            "m1", "decision", {"confidence_score": 95, "risk_score": 0.49}
-        )
+        event = DecisionMagnet().observe("m1", "decision", {"confidence_score": 95, "risk_score": 0.49})
         assert event.recommended_action == "proceed"
 
 
