@@ -348,6 +348,12 @@ SUITES = [
             "test_mission_packet.py",
         ],
     ),
+    (
+        "repo format + gitattributes hygiene",
+        [
+            "test_repo_format_hygiene.py",
+        ],
+    ),
 ]
 
 
