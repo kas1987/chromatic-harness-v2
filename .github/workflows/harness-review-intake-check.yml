@@ -40,7 +40,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install pytest jsonschema
+        run: pip install pytest jsonschema pytest-cov
 
       - name: Run review-intake test suite (all acceptance criteria)
         run: python -m pytest tests/test_review_intake.py tests/test_review_intake_acceptance.py tests/test_review_intake_central_collector.py -q

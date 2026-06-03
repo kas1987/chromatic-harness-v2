@@ -43,7 +43,10 @@ def main():
         if is_test(r):
             continue
         did = r.get("decision_id")
-        (by_id.__setitem__(did, r) if did else no_id.append(r))
+        if did:
+            by_id[did] = r
+        else:
+            no_id.append(r)
     kept = list(by_id.values()) + no_id
 
     today_prefix = datetime.now(timezone.utc).strftime("%Y-%m-%d")

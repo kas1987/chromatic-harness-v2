@@ -17,6 +17,11 @@ from scope.guard import DispatchGuard  # noqa: E402
 from magnets.base_magnet import MagnetEvent  # noqa: E402
 from magnets.magnet_orchestrator import MagnetOrchestrator  # noqa: E402
 
+# Module-level placeholder so patch("orchestrator.orchestrator.ChromaticRouter")
+# resolves in tests. Populated lazily on first call to route_to_provider.
+# Must NOT be a top-level import statement (architectural boundary constraint).
+ChromaticRouter = None
+
 
 @dataclass
 class MissionPacket:
@@ -157,6 +162,43 @@ class Orchestrator:
             "violations": result.violations,
             "new_files_outside_scope": result.new_files,
             "modified_outside_scope": result.modified_outside,
+        }
+
+    async def route_to_provider(
+        self,
+        mission: MissionPacket,
+        *,
+        task_type: str = "planning",
+    ) -> dict[str, Any]:
+        """Route a mission through ChromaticRouter and return provider selection."""
+        global ChromaticRouter
+        if ChromaticRouter is None:
+            from router.router import ChromaticRouter as _CR
+            ChromaticRouter = _CR
+        from router.contracts import RouteRequest, RouteInput, RouteConstraints, TaskType, PrivacyClass
+
+        router = ChromaticRouter()
+        req = RouteRequest(
+            request_id=str(uuid.uuid4()),
+            task_id=mission.mission_id,
+            task_type=TaskType(task_type),
+            objective=mission.objective,
+            input=RouteInput(messages=[], files=[], metadata=mission.metadata),
+            constraints=RouteConstraints(
+                privacy_class=PrivacyClass.P1,
+                max_cost_usd=0.25,
+            ),
+        )
+        resp = await router.route(req)
+        return {
+            "provider": resp.selected_provider,
+            "model": resp.selected_model,
+            "reason": resp.route_reason,
+            "fallback_used": resp.fallback_used,
+            "cost_estimate_usd": resp.cost_estimate_usd,
+            "latency_ms": int(resp.latency_ms or 0),
+            "warnings": resp.logs.warnings,
+            "errors": resp.logs.errors,
         }
 
     def dispatch(self, mission: MissionPacket) -> dict[str, Any]:
