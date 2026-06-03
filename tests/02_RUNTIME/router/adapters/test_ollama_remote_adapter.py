@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from router.adapters.ollama_adapter import OllamaAdapter
-from router.adapters.ollama_remote import OllamaRemoteAdapter
+from router.adapters.ollama_remote import OllamaRemoteAdapter, _prune_messages
 from router.contracts import (
     OutputType,
     RouteInput,
@@ -211,6 +211,130 @@ class TestOllamaRemoteComplete:
 
         resp = await adapter.complete(_make_request(request_id="oll-xyz"))
         assert resp.request_id == "oll-xyz"
+
+
+# ---------------------------------------------------------------------------
+# OllamaAdapter (local wrapper)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# _prune_messages — pure-function boundary tests
+# ---------------------------------------------------------------------------
+
+
+class TestPruneMessages:
+    def _turns(self, n: int) -> list:
+        """Build n user+assistant pairs (2*n messages)."""
+        msgs = []
+        for i in range(n):
+            msgs.append({"role": "user", "content": f"q{i}"})
+            msgs.append({"role": "assistant", "content": f"a{i}"})
+        return msgs
+
+    def test_empty_list_returns_empty(self):
+        assert _prune_messages([], 20) == []
+
+    def test_under_limit_unchanged(self):
+        msgs = self._turns(5)  # 10 messages, well under 20-turn limit
+        assert _prune_messages(msgs, 20) == msgs
+
+    def test_exactly_at_limit_unchanged(self):
+        msgs = self._turns(20)  # exactly 40 messages = 20 turns
+        assert _prune_messages(msgs, 20) == msgs
+
+    def test_over_limit_truncates_oldest(self):
+        msgs = self._turns(25)  # 50 messages, limit is 20 turns (40 messages)
+        result = _prune_messages(msgs, 20)
+        assert len(result) == 40
+        # Most recent messages are kept
+        assert result[-1] == {"role": "assistant", "content": "a24"}
+        assert result[0] == {"role": "user", "content": "q5"}
+
+    def test_system_messages_always_preserved(self):
+        sys_msg = {"role": "system", "content": "You are helpful."}
+        chat = self._turns(25)
+        msgs = [sys_msg] + chat
+        result = _prune_messages(msgs, 20)
+        assert result[0] == sys_msg
+        # System message kept + 40 chat messages
+        assert len(result) == 41
+
+    def test_multiple_system_messages_all_preserved(self):
+        sys1 = {"role": "system", "content": "System 1"}
+        sys2 = {"role": "system", "content": "System 2"}
+        chat = self._turns(25)
+        msgs = [sys1] + chat[:10] + [sys2] + chat[10:]
+        result = _prune_messages(msgs, 20)
+        assert sys1 in result
+        assert sys2 in result
+
+    def test_max_turns_zero_keeps_all(self):
+        msgs = self._turns(50)
+        result = _prune_messages(msgs, 0)
+        assert result == msgs
+
+    def test_max_turns_negative_keeps_all(self):
+        msgs = self._turns(50)
+        result = _prune_messages(msgs, -1)
+        assert result == msgs
+
+    def test_max_turns_one_keeps_last_pair(self):
+        msgs = self._turns(5)
+        result = _prune_messages(msgs, 1)
+        assert len(result) == 2
+        assert result == [{"role": "user", "content": "q4"}, {"role": "assistant", "content": "a4"}]
+
+
+# ---------------------------------------------------------------------------
+# OllamaRemoteAdapter — history pruning integration
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+class TestOllamaRemoteHistoryPruning:
+    async def test_history_pruned_before_sending(self):
+        """Adapter passes pruned messages to the HTTP payload."""
+        cfg = {"enabled": True, "host": "localhost", "port": 11434, "model": "llama3.1:8b", "max_history_turns": 2}
+        adapter = OllamaRemoteAdapter("ollama-remote", cfg)
+        mock_resp = _mock_response(200)
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(return_value=mock_resp)
+        adapter._client = mock_client
+
+        # 10 turns — should be pruned to last 2 (4 messages)
+        long_history = []
+        for i in range(10):
+            long_history += [{"role": "user", "content": f"q{i}"}, {"role": "assistant", "content": f"a{i}"}]
+        req = _make_request(messages=long_history)
+
+        await adapter.complete(req)
+        sent = mock_client.post.call_args.kwargs["json"]["messages"]
+        assert len(sent) == 4
+        assert sent[0]["content"] == "q8"
+
+    async def test_system_messages_preserved_through_pruning(self):
+        """System messages survive history pruning in the adapter."""
+        cfg = {"enabled": True, "host": "localhost", "port": 11434, "model": "llama3.1:8b", "max_history_turns": 1}
+        adapter = OllamaRemoteAdapter("ollama-remote", cfg)
+        mock_resp = _mock_response(200)
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(return_value=mock_resp)
+        adapter._client = mock_client
+
+        sys_msg = {"role": "system", "content": "Be concise."}
+        chat = [{"role": "user", "content": f"q{i}"} for i in range(5)]
+        req = _make_request(messages=[sys_msg] + chat)
+
+        await adapter.complete(req)
+        sent = mock_client.post.call_args.kwargs["json"]["messages"]
+        assert sent[0] == sys_msg
+
+    async def test_max_history_turns_configurable(self):
+        """max_history_turns cfg key is wired up to _prune_messages."""
+        cfg = {"enabled": True, "host": "localhost", "port": 11434, "model": "llama3.1:8b", "max_history_turns": 3}
+        adapter = OllamaRemoteAdapter("ollama-remote", cfg)
+        assert adapter.max_history_turns == 3
 
 
 # ---------------------------------------------------------------------------

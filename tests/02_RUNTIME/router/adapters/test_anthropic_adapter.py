@@ -231,3 +231,145 @@ class TestAnthropicAdapterComplete:
 
         resp = await adapter.complete(_make_request())
         assert resp.latency_ms >= 0
+
+
+# ---------------------------------------------------------------------------
+# complete() — prompt caching + system message extraction
+# ---------------------------------------------------------------------------
+
+
+def _fake_response_with_cache(
+    content: str = "ok",
+    input_tokens: int = 10,
+    output_tokens: int = 5,
+    cache_read: int = 0,
+    cache_write: int = 0,
+):
+    """Fake response that includes Anthropic cache token fields."""
+    from types import SimpleNamespace
+    usage = SimpleNamespace(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cache_read_input_tokens=cache_read,
+        cache_creation_input_tokens=cache_write,
+    )
+    return SimpleNamespace(content=[SimpleNamespace(text=content)], usage=usage)
+
+
+@pytest.mark.asyncio
+class TestAnthropicAdapterCaching:
+    def _adapter(self):
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-test"}):
+            return AnthropicAdapter()
+
+    async def test_system_message_sent_via_system_param(self):
+        """role=system is extracted and sent via system=, not in messages=."""
+        adapter = self._adapter()
+        mock_client = MagicMock()
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
+        adapter._client = mock_client
+
+        msgs = [
+            {"role": "system", "content": "Be concise."},
+            {"role": "user", "content": "hello"},
+        ]
+        await adapter.complete(_make_request(messages=msgs))
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        assert "system" in kwargs
+        assert kwargs["system"][0]["text"] == "Be concise."
+        assert kwargs["system"][0]["cache_control"] == {"type": "ephemeral"}
+
+    async def test_system_message_removed_from_messages_list(self):
+        """role=system must not appear inside messages= (Anthropic rejects it)."""
+        adapter = self._adapter()
+        mock_client = MagicMock()
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
+        adapter._client = mock_client
+
+        msgs = [
+            {"role": "system", "content": "System prompt."},
+            {"role": "user", "content": "user turn"},
+        ]
+        await adapter.complete(_make_request(messages=msgs))
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        for m in kwargs["messages"]:
+            assert m.get("role") != "system"
+
+    async def test_system_message_mid_list_also_extracted(self):
+        """System messages are filtered regardless of position."""
+        adapter = self._adapter()
+        mock_client = MagicMock()
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
+        adapter._client = mock_client
+
+        msgs = [
+            {"role": "user", "content": "first"},
+            {"role": "system", "content": "Late system msg."},
+            {"role": "user", "content": "second"},
+        ]
+        await adapter.complete(_make_request(messages=msgs))
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        assert "system" in kwargs
+        for m in kwargs["messages"]:
+            assert m.get("role") != "system"
+
+    async def test_system_content_as_list_of_blocks(self):
+        """system content as list-of-blocks is joined into a string."""
+        adapter = self._adapter()
+        mock_client = MagicMock()
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
+        adapter._client = mock_client
+
+        msgs = [
+            {"role": "system", "content": [
+                {"type": "text", "text": "Part one."},
+                {"type": "text", "text": "Part two."},
+            ]},
+            {"role": "user", "content": "hi"},
+        ]
+        await adapter.complete(_make_request(messages=msgs))
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        assert "Part one." in kwargs["system"][0]["text"]
+        assert "Part two." in kwargs["system"][0]["text"]
+
+    async def test_empty_chat_messages_falls_back_to_objective(self):
+        """If only system messages are present, fall back to req.objective."""
+        adapter = self._adapter()
+        mock_client = MagicMock()
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
+        adapter._client = mock_client
+
+        msgs = [{"role": "system", "content": "Only a system prompt."}]
+        await adapter.complete(_make_request(objective="fallback objective", messages=msgs))
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        assert kwargs["messages"] == [{"role": "user", "content": "fallback objective"}]
+
+    async def test_cache_tokens_reported_in_usage(self):
+        """cache_read_tokens and cache_write_tokens surface in RouteUsage."""
+        adapter = self._adapter()
+        mock_client = MagicMock()
+        mock_client.messages.create = AsyncMock(
+            return_value=_fake_response_with_cache(cache_read=120, cache_write=300)
+        )
+        adapter._client = mock_client
+
+        resp = await adapter.complete(_make_request())
+        assert resp.usage.cache_read_tokens == 120
+        assert resp.usage.cache_write_tokens == 300
+
+    async def test_no_system_message_no_system_param(self):
+        """Without a system message, system= is not added to the API call."""
+        adapter = self._adapter()
+        mock_client = MagicMock()
+        mock_client.messages.create = AsyncMock(return_value=_fake_response_with_cache())
+        adapter._client = mock_client
+
+        await adapter.complete(_make_request(messages=[{"role": "user", "content": "hello"}]))
+
+        kwargs = mock_client.messages.create.call_args.kwargs
+        assert "system" not in kwargs
