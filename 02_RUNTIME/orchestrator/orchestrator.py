@@ -16,9 +16,6 @@ sys.path.insert(0, _RUNTIME)
 from scope.guard import DispatchGuard  # noqa: E402
 from magnets.base_magnet import MagnetEvent  # noqa: E402
 from magnets.magnet_orchestrator import MagnetOrchestrator  # noqa: E402
-from router.router import ChromaticRouter  # noqa: E402
-from router.contracts import RouteRequest, RouteInput, RouteConstraints, TaskType  # noqa: E402
-from router.contracts import PrivacyClass  # noqa: E402
 
 
 @dataclass
@@ -169,8 +166,12 @@ class Orchestrator:
         task_type: str = "planning",
     ) -> dict[str, Any]:
         """Route a mission through ChromaticRouter and return provider selection."""
+        from router.router import ChromaticRouter  # lazy — keeps orchestrator decoupled from router
+        from router.contracts import RouteRequest, RouteInput, RouteConstraints, TaskType, PrivacyClass
+
         router = ChromaticRouter()
         req = RouteRequest(
+            request_id=str(uuid.uuid4()),
             task_id=mission.mission_id,
             task_type=TaskType(task_type),
             objective=mission.objective,
