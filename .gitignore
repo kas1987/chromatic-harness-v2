@@ -124,3 +124,7 @@ server_stderr.txt
 # Timestamped budget/control-plane snapshots (session-local)
 07_LOGS_AND_AUDIT/budget/*_[0-9]*_[0-9]*.json
 07_LOGS_AND_AUDIT/control_plane/*_[0-9]*T*.json
+
+# Isolated per-worker git worktrees (task_runner / claude_delegate_gate dispatch)
+.worktrees/
+.claude/worktrees/

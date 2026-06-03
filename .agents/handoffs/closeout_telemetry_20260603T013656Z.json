@@ -1,0 +1,15 @@
+{
+  "generated_at_utc": "2026-06-03T01:36:56.417392+00:00",
+  "invoked_by": "claude_code",
+  "budget_decision": "spawn",
+  "epic_swot_telemetry_key": "EPIC-SWOT-NEXT-20260530T091436Z",
+  "epic_timestamp_utc": "20260530T091436Z",
+  "epic_title": "EPIC-SWOT NEXT [20260530T091436Z]: Post-Closeout SWOT Seed (2026-05-30)",
+  "epic_id": "chromatic-harness-v2-3b64",
+  "task_id": "chromatic-harness-v2-0jpb",
+  "parent_linked": false,
+  "epic_policy_allow": false,
+  "epic_policy_confidence": 0.0,
+  "epic_policy_reason": "bd live query failed \u2014 blocking to prevent duplicate creation",
+  "auto_start_ok": false
+}

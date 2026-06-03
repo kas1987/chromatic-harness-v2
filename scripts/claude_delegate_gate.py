@@ -53,10 +53,53 @@ DESTRUCTIVE_PATTERNS = (
 )
 
 
-def _run(cmd: list[str], timeout: int = 900) -> tuple[int, str]:
-    proc = run_safe(cmd, cwd=REPO, timeout=timeout)
+def _run(cmd: list[str], timeout: int = 900, cwd: Path | None = None) -> tuple[int, str]:
+    """Run a command via the harness-safe runner.
+
+    cwd defaults to the main checkout (REPO); pass an isolated worktree path to
+    run a spawned worker without moving the shared checkout's HEAD.
+    """
+    proc = run_safe(cmd, cwd=cwd or REPO, timeout=timeout)
     out = (proc.stdout or "") + (proc.stderr or "")
     return proc.returncode, out
+
+
+# ── Worktree isolation ─────────────────────────────────────────────────────────
+# The spawned `claude -p` worker gets its own `git worktree` checkout so its
+# branch/commits never move the shared checkout's HEAD. Without this, a worker
+# switching branches in the shared tree corrupts a concurrent interactive
+# session's git state (the documented concurrent-runner branch-churn problem;
+# see docs/retros/2026-06-02-worker-spawn-worktree-isolation.md learning #2 and bd memory
+# `concurrent-runner-worktree-isolation`). .worktrees/ is gitignored. This
+# mirrors task_runner.py's _create_worktree/_remove_worktree/_run(cwd=...).
+_WORKTREE_ROOT = REPO / ".worktrees"
+
+
+def _worktree_path(worker_id: str) -> Path:
+    safe = worker_id.replace("/", "_").replace(".", "_") or "delegate"
+    return _WORKTREE_ROOT / f"delegate-{safe}"
+
+
+def _create_worktree(worker_id: str, base: str = "HEAD") -> Path | None:
+    """Add an isolated worktree checked out on a fresh `delegate/<id>` branch.
+
+    Returns the worktree path, or None on failure (caller must then refuse to
+    spawn rather than fall back to the shared checkout). Cleans up any stale
+    worktree/branch left by a prior aborted run first.
+    """
+    path = _worktree_path(worker_id)
+    branch = f"delegate/{worker_id}"
+    _run(["git", "worktree", "remove", str(path), "--force"])  # ignore failure (may not exist)
+    _run(["git", "worktree", "prune"])
+    _run(["git", "branch", "-D", branch])  # ignore failure (branch may not exist)
+    code, _ = _run(["git", "worktree", "add", str(path), "-b", branch, base])
+    return path if code == 0 else None
+
+
+def _remove_worktree(path: Path) -> None:
+    """Tear down a spawned worker's worktree (best-effort)."""
+    _run(["git", "worktree", "remove", str(path), "--force"])
+    _run(["git", "worktree", "prune"])
 
 
 def _run_pre_swarm_gate(invoked_by: str) -> tuple[bool, str]:
@@ -206,14 +249,26 @@ def _write_artifacts(packet: dict) -> tuple[Path, Path]:
     return packet_path, prompt_path
 
 
-def _spawn_claude(prompt_path: Path) -> tuple[bool, str]:
-    cmd = ["claude", "-p", f"@{prompt_path}"]
+def _spawn_claude(prompt_path: Path, worker_id: str) -> tuple[bool, str]:
     if shutil.which("claude") is None:
         return False, "claude CLI not found; packet created for manual use"
-    code, out = _run(cmd, timeout=120)
-    if code == 0:
-        return True, (out[:1000] or "claude delegation dispatched")
-    return False, out[-1000:]
+
+    # Isolate the spawned worker in its own worktree so it never moves the shared
+    # checkout's HEAD. If the worktree can't be created, refuse rather than churn
+    # the shared tree (which would corrupt concurrent interactive git work).
+    worktree = _create_worktree(worker_id)
+    if worktree is None:
+        return False, "failed to create isolated git worktree; refusing to spawn into the shared checkout"
+
+    try:
+        # prompt_path is absolute, so the `@file` reference resolves regardless of cwd.
+        cmd = ["claude", "-p", f"@{prompt_path}"]
+        code, out = _run(cmd, timeout=120, cwd=worktree)
+        if code == 0:
+            return True, (out[:1000] or "claude delegation dispatched")
+        return False, out[-1000:]
+    finally:
+        _remove_worktree(worktree)
 
 
 def _destructive_guard(task: str, allow_destructive: bool) -> tuple[str, str]:
@@ -364,7 +419,8 @@ def main() -> int:
     }
 
     if args.spawn_claude_cli and decision == "execute":
-        ok, msg = _spawn_claude(prompt_path)
+        worker_id = args.bead_id or args.task_id or args.run_id or "delegate"
+        ok, msg = _spawn_claude(prompt_path, worker_id)
         packet["spawn"] = {"ok": ok, "message": msg}
 
     _emit_delegation_log(packet)

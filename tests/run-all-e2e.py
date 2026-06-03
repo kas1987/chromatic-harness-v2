@@ -41,6 +41,7 @@ SUITES = [
         [
             "test_router_autopath.py",
             "test_delegate_bead.py",
+            "test_claude_delegate_gate_worktree.py",
         ],
     ),
     (
@@ -68,6 +69,12 @@ SUITES = [
         "PR size & change-risk gate",
         [
             "test_pr_size_gate.py",
+        ],
+    ),
+    (
+        "merge confidence gate (composite verdict)",
+        [
+            "test_merge_confidence_gate.py",
         ],
     ),
     (

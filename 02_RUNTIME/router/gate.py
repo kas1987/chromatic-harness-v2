@@ -35,10 +35,13 @@ if "router" not in sys.modules:
 
 
 def _load_submodule(name: str, fname: str):
+    key = f"router.{name}"
+    if key in sys.modules:
+        return sys.modules[key]
     path = _ROUTER_DIR / fname
-    spec = importlib.util.spec_from_file_location(f"router.{name}", path)
+    spec = importlib.util.spec_from_file_location(key, path)
     mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
-    sys.modules.setdefault(f"router.{name}", mod)
+    sys.modules[key] = mod
     spec.loader.exec_module(mod)  # type: ignore[union-attr]
     return mod
 

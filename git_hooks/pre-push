@@ -1,4 +1,81 @@
 #!/usr/bin/env bash
 set -euo pipefail
-python -m py_compile scripts/*.py
-python scripts/generate_observability_report.py >/dev/null
+
+# ── Local fast checks ──────────────────────────────────────────────────
+# Redirect stdin from /dev/null so the push ref lines git feeds on stdin
+# survive intact for the canonical gate below (these checks read no stdin).
+python -m py_compile scripts/*.py </dev/null
+python scripts/generate_observability_report.py >/dev/null </dev/null
+
+# ── Canonical gate: main/master block + pytest E2E suite ───────────────
+# Setting core.hooksPath=git_hooks bypassed the auto-installed
+# .git/hooks/pre-push that used to delegate to ~/.claude/hooks/pre-push.sh,
+# silently dropping the direct-push branch block AND the run-all-e2e.py gate
+# (the real pre-push test gate). Re-delegate here so both layers run again.
+# Pass args ($1 remote, $2 url) and stdin (push ref lines) straight through;
+# exec hands the remaining stdin to the canonical hook untouched.
+CANON="$HOME/.claude/hooks/pre-push.sh"
+if [ -x "$CANON" ]; then
+  exec "$CANON" "$@"
+fi
+
+# ── Fail closed: in-repo fallback gate ─────────────────────────────────
+# The canonical hook is a machine-local, untracked file. On a fresh clone,
+# container, or CI-like checkout it won't exist — and falling through here
+# would exit 0, silently skipping the branch block + E2E gate while the push
+# appears to have passed (the original bypass bug, just relocated). So when
+# the canonical hook is absent we run the tracked gate directly, replicating
+# its two essential layers: the main/master direct-push block and the
+# run-all-e2e.py pytest suite (with a watchdog so a hung suite can't wedge a
+# push). This makes the tracked hook self-sufficient — it never passes blind.
+echo "pre-push: canonical hook ($CANON) not found — running in-repo fallback gate." >&2
+
+# Beads/Dolt sync pushes refs/dolt/* from a bare cache on master — never block those.
+if [ ! -t 0 ]; then
+  while read -r local_ref _local_sha remote_ref _remote_sha; do
+    [ -z "${local_ref:-}" ] && continue
+    case "$local_ref" in refs/dolt/*) exit 0 ;; esac
+    case "$remote_ref" in refs/dolt/*) exit 0 ;; esac
+  done
+fi
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "main" ]; then
+  echo "" >&2
+  echo "  pre-push: direct push to main/master is blocked. Use a session branch + PR." >&2
+  echo "" >&2
+  exit 1
+fi
+
+# pytest E2E gate, watchdog-bounded. On timeout: warn + continue (fail-open on
+# hangs only); a genuine test failure within the window still blocks the push.
+PYTEST_RUNNER="tests/run-all-e2e.py"
+if [ -f "$PYTEST_RUNNER" ]; then
+  E2E_TIMEOUT="${E2E_TIMEOUT:-180}"
+  echo "pre-push: running pytest harness E2E gates (watchdog ${E2E_TIMEOUT}s)…" >&2
+  python "$PYTEST_RUNNER" </dev/null & _pid=$!
+  _secs=0; _timed_out=0
+  while kill -0 "$_pid" 2>/dev/null; do
+    sleep 1; _secs=$((_secs + 1))
+    if [ "$_secs" -ge "$E2E_TIMEOUT" ]; then
+      kill "$_pid" 2>/dev/null || true
+      _timed_out=1
+      break
+    fi
+  done
+  _e2e_rc=0
+  wait "$_pid" 2>/dev/null || _e2e_rc=$?
+  if [ "$_timed_out" = "1" ]; then
+    echo "  pre-push: pytest E2E exceeded ${E2E_TIMEOUT}s — killed; NOT blocking push." >&2
+  elif [ "$_e2e_rc" != "0" ]; then
+    echo "" >&2
+    echo "  pre-push: pytest E2E FAILED (rc=$_e2e_rc) — push blocked." >&2
+    echo "" >&2
+    exit 1
+  fi
+else
+  # No canonical hook AND no tracked runner: we cannot prove the gate ran.
+  # Fail closed rather than let an unverified push masquerade as gated.
+  echo "  pre-push: neither canonical hook nor $PYTEST_RUNNER present — cannot verify gate; blocking." >&2
+  exit 1
+fi

@@ -1,209 +1,131 @@
 {
-  "generated_at": "2026-06-01T16:15:40.970015+00:00",
+  "generated_at": "2026-06-03T01:49:40.715242+00:00",
   "rigs_scanned": [
     "chromatic-harness-v2"
   ],
-  "artifacts_found": 139,
-  "unique_count": 79,
-  "duplicate_count": 60,
-  "promoted": [
-    {
-      "from": ".agents\\patterns\\anti_pattern-2026-04-27-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-2026-04-27-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "02927361a4164784cb8d1c6bbff9097fd255bce11ea0691f8259260206bccb60"
-    },
-    {
-      "from": ".agents\\patterns\\anti_pattern-2026-05-03-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-2026-05-03-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "899db2555fba35de5e6a77d390f5f1c7fda078bc507c4dca42990901872ca1c7"
-    },
-    {
-      "from": ".agents\\patterns\\anti_pattern-2026-05-18-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-2026-05-18-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "307b0f194da3f49b1a520fbc3104eb41bc960a4ac36b3e0246a4fb260917d32e"
-    },
-    {
-      "from": ".agents\\patterns\\anti_pattern-2026-05-19-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-2026-05-19-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "dd0a6aeefe8029e4618f0a6f935ff8c05cac7590bdcd57a2797ba98133e8cc3c"
-    },
-    {
-      "from": ".agents\\patterns\\anti_pattern-2026-05-20-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-2026-05-20-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "cf1b74ccd0180fa36f3f7a2504a80552134801f79d9ee66afbfaec66ad514d5d"
-    },
-    {
-      "from": ".agents\\patterns\\anti_pattern-2026-05-21-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-2026-05-21-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "b059a18ec48975df51c486b42c741bb01e0ccb843b2817c7ae949d1202dc2a86"
-    },
-    {
-      "from": ".agents\\patterns\\anti_pattern-2026-05-22-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-2026-05-22-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "e1196acf3f0ec875128caa4e3e85fcd1fa12e644ff4432afdfdadea1ede7ce1f"
-    },
-    {
-      "from": ".agents\\patterns\\anti_pattern-ai-infrastructure-research-compendium.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\anti_pattern-ai-infrastructure-research-compendium.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "ed4ef2ab399e22e40cd202cd8664b3fb2907b1e9bcaf3ad98fe6a2993160e7c8"
-    },
-    {
-      "from": ".agents\\patterns\\pattern-cli-coding-agents-quickref.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\pattern-cli-coding-agents-quickref.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "d595e586e79ac2fd8b734c2f61a8222a5dec0aa8937e017f9974fcf230a8b4cc"
-    },
-    {
-      "from": ".agents\\patterns\\principle-2026-05-24-nightly-extract.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\principle-2026-05-24-nightly-extract.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "96aec9dda5289f221c87c03700f46ee814b97c8647b11176bfb05e60a5d48865"
-    },
-    {
-      "from": ".agents\\patterns\\SCHEMA.md",
-      "to": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\learnings\\SCHEMA.md",
-      "rig_id": "chromatic-harness-v2",
-      "confidence": 0.5,
-      "content_hash": "cb051dcd88b7f23781bbc292dd729d5c94ff94c45c849a736444f1adb5fc5630"
-    }
-  ],
+  "artifacts_found": 154,
+  "unique_count": 83,
+  "duplicate_count": 71,
+  "promoted": [],
   "skipped": [
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-cloud-vs-local-routing-strategy.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-cloud-vs-local-routing-strategy.md",
       "reason": "duplicate of 2026-04-26-cloud-vs-local-routing-strategy.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-driver-abstraction-for-os-bound-code.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-driver-abstraction-for-os-bound-code.md",
       "reason": "duplicate of 2026-04-26-driver-abstraction-for-os-bound-code.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-2026-04-26-mcp-stdio-client-lifecycle.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-2026-04-26-mcp-stdio-client-lifecycle.md",
       "reason": "duplicate of 2026-04-26-mcp-stdio-client-lifecycle.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-non-blocking-observer-hooks-for-policy.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-non-blocking-observer-hooks-for-policy.md",
       "reason": "duplicate of 2026-04-26-non-blocking-observer-hooks-for-policy.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-routing-session.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-routing-session.md",
       "reason": "duplicate of 2026-04-26-routing-session-post-mortem.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-subagent-overhead-vs-task-complexity.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-subagent-overhead-vs-task-complexity.md",
       "reason": "duplicate of 2026-04-26-subagent-overhead-vs-task-complexity.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-windows-crlf-in-jq-mapfile-pipelines.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-windows-crlf-in-jq-mapfile-pipelines.md",
       "reason": "duplicate of 2026-04-26-windows-crlf-in-jq-mapfile-pipelines.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-check-existing-skills.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-check-existing-skills.md",
       "reason": "duplicate of 2026-05-02-check-existing-skills-before-designing.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-env-clash-session.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-env-clash-session.md",
       "reason": "duplicate of 2026-05-02-env-clash-session.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\principle-hook-audit-skill-build.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/principle-hook-audit-skill-build.md",
       "reason": "duplicate of 2026-05-02-hook-audit-skill-build.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-session-branch-workflow.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-session-branch-workflow.md",
       "reason": "duplicate of 2026-05-02-session-branch-workflow.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-whisper-call-parallel-mcp-l2-tests.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-whisper-call-parallel-mcp-l2-tests.md",
       "reason": "duplicate of 2026-05-02-whisper-call-parallel-mcp-l2-tests.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-bats-guard-test-before-consumer.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-bats-guard-test-before-consumer.md",
       "reason": "duplicate of 2026-05-21-bats-guard-test-before-consumer.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-env-var-override-for-test-path-assumptions.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-env-var-override-for-test-path-assumptions.md",
       "reason": "duplicate of 2026-05-21-env-var-override-for-test-path-assumptions.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-fixture-guard-mcp-layout.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-fixture-guard-mcp-layout.md",
       "reason": "duplicate of 2026-05-21-fixture-guard-mcp-layout.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\principle-posttooluse-formatter-reformat.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/principle-posttooluse-formatter-reformat.md",
       "reason": "duplicate of 2026-05-21-postToolUse-formatter-reformat.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\principle-session-closeout.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/principle-session-closeout.md",
       "reason": "duplicate of 2026-05-21-session-closeout-hook-cleanup.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-router-governance.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-router-governance.md",
       "reason": "duplicate of 2026-05-27-router-governance-session.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-beads-intake.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-beads-intake.md",
       "reason": "duplicate of 2026-05-28-beads-unified-intake.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-governance-hooks-mc-x1bi.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-governance-hooks-mc-x1bi.md",
       "reason": "duplicate of 2026-05-28-governance-hooks-mc-x1bi.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-magnets-scoring.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-magnets-scoring.md",
       "reason": "duplicate of 2026-05-28-magnet-scoring-determinism.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-option-c-interface-first.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-option-c-interface-first.md",
       "reason": "duplicate of 2026-05-28-option-c-interface-first.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-phase7-agent-registration.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-phase7-agent-registration.md",
       "reason": "duplicate of 2026-05-28-phase7-agent-registration.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\principle-pre-session-context-governance.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/principle-pre-session-context-governance.md",
       "reason": "duplicate of 2026-05-29-pre-session-context-governance.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-closeout-epic-governance.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-closeout-epic-governance.md",
       "reason": "duplicate of 2026-05-30-closeout-epic-governance.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-delegation-correlation-contract.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-delegation-correlation-contract.md",
       "reason": "duplicate of 2026-05-30-delegation-correlation-contract.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\anti_pattern-delegation-loop-observability-shell-safety.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/anti_pattern-delegation-loop-observability-shell-safety.md",
       "reason": "duplicate of 2026-05-30-delegation-loop-observability-and-shell-safety.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\principle-governance-guards-is2f.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/principle-governance-guards-is2f.md",
       "reason": "duplicate of 2026-05-30-governance-guards-is2f.md"
     },
     {
-      "path": "C:\\Users\\kas41\\chromatic-harness-v2\\.agents\\patterns\\pattern-integration-testing.md",
+      "path": "/home/user/chromatic-harness-v2/.agents/patterns/pattern-integration-testing.md",
       "reason": "duplicate of 2026-05-30-integration-testing-patterns.md"
     }
   ],
   "dry_run": false,
-  "min_confidence": 0.5,
+  "min_confidence": 0.6,
   "global_hub": false
 }

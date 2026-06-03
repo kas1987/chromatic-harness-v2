@@ -1,31 +1,28 @@
 {
-  "ok": true,
-  "timestamp": "2026-06-02T20:38:05.446023+00:00",
+  "ok": false,
+  "timestamp": "2026-06-03T01:55:38.861003+00:00",
   "surface": "cli",
   "invoked_by": "claude",
-  "codegraph_status": "fresh",
+  "codegraph_status": "absent",
   "steps": [
     {
       "name": "session_boot_automation",
       "command": [
-        "C:\\Users\\kas41\\.pyenv\\pyenv-win\\versions\\3.12.3\\python.exe",
-        "C:\\Users\\kas41\\chromatic-harness-v2\\scripts\\session_boot_automation.py",
+        "/usr/local/bin/python",
+        "/home/user/chromatic-harness-v2/scripts/session_boot_automation.py",
         "--invoked-by",
         "claude"
       ],
-      "exit_code": 0,
-      "ok": true,
-      "stdout_tail": "{\n  \"generated_at\": \"2026-06-02T20:00:45.170461+00:00\",\n  \"manifest_age_hours\": 0.62,\n  \"branch\": \"feat/u8uj-2-gate-middleware-pipeline\",\n  \"context_tier\": \"P0\",\n  \"mcp_tokens\": 10198,\n  \"mcp_over_budget\": false,\n  \"pack_version\": \"ea766f5329f69dfb\",\n  \"invoked_by\": \"claude\",\n  \"boot_mode\": \"fresh_skip\"\n}\n",
-      "stderr_tail": "Pre-session manifest fresh (<6.0h); skipping heavy boot steps.\n"
+      "exit_code": 1,
+      "ok": false,
+      "stdout_tail": "",
+      "stderr_tail": "Session boot completed with errors: audit_mcp_context failed, pre_session_manifest failed, validate_intake_loop failed, manifest missing after boot\n"
     },
     {
       "name": "codegraph_freshness",
       "ok": true,
-      "status": "fresh",
-      "index_lag_minutes": 0.0,
-      "stale_after_minutes": 60,
-      "newest_source": "02_RUNTIME/orchestrator/orchestrator.py",
-      "advice": "index current"
+      "status": "absent",
+      "advice": "codegraph not initialized: run `codegraph init -i .`"
     }
   ]
 }

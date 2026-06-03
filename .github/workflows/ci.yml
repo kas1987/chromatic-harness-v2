@@ -123,7 +123,7 @@ jobs:
           mypy 02_RUNTIME/router/ 02_RUNTIME/memory/ 02_RUNTIME/api/ --config-file mypy.ini
 
       - name: Run tests with coverage
-        run: pytest tests/ -v --tb=short --cov=src/chromatic_router --cov-report=term --cov-fail-under=50
+        run: pytest tests/ -v --tb=short --cov=02_RUNTIME --cov-report=term --cov-fail-under=60
         env:
           CHROMATIC_DB_PATH: ":memory:"
 

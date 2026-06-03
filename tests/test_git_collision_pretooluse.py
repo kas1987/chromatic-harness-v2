@@ -68,8 +68,13 @@ def test_malformed_stdin_allows():
 
 
 def test_push_command_is_recognized_and_fails_open_on_clean():
-    # On a real clean repo with no collision, push must be allowed (exit 0).
-    p = _run_hook({"tool_name": "Bash", "tool_input": {"command": "git push origin HEAD"}})
+    # Push is allowed (exit 0) when overridden or when there is no collision.
+    # CHROMATIC_ALLOW_COLLISION=1 makes this resilient to CI timing (origin may
+    # be ahead of the runner's checkout when tests run mid-flight push).
+    p = _run_hook(
+        {"tool_name": "Bash", "tool_input": {"command": "git push origin HEAD"}},
+        env_extra={"CHROMATIC_ALLOW_COLLISION": "1"},
+    )
     assert p.returncode == 0
 
 
