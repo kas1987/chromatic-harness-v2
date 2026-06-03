@@ -14,8 +14,8 @@ python scripts/harness_health_check.py --markdown
 
 # Persist the report artifact (the ONLY thing --write touches)
 python scripts/harness_health_check.py --write
-# -> 05_REPORTS/harness_health/latest.json
-# -> 05_REPORTS/harness_health/latest.md
+# -> reports/harness_health/latest.json
+# -> reports/harness_health/latest.md
 ```
 
 Exit code is `0` unless an **integrity** check fails (`overall_status: red`).
@@ -66,7 +66,7 @@ only ever warn.
 ## Read-only guarantee
 
 The cockpit mutates **nothing** by default. `--write` is the only flag that
-touches disk, and it writes solely to `05_REPORTS/harness_health/` — a report
+touches disk, and it writes solely to `reports/harness_health/` — a report
 artifact, never harness state. This satisfies the NW-RG-079 stop condition
 "health check would mutate state."
 

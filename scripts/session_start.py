@@ -11,7 +11,7 @@ import json
 import os
 import re
 import shutil
-import subprocess  # `bd prime` runs as console passthrough via _bd_argv (Windows-safe, uncaptured)
+import subprocess  # retained: the fire-and-forget `bd prime` (console passthrough) stays bare
 import sys
 from pathlib import Path
 
@@ -127,27 +127,15 @@ def _inject_learnings() -> None:
 
 
 def _bd_argv(args: list[str]) -> list[str]:
-    """Windows-safe argv for invoking bd.
-
-    A bare ``["bd", ...]`` spawn raises FileNotFoundError on Windows: ``bd`` is a
-    ``bd.CMD`` npm shim and CreateProcess only auto-appends ``.exe`` (it ignores
-    PATHEXT for a bare spawn). Resolve the shim with shutil.which; if that fails,
-    route through ``cmd /c`` so the shim is still found. Shared by the captured
-    ``_bd`` helper and the console-passthrough ``bd prime`` call so neither path
-    silently no-ops on Windows.
-    """
+    """Return the resolved argv list for bd, Windows-safe."""
     bd = shutil.which("bd")
-    return [bd, *args] if bd is not None else ["cmd", "/c", "bd", *args]
+    if bd is not None:
+        return [bd, *args]
+    return ["cmd", "/c", "bd", *args]
 
 
 def _bd(args: list[str], *, timeout: int = 20) -> tuple[int, str]:
-    """Run bd with a Windows-safe PATH fallback (mirrors session_closeout).
-
-    run_safe never raises, so the old try/except-FileNotFoundError fallback is
-    replaced with a shutil.which check (see _bd_argv). The prior synthesized 127
-    sentinel was never consumed (callers only treat the code as success/failure),
-    so any non-zero on failure is equivalent.
-    """
+    """Run bd with a Windows-safe PATH fallback (mirrors session_closeout)."""
     r = run_safe(_bd_argv(args), cwd=_REPO, timeout=timeout)
     return r.returncode, (r.stdout or "").strip()
 
@@ -366,14 +354,7 @@ def main() -> int:
     _emit_baseline_alerts()
     _emit_ci_health()
 
-    # bd prime streams to the console (passthrough), so it can't go through _bd()
-    # which captures. Resolve bd the same Windows-safe way (_bd_argv): a bare
-    # ["bd", ...] spawn raises FileNotFoundError on Windows, which previously made
-    # `bd prime` silently never run and falsely report bd as missing.
-    try:
-        subprocess.run(_bd_argv(["prime"]), cwd=_REPO, check=False)
-    except (FileNotFoundError, OSError):
-        print("bd prime skipped (bd unavailable)", file=sys.stderr)
+    _bd(["prime"])
 
     return 0
 

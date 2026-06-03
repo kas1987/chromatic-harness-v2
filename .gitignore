@@ -127,3 +127,4 @@ server_stderr.txt
 
 # Isolated per-worker git worktrees (task_runner / claude_delegate_gate dispatch)
 .worktrees/
+.claude/worktrees/

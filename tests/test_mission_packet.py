@@ -12,7 +12,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 PACKET = REPO / "templates" / "AGENT_MISSION_PACKET_OBSERVABILITY.md"
-CODEX_HANDOFF = REPO / "12_HANDOFFS" / "CODEX_IMPLEMENTATION_HANDOFF.md"
+CODEX_HANDOFF = REPO / "agent_handoffs" / "CODEX_IMPLEMENTATION_HANDOFF.md"
 
 
 def _packet() -> str:

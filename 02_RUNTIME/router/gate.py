@@ -68,6 +68,8 @@ TOOL_USE_PATTERN = os.environ.get(
 # ── Pipeline stage imports ───────────────────────────────────────────────────
 from router.pipeline.io import emit_advisory, emit_deny, read_stdin  # noqa: E402
 from router.pipeline.impact import (  # noqa: E402
+    IMPACT_ENABLED,
+    IMPACT_TIMEOUT,
     count_impacted,
     extract_file_refs,
     impact_fan_out,
@@ -82,7 +84,22 @@ _emit_advisory = emit_advisory
 _emit_deny = emit_deny
 _extract_file_refs = extract_file_refs
 _count_impacted = count_impacted
-_impact_fan_out = impact_fan_out
+
+
+def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
+    """Gate-level wrapper — reads impact module's IMPACT_ENABLED so tests can monkeypatch it."""
+    import router.pipeline.impact as _impact
+    if not _impact.IMPACT_ENABLED:
+        return None
+    try:
+        refs = extract_file_refs(f"{description}\n{prompt}")
+        if not refs:
+            return None
+        run = runner or _impact._default_runner
+        count = count_impacted(run(refs))
+        return max(count, len(refs))
+    except Exception:
+        return None
 _billing_for_route = billing_for_route
 _cost_estimate_usd = cost_estimate_usd
 _context_gate_advisory = context_gate_advisory

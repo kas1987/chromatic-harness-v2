@@ -1,0 +1,23 @@
+infrastructure:
+  - changed-files:
+    - any-glob-to-any-file: ['.github/**', 'scripts/**', 'config/**']
+
+governance:
+  - changed-files:
+    - any-glob-to-any-file: ['00_SOURCE_OF_TRUTH/**', 'docs/routing/**', 'docs/governance/**']
+
+observability:
+  - changed-files:
+    - any-glob-to-any-file: ['00_META/observability/**', '07_LOGS_AND_AUDIT/**']
+
+harness:
+  - changed-files:
+    - any-glob-to-any-file: ['02_RUNTIME/**']
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file: ['docs/**', '*.md']
+
+hooks:
+  - changed-files:
+    - any-glob-to-any-file: ['.claude/settings*.json']

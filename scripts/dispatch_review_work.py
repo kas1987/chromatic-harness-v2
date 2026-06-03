@@ -97,10 +97,6 @@ def create_bead(item: Dict[str, Any], bd_bin: str = "bd") -> str | None:
     Returns the new bead id, or None if bd is unavailable or the call fails. The dispatcher
     never blocks on bd: a missing tracker degrades to mission-packet-only dispatch.
     """
-    # Resolve to an absolute path: on Windows ``bd`` is a ``bd.CMD`` shim and
-    # ``subprocess.run(["bd", ...])`` raises FileNotFoundError because CreateProcess
-    # does not apply PATHEXT. Passing the which-resolved path makes --emit-beads work
-    # cross-platform instead of silently degrading to packet-only on Windows.
     bd_path = shutil.which(bd_bin)
     if not bd_path:
         return None
