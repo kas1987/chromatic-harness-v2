@@ -36,7 +36,9 @@ def _make_request(
     )
 
 
-def _make_remote_adapter(host: str = "localhost", port: int = 11434, model: str = "llama3.1:8b") -> OllamaRemoteAdapter:
+def _make_remote_adapter(
+    host: str = "localhost", port: int = 11434, model: str = "llama3.1:8b"
+) -> OllamaRemoteAdapter:
     cfg = {"enabled": True, "host": host, "port": port, "model": model}
     return OllamaRemoteAdapter("ollama-remote", cfg)
 
@@ -102,7 +104,9 @@ class TestOllamaRemoteHealth:
     async def test_health_connection_error(self):
         adapter = _make_remote_adapter()
         mock_client = MagicMock()
-        mock_client.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
+        mock_client.get = AsyncMock(
+            side_effect=httpx.ConnectError("Connection refused")
+        )
         adapter._client = mock_client
 
         health = await adapter.health()
@@ -191,7 +195,9 @@ class TestOllamaRemoteComplete:
 
         await adapter.complete(_make_request(objective="define recursion", messages=[]))
         call_kwargs = mock_client.post.call_args.kwargs
-        assert call_kwargs["json"]["messages"] == [{"role": "user", "content": "define recursion"}]
+        assert call_kwargs["json"]["messages"] == [
+            {"role": "user", "content": "define recursion"}
+        ]
 
     async def test_complete_exception_returns_error(self):
         adapter = _make_remote_adapter()
@@ -283,7 +289,10 @@ class TestPruneMessages:
         msgs = self._turns(5)
         result = _prune_messages(msgs, 1)
         assert len(result) == 2
-        assert result == [{"role": "user", "content": "q4"}, {"role": "assistant", "content": "a4"}]
+        assert result == [
+            {"role": "user", "content": "q4"},
+            {"role": "assistant", "content": "a4"},
+        ]
 
 
 # ---------------------------------------------------------------------------
@@ -295,7 +304,13 @@ class TestPruneMessages:
 class TestOllamaRemoteHistoryPruning:
     async def test_history_pruned_before_sending(self):
         """Adapter passes pruned messages to the HTTP payload."""
-        cfg = {"enabled": True, "host": "localhost", "port": 11434, "model": "llama3.1:8b", "max_history_turns": 2}
+        cfg = {
+            "enabled": True,
+            "host": "localhost",
+            "port": 11434,
+            "model": "llama3.1:8b",
+            "max_history_turns": 2,
+        }
         adapter = OllamaRemoteAdapter("ollama-remote", cfg)
         mock_resp = _mock_response(200)
         mock_client = MagicMock()
@@ -305,7 +320,10 @@ class TestOllamaRemoteHistoryPruning:
         # 10 turns — should be pruned to last 2 (4 messages)
         long_history = []
         for i in range(10):
-            long_history += [{"role": "user", "content": f"q{i}"}, {"role": "assistant", "content": f"a{i}"}]
+            long_history += [
+                {"role": "user", "content": f"q{i}"},
+                {"role": "assistant", "content": f"a{i}"},
+            ]
         req = _make_request(messages=long_history)
 
         await adapter.complete(req)
@@ -315,7 +333,13 @@ class TestOllamaRemoteHistoryPruning:
 
     async def test_system_messages_preserved_through_pruning(self):
         """System messages survive history pruning in the adapter."""
-        cfg = {"enabled": True, "host": "localhost", "port": 11434, "model": "llama3.1:8b", "max_history_turns": 1}
+        cfg = {
+            "enabled": True,
+            "host": "localhost",
+            "port": 11434,
+            "model": "llama3.1:8b",
+            "max_history_turns": 1,
+        }
         adapter = OllamaRemoteAdapter("ollama-remote", cfg)
         mock_resp = _mock_response(200)
         mock_client = MagicMock()
@@ -332,7 +356,13 @@ class TestOllamaRemoteHistoryPruning:
 
     async def test_max_history_turns_configurable(self):
         """max_history_turns cfg key is wired up to _prune_messages."""
-        cfg = {"enabled": True, "host": "localhost", "port": 11434, "model": "llama3.1:8b", "max_history_turns": 3}
+        cfg = {
+            "enabled": True,
+            "host": "localhost",
+            "port": 11434,
+            "model": "llama3.1:8b",
+            "max_history_turns": 3,
+        }
         adapter = OllamaRemoteAdapter("ollama-remote", cfg)
         assert adapter.max_history_turns == 3
 
@@ -350,5 +380,7 @@ class TestOllamaAdapterWrapper:
         assert adapter.port == 11434
 
     def test_custom_cfg_passed_through(self):
-        adapter = OllamaAdapter({"enabled": True, "base_url": "http://192.168.1.5:11434", "model": "phi3"})
+        adapter = OllamaAdapter(
+            {"enabled": True, "base_url": "http://192.168.1.5:11434", "model": "phi3"}
+        )
         assert adapter.model == "phi3"
