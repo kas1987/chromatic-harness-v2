@@ -1,4 +1,5 @@
 """Tests for the usage-calibration pipeline (weight math + snapshot-delta engine)."""
+
 from __future__ import annotations
 
 import sys
@@ -23,8 +24,7 @@ def test_model_type_normalizes_suffixes():
 def test_wtok_weights_by_model_and_type():
     weights, _ = L.load_weights()
     # Opus: 100k input * 5 + 10k output * 25 = 500000 + 250000 = 750000
-    assert L.wtok({"input_tokens": 100000, "output_tokens": 10000},
-                  "claude-opus-4-8[1m]", weights) == 750000.0
+    assert L.wtok({"input_tokens": 100000, "output_tokens": 10000}, "claude-opus-4-8[1m]", weights) == 750000.0
     # Sonnet input is the reference unit (weight 1.0)
     assert L.wtok({"input_tokens": 100000}, "claude-sonnet-4-6", weights) == 100000.0
     # Accepts already-mapped keys too
@@ -111,11 +111,11 @@ def test_calibrate_end_to_end(tmp_path, monkeypatch):
 
     # 5 evenly-spaced events of 1000 wtok each; 5h pct climbs 1%/event.
     for i, ts in enumerate([100, 200, 300, 400, 500, 600], start=1):
-        L.append_jsonl(wtok, {"ts": ts, "model": "claude-sonnet-4-6",
-                              "request_id": f"r{i}", "raw": {}, "wtok": 1000})
+        L.append_jsonl(wtok, {"ts": ts, "model": "claude-sonnet-4-6", "request_id": f"r{i}", "raw": {}, "wtok": 1000})
     for i, ts in enumerate([100, 200, 300, 400, 500, 600]):
-        L.append_jsonl(arc, {"ts": ts, "five_hour": {"pct": 5 + i, "resets_at": 9999},
-                            "seven_day": {"pct": 16, "resets_at": 8888}})
+        L.append_jsonl(
+            arc, {"ts": ts, "five_hour": {"pct": 5 + i, "resets_at": 9999}, "seven_day": {"pct": 16, "resets_at": 8888}}
+        )
 
     out = C.calibrate()
     # Each step: Δwtok=1000, Δpct=1 => cap = 1000/0.01 = 100000
