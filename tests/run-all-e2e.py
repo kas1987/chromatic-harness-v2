@@ -354,6 +354,12 @@ SUITES = [
             "test_repo_format_hygiene.py",
         ],
     ),
+    (
+        "usage calibration (weight math + cap estimation)",
+        [
+            "test_usage_calibration.py",
+        ],
+    ),
 ]
 
 
