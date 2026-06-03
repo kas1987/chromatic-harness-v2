@@ -29,7 +29,7 @@ jobs:
     if: github.event_name != 'issue_comment' || github.event.issue.pull_request != null
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
         with:
@@ -59,7 +59,7 @@ jobs:
       # branch. A downstream collector (scripts/review_intake_central_collector.py)
       # ingests these artifacts; this keeps the default branch immutable from CI.
       - name: Publish intake artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: review-intake-state-${{ github.run_id }}
           path: 07_LOGS_AND_AUDIT/review_intake/
