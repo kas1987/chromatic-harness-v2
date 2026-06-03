@@ -69,7 +69,7 @@ def _run(cmd: list[str], timeout: int = 900, cwd: Path | None = None) -> tuple[i
 # branch/commits never move the shared checkout's HEAD. Without this, a worker
 # switching branches in the shared tree corrupts a concurrent interactive
 # session's git state (the documented concurrent-runner branch-churn problem;
-# see docs/retros/2026-06-02-omh-pr233-gate-fix.md learning #2 and bd memory
+# see docs/retros/2026-06-02-worker-spawn-worktree-isolation.md learning #2 and bd memory
 # `concurrent-runner-worktree-isolation`). .worktrees/ is gitignored. This
 # mirrors task_runner.py's _create_worktree/_remove_worktree/_run(cwd=...).
 _WORKTREE_ROOT = REPO / ".worktrees"
