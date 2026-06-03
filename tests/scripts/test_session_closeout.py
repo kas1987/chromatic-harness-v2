@@ -327,7 +327,10 @@ def test_find_latest_open_swot_epic_from_jsonl(tmp_path, monkeypatch):
 
 def test_find_latest_open_swot_epic_returns_empty_when_no_epics(tmp_path, monkeypatch):
     issues = tmp_path / "issues.jsonl"
-    issues.write_text('{"id":"t1","title":"plain task","status":"open","issue_type":"task","created_at":"2026-01-01T00:00:00Z"}\n', encoding="utf-8")
+    issues.write_text(
+        '{"id":"t1","title":"plain task","status":"open","issue_type":"task","created_at":"2026-01-01T00:00:00Z"}\n',
+        encoding="utf-8",
+    )
     monkeypatch.setattr(sc, "_fetch_swot_rows_live", lambda: None)
     result = sc.find_latest_open_swot_epic(issues_path=issues)
     assert result == {}

@@ -123,7 +123,7 @@ def test_validate_jsonl_reports_invalid_json_line(tmp_path):
     schema = vsr.load_json_schema(schema_path)
 
     jsonl = tmp_path / "invalid.jsonl"
-    jsonl.write_text('NOT JSON\n', encoding="utf-8")
+    jsonl.write_text("NOT JSON\n", encoding="utf-8")
 
     errors = vsr.validate_jsonl(jsonl, schema, sample=50)
     assert any("JSON parse error" in e for e in errors)
