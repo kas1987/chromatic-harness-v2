@@ -70,6 +70,17 @@ entries:
     tags: [reference, execution]
     status: active
 
+  - id: chromatic-trees-v1
+    title: "Chromatic Trees — Repo Structure SoT"
+    version: 1.1
+    source_type: manual
+    source_ref: CHROMATIC_TREES.md
+    source_bead: null
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [reference, structure, governance]
+    status: active
+
   - id: option-c-integration-architecture-v1
     title: "Option C Integration Architecture"
     version: 1.0
