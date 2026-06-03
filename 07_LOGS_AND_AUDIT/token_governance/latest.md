@@ -1,15 +1,16 @@
 # Token Governance Closed Loop
 
-- Timestamp: 2026-05-31T23:15:22.018220+00:00
+- Timestamp: 2026-06-03T13:14:39.602540+00:00
 - Status: RED
-- Pass: 2
-- Warn: 1
-- Fail: 1
+- Pass: 1
+- Warn: 0
+- Fail: 3
 
 ## Checks
 
-- PASS session_context_report: no warnings
-- WARN audit_mcp_context: Heavy MCP servers still present on disk: user-review-daemon
+- FAIL session_context_report: ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps
+- FAIL audit_mcp_context: ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps
+Set config/pre_session/settings.local.yaml mcp_descriptors_path
 - PASS validate_workflow_token_governance: workflow token governance OK
 - FAIL daily_harness_audit_strict: status=red
 
@@ -23,10 +24,12 @@
 
 ## Suggestions
 
+- token-gov-context-budget: Reduce session context budget pressure and warnings
 - token-gov-mcp-trim: Trim MCP token surface below profile warning threshold
 - token-gov-daily-audit-remediation: Remediate strict daily audit findings affecting token governance
 
 ## Queue Actions
 
-- token-gov-mcp-trim: skipped_existing
-- token-gov-daily-audit-remediation: skipped_existing
+- token-gov-context-budget: queued
+- token-gov-mcp-trim: queued
+- token-gov-daily-audit-remediation: queued

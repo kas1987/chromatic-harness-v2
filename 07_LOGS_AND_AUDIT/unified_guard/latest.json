@@ -1,6 +1,6 @@
 {
   "ok": false,
-  "timestamp": "2026-06-03T01:55:38.861003+00:00",
+  "timestamp": "2026-06-03T13:14:39.625775+00:00",
   "surface": "cli",
   "invoked_by": "claude",
   "codegraph_status": "absent",
@@ -17,6 +17,19 @@
       "ok": false,
       "stdout_tail": "",
       "stderr_tail": "Session boot completed with errors: audit_mcp_context failed, pre_session_manifest failed, validate_intake_loop failed, manifest missing after boot\n"
+    },
+    {
+      "name": "token_governance_closed_loop",
+      "command": [
+        "/usr/local/bin/python",
+        "/home/user/chromatic-harness-v2/scripts/token_governance_closed_loop.py",
+        "--enqueue-suggestions",
+        "--drain-intake"
+      ],
+      "exit_code": 1,
+      "ok": false,
+      "stdout_tail": "ted_close_pct\": null,\n          \"reset_at\": null,\n          \"status\": \"stale\",\n          \"fresh\": false,\n          \"source\": \"absent\"\n        }\n      }\n    },\n    {\n      \"name\": \"controller\",\n      \"status\": \"ok\",\n      \"started_at\": \"2026-06-03T13:14:39.397175+00:00\",\n      \"detail\": {\n        \"c_to_t_threshold\": 2,\n        \"previous_threshold\": 1,\n        \"direction\": 1,\n        \"allow_paid_spill\": false,\n        \"staleness_fallback\": true\n      }\n    },\n    {\n      \"name\": \"token_economy_exporter\",\n      \"status\": \"ok\",\n      \"started_at\": \"2026-06-03T13:14:39.517666+00:00\",\n      \"detail\": {\n        \"bytes\": 699\n      }\n    }\n  ],\n  \"suggestions\": [\n    {\n      \"id\": \"token-gov-context-budget\",\n      \"title\": \"Reduce session context budget pressure and warnings\",\n      \"goal\": \"Address session_context_report warnings and keep pre-session context within budget\",\n      \"priority\": \"P2\",\n      \"tier\": 2,\n      \"type\": \"task\",\n      \"context\": {\n        \"category\": \"token_governance\",\n        \"source_check\": \"session_context_report\",\n        \"message\": \"ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps\"\n      }\n    },\n    {\n      \"id\": \"token-gov-mcp-trim\",\n      \"title\": \"Trim MCP token surface below profile warning threshold\",\n      \"goal\": \"Disable or prune heavy MCP descriptors and re-run audit_mcp_context + session_context_report\",\n      \"priority\": \"P1\",\n      \"tier\": 1,\n      \"type\": \"task\",\n      \"context\": {\n        \"category\": \"token_governance\",\n        \"source_check\": \"audit_mcp_context\",\n        \"message\": \"ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps\\nSet config/pre_session/settings.local.yaml mcp_descriptors_path\"\n      }\n    },\n    {\n      \"id\": \"token-gov-daily-audit-remediation\",\n      \"title\": \"Remediate strict daily audit findings affecting token governance\",\n      \"goal\": \"Resolve red/yellow strict daily audit findings and enforce green baseline\",\n      \"priority\": \"P1\",\n      \"tier\": 2,\n      \"type\": \"task\",\n      \"context\": {\n        \"category\": \"token_governance\",\n        \"source_check\": \"daily_harness_audit_strict\",\n        \"message\": \"status=red\"\n      }\n    }\n  ],\n  \"queue_actions\": [\n    {\n      \"id\": \"token-gov-context-budget\",\n      \"status\": \"queued\",\n      \"queued_at\": \"2026-06-03T13:14:39Z\"\n    },\n    {\n      \"id\": \"token-gov-mcp-trim\",\n      \"status\": \"queued\",\n      \"queued_at\": \"2026-06-03T13:14:39Z\"\n    },\n    {\n      \"id\": \"token-gov-daily-audit-remediation\",\n      \"status\": \"queued\",\n      \"queued_at\": \"2026-06-03T13:14:39Z\"\n    }\n  ],\n  \"intake_result\": {\n    \"ok\": false,\n    \"returncode\": 1,\n    \"stderr\": \"ser/chromatic-harness-v2/02_RUNTIME/intake/auto_intake.py\\\", line 351, in drain_queue\\n    existing_titles = _existing_open_titles(cwd=repo, runner=runner)\\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/home/user/chromatic-harness-v2/02_RUNTIME/intake/auto_intake.py\\\", line 74, in _existing_open_titles\\n    proc = _run_bd(\\n           ^^^^^^^^\\n  File \\\"/home/user/chromatic-harness-v2/02_RUNTIME/intake/auto_intake.py\\\", line 156, in _run_bd\\n    return subprocess.run(\\n           ^^^^^^^^^^^^^^^\\n  File \\\"/usr/lib/python3.11/subprocess.py\\\", line 548, in run\\n    with Popen(*popenargs, **kwargs) as process:\\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/usr/lib/python3.11/subprocess.py\\\", line 1026, in __init__\\n    self._execute_child(args, executable, preexec_fn, close_fds,\\n  File \\\"/usr/lib/python3.11/subprocess.py\\\", line 1955, in _execute_child\\n    raise child_exception_type(errno_num, err_msg, err_filename)\\nFileNotFoundError: [Errno 2] No such file or directory: 'bd'\\n\",\n    \"result\": {}\n  },\n  \"artifacts\": {\n    \"run_json\": \"07_LOGS_AND_AUDIT/token_governance/token_governance_20260603_131439.json\",\n    \"latest_json\": \"07_LOGS_AND_AUDIT/token_governance/latest.json\",\n    \"latest_md\": \"07_LOGS_AND_AUDIT/token_governance/latest.md\"\n  }\n}\n",
+      "stderr_tail": ""
     },
     {
       "name": "codegraph_freshness",
