@@ -45,7 +45,7 @@ def test_extract_file_refs_finds_existing_file(tmp_path):
     real_file = subdir / "helper.py"
     real_file.write_text("# helper\n", encoding="utf-8")
 
-    text = f"edit scripts/helper.py to fix the bug"
+    text = "edit scripts/helper.py to fix the bug"
     with patch("router.pipeline.impact._repo", return_value=tmp_path):
         result = extract_file_refs(text)
 
