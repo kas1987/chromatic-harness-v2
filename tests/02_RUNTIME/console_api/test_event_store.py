@@ -20,6 +20,7 @@ from console_api.event_store import FileEventStore, MissionEventHub, RedisEventB
 # FileEventStore
 # ---------------------------------------------------------------------------
 
+
 class TestFileEventStore:
     def test_post_init_creates_directory(self, tmp_path: Path) -> None:
         store = FileEventStore(tmp_path)
@@ -45,10 +46,7 @@ class TestFileEventStore:
         store = FileEventStore(tmp_path)
         for i in range(5):
             store.append("m2", {"seq": i, "data": f"item-{i}"})
-        lines = [
-            ln for ln in store._path("m2").read_text(encoding="utf-8").splitlines()
-            if ln.strip()
-        ]
+        lines = [ln for ln in store._path("m2").read_text(encoding="utf-8").splitlines() if ln.strip()]
         assert len(lines) == 5
 
     def test_replay_returns_events_in_order(self, tmp_path: Path) -> None:
@@ -76,9 +74,7 @@ class TestFileEventStore:
         path = store._path("m5")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
-            '{"seq": 0}\n'
-            'THIS IS NOT JSON\n'
-            '{"seq": 2}\n',
+            '{"seq": 0}\nTHIS IS NOT JSON\n{"seq": 2}\n',
             encoding="utf-8",
         )
         events = store.replay("m5")
@@ -129,6 +125,7 @@ class TestFileEventStore:
 # ---------------------------------------------------------------------------
 # RedisEventBus
 # ---------------------------------------------------------------------------
+
 
 class TestRedisEventBus:
     def test_disabled_without_url(self) -> None:
@@ -188,6 +185,7 @@ class TestRedisEventBus:
 # MissionEventHub
 # ---------------------------------------------------------------------------
 
+
 class TestMissionEventHub:
     def test_publish_persists_event(self, tmp_path: Path) -> None:
         hub = MissionEventHub(repo_root=tmp_path)
@@ -207,9 +205,7 @@ class TestMissionEventHub:
         result = hub.publish("mission-C", {"type": "x"})
         assert result["persisted"] is True
 
-    def test_publish_returns_redis_published_false_when_no_redis(
-        self, tmp_path: Path
-    ) -> None:
+    def test_publish_returns_redis_published_false_when_no_redis(self, tmp_path: Path) -> None:
         hub = MissionEventHub(repo_root=tmp_path)
         result = hub.publish("mission-D", {"type": "y"})
         assert result["redis_published"] is False

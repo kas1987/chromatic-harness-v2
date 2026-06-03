@@ -29,15 +29,34 @@ _fake_memory = MagicMock()
 _fake_scope_mod = MagicMock()
 sys.modules.setdefault("memory", _fake_memory)
 sys.modules.setdefault("memory.store", _fake_memory)
-sys.modules.setdefault("scope", _fake_scope_mod)
-sys.modules.setdefault("scope.enforcer", _fake_scope_mod)
 _fake_memory.SystemMemoryStore = MagicMock(return_value=MagicMock())
 _fake_scope_mod.ScopeEnforcer = MagicMock(return_value=MagicMock())
 _FakeScopeBaseline = MagicMock(return_value=MagicMock())
 _fake_scope_mod.ScopeBaseline = _FakeScopeBaseline
 
+import pytest
+
 from magnets.base_magnet import BaseMagnet, MagnetEvent
 from magnets.scope_magnet import ScopeMagnet
+
+
+@pytest.fixture(autouse=True, scope="module")
+def _isolate_scope_sys_modules():
+    """Prevent module-level scope stubs from leaking into the rest of the session."""
+    prev_scope = sys.modules.pop("scope", None)
+    prev_scope_enforcer = sys.modules.pop("scope.enforcer", None)
+    sys.modules["scope"] = _fake_scope_mod
+    sys.modules["scope.enforcer"] = _fake_scope_mod
+    yield
+    # Restore whatever was there before (or remove our stubs)
+    if prev_scope is None:
+        sys.modules.pop("scope", None)
+    else:
+        sys.modules["scope"] = prev_scope
+    if prev_scope_enforcer is None:
+        sys.modules.pop("scope.enforcer", None)
+    else:
+        sys.modules["scope.enforcer"] = prev_scope_enforcer
 
 
 class TestScopeMagnetInterface:

@@ -27,6 +27,7 @@ from activity.lanes import (
 # normalize_lane
 # ---------------------------------------------------------------------------
 
+
 class TestNormalizeLane:
     @pytest.mark.parametrize("lane", ["agent", "human", "review"])
     def test_valid_lanes_pass_through(self, lane: str) -> None:
@@ -56,6 +57,7 @@ class TestNormalizeLane:
 # lane_title_prefix
 # ---------------------------------------------------------------------------
 
+
 class TestLaneTitlePrefix:
     def test_agent_prefix(self) -> None:
         assert lane_title_prefix("agent") == "[agent]"
@@ -77,6 +79,7 @@ class TestLaneTitlePrefix:
 # lane_description_line
 # ---------------------------------------------------------------------------
 
+
 class TestLaneDescriptionLine:
     def test_agent_description_line(self) -> None:
         assert lane_description_line("agent") == "lane: agent"
@@ -94,6 +97,7 @@ class TestLaneDescriptionLine:
 # ---------------------------------------------------------------------------
 # parse_lane_from_title
 # ---------------------------------------------------------------------------
+
 
 class TestParseLaneFromTitle:
     @pytest.mark.parametrize("lane", ["agent", "human", "review"])
@@ -122,6 +126,7 @@ class TestParseLaneFromTitle:
 # ---------------------------------------------------------------------------
 # apply_lane_to_bead_fields
 # ---------------------------------------------------------------------------
+
 
 class TestApplyLaneToBeadFields:
     def test_adds_prefix_to_title(self) -> None:

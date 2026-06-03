@@ -32,6 +32,7 @@ from router.observability import ObservabilityLogger, _BAND_TO_RISK, _GOVERNED_M
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_req(
     *,
     request_id: str = "req-001",
@@ -85,6 +86,7 @@ def _make_resp(
 # ---------------------------------------------------------------------------
 # Tests: log() writes JSONL with correct fields
 # ---------------------------------------------------------------------------
+
 
 class TestObservabilityLoggerLog:
     def test_creates_log_file_in_configured_dir(self, tmp_path: Path) -> None:
@@ -164,6 +166,7 @@ class TestObservabilityLoggerLog:
 # Tests: redaction
 # ---------------------------------------------------------------------------
 
+
 class TestObservabilityLoggerRedaction:
     def test_sk_token_in_extra_is_redacted(self, tmp_path: Path) -> None:
         logger = ObservabilityLogger(log_dir=tmp_path / "routes")
@@ -208,6 +211,7 @@ class TestObservabilityLoggerRedaction:
 # ---------------------------------------------------------------------------
 # Tests: governed model → AGENT_RUN_LOG
 # ---------------------------------------------------------------------------
+
 
 class TestAgentRunLog:
     def test_sonnet_model_triggers_agent_run_log(self, tmp_path: Path) -> None:
@@ -299,6 +303,7 @@ class TestAgentRunLog:
 # ---------------------------------------------------------------------------
 # Tests: _BAND_TO_RISK and _GOVERNED_MODELS constants
 # ---------------------------------------------------------------------------
+
 
 class TestConstants:
     def test_band_to_risk_covers_all_confidence_bands(self) -> None:

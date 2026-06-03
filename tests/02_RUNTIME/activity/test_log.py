@@ -24,10 +24,9 @@ from activity.log import (
 # emit_learning_outcome
 # ---------------------------------------------------------------------------
 
+
 class TestEmitLearningOutcome:
-    def test_writes_applied_success_event(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_writes_applied_success_event(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -47,9 +46,7 @@ class TestEmitLearningOutcome:
         assert "idempotency_key" in e
         assert "timestamp_utc" in e
 
-    def test_writes_applied_failure_event(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_writes_applied_failure_event(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -64,45 +61,39 @@ class TestEmitLearningOutcome:
         assert events[0]["event_type"] == "applied_failure"
 
     def test_rejects_invalid_outcome(self, tmp_path: Path) -> None:
-        result = emit_learning_outcome(
-            tmp_path, learning_name="x", outcome="something_invalid"
-        )
+        result = emit_learning_outcome(tmp_path, learning_name="x", outcome="something_invalid")
         assert result is False
 
     def test_rejects_empty_learning_name(self, tmp_path: Path) -> None:
         result = emit_learning_outcome(tmp_path, learning_name="  ", outcome="applied_success")
         assert result is False
 
-    def test_deduplicates_same_call(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_deduplicates_same_call(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
         ts = "2026-01-01T00:00:00Z"
-        emit_learning_outcome(
-            tmp_path, learning_name="p1", outcome="applied_success", timestamp_utc=ts
-        )
-        second = emit_learning_outcome(
-            tmp_path, learning_name="p1", outcome="applied_success", timestamp_utc=ts
-        )
+        emit_learning_outcome(tmp_path, learning_name="p1", outcome="applied_success", timestamp_utc=ts)
+        second = emit_learning_outcome(tmp_path, learning_name="p1", outcome="applied_success", timestamp_utc=ts)
 
         assert second is False
         events = [json.loads(ln) for ln in log.read_text().splitlines() if ln.strip()]
         assert len(events) == 1
 
-    def test_different_timestamps_are_not_duplicates(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_different_timestamps_are_not_duplicates(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
         emit_learning_outcome(
-            tmp_path, learning_name="p1", outcome="applied_success",
+            tmp_path,
+            learning_name="p1",
+            outcome="applied_success",
             timestamp_utc="2026-01-01T00:00:00Z",
         )
         second = emit_learning_outcome(
-            tmp_path, learning_name="p1", outcome="applied_success",
+            tmp_path,
+            learning_name="p1",
+            outcome="applied_success",
             timestamp_utc="2026-01-02T00:00:00Z",
         )
 
@@ -110,35 +101,25 @@ class TestEmitLearningOutcome:
         events = [json.loads(ln) for ln in log.read_text().splitlines() if ln.strip()]
         assert len(events) == 2
 
-    def test_includes_rig_id_when_provided(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_includes_rig_id_when_provided(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
-        emit_learning_outcome(
-            tmp_path, learning_name="p2", outcome="applied_success", rig_id="rig-abc"
-        )
+        emit_learning_outcome(tmp_path, learning_name="p2", outcome="applied_success", rig_id="rig-abc")
 
         events = [json.loads(ln) for ln in log.read_text().splitlines() if ln.strip()]
         assert events[0]["rig_id"] == "rig-abc"
 
-    def test_omits_rig_id_when_not_provided(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_omits_rig_id_when_not_provided(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
-        emit_learning_outcome(
-            tmp_path, learning_name="p3", outcome="applied_success"
-        )
+        emit_learning_outcome(tmp_path, learning_name="p3", outcome="applied_success")
 
         events = [json.loads(ln) for ln in log.read_text().splitlines() if ln.strip()]
         assert "rig_id" not in events[0]
 
-    def test_includes_error_category_on_failure(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_includes_error_category_on_failure(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -152,9 +133,7 @@ class TestEmitLearningOutcome:
         events = [json.loads(ln) for ln in log.read_text().splitlines() if ln.strip()]
         assert events[0]["error_category"] == "merge_conflict"
 
-    def test_omits_error_category_on_success(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_omits_error_category_on_success(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -176,9 +155,7 @@ class TestEmitLearningOutcome:
 
         assert log.is_file()
 
-    def test_idempotency_key_is_16_hex_chars(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_idempotency_key_is_16_hex_chars(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -189,9 +166,7 @@ class TestEmitLearningOutcome:
         assert len(ikey) == 16
         assert all(c in "0123456789abcdef" for c in ikey)
 
-    def test_learning_path_field_is_set(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_learning_path_field_is_set(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -200,9 +175,7 @@ class TestEmitLearningOutcome:
         events = [json.loads(ln) for ln in log.read_text().splitlines() if ln.strip()]
         assert events[0]["learning_path"] == ".agents/learnings/my-learning.md"
 
-    def test_notes_field_is_workflow_execution(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_notes_field_is_workflow_execution(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -211,9 +184,7 @@ class TestEmitLearningOutcome:
         events = [json.loads(ln) for ln in log.read_text().splitlines() if ln.strip()]
         assert events[0]["notes"] == "workflow_execution"
 
-    def test_appends_multiple_distinct_events(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_appends_multiple_distinct_events(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         log = tmp_path / "usage.jsonl"
         monkeypatch.setenv("CHROMATIC_LEARNING_USAGE_LOG", str(log))
 
@@ -229,6 +200,7 @@ class TestEmitLearningOutcome:
 # ---------------------------------------------------------------------------
 # _event_to_mode
 # ---------------------------------------------------------------------------
+
 
 class TestEventToMode:
     def test_workflow_prefix_stripped(self) -> None:
@@ -252,41 +224,31 @@ class TestEventToMode:
 # _should_enqueue_intake
 # ---------------------------------------------------------------------------
 
+
 class TestShouldEnqueueIntake:
     def test_intake_on_failure_with_error_triggers(self) -> None:
-        assert _should_enqueue_intake(
-            lane="agent", error="something broke", intake_on_failure=True
-        ) is True
+        assert _should_enqueue_intake(lane="agent", error="something broke", intake_on_failure=True) is True
 
     def test_intake_on_failure_without_error_does_not_trigger(self) -> None:
-        assert _should_enqueue_intake(
-            lane="agent", error="", intake_on_failure=True
-        ) is False
+        assert _should_enqueue_intake(lane="agent", error="", intake_on_failure=True) is False
 
     def test_human_lane_with_error_always_triggers(self) -> None:
-        assert _should_enqueue_intake(
-            lane="human", error="bad thing happened", intake_on_failure=False
-        ) is True
+        assert _should_enqueue_intake(lane="human", error="bad thing happened", intake_on_failure=False) is True
 
     def test_human_lane_without_error_does_not_trigger(self) -> None:
-        assert _should_enqueue_intake(
-            lane="human", error="", intake_on_failure=False
-        ) is False
+        assert _should_enqueue_intake(lane="human", error="", intake_on_failure=False) is False
 
     def test_agent_lane_no_error_no_intake(self) -> None:
-        assert _should_enqueue_intake(
-            lane="agent", error="", intake_on_failure=False
-        ) is False
+        assert _should_enqueue_intake(lane="agent", error="", intake_on_failure=False) is False
 
     def test_whitespace_only_error_treated_as_no_error(self) -> None:
-        assert _should_enqueue_intake(
-            lane="agent", error="   ", intake_on_failure=True
-        ) is False
+        assert _should_enqueue_intake(lane="agent", error="   ", intake_on_failure=True) is False
 
 
 # ---------------------------------------------------------------------------
 # ActivityLogResult
 # ---------------------------------------------------------------------------
+
 
 class TestActivityLogResult:
     def test_to_dict_contains_workflow_log_path(self) -> None:
