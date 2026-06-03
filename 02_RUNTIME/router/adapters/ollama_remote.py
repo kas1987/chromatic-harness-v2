@@ -4,6 +4,24 @@ import json
 import time
 from typing import Any
 
+_MAX_HISTORY_TURNS_DEFAULT = 20  # user+assistant pairs; system messages always kept
+
+
+def _prune_messages(messages: list, max_turns: int) -> list:
+    """Keep all system messages + the last max_turns user/assistant pairs.
+
+    Prevents unbounded context growth in long RPI sessions where each call
+    re-feeds the full accumulated history (observed: 14k→100k tokens in 71 calls).
+    """
+    if not messages:
+        return messages
+    system_msgs = [m for m in messages if isinstance(m, dict) and m.get("role") == "system"]
+    non_system = [m for m in messages if not (isinstance(m, dict) and m.get("role") == "system")]
+    max_msg_count = max_turns * 2
+    if len(non_system) > max_msg_count:
+        non_system = non_system[-max_msg_count:]
+    return system_msgs + non_system
+
 import httpx
 
 from ..contracts import (
@@ -33,6 +51,7 @@ class OllamaRemoteAdapter(BaseAdapter):
         self.port = cfg.get("port", 11434)
         self.model = cfg.get("model", "llama3.1:8b")
         self.timeout_s = cfg.get("timeout_s", 30)
+        self.max_history_turns = cfg.get("max_history_turns", _MAX_HISTORY_TURNS_DEFAULT)
         self._client: httpx.AsyncClient | None = None
 
     def _url(self, path: str) -> str:
@@ -64,11 +83,12 @@ class OllamaRemoteAdapter(BaseAdapter):
         if not self.model:
             return self.normalize_error(req.request_id, "No Ollama model configured")
 
-        messages = (
+        raw_messages = (
             req.input.messages
             if req.input.messages
             else [{"role": "user", "content": req.objective}]
         )
+        messages = _prune_messages(raw_messages, self.max_history_turns)
         payload = {
             "model": self.model,
             "messages": messages,
