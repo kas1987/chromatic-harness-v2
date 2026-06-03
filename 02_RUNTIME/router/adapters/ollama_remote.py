@@ -4,24 +4,6 @@ import json
 import time
 from typing import Any
 
-_MAX_HISTORY_TURNS_DEFAULT = 20  # user+assistant pairs; system messages always kept
-
-
-def _prune_messages(messages: list, max_turns: int) -> list:
-    """Keep all system messages + the last max_turns user/assistant pairs.
-
-    Prevents unbounded context growth in long RPI sessions where each call
-    re-feeds the full accumulated history (observed: 14k→100k tokens in 71 calls).
-    """
-    if not messages:
-        return messages
-    system_msgs = [m for m in messages if isinstance(m, dict) and m.get("role") == "system"]
-    non_system = [m for m in messages if not (isinstance(m, dict) and m.get("role") == "system")]
-    max_msg_count = max_turns * 2
-    if len(non_system) > max_msg_count:
-        non_system = non_system[-max_msg_count:]
-    return system_msgs + non_system
-
 import httpx
 
 from ..contracts import (
@@ -33,6 +15,31 @@ from ..contracts import (
     RouteLogs,
 )
 from ..adapters.base import BaseAdapter, AdapterHealth
+
+_MAX_HISTORY_TURNS_DEFAULT = 20  # user+assistant pairs; system messages always kept
+
+
+def _prune_messages(messages: list, max_turns: int) -> list:
+    """Keep all system messages + the last max_turns user/assistant pairs.
+
+    Prevents unbounded context growth in long RPI sessions where each call
+    re-feeds the full accumulated history (observed: 14k→100k tokens in 71 calls).
+
+    max_turns <= 0 means no pruning (keep all messages).
+    """
+    if not messages or max_turns <= 0:
+        return messages
+    system_msgs: list = []
+    non_system: list = []
+    for m in messages:
+        if isinstance(m, dict) and m.get("role") == "system":
+            system_msgs.append(m)
+        else:
+            non_system.append(m)
+    max_msg_count = max_turns * 2
+    if len(non_system) > max_msg_count:
+        non_system = non_system[-max_msg_count:]
+    return system_msgs + non_system
 
 
 class OllamaRemoteAdapter(BaseAdapter):

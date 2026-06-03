@@ -71,15 +71,33 @@ class AnthropicAdapter(BaseAdapter):
 
             raw = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
 
-            # Extract system message and enable prompt caching on it.
-            # Anthropic caches the system prompt across calls with identical prefixes,
-            # cutting input costs ~80% on repeated RPI/harness patterns.
+            # Separate ALL system messages (anywhere in the list) and route them
+            # via the top-level system= param with prompt caching. Anthropic rejects
+            # role="system" inside messages=[] and caching won't apply otherwise.
+            system_msgs = [m for m in raw if isinstance(m, dict) and m.get("role") == "system"]
+            chat_messages = [m for m in raw if not (isinstance(m, dict) and m.get("role") == "system")]
+
+            # Guard: API requires at least one user/assistant turn.
+            if not chat_messages:
+                chat_messages = [{"role": "user", "content": req.objective}]
+
             system_param: list[dict] | None = None
-            chat_messages = raw
-            if raw and raw[0].get("role") == "system":
-                system_content = raw[0].get("content", "")
-                system_param = [{"type": "text", "text": system_content, "cache_control": {"type": "ephemeral"}}]
-                chat_messages = raw[1:]
+            if system_msgs:
+                # Merge all system content; handle both str and list-of-blocks formats.
+                parts: list[str] = []
+                for sm in system_msgs:
+                    content = sm.get("content", "")
+                    if isinstance(content, str):
+                        parts.append(content)
+                    elif isinstance(content, list):
+                        parts.extend(
+                            p.get("text", "")
+                            for p in content
+                            if isinstance(p, dict) and p.get("type") == "text"
+                        )
+                system_text = "\n".join(p for p in parts if p)
+                if system_text:
+                    system_param = [{"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}]
 
             create_kwargs: dict[str, Any] = {
                 "model": self.cfg.get("model", "claude-3-5-sonnet-20241022"),
