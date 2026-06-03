@@ -1,4 +1,4 @@
-"""Unit tests for the AnthropicAdapter."""
+﻿"""Unit tests for the AnthropicAdapter."""
 
 from __future__ import annotations
 
