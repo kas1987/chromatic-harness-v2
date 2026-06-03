@@ -1,10 +1,10 @@
 {
   "schema": "dr_inventory_v1",
-  "timestamp": "20260603T013228Z",
+  "timestamp": "20260603T013708Z",
   "repo": "/home/user/chromatic-harness-v2",
   "rto_hours": 4,
   "rpo_hours": 24,
-  "total_critical_bytes": 8904627,
+  "total_critical_bytes": 9177313,
   "total_critical_human": "8.0 MB",
   "items": [
     {
@@ -22,9 +22,9 @@
       "description": "Agent handoffs, plans, council, harvest, swarm results",
       "priority": "P1",
       "exists": true,
-      "size_bytes": 1103060,
+      "size_bytes": 1145240,
       "size_human": "1.0 MB",
-      "last_modified": "2026-06-03T01:32:27.190445+00:00",
+      "last_modified": "2026-06-03T01:37:07.530221+00:00",
       "recovery_note": "Restore from backup; re-run `python scripts/session_start.py` to rebuild state."
     },
     {
@@ -42,9 +42,9 @@
       "description": "Telemetry, budget ledger, audit trails, security scans",
       "priority": "P2",
       "exists": true,
-      "size_bytes": 5489987,
+      "size_bytes": 5687238,
       "size_human": "5.0 MB",
-      "last_modified": "2026-06-03T01:32:28.305166+00:00",
+      "last_modified": "2026-06-03T01:37:08.345078+00:00",
       "recovery_note": "Restore from backup. Historical logs not strictly required for operation."
     },
     {
@@ -62,9 +62,9 @@
       "description": "Runtime engines, router config, roach-pi submodule",
       "priority": "P2",
       "exists": true,
-      "size_bytes": 1688650,
+      "size_bytes": 1723707,
       "size_human": "1.0 MB",
-      "last_modified": "2026-06-03T01:28:24.307688+00:00",
+      "last_modified": "2026-06-03T01:34:28.058142+00:00",
       "recovery_note": "Restore from git checkout + submodule update."
     },
     {
@@ -82,9 +82,9 @@
       "description": "Pre-session inventory, config snapshots",
       "priority": "P3",
       "exists": true,
-      "size_bytes": 46654,
-      "size_human": "45.0 KB",
-      "last_modified": "2026-06-03T00:19:16.413423+00:00",
+      "size_bytes": 44852,
+      "size_human": "43.0 KB",
+      "last_modified": "2026-06-03T01:32:48.584959+00:00",
       "recovery_note": "Regenerate with `python scripts/generate_pre_session_inventory.py`."
     }
   ]
