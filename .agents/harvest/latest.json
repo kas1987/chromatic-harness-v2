@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-03T01:31:38.988106+00:00",
+  "generated_at": "2026-06-03T01:32:34.939855+00:00",
   "rigs_scanned": [
     "chromatic-harness-v2"
   ],
@@ -125,7 +125,7 @@
       "reason": "duplicate of 2026-05-30-integration-testing-patterns.md"
     }
   ],
-  "dry_run": false,
-  "min_confidence": 0.6,
+  "dry_run": true,
+  "min_confidence": 0.5,
   "global_hub": false
 }

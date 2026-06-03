@@ -1,6 +1,6 @@
 {
-  "transfer_id": "358ef135-4572-4b66-9df3-bb4e005f02de",
-  "updated_at": "2026-06-03T01:31:38Z",
+  "transfer_id": "41727d3a-cee6-400a-bb4c-0539dd219678",
+  "updated_at": "2026-06-03T01:32:25Z",
   "source_runtime": "claude_code",
   "objective": "Continue harness mission from handoff",
   "decision": "review",
@@ -49,26 +49,23 @@
   "latest_pointer": ".agents/handoffs/latest.json",
   "git": {
     "branch": "claude/test-coverage-analysis-F9XyC",
-    "last_commit": "f9657f6 fix: pre-load real workflows package in conftest to prevent sys.modules pollution",
+    "last_commit": "30f1206 chore: update session artifacts and runtime logs",
     "status_short": [
-      "M .agents/context/context_rebuild_summary.md",
+      "M .agents/council/2026-06-03-post-mortem-auto-turn-00.md",
       " M .agents/handoffs/auto_turn_observations.jsonl",
       " M .agents/handoffs/closeout_telemetry_latest.json",
       " M .agents/handoffs/successor_prompt.md",
       " M .agents/handoffs/transfer_packet.json",
       " M .agents/harvest/latest.json",
-      " M .agents/workflows/active-graph.json",
       " M 05_REPORTS/telemetry.jsonl",
       " M 07_LOGS_AND_AUDIT/active_sessions.sqlite3",
       " M 07_LOGS_AND_AUDIT/budget/monthly.json",
-      " M 07_LOGS_AND_AUDIT/governance_intelligence/canary_snapshot_latest.json",
       " M 07_LOGS_AND_AUDIT/harness_health/latest.json",
       " M 07_LOGS_AND_AUDIT/harness_health/latest.md",
       " M 07_LOGS_AND_AUDIT/unified_guard/latest.json",
       " M docs/workflows/WORKFLOW_RUN_LOG.jsonl",
-      "?? .agents/council/2026-06-03-post-mortem-auto-turn-00.md",
-      "?? .agents/handoffs/closeout_telemetry_20260603T013114Z.json",
-      "?? .agents/handoffs/closeout_telemetry_20260603T013126Z.json",
+      "?? .agents/handoffs/closeout_telemetry_20260603T013207Z.json",
+      "?? .agents/handoffs/closeout_telemetry_20260603T013218Z.json",
       "?? 07_LOGS_AND_AUDIT/command_matrix/"
     ]
   }

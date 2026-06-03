@@ -1,13 +1,22 @@
 {
-  "generated_at": "2026-06-01T16:25:06.811779+00:00",
-  "repo_root": "C:\\Users\\kas41\\chromatic-harness-v2",
+  "generated_at": "2026-06-03T01:32:42.121223+00:00",
+  "repo_root": "/home/user/chromatic-harness-v2",
   "mode": "dry-run",
   "counts": {
-    "planned": 0,
+    "planned": 1,
     "applied": 0,
     "missing": 0,
     "moves": 0,
-    "deletes": 0
+    "deletes": 1
   },
-  "actions": []
+  "actions": [
+    {
+      "action": "delete",
+      "path": ".coverage",
+      "destination": null,
+      "existed": true,
+      "applied": false,
+      "reason": "disposable-root-artifact"
+    }
+  ]
 }

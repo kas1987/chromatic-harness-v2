@@ -1,6 +1,6 @@
 # Post-Mortem Council Report - Auto Turn Closeout
 
-- generated_at_utc: 20260603T013140Z
+- generated_at_utc: 20260603T013227Z
 - auto_turn_index: 0
 - auto_turn_threshold: 5
 - artifact_kind: post_mortem
@@ -16,7 +16,7 @@
 
 ## Artifacts
 - closeout_telemetry_latest: .agents/handoffs/closeout_telemetry_latest.json
-- closeout_telemetry_history: .agents/handoffs/closeout_telemetry_20260603T013140Z.json
+- closeout_telemetry_history: .agents/handoffs/closeout_telemetry_20260603T013227Z.json
 
 ## Notes
 - Generated automatically because auto-turn threshold was reached.
