@@ -48,7 +48,7 @@ The permission hint fired when `"RUNNER_RESULT" in result.summary` — which onl
 because `_parse_worker_result()` happens to synthesize "no RUNNER_RESULT line from
 worker". Fragile: reword the summary and the behavior silently breaks.
 **Action:** Gate on the actual signal (`_RESULT_MARKER not in out`, the worker's raw
-output). Captured in bd: `review-hint-robustness-...`.
+output). Captured in bd: `review-hint-robustness-gate-behavioral-hints-on-the`.
 
 ### 4. Mid-session branch churn is an active hazard — recover without touching the live checkout
 The working branch switched under me repeatedly: a commit meant for one branch landed
@@ -59,8 +59,8 @@ own PR, then un-pollute the sibling branch with
 `git push origin <parent>:<branch> --force-with-lease=<branch>:<sha>`.
 **Action:** Commit immediately after editing; verify the branch before/after every
 commit/push; prefer explicit-ref pushes and isolated worktrees over `git checkout`.
-Captured in bd: `branch-churn-recovery-pattern-...` (reinforces existing
-`automode-midsession-branch-hazard`).
+Captured in bd: `branch-churn-recovery-pattern-when-mid-session-branch` (reinforces
+existing `automode-midsession-branch-hazard`).
 
 ## Process notes
 
