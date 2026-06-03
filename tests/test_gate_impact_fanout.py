@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib
 
 import router.gate as gate
+import router.pipeline.impact as impact_mod
 
 importlib.reload(gate)
 
@@ -35,13 +36,13 @@ def test_count_impacted_dedupes_path_lines():
 
 
 def test_impact_fan_out_disabled_returns_none(monkeypatch):
-    monkeypatch.setattr(gate, "IMPACT_ENABLED", False)
+    monkeypatch.setattr(impact_mod, "IMPACT_ENABLED", False)
     result = gate._impact_fan_out("edit 02_RUNTIME/router/gate.py", "")
     assert result is None
 
 
 def test_impact_fan_out_uses_injected_runner(monkeypatch):
-    monkeypatch.setattr(gate, "IMPACT_ENABLED", True)
+    monkeypatch.setattr(impact_mod, "IMPACT_ENABLED", True)
     captured = {}
 
     def fake_runner(files):
@@ -54,7 +55,7 @@ def test_impact_fan_out_uses_injected_runner(monkeypatch):
 
 
 def test_impact_fan_out_floor_is_referenced_count(monkeypatch):
-    monkeypatch.setattr(gate, "IMPACT_ENABLED", True)
+    monkeypatch.setattr(impact_mod, "IMPACT_ENABLED", True)
     # Runner returns nothing useful, but two real files were referenced.
     result = gate._impact_fan_out(
         "touch 02_RUNTIME/router/gate.py and 02_RUNTIME/router/complexity_classifier.py",
@@ -65,13 +66,13 @@ def test_impact_fan_out_floor_is_referenced_count(monkeypatch):
 
 
 def test_impact_fan_out_no_refs_returns_none(monkeypatch):
-    monkeypatch.setattr(gate, "IMPACT_ENABLED", True)
+    monkeypatch.setattr(impact_mod, "IMPACT_ENABLED", True)
     result = gate._impact_fan_out("just brainstorm some ideas", "", runner=lambda f: "")
     assert result is None
 
 
 def test_impact_fan_out_failopen_on_runner_error(monkeypatch):
-    monkeypatch.setattr(gate, "IMPACT_ENABLED", True)
+    monkeypatch.setattr(impact_mod, "IMPACT_ENABLED", True)
 
     def boom(files):
         raise RuntimeError("codegraph exploded")

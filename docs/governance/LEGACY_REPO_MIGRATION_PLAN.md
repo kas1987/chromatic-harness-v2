@@ -8,18 +8,11 @@ Preserve useful separated repos while removing stale authority claims.
 
 | Repo | Disposition | Action |
 |---|---|---|
-| `.01_Image Org` | **Harvest + retire authority** | Strip all canonical/source-of-truth claims; harvest remaining governance + scripts into Harness `docs/routing/` and `docs/governance/`; then archive. **Routing governance migrated 2026-06-02.** |
-| `.04_Prism` | Harvest + demote | Remove from federation roots; harvest any unique tooling into Harness; mark as legacy parent workspace |
 | `Chromatic_Brain` | Migrate/archive | Convert queue/planning items into GitHub issues/beads; mark as legacy brain archive |
 | `claude-config` | Demote/adapt | Keep slash commands and config, remove independent orchestration logic |
 | `ChromaticSystems` | Federate | Keep registries; sync skill and governance summaries into Harness |
 | `chromatic-wiki` | Promote canon | Keep durable knowledge only; consume promoted artifacts |
 | `chromatic-stack` | Keep substrate | Keep service definitions; expose machine-readable service registry |
-
-> **Authority principle:** `chromatic-harness-v2` is the single canonical home for routing/governance.
-> Legacy repos contribute knowledge (harvested into Harness or the wiki) but hold **no** live authority.
-> Federation is one-way: Harness `docs/routing/` → `~/.claude/governance/`, `~/.agents/governance/`,
-> `chromatic-wiki/03_GOVERNANCE/` via `scripts/federate-governance.sh`. Never edit federated copies.
 
 ## Migration Steps
 
@@ -38,7 +31,6 @@ Preserve useful separated repos while removing stale authority claims.
 2. Clean residual refs in `~/.claude/.bin/ao.sh` (WSL fallback path) and `~/.claude/docs/operations/MULTI-ROUTER-MATRIX.md`.
 3. Update `.01_Image Org/README`: "Legacy archive; no execution authority. See chromatic-harness-v2."
 4. Archive the repo (org-move or mark read-only) once curation confirms nothing live remains. *(User deferred full archive; this is the next escalation.)*
-
 ### Chromatic_Brain
 
 1. Inventory active queue items.

@@ -33,14 +33,18 @@ jobs:
       - name: Install beads (bd)
         run: |
           set -euo pipefail
-          curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash
-          # Include $HOME/go/bin: when GitHub releases rate-limit (HTTP 403) the installer
-          # falls back to `go install`, which lands bd there — not in the release dirs.
+          # Soft-fail the curl install: on GitHub release rate-limit (HTTP 403) the
+          # script falls back to 'go install' and exits non-zero even when bd lands
+          # successfully in $HOME/go/bin, causing a false-fail (PR #212 retro).
+          curl -sSL https://raw.githubusercontent.com/steveyegge/beads/main/scripts/install.sh | bash || true
+          # Unconditionally expose all known install locations so GITHUB_PATH is
+          # correct regardless of which path the installer used.
           for d in "$HOME/.local/bin" "$HOME/.beads/bin" /usr/local/bin "$HOME/go/bin" /home/runner/go/bin; do
-            [ -x "$d/bd" ] && echo "$d" >> "$GITHUB_PATH" && export PATH="$d:$PATH"
+            echo "$d" >> "$GITHUB_PATH"
+            export PATH="$d:$PATH"
           done
-          # Hard-fail if bd did not land on PATH: the governance/intake checks must run
-          # for real, not fail-open. (codex review #3330604912)
+          # Hard-fail if bd truly did not land anywhere: governance/intake checks
+          # must run for real, not fail-open. (codex review #3330604912)
           command -v bd && bd --version
 
       # These two-log/intake JSONLs are runtime-generated and gitignored, so a clean
@@ -91,6 +95,9 @@ jobs:
         run: |
           python scripts/audit_hooks.py --json > hook_audit.json
           python -c "import json; d=json.load(open('hook_audit.json')); high=[f for f in d.get('findings',[]) if f.get('severity')=='HIGH']; assert not high, high"
+
+      - name: Schema registry validation
+        run: python scripts/validate_schema_registry.py
 
       - name: Intake close-loop validation (dry-run)
         run: python scripts/validate_intake_loop.py
