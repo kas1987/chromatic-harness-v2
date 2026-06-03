@@ -1,4 +1,4 @@
-"""Unit tests for OllamaRemoteAdapter (and OllamaAdapter which wraps it)."""
+﻿"""Unit tests for OllamaRemoteAdapter (and OllamaAdapter which wraps it)."""
 
 from __future__ import annotations
 
