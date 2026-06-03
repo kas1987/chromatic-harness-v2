@@ -27,8 +27,6 @@ if str(_RUNTIME) not in sys.path:
 # ---- Stub out heavy top-level imports before ScopeMagnet is loaded ----
 _fake_memory = MagicMock()
 _fake_scope_mod = MagicMock()
-sys.modules.setdefault("memory", _fake_memory)
-sys.modules.setdefault("memory.store", _fake_memory)
 _fake_memory.SystemMemoryStore = MagicMock(return_value=MagicMock())
 _fake_scope_mod.ScopeEnforcer = MagicMock(return_value=MagicMock())
 _FakeScopeBaseline = MagicMock(return_value=MagicMock())
@@ -42,21 +40,20 @@ from magnets.scope_magnet import ScopeMagnet
 
 @pytest.fixture(autouse=True, scope="module")
 def _isolate_scope_sys_modules():
-    """Prevent module-level scope stubs from leaking into the rest of the session."""
-    prev_scope = sys.modules.pop("scope", None)
-    prev_scope_enforcer = sys.modules.pop("scope.enforcer", None)
+    """Prevent module-level scope/memory stubs from leaking into the rest of the session."""
+    saved = {}
+    for key in ("scope", "scope.enforcer", "memory", "memory.store"):
+        saved[key] = sys.modules.pop(key, None)
     sys.modules["scope"] = _fake_scope_mod
     sys.modules["scope.enforcer"] = _fake_scope_mod
+    sys.modules["memory"] = _fake_memory
+    sys.modules["memory.store"] = _fake_memory
     yield
-    # Restore whatever was there before (or remove our stubs)
-    if prev_scope is None:
-        sys.modules.pop("scope", None)
-    else:
-        sys.modules["scope"] = prev_scope
-    if prev_scope_enforcer is None:
-        sys.modules.pop("scope.enforcer", None)
-    else:
-        sys.modules["scope.enforcer"] = prev_scope_enforcer
+    for key, val in saved.items():
+        if val is None:
+            sys.modules.pop(key, None)
+        else:
+            sys.modules[key] = val
 
 
 class TestScopeMagnetInterface:
