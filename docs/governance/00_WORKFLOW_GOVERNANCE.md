@@ -71,4 +71,3 @@ Stop immediately if:
 - agent attempts full-history mining
 - output exceeds phase limit
 - task scope expands without approval
-
