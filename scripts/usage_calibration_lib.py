@@ -5,6 +5,7 @@ Path constants, robust JSON/JSONL readers, model-type normalization, weight-tabl
 loading, and the weighted-token (wtok) computation. Imported by usage_ingest.py
 and usage_calibrate.py. No side effects on import.
 """
+
 from __future__ import annotations
 import json
 import os
@@ -82,6 +83,7 @@ def write_json(path, obj):
 def _now_iso():
     """Current UTC time as an ISO 8601 string (no Date.now restriction here — plain script)."""
     from datetime import datetime, timezone
+
     return datetime.now(timezone.utc).isoformat()
 
 
@@ -107,8 +109,12 @@ def load_weights(path=WEIGHT_TABLE_PATH):
     wt = read_json(path)
     weights = wt.get("weights") if isinstance(wt, dict) else None
     if not weights:
-        weights = {"default": {"input": 1.0, "output": 5.0,
-                               "cache_creation": 1.25, "cache_read": 0.10}}
+        weights = {
+            "sonnet": {"input": 1.0, "output": 5.0, "cache_creation": 1.25, "cache_read": 0.10},
+            "opus": {"input": 5.0, "output": 25.0, "cache_creation": 6.25, "cache_read": 0.50},
+            "haiku": {"input": 0.2667, "output": 1.3333, "cache_creation": 0.3333, "cache_read": 0.02667},
+            "default": {"input": 1.0, "output": 5.0, "cache_creation": 1.25, "cache_read": 0.10},
+        }
         version = "fallback"
     else:
         version = wt.get("version", "unknown")
