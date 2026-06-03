@@ -68,7 +68,7 @@ class TestClassifyText:
         assert result == PrivacyClass.P3
 
     def test_aws_secret_is_p3(self, gate):
-        result = gate.classify_text("aws_secret_access_key=AKIAIOSFODNN7EXAMPLE")
+        result = gate.classify_text("aws_secret_access_key=AKIAIOSFODNN7EXAMPLE")  # pragma: allowlist secret
         assert result == PrivacyClass.P3
 
     def test_hipaa_is_p4(self, gate):
