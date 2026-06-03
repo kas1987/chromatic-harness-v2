@@ -17,6 +17,11 @@ from scope.guard import DispatchGuard  # noqa: E402
 from magnets.base_magnet import MagnetEvent  # noqa: E402
 from magnets.magnet_orchestrator import MagnetOrchestrator  # noqa: E402
 
+# Module-level placeholder so patch("orchestrator.orchestrator.ChromaticRouter")
+# resolves in tests. Populated lazily on first call to route_to_provider.
+# Must NOT be a top-level import statement (architectural boundary constraint).
+ChromaticRouter = None
+
 
 @dataclass
 class MissionPacket:
@@ -166,7 +171,10 @@ class Orchestrator:
         task_type: str = "planning",
     ) -> dict[str, Any]:
         """Route a mission through ChromaticRouter and return provider selection."""
-        from router.router import ChromaticRouter  # lazy — keeps orchestrator decoupled from router
+        global ChromaticRouter
+        if ChromaticRouter is None:
+            from router.router import ChromaticRouter as _CR
+            ChromaticRouter = _CR
         from router.contracts import RouteRequest, RouteInput, RouteConstraints, TaskType, PrivacyClass
 
         router = ChromaticRouter()
