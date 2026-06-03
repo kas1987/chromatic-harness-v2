@@ -13,6 +13,8 @@ on:
       - "02_RUNTIME/**"
       - "tests/**"
       - ".github/workflows/**"
+      - "requirements.txt"
+      - "pyproject.toml"
   workflow_dispatch:
 
 jobs:
