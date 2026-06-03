@@ -1,0 +1,105 @@
+name: Repo settings (settings-as-code)
+
+# Declarative repository settings managed via GitHub App token.
+# Run manually or on changes to config/repo-settings.yaml.
+# The GitHub App (APP_ID) needs `administration: write` on this repo.
+# To grant it: GitHub → repo Settings → GitHub Apps → configure → permissions.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "session/**"]
+    paths:
+      - config/repo-settings.yaml
+      - .github/workflows/repo-settings.yml
+
+permissions:
+  contents: read
+
+jobs:
+  apply-settings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
+
+      - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+
+      - name: Apply repo-level settings
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --method PATCH "repos/$REPO" \
+            -f allow_auto_merge=true \
+            -f delete_branch_on_merge=true \
+            -f allow_squash_merge=true \
+            -f allow_merge_commit=false \
+            -f allow_rebase_merge=false
+
+      - name: Apply branch protection — main
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --method PUT "repos/$REPO/branches/main/protection" \
+            --input - <<'EOF'
+          {
+            "required_status_checks": {
+              "strict": true,
+              "checks": [
+                {"context": "test",                        "app_id": 15368},
+                {"context": "governance",                  "app_id": 15368},
+                {"context": "validate-harness-observability", "app_id": 15368},
+                {"context": "merge-gate",                  "app_id": 15368}
+              ]
+            },
+            "enforce_admins": true,
+            "required_pull_request_reviews": {
+              "dismiss_stale_reviews": true,
+              "require_code_owner_reviews": false,
+              "required_approving_review_count": 0
+            },
+            "required_conversation_resolution": true,
+            "restrictions": null
+          }
+          EOF
+
+      - name: Apply branch protection — session branch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --method PUT "repos/$REPO/branches/session%2Fchromatic-harness-v2-initial/protection" \
+            --input - <<'EOF'
+          {
+            "required_status_checks": {
+              "strict": true,
+              "checks": [
+                {"context": "test",                        "app_id": 15368},
+                {"context": "governance",                  "app_id": 15368},
+                {"context": "validate-harness-observability", "app_id": 15368},
+                {"context": "merge-gate",                  "app_id": 15368}
+              ]
+            },
+            "enforce_admins": false,
+            "required_pull_request_reviews": null,
+            "required_conversation_resolution": false,
+            "restrictions": null
+          }
+          EOF
+
+      - name: Summary
+        run: |
+          echo "### Repo settings applied" >> $GITHUB_STEP_SUMMARY
+          echo "- allow_auto_merge: true" >> $GITHUB_STEP_SUMMARY
+          echo "- delete_branch_on_merge: true" >> $GITHUB_STEP_SUMMARY
+          echo "- squash-only merges" >> $GITHUB_STEP_SUMMARY
+          echo "- main: strict=true, required=[test, governance, validate-harness-observability, merge-gate]" >> $GITHUB_STEP_SUMMARY
+          echo "- session branch: strict=true, required=[test, governance, validate-harness-observability, merge-gate]" >> $GITHUB_STEP_SUMMARY
