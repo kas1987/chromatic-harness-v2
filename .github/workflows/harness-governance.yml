@@ -12,6 +12,14 @@ on:
       - "docs/**"
       - "02_RUNTIME/**"
       - "tests/**"
+      # Harness-enforcement infra: hooks and repo config ARE governance, and
+      # leaving them out makes hook-/config-only PRs hang forever on the
+      # required `governance` check (it never runs, so it's never reported).
+      - "git_hooks/**"
+      - "hooks/**"
+      - ".beads/hooks/**"
+      - ".gitattributes"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:
