@@ -126,20 +126,17 @@ def _inject_learnings() -> None:
         print(f"  learnings: injection skipped ({exc})", file=sys.stderr)
 
 
-def _bd(args: list[str], *, timeout: int = 20) -> tuple[int, str]:
-    """Run bd with a Windows-safe PATH fallback (mirrors session_closeout).
-
-    run_safe never raises, so the old try/except-FileNotFoundError fallback is
-    replaced with a shutil.which check: resolve bd directly when possible, else
-    route through `cmd /c` (handles a .cmd shim not found by a bare spawn). The
-    prior synthesized 127 sentinel was never consumed (callers only treat the
-    code as success/failure), so any non-zero on failure is equivalent.
-    """
+def _bd_argv(args: list[str]) -> list[str]:
+    """Return the resolved argv list for bd, Windows-safe."""
     bd = shutil.which("bd")
     if bd is not None:
-        r = run_safe([bd, *args], cwd=_REPO, timeout=timeout)
-    else:
-        r = run_safe(["cmd", "/c", "bd", *args], cwd=_REPO, timeout=timeout)
+        return [bd, *args]
+    return ["cmd", "/c", "bd", *args]
+
+
+def _bd(args: list[str], *, timeout: int = 20) -> tuple[int, str]:
+    """Run bd with a Windows-safe PATH fallback (mirrors session_closeout)."""
+    r = run_safe(_bd_argv(args), cwd=_REPO, timeout=timeout)
     return r.returncode, (r.stdout or "").strip()
 
 
@@ -357,10 +354,7 @@ def main() -> int:
     _emit_baseline_alerts()
     _emit_ci_health()
 
-    try:
-        subprocess.run(["bd", "prime"], cwd=_REPO, check=False)
-    except FileNotFoundError:
-        print("bd not on PATH — install beads or skip", file=sys.stderr)
+    _bd(["prime"])
 
     return 0
 

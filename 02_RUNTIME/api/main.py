@@ -626,7 +626,7 @@ async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict:
             metadata=getattr(mission, "metadata", {}),
         ),
         constraints=RouteConstraints(
-            privacy_class=getattr(mission, "privacy_class", PrivacyClass.P1),
+            privacy_class=PrivacyClass(getattr(mission, "privacy_class", "P1")) if isinstance(getattr(mission, "privacy_class", None), str) else getattr(mission, "privacy_class", PrivacyClass.P1),
             max_cost_usd=getattr(mission, "max_cost_usd", 0.25),
         ),
     )
