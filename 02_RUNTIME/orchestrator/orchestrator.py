@@ -196,7 +196,7 @@ class Orchestrator:
             "reason": resp.route_reason,
             "fallback_used": resp.fallback_used,
             "cost_estimate_usd": resp.cost_estimate_usd,
-            "latency_ms": int(resp.latency_ms),
+            "latency_ms": int(resp.latency_ms or 0),
             "warnings": resp.logs.warnings,
             "errors": resp.logs.errors,
         }

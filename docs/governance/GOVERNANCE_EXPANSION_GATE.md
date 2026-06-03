@@ -2,7 +2,7 @@
 
 > **Status:** Enforced  
 > **Enforcer script:** `scripts/check_expansion_gate.sh`  
-> **Evidence matrix:** [VALIDATION_MATRIX.md](VALIDATION_MATRIX.md)
+> **Evidence matrix:** [VALIDATION_MATRIX.md](../../VALIDATION_MATRIX.md)
 
 ---
 

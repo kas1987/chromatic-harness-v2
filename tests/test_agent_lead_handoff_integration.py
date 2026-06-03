@@ -46,10 +46,8 @@ def event_hub(tmp_path):
 
 
 @pytest.fixture(scope="module")
-def intake_queue(repo_root):
-    from intake.queue import default_queue_path
-
-    return default_queue_path(repo_root)
+def intake_queue(tmp_path_factory):
+    return tmp_path_factory.mktemp("intake") / "intake_queue.jsonl"
 
 
 @pytest.fixture

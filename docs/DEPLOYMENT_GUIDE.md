@@ -202,7 +202,7 @@ Smoke (bounded timeouts):
 powershell -NoProfile -File ../scripts/smoke_stack.ps1
 ```
 
-Full automation runbook: [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](docs/ops/HARNESS_AUTOMATION_RUNBOOK.md)
+Full automation runbook: [docs/ops/HARNESS_AUTOMATION_RUNBOOK.md](ops/HARNESS_AUTOMATION_RUNBOOK.md)
 
 - API: http://127.0.0.1:8787/health
 - Console: http://127.0.0.1:3030 (prod build via `09_DEPLOYMENT/Dockerfile.console`)
@@ -230,7 +230,7 @@ cp 09_DEPLOYMENT/.env.example 09_DEPLOYMENT/.env
 | `OPENHUMAN_BEARER_TOKEN` | OpenHuman sidecar | Only when `OPENHUMAN_ENABLED=true` |
 | `GITHUB_TOKEN` | GitHub MCP / PR flows | Optional for git automation |
 
-**Kimi and Google fail silently** when keys are missing: the router registers the adapter but `health_check` reports unreachable and routes fall through to the next provider. Set both keys during harness dev if you rely on the Sonnet-plans / Kimi-builds workflow ([MODEL_ROUTING_RULES.md](docs/governance/MODEL_ROUTING_RULES.md)).
+**Kimi and Google fail silently** when keys are missing: the router registers the adapter but `health_check` reports unreachable and routes fall through to the next provider. Set both keys during harness dev if you rely on the Sonnet-plans / Kimi-builds workflow ([MODEL_ROUTING_RULES.md](governance/MODEL_ROUTING_RULES.md)).
 
 **Frontend (`05_FRONTEND_CONSOLE/.env.local`):**
 ```
@@ -369,7 +369,7 @@ ws://localhost:3030/ws/missions/:id/events
 # Late subscribers receive replay from 07_LOGS_AND_AUDIT/ws_events/*.jsonl
 ```
 
-**Multi-instance:** set `REDIS_URL` and run `python scripts/ws_redis_fanout.py` with `CONSOLE_INSTANCE_URLS`. See [docs/console/WEBSOCKET_EVENT_BUS.md](docs/console/WEBSOCKET_EVENT_BUS.md).
+**Multi-instance:** set `REDIS_URL` and run `python scripts/ws_redis_fanout.py` with `CONSOLE_INSTANCE_URLS`. See [docs/console/WEBSOCKET_EVENT_BUS.md](console/WEBSOCKET_EVENT_BUS.md).
 
 ### Phase 7: Mission Replay
 

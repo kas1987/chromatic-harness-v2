@@ -138,8 +138,8 @@ def _promote_one(src: Path, wiki_root: Path, *, execute: bool) -> str | None:
     if dest.is_file():
         existing = dest.read_text(encoding="utf-8", errors="replace")
         if (
-            hashlib.sha256(existing.encode()).hexdigest()
-            == hashlib.sha256(text.encode()).hexdigest()
+            hashlib.sha256(existing.replace("\r\n", "\n").encode("utf-8")).hexdigest()
+            == hashlib.sha256(text.replace("\r\n", "\n").encode("utf-8")).hexdigest()
         ):
             return None
 
