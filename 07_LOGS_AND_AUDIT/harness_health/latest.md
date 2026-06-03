@@ -1,6 +1,6 @@
 # Harness Health Snapshot
 
-- generated_at_utc: 2026-06-03T01:49:47Z
+- generated_at_utc: 2026-06-03T15:05:22Z
 - overall_status: red
 - readiness_score: 0/100
 
@@ -11,13 +11,13 @@
 | unified_guard_ok | fail | ok=False |
 | token_governance_green | fail | status=red |
 | pre_session_fresh | fail | age_min=None |
-| unified_guard_fresh | pass | age_min=0.23 |
+| unified_guard_fresh | pass | age_min=25.61 |
 | handoff_present | fail | handoff_present=False |
 | mcp_budget | pass | over_warn_threshold=False |
 | coverage_provider_model | warn | provider=0.7366 model=0.7368 llm_events=0 |
 | coverage_task_exec | warn | task_id=0.8585 execution_status=0.8873 llm_events=0 |
 | coverage_confidence_cost_latency | fail | confidence=0.4413 cost=0.3344 latency=0.3344 |
-| agent_log_fresh_and_populated | pass | age_min=1.13 lines=49 |
+| agent_log_fresh_and_populated | pass | age_min=25.71 lines=49 |
 | codegraph_sample_size | pass | paired_count=1 |
 | budget_forecast_present | pass | forecast artifact loaded |
 | weekly_budget_optimization | pass | state=at_or_above_target target_pct=75.0 gap_target_usd=0.0 need_per_day_usd=0.0 |

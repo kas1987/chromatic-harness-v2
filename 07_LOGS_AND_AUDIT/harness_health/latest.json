@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-03T01:49:47Z",
+  "generated_at_utc": "2026-06-03T15:05:22Z",
   "overall_status": "red",
   "readiness_score": 0,
   "counts": {
@@ -29,8 +29,8 @@
     {
       "name": "unified_guard_fresh",
       "status": "pass",
-      "message": "age_min=0.23",
-      "value": 0.23
+      "message": "age_min=25.61",
+      "value": 25.61
     },
     {
       "name": "handoff_present",
@@ -65,9 +65,9 @@
     {
       "name": "agent_log_fresh_and_populated",
       "status": "pass",
-      "message": "age_min=1.13 lines=49",
+      "message": "age_min=25.71 lines=49",
       "value": {
-        "age_min": 1.13,
+        "age_min": 25.71,
         "lines": 49
       }
     },
@@ -156,7 +156,7 @@
     "budget_channel_trend": "07_LOGS_AND_AUDIT/budget/forecast_channel_trend_latest.json"
   },
   "budget_weekly": {
-    "current_usd": 9036.9104,
+    "current_usd": 112.5384,
     "cap_usd": 100.0,
     "remaining_usd": 0.0,
     "forecast_remaining_usd": 0.0,
@@ -219,19 +219,19 @@
       "optimization_state": "below_target"
     },
     "claude_code": {
-      "daily_spent_usd": 9036.9104,
-      "weekly_spent_usd": 9036.9104,
-      "monthly_spent_usd": 9036.9104,
-      "end_of_day_usd": 9189.0009,
-      "end_of_week_usd": 9189.0009,
-      "end_of_month_usd": 10501.7154,
-      "weekly_spent_share": 1.0,
+      "daily_spent_usd": 2.88,
+      "weekly_spent_usd": 103.8984,
+      "monthly_spent_usd": 12.672,
+      "end_of_day_usd": 5.0636,
+      "end_of_week_usd": 106.082,
+      "end_of_month_usd": 439.1836,
+      "weekly_spent_share": 0.9232,
       "cap_daily_usd": 5.0,
       "cap_weekly_usd": 20.0,
       "cap_monthly_usd": 80.0,
-      "daily_utilization_forecast": 1837.8002,
-      "weekly_utilization_forecast": 459.45,
-      "monthly_utilization_forecast": 131.2714,
+      "daily_utilization_forecast": 1.0127,
+      "weekly_utilization_forecast": 5.3041,
+      "monthly_utilization_forecast": 5.4898,
       "risk_level": "red",
       "target_utilization_pct": 75.0,
       "target_utilization_usd": 15.0,
@@ -282,24 +282,24 @@
       "optimization_state": "below_target"
     },
     "other": {
-      "daily_spent_usd": 0.0,
-      "weekly_spent_usd": 0.0,
-      "monthly_spent_usd": 0.0,
-      "end_of_day_usd": 0.0,
-      "end_of_week_usd": 0.0,
-      "end_of_month_usd": 0.0,
-      "weekly_spent_share": 0.0,
+      "daily_spent_usd": 2.16,
+      "weekly_spent_usd": 8.64,
+      "monthly_spent_usd": 5.4,
+      "end_of_day_usd": 2.3416,
+      "end_of_week_usd": 8.8216,
+      "end_of_month_usd": 40.8679,
+      "weekly_spent_share": 0.0768,
       "cap_daily_usd": 5.0,
       "cap_weekly_usd": 20.0,
       "cap_monthly_usd": 80.0,
-      "daily_utilization_forecast": 0.0,
-      "weekly_utilization_forecast": 0.0,
-      "monthly_utilization_forecast": 0.0,
+      "daily_utilization_forecast": 0.4683,
+      "weekly_utilization_forecast": 0.4411,
+      "monthly_utilization_forecast": 0.5108,
       "risk_level": "green",
       "target_utilization_pct": 75.0,
       "target_utilization_usd": 15.0,
-      "forecast_gap_to_target_usd": 15.0,
-      "daily_spend_needed_to_hit_target_usd": 15.0,
+      "forecast_gap_to_target_usd": 6.1784,
+      "daily_spend_needed_to_hit_target_usd": 6.1784,
       "optimization_state": "below_target"
     }
   },
