@@ -101,6 +101,12 @@ SUITES = [
         ],
     ),
     (
+        "merge confidence gate (composite verdict)",
+        [
+            "test_merge_confidence_gate.py",
+        ],
+    ),
+    (
         "architecture/docs/coverage enforcement",
         [
             "test_coverage_gate.py",
