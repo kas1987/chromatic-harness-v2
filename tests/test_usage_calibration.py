@@ -10,6 +10,12 @@ sys.path.insert(0, str(_SCRIPTS))
 
 import usage_calibration_lib as L  # noqa: E402
 import usage_calibrate as C  # noqa: E402
+import usage_rollup as R  # noqa: E402
+import datetime as _dt  # noqa: E402
+
+
+def _epoch(y, mo, d, h=12):
+    return int(_dt.datetime(y, mo, d, h, 0, tzinfo=_dt.timezone.utc).timestamp())
 
 
 # ── Weight math & model normalization ───────────────────────────────────────--
@@ -205,3 +211,54 @@ def test_weights_override_changes_cap(tmp_path, monkeypatch):
     rw = C.calibrate(weights_path=alt, write=False)       # 200*10 = 2000/event
     assert base["five_hour"]["cap_wtok"] and rw["five_hour"]["cap_wtok"]
     assert rw["five_hour"]["cap_wtok"] == 2 * base["five_hour"]["cap_wtok"]
+
+
+# ── Rollup, week anchor & forecast (P3) ──────────────────────────────────────
+def test_week_anchor_tuesday_1pm_and_dst():
+    # Wed 2026-06-03 (EDT) -> Tue 2026-06-02 13:00 -04:00
+    assert L.week_start_key(_epoch(2026, 6, 3, 20)) == "2026-06-02T13:00:00-04:00"
+    # Monday belongs to the PRIOR Tuesday week
+    assert L.week_start_key(_epoch(2026, 6, 1, 12)) == "2026-05-26T13:00:00-04:00"
+    # Winter date resolves to EST (-05:00) — DST handled
+    assert L.week_start_key(_epoch(2026, 1, 15, 18)) == "2026-01-13T13:00:00-05:00"
+
+
+def test_rollup_buckets_sum(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "WTOK_EVENTS", tmp_path / "wtok_events.jsonl")
+    monkeypatch.setattr(L, "CALIBRATED_CAPS", tmp_path / "caps.json")
+    # Two events same day, one a week later.
+    L.append_jsonl(L.WTOK_EVENTS, {"ts": _epoch(2026, 6, 3, 15), "session_id": "s1",
+                                   "model": "claude-opus-4-8", "wtok": 1000})
+    L.append_jsonl(L.WTOK_EVENTS, {"ts": _epoch(2026, 6, 3, 17), "session_id": "s1",
+                                   "model": "claude-sonnet-4-6", "wtok": 500})
+    L.append_jsonl(L.WTOK_EVENTS, {"ts": _epoch(2026, 6, 10, 15), "session_id": "s2",
+                                   "model": "claude-sonnet-4-6", "wtok": 700})
+    r = R.build_rollup()
+    assert r["daily"]["2026-06-03"]["wtok"] == 1500 and r["daily"]["2026-06-03"]["events"] == 2
+    assert r["monthly"]["2026-06"]["wtok"] == 2200
+    assert r["sessions"]["s1"]["wtok"] == 1500
+    # Two distinct weekly buckets (Jun-02 and Jun-09 anchors)
+    assert len(r["weekly"]) == 2
+    # per-model split in the first week
+    wk1 = "2026-06-02T13:00:00-04:00"
+    assert r["weekly_by_model"][wk1]["opus"] == 1000
+    assert r["weekly_by_model"][wk1]["sonnet"] == 500
+
+
+def test_forecast_cap_before_reset():
+    T = 100000
+    latest = {"ts": T, "five_hour": {"resets_at": T + 7200}}  # resets in 2h
+    # window started 3h ago (5h window): used 900k of 1M => burn 300k/hr => cap in 0.33h
+    fc = C._forecast("five_hour", latest, used_wtok=900000, cap_wtok=1000000)
+    assert fc["burn_wtok_per_hr"] == 300000
+    assert fc["time_to_cap_hr"] == 0.33
+    assert fc["hours_to_reset"] == 2.0
+    assert fc["verdict"] == "cap_before_reset"
+
+
+def test_forecast_coasts_to_reset():
+    T = 100000
+    latest = {"ts": T, "five_hour": {"resets_at": T + 7200}}
+    # low usage => time_to_cap >> hours_to_reset => verdict ok
+    fc = C._forecast("five_hour", latest, used_wtok=30000, cap_wtok=1000000)
+    assert fc["verdict"] == "ok"

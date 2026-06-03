@@ -117,8 +117,8 @@ def _aggregate(estimates):
 
 def _current_window_usage(window, snapshots, ts_list, cum):
     """Weighted tokens used in the current window, from the latest snapshot's
-    resets_at (window start = resets_at - duration). Returns (used_wtok, latest_pct)
-    or (None, None) when unknown."""
+    resets_at (window start = resets_at - duration). Returns
+    (used_wtok, latest_pct, latest_snapshot) or (None, None, None) when unknown."""
     latest = None
     for s in snapshots:
         w = s.get(window)
@@ -126,11 +126,41 @@ def _current_window_usage(window, snapshots, ts_list, cum):
             if latest is None or s["ts"] > latest["ts"]:
                 latest = s
     if not latest:
-        return None, None
+        return None, None, None
     w = latest[window]
     start = w["resets_at"] - WINDOW_SECONDS[window]
     used = _cumulative_at(ts_list, cum, latest["ts"]) - _cumulative_at(ts_list, cum, start)
-    return max(0.0, used), w.get("pct")
+    return max(0.0, used), w.get("pct"), latest
+
+
+def _forecast(window, latest, used_wtok, cap_wtok):
+    """Burn rate + time-to-cap for a window. None if not computable.
+
+    burn = used so far / hours elapsed in the window; time_to_cap = remaining /
+    burn; verdict compares that to the time left until the window resets.
+    """
+    w = latest.get(window) or {}
+    resets_at = w.get("resets_at")
+    if not resets_at or cap_wtok is None or used_wtok is None:
+        return None
+    start = resets_at - WINDOW_SECONDS[window]
+    elapsed_hr = (latest["ts"] - start) / 3600.0
+    hours_to_reset = max(0.0, (resets_at - latest["ts"]) / 3600.0)
+    if elapsed_hr <= 0:
+        return None
+    burn = used_wtok / elapsed_hr  # wtok / hr
+    remaining = max(0.0, cap_wtok - used_wtok)
+    time_to_cap_hr = remaining / burn if burn > 0 else None
+    verdict = "ok"
+    if time_to_cap_hr is not None and time_to_cap_hr < hours_to_reset:
+        verdict = "cap_before_reset"
+    return {
+        "burn_wtok_per_hr": round(burn),
+        "time_to_cap_hr": round(time_to_cap_hr, 2) if time_to_cap_hr is not None else None,
+        "hours_to_reset": round(hours_to_reset, 2),
+        "safe_burn_wtok_per_hr": round(remaining / hours_to_reset) if hours_to_reset > 0 else None,
+        "verdict": verdict,
+    }
 
 
 def _load_epochs():
@@ -169,9 +199,14 @@ def _compute_caps(epoch_start, snapshots, ts_list, cum):
     caps = {}
     for window in WINDOWS:
         agg = _aggregate(_estimate_caps(window, scoped, ts_list, cum))
-        used, pct = _current_window_usage(window, scoped, ts_list, cum)
+        used, pct, latest = _current_window_usage(window, scoped, ts_list, cum)
         agg["used_wtok"] = round(used) if used is not None else None
         agg["latest_pct"] = pct
+        # Forecast only meaningful once the cap is firm.
+        if agg["confidence"] == "ok" and agg["cap_wtok"] and latest:
+            agg["forecast"] = _forecast(window, latest, used, agg["cap_wtok"])
+        else:
+            agg["forecast"] = None
         caps[window] = agg
     return caps
 

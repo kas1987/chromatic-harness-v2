@@ -24,6 +24,12 @@ CALIBRATION_HISTORY = CALIB_DIR / "calibration_history.jsonl"
 CALIBRATED_CAPS = CALIB_DIR / "calibrated_caps.json"
 INGEST_STATE = CALIB_DIR / "ingest_state.json"
 EPOCHS = CALIB_DIR / "epochs.json"
+ROLLUP = CALIB_DIR / "rollup.json"
+
+# Weekly rate-limit window anchor (observed): Tuesday 1pm in US Eastern.
+WEEK_ANCHOR_TZ = "America/New_York"
+WEEK_ANCHOR_WEEKDAY = 1   # Monday=0 .. Tuesday=1
+WEEK_ANCHOR_HOUR = 13     # 1pm local
 
 EDGE_SNAPSHOTS = EDGE_USAGE_DIR / "snapshots.jsonl"
 EDGE_CALIBRATED_CAPS = EDGE_USAGE_DIR / "calibrated_caps.json"  # feedback copy for statusline
@@ -86,6 +92,41 @@ def _now_iso():
     from datetime import datetime, timezone
 
     return datetime.now(timezone.utc).isoformat()
+
+
+def _ny(ts):
+    """Epoch seconds -> aware datetime in the week-anchor timezone (DST-correct)."""
+    from datetime import datetime, timezone
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo(WEEK_ANCHOR_TZ)
+    except Exception:  # zoneinfo/tzdata unavailable -> fall back to UTC
+        tz = timezone.utc
+    return datetime.fromtimestamp(ts, tz=timezone.utc).astimezone(tz)
+
+
+def day_key(ts):
+    """Local (Eastern) calendar-day key, e.g. '2026-06-03'."""
+    return _ny(ts).strftime("%Y-%m-%d")
+
+
+def month_key(ts):
+    """Local (Eastern) calendar-month key, e.g. '2026-06'."""
+    return _ny(ts).strftime("%Y-%m")
+
+
+def week_start_key(ts):
+    """Key for the weekly window containing ts: the most recent Tuesday 1pm ET
+    at or before ts, as an ISO timestamp. Weeks run Tue-1pm -> next Tue-1pm."""
+    from datetime import timedelta
+    dt = _ny(ts)
+    anchor = dt.replace(hour=WEEK_ANCHOR_HOUR, minute=0, second=0, microsecond=0)
+    # Days since the anchor weekday (Tuesday), wrapping the week.
+    back = (dt.weekday() - WEEK_ANCHOR_WEEKDAY) % 7
+    anchor = anchor - timedelta(days=back)
+    if anchor > dt:                # before this week's Tue-1pm -> previous week
+        anchor = anchor - timedelta(days=7)
+    return anchor.isoformat()
 
 
 # ── Model normalization ─────────────────────────────────────────────────────--
