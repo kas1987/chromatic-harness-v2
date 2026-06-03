@@ -2,7 +2,7 @@
 
 > **Status:** Enforced  
 > **Enforcer script:** `scripts/check_expansion_gate.sh`  
-> **Evidence matrix:** `VALIDATION_MATRIX.md`
+> **Evidence matrix:** [VALIDATION_MATRIX.md](../../VALIDATION_MATRIX.md)
 
 ---
 
@@ -86,7 +86,7 @@ All four boxes must be checked before a bead for the new layer is opened. If the
 
 ## Reference
 
-- Evidence matrix: `VALIDATION_MATRIX.md`
+- Evidence matrix: [VALIDATION_MATRIX.md](../../VALIDATION_MATRIX.md)
 - Governance architecture: [GOVERNANCE_AND_ROUTING_ARCHITECTURE.md](GOVERNANCE_AND_ROUTING_ARCHITECTURE.md)
 - Harness execution flow: [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](../../00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md)
 - Issue #53 (bead: mc-kr2e): the bead that introduced this gate

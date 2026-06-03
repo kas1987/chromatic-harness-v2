@@ -5,7 +5,7 @@
 ```md
 # Agent Instructions
 
-Start here: [AGENT_OPERATIONS.md](../../AGENT_OPERATIONS.md)
+Start here: [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md)
 
 This repo uses Chromatic Harness v2 operating rules. Agents must not infer owner intent from chat context. Agents execute from explicit artifacts: beads, mission packets, PDRs, playbooks, governance policies, routing config, tests, and handoffs.
 
@@ -16,8 +16,8 @@ This repo uses Chromatic Harness v2 operating rules. Agents must not infer owner
 - Read `.agents/handoffs/latest.json` if present.
 - Run `bd prime` and `bd ready` before selecting work.
 - Check git branch and status before edits.
-- Follow [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](../../00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md).
-- Follow [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](../../docs/governance/PRE_SESSION_CONTEXT_POLICY.md).
+- Follow [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md).
+- Follow [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md).
 - Compact and hand off at phase boundaries or session end.
 
 ## Session Completion
