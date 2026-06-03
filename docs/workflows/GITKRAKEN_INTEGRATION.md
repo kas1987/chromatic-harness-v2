@@ -28,7 +28,7 @@ PR open/merge still uses **`gh`** (GitHub CLI). `gk pr` does not replace `gh pr 
 
 ## Cursor MCP
 
-Project config: [`.cursor/mcp.json`](../.cursor/mcp.json) — enable **gitkraken** in Cursor MCP settings or run **GitLens: Install GitKraken MCP Server**.
+Project config: [`.cursor/mcp.json`](../../.cursor/mcp.json) — enable **gitkraken** in Cursor MCP settings or run **GitLens: Install GitKraken MCP Server**.
 
 Verify in Agent mode: ask the agent to list assigned PRs (uses GitKraken MCP tools after approval).
 

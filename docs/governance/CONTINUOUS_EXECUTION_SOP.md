@@ -66,5 +66,5 @@ Everything else: proceed.
 ## References
 
 - [AGENT_OPERATIONS.md](../../AGENT_OPERATIONS.md) — session lifecycle
-- [auto-mode-scope.yaml](../../.agents/governance/auto-mode-scope.yaml) — tier policy
+- `auto-mode-scope.yaml` — tier policy (see [AGENT_OPERATIONS.md](../../AGENT_OPERATIONS.md))
 - [GOVERNANCE_EXPANSION_GATE.md](../../GOVERNANCE_EXPANSION_GATE.md) — no new layer without proof
