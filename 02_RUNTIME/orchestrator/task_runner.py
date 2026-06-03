@@ -173,7 +173,7 @@ def _which(name: str) -> str | None:
 # Each worker gets its own `git worktree` checkout so its branch/commits never move
 # the shared checkout's HEAD. Without this, a concurrent autonomous worker switching
 # branches in the shared tree corrupts an interactive session's git state (and vice
-# versa). .worktrees/ is gitignored. See docs/retros/2026-06-02-omh-pr233-gate-fix.md.
+# versa). .worktrees/ is gitignored. See docs/retros/2026-06-02-worker-spawn-worktree-isolation.md.
 _WORKTREE_ROOT = REPO / ".worktrees"
 
 
