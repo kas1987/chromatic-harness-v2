@@ -3,23 +3,9 @@
 > **Applies to:** Claude, Pi, Codex, Cursor agents, and every runtime in Chromatic Harness v2.  
 > **If you skip this, you will break governance, miss MCP/CRG changes, or strand work.**
 
-This is the single entry point for *operational behavior*. Sub-docs go deeper; this page is the checklist nothing is allowed to skip.
-
-**Repo structure & "which file do I use?":** [CHROMATIC_TREES.md](CHROMATIC_TREES.md) — the structure source-of-truth + the operation→file map (create epic/bead/roadmap/PDR/retro). This page is the *checklist*; that file is the *map*.
+This is the single entry point. Sub-docs go deeper; this page is the checklist nothing is allowed to skip.
 
 **Rules map (all layers):** [docs/RULES_INVENTORY.md](docs/RULES_INVENTORY.md) — project vs global vs User Rules.
-
-### Creating work (epics, beads, roadmaps, PDRs)
-
-| To create… | Template | Command |
-|------------|----------|---------|
-| Epic | [templates/EPIC_TEMPLATE.md](templates/EPIC_TEMPLATE.md) | `bd create "<title>" --type epic -p P1 -l <area>` |
-| Bead | [templates/BEAD_TEMPLATE.md](templates/BEAD_TEMPLATE.md) | `bd create "<title>" --type task --parent <epic-id>` |
-| Roadmap | [templates/ROADMAP_TEMPLATE.md](templates/ROADMAP_TEMPLATE.md) | → `docs/research/<TOPIC>_ROADMAP.md` |
-| PDR | [08_PDRS/_PDR_TEMPLATE.md](08_PDRS/_PDR_TEMPLATE.md) | → `08_PDRS/<feature>.md` |
-| Retro | [templates/RETRO_TEMPLATE.md](templates/RETRO_TEMPLATE.md) | → `docs/retros/YYYY-MM-DD-<slug>.md` |
-
-Full template index: [templates/README.md](templates/README.md). After creating beads: `bd dolt commit` → `bd dolt push`.
 
 ---
 
@@ -251,7 +237,6 @@ POST /missions/{mission_id}/synthesize?create_bead=true
 
 | Role | Playbook |
 |------|----------|
-| **Workflows (operating model)** | [04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md](04_PLAYBOOKS/WORKFLOWS_PLAYBOOK.md) — `/audit → /plan → /go → /close-issue` |
 | GO / autonomous | [04_PLAYBOOKS/GO_MODE_PLAYBOOK.md](04_PLAYBOOKS/GO_MODE_PLAYBOOK.md) |
 | Orchestrator | [04_PLAYBOOKS/ORCHESTRATOR_PLAYBOOK.md](04_PLAYBOOKS/ORCHESTRATOR_PLAYBOOK.md) |
 | Magnets | [04_PLAYBOOKS/MAGNETS_PLAYBOOK.md](04_PLAYBOOKS/MAGNETS_PLAYBOOK.md) |

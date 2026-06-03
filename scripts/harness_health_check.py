@@ -20,12 +20,12 @@ relies on, each as pass / warn / fail:
 
 Design rules (mission stop-conditions):
   * Read-only by DEFAULT. Nothing is written unless --write is passed (which only
-    emits a report artifact under 05_REPORTS/harness_health/, never harness state).
+    emits a report artifact under reports/harness_health/, never harness state).
   * No credentials are ever required or used — service checks are bare TCP connects,
     so an unreachable/optional local service WARNs, it does not FAIL the cockpit.
 
 Output: JSON to stdout by default; --markdown for the dashboard table; --write to
-persist 05_REPORTS/harness_health/latest.{json,md}.
+persist reports/harness_health/latest.{json,md}.
 
 Exit code: 0 unless a hard-fail check fails (integrity checks only — services warn).
 """
@@ -52,7 +52,7 @@ from common_harness import run_safe  # noqa: E402
 LOGS = REPO / "07_LOGS_AND_AUDIT"
 ROUTING_DIR = LOGS / "routing"
 DECISION_LOG = LOGS / "decisions" / "decision_log.jsonl"
-OUT_DIR = REPO / "05_REPORTS" / "harness_health"
+OUT_DIR = REPO / "reports" / "harness_health"
 
 # Service registry: name -> (env var, default host:port). TCP-only, no auth.
 SERVICES: list[tuple[str, str, str]] = [
@@ -381,7 +381,7 @@ def write_artifact(result: dict) -> tuple[Path, Path]:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Harness runtime health cockpit (issue #79)")
     ap.add_argument("--markdown", action="store_true", help="print the Markdown dashboard instead of JSON")
-    ap.add_argument("--write", action="store_true", help="persist 05_REPORTS/harness_health/latest.{json,md}")
+    ap.add_argument("--write", action="store_true", help="persist reports/harness_health/latest.{json,md}")
     ap.add_argument("--service-timeout", type=float, default=0.6, help="per-service TCP probe timeout (seconds)")
     args = ap.parse_args()
 

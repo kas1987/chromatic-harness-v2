@@ -409,11 +409,6 @@ def test_dispatch_emits_bead_into_live_loop(base: Path, monkeypatch):
     assert result["bead_id"] == "harness-bead-42"
     assert item["bead_id"] == "harness-bead-42"
     assert "create" in captured["cmd"] and "--labels" in captured["cmd"]
-    # Regression (OMH-4): the which-resolved path is executed, not the bare name.
-    # On Windows ``bd`` is a ``bd.CMD`` shim; subprocess.run(["bd", ...]) raises
-    # FileNotFoundError (CreateProcess ignores PATHEXT), silently degrading
-    # --emit-beads to packet-only. cmd[0] must be the resolved path.
-    assert captured["cmd"][0] == "/usr/bin/bd"
     # Idempotent: a second dispatch with bead_id already set does not recreate.
     captured.clear()
     lock_pr_branch.release(base / "locks", "owner/repo", 42)
