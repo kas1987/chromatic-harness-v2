@@ -151,26 +151,36 @@ Rule: one PR branch gets one active mutating agent.
 
 ```text
 .github/workflows/review-intake.yml
+.github/workflows/harness-review-intake-check.yml
 scripts/review_intake.py
 scripts/classify_review_finding.py
 scripts/update_next_work_queue.py
 scripts/post_review_resolution.py
 scripts/lock_pr_branch.py
+scripts/dispatch_review_work.py
+scripts/review_learning.py
 schemas/review_finding.schema.json
 schemas/next_work_item.schema.json
 schemas/agent_dispatch.schema.json
 schemas/pr_branch_lock.schema.json
-00_PLANNING/review-findings.jsonl
-00_PLANNING/next-work.queue.json
-00_PLANNING/review-intake.state.json
-02_LOGS/agent-dispatch-log.jsonl
-02_LOGS/review-resolution-log.jsonl
-03_PLAYBOOKS/REVIEW_INTAKE_PLAYBOOK.md
-03_PLAYBOOKS/REVIEW_DISPATCH_PLAYBOOK.md
-03_PLAYBOOKS/REVIEW_RESOLUTION_PLAYBOOK.md
-03_PLAYBOOKS/PR_COLLISION_CONTROL_PLAYBOOK.md
-03_PLAYBOOKS/REVIEW_LEARNING_PLAYBOOK.md
+schemas/review_resolution.schema.json
+07_LOGS_AND_AUDIT/review_intake/findings.jsonl
+07_LOGS_AND_AUDIT/review_intake/queue.json
+07_LOGS_AND_AUDIT/review_intake/state.json
+07_LOGS_AND_AUDIT/review_intake/dispatch_log.jsonl
+07_LOGS_AND_AUDIT/review_intake/resolution_log.jsonl
+07_LOGS_AND_AUDIT/review_intake/reviewer_patterns.jsonl
+04_PLAYBOOKS/REVIEW_INTAKE_PLAYBOOK.md
+04_PLAYBOOKS/REVIEW_DISPATCH_PLAYBOOK.md
+04_PLAYBOOKS/REVIEW_RESOLUTION_PLAYBOOK.md
+04_PLAYBOOKS/PR_COLLISION_CONTROL_PLAYBOOK.md
+04_PLAYBOOKS/REVIEW_LEARNING_PLAYBOOK.md
+docs/pdr/review_intake/
 ```
+
+> **Portable PDR zip paths** (`00_PLANNING/`, `02_LOGS/`, `03_PLAYBOOKS/`) are scaffold-only.
+> Do not create them in this repo. See `CHROMATIC_TREES.md` §4 and
+> `07_LOGS_AND_AUDIT/audits/repo_reorg_audit_2026-06-01.md`.
 
 ## 12. Implementation Phases
 
