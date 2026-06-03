@@ -16,6 +16,21 @@ Preserve useful separated repos while removing stale authority claims.
 
 ## Migration Steps
 
+### .01_Image Org  *(priority — was the largest stale-authority source)*
+
+**Done (2026-06-02):**
+1. ✅ Routing governance migrated to Harness `docs/routing/`: `multi-router-matrix.yaml`, `auto-mode-scope.yaml`, `subagent-token-efficiency.md`, `model-routing-for-subagents.md`.
+2. ✅ Federation re-pointed: canonical is Harness; `~/.claude/governance/` + `~/.agents/governance/` now marked "federated copy"; `scripts/federate-governance.sh` syncs them + the wiki.
+3. ✅ Stripped `C:\.01_Image Org` from federation roots in the migrated files.
+4. ✅ Removed hardcoded `cd "C:\.01_Image Org"` from `~/.claude/scheduled-tasks/{weekly-skills-reflection,worktree-tooling-sweep}/SKILL.md`.
+5. ✅ **Neutralized live authority** (Image-Prism branch `chore/retire-image-org-governance`): removed all 6 `governance:*` npm scripts (none CI-referenced); guarded `federate-auto-mode.mjs` + `federate-multi-router.mjs` (print + `exit 0` before any write, verified); marked both `.agents/governance/*.yaml` LEGACY / NOT AUTHORITATIVE.
+6. ✅ **Harvested knowledge** into `chromatic-wiki/02_LEARNINGS/_harvested/image-org/` (31 files: 14 learnings, 7 audits, 10 specs) with provenance — uncurated staging.
+
+**Remaining:**
+1. Curate the harvest: triage the 31 staged files → promote durable items to wiki canon, discard obsolete (expect most archival), per `manifest.yaml` review-PR policy.
+2. Clean residual refs in `~/.claude/.bin/ao.sh` (WSL fallback path) and `~/.claude/docs/operations/MULTI-ROUTER-MATRIX.md`.
+3. Update `.01_Image Org/README`: "Legacy archive; no execution authority. See chromatic-harness-v2."
+4. Archive the repo (org-move or mark read-only) once curation confirms nothing live remains. *(User deferred full archive; this is the next escalation.)*
 ### Chromatic_Brain
 
 1. Inventory active queue items.

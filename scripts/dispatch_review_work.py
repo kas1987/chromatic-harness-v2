@@ -97,7 +97,8 @@ def create_bead(item: Dict[str, Any], bd_bin: str = "bd") -> str | None:
     Returns the new bead id, or None if bd is unavailable or the call fails. The dispatcher
     never blocks on bd: a missing tracker degrades to mission-packet-only dispatch.
     """
-    if not shutil.which(bd_bin):
+    bd_path = shutil.which(bd_bin)
+    if not bd_path:
         return None
     title = item.get("title") or f"Review finding {item.get('source_finding_id')}"
     acceptance = "\n".join(f"- {c}" for c in (item.get("acceptance_checks") or []))
@@ -109,7 +110,7 @@ def create_bead(item: Dict[str, Any], bd_bin: str = "bd") -> str | None:
         f"Links:\n{links}".strip()
     )
     cmd = [
-        bd_bin,
+        bd_path,
         "create",
         title,
         "--priority",

@@ -12,6 +12,7 @@ from typing import Literal
 
 from .context_detector import ContextDetector, RuntimeContext
 from .complexity_classifier import ComplexityResult
+from .contracts import RoutingContext
 from .policy import PolicyLoader
 
 SpeedMode = Literal["speed", "balance", "low"]
@@ -353,3 +354,46 @@ class ProviderSelector:
         front = [c for c in choices if c.provider == pref]
         rest = [c for c in choices if c.provider != pref]
         return front + rest
+
+    # ── Pure-function stage over RoutingContext ──────────────────────────────
+
+    def select_context(self, ctx: RoutingContext, complexity: ComplexityResult) -> SelectionResult:
+        """Pure function: derive SelectionResult from a sealed RoutingContext.
+
+        No I/O; all environment data has already been captured in ctx by
+        ContextDetector.build_routing_context().  Call after
+        ComplexityClassifier.classify_context().
+        """
+        runtime = RuntimeContext(
+            device_type=ctx.device_type,
+            gpu_model=ctx.gpu_model,
+            gpu_vram_gb=ctx.gpu_vram_gb,
+            gpu_available=ctx.gpu_available,
+            ollama_local_reachable=ctx.ollama_local_reachable,
+            ollama_local_models=list(ctx.ollama_local_models),
+            remote_ollama_endpoints=[
+                {"host": ep.host, "port": ep.port, "enabled": ep.enabled} for ep in ctx.remote_ollama_endpoints
+            ],
+            internet_reachable=ctx.internet_reachable,
+            connectivity=ctx.connectivity,
+            memory_pressure=ctx.memory_pressure,
+            os_family=ctx.os_family,
+            cpu_count=ctx.cpu_count,
+            is_battery=ctx.is_battery,
+        )
+        # Connectivity and battery always win over user preference — pass None
+        # so _resolve_speed_mode applies its offline/battery override logic,
+        # then fall back to ctx.speed_mode as the persistent user setting by
+        # injecting it into a throwaway prefs dict.
+        effective_speed: SpeedMode | None = None
+        if not ctx.internet_reachable or ctx.is_battery:
+            effective_speed = "low"
+        elif ctx.speed_mode != "balance":
+            effective_speed = ctx.speed_mode  # type: ignore[assignment]
+
+        return self.select(
+            complexity=complexity,
+            context=runtime,
+            privacy_class=ctx.privacy_class.value,
+            speed_mode=effective_speed,
+        )

@@ -92,19 +92,13 @@ def decide_transfer(snapshot: BudgetSnapshot, config: dict[str, Any]) -> Transfe
     session_ratio = snapshot.session_est_tokens / session_cap if session_cap > 0 else 0.0
 
     if session_ratio >= handoff_session_pct:
-        reasons.append(
-            f"session context high ({snapshot.session_est_tokens}/{int(session_cap)} tokens)"
-        )
+        reasons.append(f"session context high ({snapshot.session_est_tokens}/{int(session_cap)} tokens)")
 
     if daily_remaining < daily_cap * spawn_daily_min + reserve:
-        reasons.append(
-            f"daily headroom low (${daily_remaining:.2f} remaining, need {spawn_daily_min:.0%}+ reserve)"
-        )
+        reasons.append(f"daily headroom low (${daily_remaining:.2f} remaining, need {spawn_daily_min:.0%}+ reserve)")
 
     if monthly_remaining < monthly_cap * spawn_monthly_min + reserve:
-        reasons.append(
-            f"monthly headroom low (${monthly_remaining:.2f} remaining)"
-        )
+        reasons.append(f"monthly headroom low (${monthly_remaining:.2f} remaining)")
 
     if reasons:
         snapshot.reasons = reasons
@@ -205,23 +199,23 @@ class BudgetLedger:
         activity = self.repo_root / "07_LOGS_AND_AUDIT" / "activity" / "agent_activity.jsonl"
         if activity.is_file():
             try:
-                lines = [
-                    ln for ln in activity.read_text(encoding="utf-8").splitlines() if ln.strip()
-                ]
+                lines = [ln for ln in activity.read_text(encoding="utf-8").splitlines() if ln.strip()]
                 return min(50_000, len(lines) * 500)
             except OSError:
                 pass
 
         return 25_000
 
-    def append_daily(self, amount_usd: float, *, source: str, note: str = "") -> None:
+    def append_daily(self, amount_usd: float, *, source: str, note: str = "", decision_id: str = "") -> None:
         self._ensure_dir()
-        row = {
+        row: dict[str, Any] = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "amount_usd": round(amount_usd, 6),
             "source": source,
             "note": note,
         }
+        if decision_id:
+            row["decision_id"] = decision_id
         with open(self.daily_log, "a", encoding="utf-8") as f:
             f.write(json.dumps(row) + "\n")
 
@@ -256,18 +250,14 @@ class BudgetLedger:
                 if str(row.get("timestamp", "")).startswith(today):
                     today_spend += float(row.get("amount_usd", 0.0))
 
-        daily_spent = (
-            max(self._router_daily_spend(), today_spend) + extra_daily_usd + self.ingest_claude_usage_hook()
-        )
+        daily_spent = max(self._router_daily_spend(), today_spend) + extra_daily_usd + self.ingest_claude_usage_hook()
 
         monthly_spent = self._read_monthly_rollup()
         if monthly_spent < daily_spent:
             monthly_spent = self._sum_daily_ledger() + extra_daily_usd
 
         snap = BudgetSnapshot(
-            session_est_tokens=session_tokens
-            if session_tokens is not None
-            else self.estimate_session_tokens(),
+            session_est_tokens=session_tokens if session_tokens is not None else self.estimate_session_tokens(),
             session_cap_tokens=int(caps.get("session_tokens", 200_000)),
             daily_spent_usd=daily_spent,
             daily_cap_usd=float(caps.get("daily_usd", 25.0)),

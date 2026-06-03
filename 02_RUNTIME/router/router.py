@@ -19,13 +19,12 @@ from .budget import BudgetGate
 from .observability import ObservabilityLogger
 from .adapters.base import BaseAdapter
 from .adapters.mock import MockAdapter
+from .adapters.adapter_factory import build as _build_adapters
 from .complexity_classifier import ComplexityClassifier
 from .context_detector import ContextDetector
 from .provider_selector import ProviderSelector
 from .context_gate import ContextGate
 from .context_policy import ContextPolicyLoader
-from .adapters.ollama_remote import OllamaRemoteAdapter
-from .adapters.openhuman_adapter import OpenHumanAdapter
 
 
 class ChromaticRouter:
@@ -59,49 +58,7 @@ class ChromaticRouter:
 
     def _register_default_adapters(self):
         providers = self.loader.providers()
-        for name, cfg in providers.items():
-            if name == "openhuman":
-                self.adapters[name] = OpenHumanAdapter(cfg)
-            elif name.startswith("ollama"):
-                self.adapters[name] = OllamaRemoteAdapter(name, cfg)
-            elif name == "lmstudio":
-                from .adapters.lmstudio_adapter import LMStudioAdapter
-
-                self.adapters[name] = LMStudioAdapter(cfg)
-            elif name == "openai":
-                from .adapters.openai_adapter import OpenAIAdapter
-
-                self.adapters[name] = OpenAIAdapter(cfg)
-            elif name == "anthropic":
-                from .adapters.anthropic_adapter import AnthropicAdapter
-
-                self.adapters[name] = AnthropicAdapter(cfg)
-            elif name == "google":
-                from .adapters.google_adapter import GoogleAdapter
-
-                self.adapters[name] = GoogleAdapter(cfg)
-            elif name == "openrouter":
-                from .adapters.openrouter_adapter import OpenRouterAdapter
-
-                self.adapters[name] = OpenRouterAdapter(cfg)
-            elif name == "featherless":
-                from .adapters.featherless_adapter import FeatherlessAdapter
-
-                self.adapters[name] = FeatherlessAdapter(cfg)
-            elif name == "kimi":
-                from .adapters.kimi_adapter import KimiAdapter
-
-                self.adapters[name] = KimiAdapter(cfg)
-            elif name == "prism-orchestrator":
-                from .adapters.prism_orchestrator_adapter import (
-                    PrismOrchestratorAdapter,
-                )
-
-                self.adapters[name] = PrismOrchestratorAdapter(cfg)
-            elif name == "native_claude":
-                from .adapters.native_claude_adapter import NativeClaudeAdapter
-
-                self.adapters[name] = NativeClaudeAdapter(cfg)
+        self.adapters.update(_build_adapters(providers))
         if "mock" not in self.adapters:
             self.adapters["mock"] = MockAdapter()
 

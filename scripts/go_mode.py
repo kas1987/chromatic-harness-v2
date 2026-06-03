@@ -118,7 +118,7 @@ def estimate_factors(item: dict) -> dict[str, float]:
     objective = str(item.get("objective") or item.get("notes") or "").strip()
     checks = item.get("acceptance_checks") or item.get("acceptance") or []
     if isinstance(checks, str):
-        checks = [checks] if checks.strip() else []
+        checks = [c.strip(" -*\t") for c in checks.replace(";", "\n").split("\n") if c.strip(" -*\t")]
     allowed = item.get("allowed_files") or []
     stops = item.get("stop_conditions") or []
     risk = str(item.get("risk_level", "")).lower()

@@ -53,7 +53,7 @@ repos:
 
   - repo: "kas1987/claude-config"
     role: "claude_adapter_config"
-    status: "active_demoted"
+    status: "active"
     owns:
       - claude_context
       - slash_command_adapters
