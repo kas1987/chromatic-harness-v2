@@ -5,7 +5,7 @@
 ```md
 # Claude Instructions for Chromatic Harness v2
 
-Start here: [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md)
+Start here: [AGENT_OPERATIONS.md](../../AGENT_OPERATIONS.md)
 
 Claude must follow the same Harness v2 operating model as all agents.
 
@@ -23,9 +23,9 @@ Claude must follow the same Harness v2 operating model as all agents.
 
 Follow:
 
-- [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md)
-- [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md)
-- [docs/BEADS_OBJECT_MODEL.md](docs/BEADS_OBJECT_MODEL.md)
+- [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](../../00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md)
+- [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](../../docs/governance/PRE_SESSION_CONTEXT_POLICY.md)
+- [docs/BEADS_OBJECT_MODEL.md](../../docs/BEADS_OBJECT_MODEL.md)
 
 ## Session End
 
