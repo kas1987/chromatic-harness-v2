@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-05-31T18:28:51Z",
+  "generated_at_utc": "2026-06-03T01:31:40Z",
   "overall_status": "red",
-  "readiness_score": 24,
+  "readiness_score": 0,
   "counts": {
-    "pass": 13,
+    "pass": 11,
     "warn": 2,
-    "fail": 3
+    "fail": 5
   },
   "checks": [
     {
@@ -22,20 +22,20 @@
     },
     {
       "name": "pre_session_fresh",
-      "status": "pass",
-      "message": "age_min=20.31",
-      "value": 20.31
+      "status": "fail",
+      "message": "age_min=None",
+      "value": null
     },
     {
       "name": "unified_guard_fresh",
       "status": "pass",
-      "message": "age_min=0.42",
-      "value": 0.42
+      "message": "age_min=0.19",
+      "value": 0.19
     },
     {
       "name": "handoff_present",
-      "status": "pass",
-      "message": "handoff_present=True",
+      "status": "fail",
+      "message": "handoff_present=False",
       "value": null
     },
     {
@@ -65,9 +65,9 @@
     {
       "name": "agent_log_fresh_and_populated",
       "status": "pass",
-      "message": "age_min=1291.07 lines=1",
+      "message": "age_min=72.4 lines=1",
       "value": {
-        "age_min": 1291.07,
+        "age_min": 72.4,
         "lines": 1
       }
     },
@@ -145,15 +145,15 @@
     "llm_applicable_event_count": 0
   },
   "inputs": {
-    "unified_guard": "07_LOGS_AND_AUDIT\\unified_guard\\latest.json",
-    "pre_session": "07_LOGS_AND_AUDIT\\pre_session\\latest.json",
-    "token_governance": "07_LOGS_AND_AUDIT\\token_governance\\latest.json",
-    "governance_intelligence": "07_LOGS_AND_AUDIT\\governance_intelligence\\latest.json",
-    "agent_log": "07_LOGS_AND_AUDIT\\AGENT_RUN_LOG.jsonl",
-    "codegraph_scorecard": "07_LOGS_AND_AUDIT\\codegraph_effectiveness\\summary_latest.json",
-    "budget_forecast": "07_LOGS_AND_AUDIT\\budget\\forecast_latest.json",
-    "budget_forecast_accuracy": "07_LOGS_AND_AUDIT\\budget\\forecast_accuracy_latest.json",
-    "budget_channel_trend": "07_LOGS_AND_AUDIT\\budget\\forecast_channel_trend_latest.json"
+    "unified_guard": "07_LOGS_AND_AUDIT/unified_guard/latest.json",
+    "pre_session": "07_LOGS_AND_AUDIT/pre_session/latest.json",
+    "token_governance": "07_LOGS_AND_AUDIT/token_governance/latest.json",
+    "governance_intelligence": "07_LOGS_AND_AUDIT/governance_intelligence/latest.json",
+    "agent_log": "07_LOGS_AND_AUDIT/AGENT_RUN_LOG.jsonl",
+    "codegraph_scorecard": "07_LOGS_AND_AUDIT/codegraph_effectiveness/summary_latest.json",
+    "budget_forecast": "07_LOGS_AND_AUDIT/budget/forecast_latest.json",
+    "budget_forecast_accuracy": "07_LOGS_AND_AUDIT/budget/forecast_accuracy_latest.json",
+    "budget_channel_trend": "07_LOGS_AND_AUDIT/budget/forecast_channel_trend_latest.json"
   },
   "budget_weekly": {
     "current_usd": 9036.9104,

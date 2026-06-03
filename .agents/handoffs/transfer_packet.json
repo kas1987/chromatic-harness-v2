@@ -1,14 +1,14 @@
 {
-  "transfer_id": "95b21f5e-8c24-442b-ba68-d4aac4fe0342",
-  "updated_at": "2026-05-31T18:28:43Z",
+  "transfer_id": "358ef135-4572-4b66-9df3-bb4e005f02de",
+  "updated_at": "2026-06-03T01:31:38Z",
   "source_runtime": "claude_code",
   "objective": "Continue harness mission from handoff",
-  "decision": "halt",
-  "summary": "Session closeout (claude_code). Budget decision: halt_human.",
+  "decision": "review",
+  "summary": "Session closeout (claude_code). Budget decision: spawn.",
   "evidence_refs": [],
   "files_touched": [],
   "risks": [
-    "monthly cap reached ($11492.76 >= $400.00)"
+    "budget headroom OK for successor spawn"
   ],
   "blockers": [],
   "next_action": "bd ready",
@@ -21,19 +21,19 @@
   "successor": {
     "runtime": "cursor",
     "model_hint": "",
-    "spawn_mode": "manual",
+    "spawn_mode": "auto",
     "prompt_path": ".agents/handoffs/successor_prompt.md"
   },
   "budget": {
     "session_est_tokens": 25000,
     "session_cap_tokens": 200000,
-    "daily_spent_usd": 4457.3966,
+    "daily_spent_usd": 0.0,
     "daily_cap_usd": 25.0,
-    "monthly_spent_usd": 11492.7634,
+    "monthly_spent_usd": 15.192,
     "monthly_cap_usd": 400.0,
-    "decision": "halt_human",
+    "decision": "spawn",
     "reasons": [
-      "monthly cap reached ($11492.76 >= $400.00)"
+      "budget headroom OK for successor spawn"
     ]
   },
   "beads_ready": [],
@@ -48,43 +48,28 @@
   "handoff_path": "12_HANDOFFS/sessions/SESSION.md",
   "latest_pointer": ".agents/handoffs/latest.json",
   "git": {
-    "branch": "clean/mirror-wiki-fixes-uh2p",
-    "last_commit": "642a7c8 fix(learnings): mirror wiki PR #22 review corrections back to sources (-uh2p)",
+    "branch": "claude/test-coverage-analysis-F9XyC",
+    "last_commit": "f9657f6 fix: pre-load real workflows package in conftest to prevent sys.modules pollution",
     "status_short": [
       "M .agents/context/context_rebuild_summary.md",
       " M .agents/handoffs/auto_turn_observations.jsonl",
-      " M .agents/handoffs/claude_delegate_packet.json",
-      " M .agents/handoffs/claude_delegate_prompt.md",
       " M .agents/handoffs/closeout_telemetry_latest.json",
       " M .agents/handoffs/successor_prompt.md",
       " M .agents/handoffs/transfer_packet.json",
       " M .agents/harvest/latest.json",
-      " M .agents/locks/session_locks.sqlite3",
       " M .agents/workflows/active-graph.json",
-      " M .beads/interactions.jsonl",
-      " M .claude/settings.json",
-      " m 02_RUNTIME/runtime-engines/roach-pi",
+      " M 05_REPORTS/telemetry.jsonl",
       " M 07_LOGS_AND_AUDIT/active_sessions.sqlite3",
-      " M 07_LOGS_AND_AUDIT/budget/daily.jsonl",
-      " M 07_LOGS_AND_AUDIT/budget/forecast_latest.json",
-      " M 07_LOGS_AND_AUDIT/budget/ledger.jsonl",
       " M 07_LOGS_AND_AUDIT/budget/monthly.json",
-      " M 07_LOGS_AND_AUDIT/control_plane/routing_policy_overlay.json",
       " M 07_LOGS_AND_AUDIT/governance_intelligence/canary_snapshot_latest.json",
       " M 07_LOGS_AND_AUDIT/harness_health/latest.json",
       " M 07_LOGS_AND_AUDIT/harness_health/latest.md",
-      " M 07_LOGS_AND_AUDIT/token_governance/history.jsonl",
-      " M 07_LOGS_AND_AUDIT/token_governance/latest.json",
-      " M 07_LOGS_AND_AUDIT/token_governance/latest.md",
       " M 07_LOGS_AND_AUDIT/unified_guard/latest.json",
-      " M 12_HANDOFFS/PRE_SESSION_INVENTORY.md",
-      " M config/pre_session/inventory.snapshot.json",
-      " M docs/PRE_SESSION_AND_TOOLS.md",
       " M docs/workflows/WORKFLOW_RUN_LOG.jsonl",
-      "?? .agents/council/2026-05-31-post-mortem-auto-turn-00.md",
-      "?? .agents/handoffs/closeout_telemetry_20260531T181947Z.json",
-      "?? .agents/swarm/",
-      "?? hook_audit.json"
+      "?? .agents/council/2026-06-03-post-mortem-auto-turn-00.md",
+      "?? .agents/handoffs/closeout_telemetry_20260603T013114Z.json",
+      "?? .agents/handoffs/closeout_telemetry_20260603T013126Z.json",
+      "?? 07_LOGS_AND_AUDIT/command_matrix/"
     ]
   }
 }
