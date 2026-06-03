@@ -24,7 +24,8 @@ Dispatch / execution              →  bd ready → /crank or /implement
 - **PDRs** live in `08_PDRS/` (canonical) with area detail under `docs/pdr/<area>/`.
 - **Plans** live in `.agents/plans/` — always produced by `/plan`, never hand-waved.
 - **Tracking** is **bd only**. Never use TodoWrite / TaskCreate / markdown TODO lists.
-- Queue/handoff surfaces: `00_PLANNING/`, `12_HANDOFFS/`, `.agents/handoffs/`.
+- Queue/handoff surfaces: `07_LOGS_AND_AUDIT/review_intake/queue.json` (review-intake),
+  `12_HANDOFFS/`, `.agents/handoffs/`. Do **not** use `00_PLANNING/` (PDR zip scaffold only).
 
 ## 2. The lock model — why you MUST serialize `bd` writes
 
