@@ -1,5 +1,10 @@
 [run]
-source = 02_RUNTIME/router
+source = 02_RUNTIME
+omit =
+    */test_*.py
+    *_test.py
+    */migrations/*
+    */__pycache__/*
 
 [report]
 exclude_lines =
