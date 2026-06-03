@@ -1,6 +1,6 @@
 {
   "schema": "routing_policy_overlay/v1",
-  "generated_at": "2026-06-02T20:37:42.906298Z",
+  "generated_at": "2026-06-03T16:47:19.787249Z",
   "c_to_t_threshold": 1,
   "allow_paid_spill": false,
   "staleness_fallback": false,
@@ -10,7 +10,7 @@
   "deadband_pct": 2.0,
   "reasons": [
     "axis_d_hard_ceiling: $ cap exhausted -> forbid paid spill",
-    "under_target: projected 33.83 < 90.0 -> lower C->T bar (route C3/C4 to native_claude)",
+    "under_target: projected 18.67 < 90.0 -> lower C->T bar (route C3/C4 to native_claude)",
     "rate_limit: at C-level bound, no further move"
   ],
   "_hysteresis": {

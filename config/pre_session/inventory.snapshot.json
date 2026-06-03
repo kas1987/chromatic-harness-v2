@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-03T01:37:29.823159+00:00",
-  "repo": "/home/user/chromatic-harness-v2",
-  "mcp_descriptors_path": "/home/user/chromatic-harness-v2/tests/fixtures/mcp_minimal",
+  "generated_at": "2026-06-03T16:47:03.830998+00:00",
+  "repo": "C:\\Users\\kas41\\chromatic-harness-v2",
+  "mcp_descriptors_path": "C:\\Users\\kas41\\.cursor\\projects\\c-Users-kas41-chromatic-harness-v2\\mcps",
   "summary": {
     "native_tool_count": 15,
     "subagent_count": 9,
-    "mcp_server_count": 1,
-    "mcp_tool_count": 1,
+    "mcp_server_count": 4,
+    "mcp_tool_count": 36,
     "crg_resource_count": 15
   },
   "native_tools": [
@@ -84,11 +84,70 @@
   ],
   "mcp_servers": [
     {
-      "id": "plugin-test-server",
-      "display_name": "test-server",
-      "tool_count": 1,
+      "id": "cursor-app-control",
+      "display_name": "cursor-app-control",
+      "tool_count": 5,
       "tools": [
-        "sample_tool"
+        "create_project",
+        "move_agent_to_cloned_root",
+        "move_agent_to_root",
+        "open_automation",
+        "rename_chat"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "cursor-ide-browser",
+      "display_name": "cursor-ide-browser",
+      "tool_count": 16,
+      "tools": [
+        "browser_cdp",
+        "browser_click",
+        "browser_drag",
+        "browser_fill",
+        "browser_get_bounding_box",
+        "browser_highlight",
+        "browser_lock",
+        "browser_mouse_click_xy",
+        "browser_navigate",
+        "browser_press_key",
+        "browser_scroll",
+        "browser_select_option",
+        "browser_snapshot",
+        "browser_tabs",
+        "browser_take_screenshot",
+        "browser_type"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "user-codegraph",
+      "display_name": "codegraph",
+      "tool_count": 10,
+      "tools": [
+        "codegraph_callees",
+        "codegraph_callers",
+        "codegraph_context",
+        "codegraph_explore",
+        "codegraph_files",
+        "codegraph_impact",
+        "codegraph_node",
+        "codegraph_search",
+        "codegraph_status",
+        "codegraph_trace"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "user-review-daemon",
+      "display_name": "review-daemon",
+      "tool_count": 5,
+      "tools": [
+        "review_enqueue",
+        "review_package",
+        "review_run",
+        "review_ship",
+        "review_status"
       ],
       "status": "active"
     }

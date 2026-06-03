@@ -1,20 +1,20 @@
 {
   "schema": "dr_inventory_v1",
-  "timestamp": "20260603T013708Z",
-  "repo": "/home/user/chromatic-harness-v2",
+  "timestamp": "20260603T164608Z",
+  "repo": "C:\\Users\\kas41\\chromatic-harness-v2",
   "rto_hours": 4,
   "rpo_hours": 24,
-  "total_critical_bytes": 9177313,
-  "total_critical_human": "8.0 MB",
+  "total_critical_bytes": 490019229,
+  "total_critical_human": "467.0 MB",
   "items": [
     {
       "path": ".beads",
       "description": "Beads issue tracker (local Dolt DB + JSONL export)",
       "priority": "P1",
       "exists": true,
-      "size_bytes": 452189,
-      "size_human": "441.0 KB",
-      "last_modified": "2026-06-03T00:19:16.178935+00:00",
+      "size_bytes": 259168124,
+      "size_human": "247.0 MB",
+      "last_modified": "2026-06-03T16:45:57.486691+00:00",
       "recovery_note": "Restore from .beads/ backup; run `bd dolt pull` to sync remote."
     },
     {
@@ -22,9 +22,9 @@
       "description": "Agent handoffs, plans, council, harvest, swarm results",
       "priority": "P1",
       "exists": true,
-      "size_bytes": 1145240,
-      "size_human": "1.0 MB",
-      "last_modified": "2026-06-03T01:37:07.530221+00:00",
+      "size_bytes": 37170663,
+      "size_human": "35.0 MB",
+      "last_modified": "2026-06-03T16:45:20.381980+00:00",
       "recovery_note": "Restore from backup; re-run `python scripts/session_start.py` to rebuild state."
     },
     {
@@ -32,9 +32,9 @@
       "description": "Canon registry, governance truth artifacts",
       "priority": "P1",
       "exists": true,
-      "size_bytes": 82313,
-      "size_human": "80.0 KB",
-      "last_modified": "2026-06-03T00:19:16.205022+00:00",
+      "size_bytes": 81865,
+      "size_human": "79.0 KB",
+      "last_modified": "2026-06-03T16:36:01.787124+00:00",
       "recovery_note": "Restore from git history or backup snapshot."
     },
     {
@@ -42,9 +42,9 @@
       "description": "Telemetry, budget ledger, audit trails, security scans",
       "priority": "P2",
       "exists": true,
-      "size_bytes": 5687238,
-      "size_human": "5.0 MB",
-      "last_modified": "2026-06-03T01:37:08.345078+00:00",
+      "size_bytes": 183431944,
+      "size_human": "174.0 MB",
+      "last_modified": "2026-06-03T16:45:25.022222+00:00",
       "recovery_note": "Restore from backup. Historical logs not strictly required for operation."
     },
     {
@@ -52,9 +52,9 @@
       "description": "Agent handoff queue, session state",
       "priority": "P2",
       "exists": true,
-      "size_bytes": 39589,
-      "size_human": "38.0 KB",
-      "last_modified": "2026-06-03T00:19:16.214303+00:00",
+      "size_bytes": 40231,
+      "size_human": "39.0 KB",
+      "last_modified": "2026-06-02T20:13:15.107345+00:00",
       "recovery_note": "Restore from git or backup. Reconstruct queue from beads if lost."
     },
     {
@@ -62,9 +62,9 @@
       "description": "Runtime engines, router config, roach-pi submodule",
       "priority": "P2",
       "exists": true,
-      "size_bytes": 1723707,
-      "size_human": "1.0 MB",
-      "last_modified": "2026-06-03T01:34:28.058142+00:00",
+      "size_bytes": 10076008,
+      "size_human": "9.0 MB",
+      "last_modified": "2026-06-03T16:46:03.472634+00:00",
       "recovery_note": "Restore from git checkout + submodule update."
     },
     {
@@ -72,9 +72,9 @@
       "description": "Claude harness settings (hooks, env vars, permissions)",
       "priority": "P1",
       "exists": true,
-      "size_bytes": 2185,
+      "size_bytes": 2291,
       "size_human": "2.0 KB",
-      "last_modified": "2026-06-03T00:19:16.185857+00:00",
+      "last_modified": "2026-06-03T14:33:55.043822+00:00",
       "recovery_note": "Restore from backup. Never commit tokens \u2014 redact before backup."
     },
     {
@@ -82,9 +82,9 @@
       "description": "Pre-session inventory, config snapshots",
       "priority": "P3",
       "exists": true,
-      "size_bytes": 44852,
-      "size_human": "43.0 KB",
-      "last_modified": "2026-06-03T01:32:48.584959+00:00",
+      "size_bytes": 48103,
+      "size_human": "46.0 KB",
+      "last_modified": "2026-06-03T16:45:03.309035+00:00",
       "recovery_note": "Regenerate with `python scripts/generate_pre_session_inventory.py`."
     }
   ]

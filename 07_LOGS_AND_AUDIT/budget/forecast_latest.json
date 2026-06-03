@@ -284,15 +284,15 @@
   "axis_prepaid": {
     "weekly_quota_pct": 5.0,
     "target_pct": 90.0,
-    "pace_needed": 14.2413,
-    "projected_close_pct": 33.9325,
+    "pace_needed": 16.5844,
+    "projected_close_pct": 18.6697,
     "reset_at": "2026-06-08T19:47:43.385552+00:00",
     "status": "red",
     "fresh": true,
     "source": "manual",
-    "current_pace_pct_per_day": 4.8475,
-    "reset_days": 5.9685,
-    "under_by_pct": 56.0675
+    "current_pace_pct_per_day": 2.6671,
+    "reset_days": 5.1253,
+    "under_by_pct": 71.3303
   },
   "roi_card": {
     "routing_card": [
@@ -327,11 +327,11 @@
     ],
     "ledger_events_by_axis": {
       "P": 1913,
-      "D": 3432,
-      "F": 1271
+      "D": 3751,
+      "F": 1377
     },
     "ledger_events_by_c_level": {},
-    "ledger_rows": 6616,
+    "ledger_rows": 7041,
     "note": "spend prepaid Axis-P quota on highest complexity (C3/C4); keep C1/C2 on free local"
   },
   "dollar_forecast": {
@@ -362,8 +362,8 @@
       }
     },
     "coverage": {
-      "forecast_rows": 86,
-      "daily_ledger_rows": 4616,
+      "forecast_rows": 84,
+      "daily_ledger_rows": 203668,
       "scored_rows": 84
     },
     "recommendations": [
@@ -371,5 +371,5 @@
       "daily forecast noisy; reduce intraday projection weight"
     ]
   },
-  "portfolio_forecast_generated_at": "2026-06-02T20:33:01.537555+00:00"
+  "portfolio_forecast_generated_at": "2026-06-03T16:47:17.429095+00:00"
 }
