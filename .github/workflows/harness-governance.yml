@@ -12,6 +12,7 @@ on:
       - "docs/**"
       - "02_RUNTIME/**"
       - "tests/**"
+      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:

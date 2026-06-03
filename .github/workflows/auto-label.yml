@@ -11,11 +11,12 @@ jobs:
       - name: Generate App token
         id: app-token
         uses: actions/create-github-app-token@v1
+        continue-on-error: true
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
 
       - uses: actions/labeler@v5
         with:
-          repo-token: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+          repo-token: ${{ steps.app-token.outputs.token || github.token }}  # pragma: allowlist secret
           sync-labels: true
