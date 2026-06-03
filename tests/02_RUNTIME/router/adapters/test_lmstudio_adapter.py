@@ -1,4 +1,5 @@
 """Unit tests for LMStudioAdapter (local inference server)."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -18,6 +19,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-lms-1",
@@ -47,6 +49,7 @@ def _mock_response(status_code: int = 200, json_body: dict | None = None) -> Mag
 # Construction
 # ---------------------------------------------------------------------------
 
+
 class TestLMStudioAdapterInit:
     def test_default_construction(self):
         adapter = LMStudioAdapter()
@@ -75,6 +78,7 @@ class TestLMStudioAdapterInit:
 # ---------------------------------------------------------------------------
 # health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestLMStudioHealth:
@@ -112,15 +116,21 @@ class TestLMStudioHealth:
 # complete()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestLMStudioComplete:
     async def test_complete_success(self):
         adapter = LMStudioAdapter()
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=_mock_response(200, {
-            "choices": [{"message": {"content": "Here's the function"}}],
-            "usage": {"prompt_tokens": 8, "completion_tokens": 6, "total_tokens": 14},
-        }))
+        mock_client.post = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "choices": [{"message": {"content": "Here's the function"}}],
+                    "usage": {"prompt_tokens": 8, "completion_tokens": 6, "total_tokens": 14},
+                },
+            )
+        )
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())
@@ -141,10 +151,15 @@ class TestLMStudioComplete:
     async def test_complete_usage_tokens(self):
         adapter = LMStudioAdapter()
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=_mock_response(200, {
-            "choices": [{"message": {"content": "ok"}}],
-            "usage": {"prompt_tokens": 12, "completion_tokens": 6, "total_tokens": 18},
-        }))
+        mock_client.post = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "choices": [{"message": {"content": "ok"}}],
+                    "usage": {"prompt_tokens": 12, "completion_tokens": 6, "total_tokens": 18},
+                },
+            )
+        )
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())

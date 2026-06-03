@@ -1,4 +1,5 @@
 """Unit tests for the GoogleAdapter (google-genai SDK)."""
+
 from __future__ import annotations
 
 import os
@@ -20,6 +21,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-goog-1",
@@ -53,6 +55,7 @@ def _fake_generate_response(text: str = "Gemini response", blocked: bool = False
 # Construction
 # ---------------------------------------------------------------------------
 
+
 class TestGoogleAdapterInit:
     def test_disabled_without_key(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -78,6 +81,7 @@ class TestGoogleAdapterInit:
 # _get_client
 # ---------------------------------------------------------------------------
 
+
 class TestGoogleGetClient:
     def test_raises_adapter_error_when_sdk_missing(self):
         with patch.dict(os.environ, {"GOOGLE_API_KEY": "key"}):
@@ -99,6 +103,7 @@ class TestGoogleGetClient:
 # ---------------------------------------------------------------------------
 # health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestGoogleAdapterHealth:
@@ -136,6 +141,7 @@ class TestGoogleAdapterHealth:
 # ---------------------------------------------------------------------------
 # complete()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestGoogleAdapterComplete:
@@ -213,9 +219,7 @@ class TestGoogleAdapterComplete:
         empty_resp = MagicMock()
         empty_resp.text = ""
         empty_resp.prompt_feedback = SimpleNamespace(block_reason=None)
-        empty_resp.usage_metadata = SimpleNamespace(
-            prompt_token_count=0, candidates_token_count=0, total_token_count=0
-        )
+        empty_resp.usage_metadata = SimpleNamespace(prompt_token_count=0, candidates_token_count=0, total_token_count=0)
         mock_client.models.generate_content.return_value = empty_resp
         adapter._client = mock_client
 

@@ -14,6 +14,7 @@ def classifier():
 
 # ── Default-config (no YAML needed) fallback ────────────────────────────────
 
+
 @pytest.fixture
 def bare_classifier(tmp_path):
     """Classifier from a missing YAML path → uses _build_defaults."""
@@ -21,6 +22,7 @@ def bare_classifier(tmp_path):
 
 
 # ── C1 – simple/formatting tasks ────────────────────────────────────────────
+
 
 class TestC1Classification:
     def test_format_keyword(self, classifier):
@@ -48,6 +50,7 @@ class TestC1Classification:
 
 # ── C2 – routine/engineering tasks ──────────────────────────────────────────
 
+
 class TestC2Classification:
     def test_fix_keyword(self, classifier):
         result = classifier.classify("fix the login bug")
@@ -73,6 +76,7 @@ class TestC2Classification:
 
 # ── C3 – complex/multi-file tasks ───────────────────────────────────────────
 
+
 class TestC3Classification:
     def test_bare_root_cause_keyword(self, bare_classifier):
         result = bare_classifier.classify("root cause the production outage")
@@ -88,6 +92,7 @@ class TestC3Classification:
 
 
 # ── C4 – creative/novel tasks ────────────────────────────────────────────────
+
 
 class TestC4Classification:
     def test_bare_brainstorm_keyword(self, bare_classifier):
@@ -114,6 +119,7 @@ class TestC4Classification:
 
 # ── Default return when no keywords match ───────────────────────────────────
 
+
 class TestNoMatch:
     def test_returns_c4_with_zero_confidence(self, classifier):
         result = classifier.classify("qqqzzzaaa no keywords here at all")
@@ -127,6 +133,7 @@ class TestNoMatch:
 
 
 # ── File-count bump logic ────────────────────────────────────────────────────
+
 
 class TestFileCountBump:
     def test_c1_bumps_to_c2_with_6_files(self, bare_classifier):
@@ -173,6 +180,7 @@ class TestFileCountBump:
 
 # ── ComplexityResult fields ──────────────────────────────────────────────────
 
+
 class TestComplexityResultFields:
     def test_result_has_all_fields(self, classifier):
         result = classifier.classify("format output")
@@ -199,6 +207,7 @@ class TestComplexityResultFields:
 
 # ── Prompt influences classification ─────────────────────────────────────────
 
+
 class TestPromptInfluence:
     def test_prompt_adds_keywords(self, bare_classifier):
         result_no_prompt = bare_classifier.classify("unknown task")
@@ -216,6 +225,7 @@ class TestPromptInfluence:
 
 
 # ── Batch classify ───────────────────────────────────────────────────────────
+
 
 class TestBatchClassify:
     def test_batch_returns_correct_count(self, classifier):

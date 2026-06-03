@@ -1,4 +1,5 @@
 """Unit tests for MockAdapter (deterministic test stub adapter)."""
+
 from __future__ import annotations
 
 import pytest
@@ -21,6 +22,7 @@ from router.contracts import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_request(
     request_id: str = "req-mock-1",
     objective: str = "test objective",
@@ -39,6 +41,7 @@ def _make_request(
 # ---------------------------------------------------------------------------
 # Construction
 # ---------------------------------------------------------------------------
+
 
 class TestMockAdapterInit:
     def test_is_base_adapter(self):
@@ -62,6 +65,7 @@ class TestMockAdapterInit:
 # health()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestMockAdapterHealth:
     async def test_always_reachable(self):
@@ -76,6 +80,7 @@ class TestMockAdapterHealth:
 # ---------------------------------------------------------------------------
 # complete()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestMockAdapterComplete:
@@ -160,6 +165,7 @@ class TestMockAdapterComplete:
 # ---------------------------------------------------------------------------
 # normalize_error (inherited from BaseAdapter)
 # ---------------------------------------------------------------------------
+
 
 class TestNormalizeError:
     def test_normalize_error_returns_error_output(self):

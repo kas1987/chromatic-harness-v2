@@ -1,4 +1,5 @@
 """Unit tests for the AnthropicAdapter."""
+
 from __future__ import annotations
 
 import os
@@ -21,6 +22,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-1",
@@ -46,6 +48,7 @@ def _fake_response(content: str = "Hello!", input_tokens: int = 10, output_token
 # ---------------------------------------------------------------------------
 # Construction / configuration
 # ---------------------------------------------------------------------------
+
 
 class TestAnthropicAdapterInit:
     def test_disabled_when_no_api_key(self):
@@ -77,6 +80,7 @@ class TestAnthropicAdapterInit:
 # _get_client
 # ---------------------------------------------------------------------------
 
+
 class TestGetClient:
     def test_raises_adapter_error_when_sdk_missing(self):
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-test"}):
@@ -98,6 +102,7 @@ class TestGetClient:
 # ---------------------------------------------------------------------------
 # health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestAnthropicAdapterHealth:
@@ -135,6 +140,7 @@ class TestAnthropicAdapterHealth:
 # ---------------------------------------------------------------------------
 # complete()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestAnthropicAdapterComplete:

@@ -1,4 +1,5 @@
 """Unit tests for the OpenRouterAdapter (httpx-based, OpenAI-compatible)."""
+
 from __future__ import annotations
 
 import json
@@ -20,6 +21,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-or-1",
@@ -51,6 +53,7 @@ def _mock_httpx_response(
 # ---------------------------------------------------------------------------
 # Construction / auth header injection
 # ---------------------------------------------------------------------------
+
 
 class TestOpenRouterAdapterInit:
     def test_disabled_without_key(self):
@@ -88,6 +91,7 @@ class TestOpenRouterAdapterInit:
 # ---------------------------------------------------------------------------
 # health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestOpenRouterAdapterHealth:
@@ -136,6 +140,7 @@ class TestOpenRouterAdapterHealth:
 # complete()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestOpenRouterAdapterComplete:
     async def test_complete_disabled(self):
@@ -148,10 +153,13 @@ class TestOpenRouterAdapterComplete:
     async def test_complete_success(self):
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "or-secret"}):
             adapter = OpenRouterAdapter()
-        mock_resp = _mock_httpx_response(200, {
-            "choices": [{"message": {"content": "Router answer"}}],
-            "usage": {"prompt_tokens": 5, "completion_tokens": 3, "total_tokens": 8},
-        })
+        mock_resp = _mock_httpx_response(
+            200,
+            {
+                "choices": [{"message": {"content": "Router answer"}}],
+                "usage": {"prompt_tokens": 5, "completion_tokens": 3, "total_tokens": 8},
+            },
+        )
         mock_client = MagicMock()
         mock_client.post = AsyncMock(return_value=mock_resp)
         adapter._client = mock_client
@@ -188,10 +196,13 @@ class TestOpenRouterAdapterComplete:
     async def test_complete_usage_mapping(self):
         with patch.dict(os.environ, {"OPENROUTER_API_KEY": "or-secret"}):
             adapter = OpenRouterAdapter()
-        mock_resp = _mock_httpx_response(200, {
-            "choices": [{"message": {"content": "ok"}}],
-            "usage": {"prompt_tokens": 20, "completion_tokens": 10, "total_tokens": 30},
-        })
+        mock_resp = _mock_httpx_response(
+            200,
+            {
+                "choices": [{"message": {"content": "ok"}}],
+                "usage": {"prompt_tokens": 20, "completion_tokens": 10, "total_tokens": 30},
+            },
+        )
         mock_client = MagicMock()
         mock_client.post = AsyncMock(return_value=mock_resp)
         adapter._client = mock_client

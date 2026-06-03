@@ -1,4 +1,5 @@
 """Unit tests for NativeClaudeAdapter (relay + subprocess modes)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,6 +22,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-nc-1",
@@ -51,6 +53,7 @@ def _mock_httpx_response(status_code: int = 200, json_body: dict | None = None) 
 # ---------------------------------------------------------------------------
 # Construction
 # ---------------------------------------------------------------------------
+
 
 class TestNativeClaudeAdapterInit:
     def test_disabled_without_relay_or_cli(self):
@@ -88,6 +91,7 @@ class TestNativeClaudeAdapterInit:
 # ---------------------------------------------------------------------------
 # health() — disabled
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestNativeClaudeHealth:
@@ -134,6 +138,7 @@ class TestNativeClaudeHealth:
 # complete() — disabled
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestNativeClaudeComplete:
     async def test_complete_disabled(self):
@@ -150,10 +155,13 @@ class TestNativeClaudeComplete:
 
     async def test_complete_relay_success(self):
         adapter = _relay_adapter()
-        mock_resp = _mock_httpx_response(200, {
-            "result": "relay content",
-            "usage": {"input_tokens": 10, "output_tokens": 5},
-        })
+        mock_resp = _mock_httpx_response(
+            200,
+            {
+                "result": "relay content",
+                "usage": {"input_tokens": 10, "output_tokens": 5},
+            },
+        )
         mock_client = MagicMock()
         mock_client.post = AsyncMock(return_value=mock_resp)
         adapter._http = mock_client
@@ -165,10 +173,13 @@ class TestNativeClaudeComplete:
 
     async def test_complete_relay_usage(self):
         adapter = _relay_adapter()
-        mock_resp = _mock_httpx_response(200, {
-            "result": "answer",
-            "usage": {"input_tokens": 20, "output_tokens": 8},
-        })
+        mock_resp = _mock_httpx_response(
+            200,
+            {
+                "result": "answer",
+                "usage": {"input_tokens": 20, "output_tokens": 8},
+            },
+        )
         mock_client = MagicMock()
         mock_client.post = AsyncMock(return_value=mock_resp)
         adapter._http = mock_client
@@ -227,8 +238,9 @@ class TestNativeClaudeComplete:
         mock_proc.returncode = 0
         mock_proc.communicate = AsyncMock(return_value=(output.encode(), b""))
 
-        with patch("router.adapters.native_claude_adapter.asyncio.create_subprocess_exec",
-                   AsyncMock(return_value=mock_proc)):
+        with patch(
+            "router.adapters.native_claude_adapter.asyncio.create_subprocess_exec", AsyncMock(return_value=mock_proc)
+        ):
             resp = await adapter.complete(_make_request())
 
         assert resp.output.type == OutputType.TEXT
@@ -243,8 +255,9 @@ class TestNativeClaudeComplete:
         mock_proc.returncode = 1
         mock_proc.communicate = AsyncMock(return_value=(b"", b"error message"))
 
-        with patch("router.adapters.native_claude_adapter.asyncio.create_subprocess_exec",
-                   AsyncMock(return_value=mock_proc)):
+        with patch(
+            "router.adapters.native_claude_adapter.asyncio.create_subprocess_exec", AsyncMock(return_value=mock_proc)
+        ):
             resp = await adapter.complete(_make_request())
 
         assert resp.output.type == OutputType.ERROR
@@ -260,8 +273,9 @@ class TestNativeClaudeComplete:
         mock_proc.returncode = 0
         mock_proc.communicate = AsyncMock(return_value=(output.encode(), b""))
 
-        with patch("router.adapters.native_claude_adapter.asyncio.create_subprocess_exec",
-                   AsyncMock(return_value=mock_proc)):
+        with patch(
+            "router.adapters.native_claude_adapter.asyncio.create_subprocess_exec", AsyncMock(return_value=mock_proc)
+        ):
             resp = await adapter.complete(_make_request())
 
         assert resp.output.type == OutputType.ERROR
@@ -275,8 +289,9 @@ class TestNativeClaudeComplete:
         mock_proc.returncode = None
         mock_proc.communicate = AsyncMock(side_effect=asyncio.TimeoutError())
 
-        with patch("router.adapters.native_claude_adapter.asyncio.create_subprocess_exec",
-                   AsyncMock(return_value=mock_proc)):
+        with patch(
+            "router.adapters.native_claude_adapter.asyncio.create_subprocess_exec", AsyncMock(return_value=mock_proc)
+        ):
             resp = await adapter.complete(_make_request())
 
         assert resp.output.type == OutputType.ERROR

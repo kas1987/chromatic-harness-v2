@@ -1,4 +1,5 @@
 """Unit tests for OpenHumanAdapter (sidecar, read-only by default)."""
+
 from __future__ import annotations
 
 import os
@@ -19,6 +20,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-oh-1",
@@ -48,6 +50,7 @@ def _mock_httpx_response(status_code: int = 200, json_body: dict | str | None = 
 # ---------------------------------------------------------------------------
 # Construction
 # ---------------------------------------------------------------------------
+
 
 class TestOpenHumanAdapterInit:
     def test_disabled_by_default(self):
@@ -85,20 +88,33 @@ class TestOpenHumanAdapterInit:
 # health()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestOpenHumanHealth:
     async def test_health_disabled(self):
-        adapter = OpenHumanAdapter({"enabled": False, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": False,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         health = await adapter.health()
         assert health.reachable is False
         assert "disabled" in health.error
 
     async def test_health_200(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         mock_resp = _mock_httpx_response(200)
         mock_async_client = MagicMock()
         mock_async_client.__aenter__ = AsyncMock(return_value=MagicMock(get=AsyncMock(return_value=mock_resp)))
@@ -109,9 +125,15 @@ class TestOpenHumanHealth:
         assert health.reachable is True
 
     async def test_health_non_200(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         mock_resp = _mock_httpx_response(503)
         mock_async_client = MagicMock()
         mock_async_client.__aenter__ = AsyncMock(return_value=MagicMock(get=AsyncMock(return_value=mock_resp)))
@@ -127,12 +149,19 @@ class TestOpenHumanHealth:
 # complete() — disabled
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestOpenHumanComplete:
     async def test_complete_disabled_returns_error_response(self):
-        adapter = OpenHumanAdapter({"enabled": False, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": False,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         resp = await adapter.complete(_make_request())
         assert resp.output.type == OutputType.ERROR
         assert resp.route_reason == "openhuman_disabled"
@@ -142,18 +171,30 @@ class TestOpenHumanComplete:
     # ---------------------------------------------------------------------------
 
     async def test_write_action_blocked_in_readonly_mode(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         req = _make_request(metadata={"action": "send_email"})
         resp = await adapter.complete(req)
         assert resp.output.type == OutputType.ERROR
         assert "read-only" in resp.output.content.lower() or "read_only" in resp.route_reason
 
     async def test_hard_write_actions_always_blocked(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         for action in ["delete_files", "write_chromatic_memory", "modify_calendar"]:
             req = _make_request(metadata={"action": action})
             resp = await adapter.complete(req)
@@ -164,9 +205,15 @@ class TestOpenHumanComplete:
     # ---------------------------------------------------------------------------
 
     async def test_memory_search_allowed(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         mock_resp = _mock_httpx_response(200, {"result": "memory found"})
         mock_async_client = MagicMock()
         inner_client = MagicMock()
@@ -179,13 +226,20 @@ class TestOpenHumanComplete:
             resp = await adapter.complete(req)
 
         assert resp.output.type != OutputType.ERROR or resp.route_reason not in (
-            "openhuman_readonly_blocked", "openhuman_write_blocked"
+            "openhuman_readonly_blocked",
+            "openhuman_write_blocked",
         )
 
     async def test_complete_success_json_response(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         response_data = {"answer": "context result"}
         mock_resp = _mock_httpx_response(200, response_data)
         mock_async_client = MagicMock()
@@ -203,9 +257,15 @@ class TestOpenHumanComplete:
         assert resp.route_reason == "openhuman_ok"
 
     async def test_complete_http_error_response(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         mock_resp = _mock_httpx_response(500)
         mock_async_client = MagicMock()
         inner_client = MagicMock()
@@ -221,9 +281,15 @@ class TestOpenHumanComplete:
         assert resp.route_reason == "openhuman_http_error"
 
     async def test_complete_exception_returns_error(self):
-        adapter = OpenHumanAdapter({"enabled": True, "base_url": "http://127.0.0.1:8787",
-                                    "env_key": "OPENHUMAN_BEARER_TOKEN", "privacy_max": "P2",
-                                    "default_mode": "read_only"})
+        adapter = OpenHumanAdapter(
+            {
+                "enabled": True,
+                "base_url": "http://127.0.0.1:8787",
+                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "privacy_max": "P2",
+                "default_mode": "read_only",
+            }
+        )
         mock_async_client = MagicMock()
         inner_client = MagicMock()
         inner_client.post = AsyncMock(side_effect=httpx.ConnectError("refused"))
@@ -241,6 +307,7 @@ class TestOpenHumanComplete:
 # ---------------------------------------------------------------------------
 # _action_from_request (sync, separate class)
 # ---------------------------------------------------------------------------
+
 
 class TestOpenHumanActionFromRequest:
     def test_action_from_metadata(self):

@@ -1,4 +1,5 @@
 """Unit tests for OllamaRemoteAdapter (and OllamaAdapter which wraps it)."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -19,6 +20,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-ollama-1",
@@ -42,15 +44,14 @@ def _make_remote_adapter(host: str = "localhost", port: int = 11434, model: str 
 def _mock_response(status_code: int = 200, json_body: dict | None = None) -> MagicMock:
     resp = MagicMock(spec=httpx.Response)
     resp.status_code = status_code
-    resp.json.return_value = json_body or {
-        "message": {"content": "Ollama says hello!"}
-    }
+    resp.json.return_value = json_body or {"message": {"content": "Ollama says hello!"}}
     return resp
 
 
 # ---------------------------------------------------------------------------
 # OllamaRemoteAdapter — construction
 # ---------------------------------------------------------------------------
+
 
 class TestOllamaRemoteAdapterInit:
     def test_basic_construction(self):
@@ -72,6 +73,7 @@ class TestOllamaRemoteAdapterInit:
 # ---------------------------------------------------------------------------
 # OllamaRemoteAdapter — health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestOllamaRemoteHealth:
@@ -111,6 +113,7 @@ class TestOllamaRemoteHealth:
 # ---------------------------------------------------------------------------
 # OllamaRemoteAdapter — complete()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestOllamaRemoteComplete:
@@ -213,6 +216,7 @@ class TestOllamaRemoteComplete:
 # ---------------------------------------------------------------------------
 # OllamaAdapter (local wrapper)
 # ---------------------------------------------------------------------------
+
 
 class TestOllamaAdapterWrapper:
     def test_default_construction(self):

@@ -13,6 +13,7 @@ from router.context_detector import RuntimeContext
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 
+
 def _complexity(level: str = "C1") -> ComplexityResult:
     return ComplexityResult(
         level=level,  # type: ignore[arg-type]
@@ -57,14 +58,13 @@ def selector():
 @pytest.fixture
 def selector_from(tmp_path):
     """Create a ProviderSelector with custom YAML configs."""
+
     def _make(routing_table: dict, providers: dict | None = None, prefs: dict | None = None) -> ProviderSelector:
         rt_path = tmp_path / "routing-table.yaml"
         rt_path.write_text(yaml.dump(routing_table), encoding="utf-8")
 
         providers_path = tmp_path / "providers.yaml"
-        providers_path.write_text(
-            yaml.dump({"providers": providers or {}}), encoding="utf-8"
-        )
+        providers_path.write_text(yaml.dump({"providers": providers or {}}), encoding="utf-8")
 
         prefs_path = tmp_path / "user-preferences.yaml"
         if prefs:
@@ -76,6 +76,7 @@ def selector_from(tmp_path):
         openrouter_path.write_text(yaml.dump({"models": []}), encoding="utf-8")
 
         from router.policy import PolicyLoader
+
         pl = PolicyLoader(config_dir=tmp_path)
 
         return ProviderSelector(
@@ -84,10 +85,12 @@ def selector_from(tmp_path):
             openrouter_models_path=openrouter_path,
             policy_loader=pl,
         )
+
     return _make
 
 
 # ── SelectionResult structure ─────────────────────────────────────────────────
+
 
 class TestSelectionResultStructure:
     def test_returns_selection_result(self, selector):
@@ -113,6 +116,7 @@ class TestSelectionResultStructure:
 
 # ── Speed mode resolution ─────────────────────────────────────────────────────
 
+
 class TestSpeedModeResolution:
     def test_offline_forces_low(self, selector):
         result = selector.select(_complexity("C1"), _context(internet=False))
@@ -137,6 +141,7 @@ class TestSpeedModeResolution:
 
 # ── Context key resolution ────────────────────────────────────────────────────
 
+
 class TestContextKeyResolution:
     def test_laptop_no_remote(self, selector):
         key = ProviderSelector._resolve_context_key(_context(device_type="laptop"))
@@ -160,6 +165,7 @@ class TestContextKeyResolution:
 
 
 # ── Tier inference ────────────────────────────────────────────────────────────
+
 
 class TestTierInference:
     def test_ollama_local_is_tier_0(self):
@@ -189,16 +195,11 @@ class TestTierInference:
 
 # ── Routing table lookup ──────────────────────────────────────────────────────
 
+
 class TestRoutingTableLookup:
     def test_providers_returned_from_table(self, selector_from):
         sel = selector_from(
-            routing_table={
-                "context_laptop": {
-                    "balance": {
-                        "C1": ["ollama_local:llama3.2:3b", "lmstudio"]
-                    }
-                }
-            }
+            routing_table={"context_laptop": {"balance": {"C1": ["ollama_local:llama3.2:3b", "lmstudio"]}}}
         )
         choices = sel._lookup_routing_table("context_laptop", "balance", "C1")
         assert len(choices) == 2
@@ -213,16 +214,12 @@ class TestRoutingTableLookup:
         assert choices == []
 
     def test_missing_mode_returns_empty(self, selector_from):
-        sel = selector_from(
-            routing_table={"context_laptop": {"speed": {"C1": ["ollama_local"]}}}
-        )
+        sel = selector_from(routing_table={"context_laptop": {"speed": {"C1": ["ollama_local"]}}})
         choices = sel._lookup_routing_table("context_laptop", "balance", "C1")
         assert choices == []
 
     def test_provider_without_model_suffix(self, selector_from):
-        sel = selector_from(
-            routing_table={"context_laptop": {"balance": {"C2": ["lmstudio"]}}}
-        )
+        sel = selector_from(routing_table={"context_laptop": {"balance": {"C2": ["lmstudio"]}}})
         choices = sel._lookup_routing_table("context_laptop", "balance", "C2")
         assert choices[0].provider == "lmstudio"
         assert choices[0].model is None
@@ -230,11 +227,10 @@ class TestRoutingTableLookup:
 
 # ── Availability filtering ────────────────────────────────────────────────────
 
+
 class TestAvailabilityFiltering:
     def test_ollama_local_removed_when_not_reachable(self, selector_from):
-        sel = selector_from(
-            routing_table={"context_laptop": {"balance": {"C1": ["ollama_local:llama3.2:3b"]}}}
-        )
+        sel = selector_from(routing_table={"context_laptop": {"balance": {"C1": ["ollama_local:llama3.2:3b"]}}})
         choices = [ProviderChoice(provider="ollama_local", model="llama3.2:3b", tier=0, reason="test")]
         ctx = _context(ollama_local=False, internet=True)
         result = sel._filter_by_availability(choices, ctx)
@@ -268,6 +264,7 @@ class TestAvailabilityFiltering:
 
 
 # ── Privacy filtering ─────────────────────────────────────────────────────────
+
 
 class TestPrivacyFiltering:
     def test_cloud_blocked_for_p3(self, selector_from):
@@ -307,6 +304,7 @@ class TestPrivacyFiltering:
 
 # ── Blocklist ────────────────────────────────────────────────────────────────
 
+
 class TestBlocklist:
     def test_blocklisted_provider_removed(self, selector_from):
         sel = selector_from(
@@ -330,6 +328,7 @@ class TestBlocklist:
 
 
 # ── Preference override ──────────────────────────────────────────────────────
+
 
 class TestPreferenceOverride:
     def test_preferred_moved_to_front(self, selector_from):
@@ -366,6 +365,7 @@ class TestPreferenceOverride:
 
 
 # ── Speed-mode prefs ──────────────────────────────────────────────────────────
+
 
 class TestSpeedModeFromPrefs:
     def test_prefs_speed_mode_respected(self, selector_from):

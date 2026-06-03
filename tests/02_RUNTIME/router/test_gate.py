@@ -28,6 +28,7 @@ from router.pipeline.advisory import overlay_advisory, context_gate_advisory
 
 # ── _has_tool_use ─────────────────────────────────────────────────────────────
 
+
 class TestHasToolUse:
     def test_bash_detected(self):
         assert gate_mod._has_tool_use("run bash command") is True
@@ -66,6 +67,7 @@ class TestHasToolUse:
 
 # ── _overlay_advisory ─────────────────────────────────────────────────────────
 
+
 class TestOverlayAdvisory:
     def test_returns_empty_when_no_file(self, tmp_path, monkeypatch):
         monkeypatch.setattr(gate_mod, "_REPO", tmp_path)
@@ -90,11 +92,13 @@ class TestOverlayAdvisory:
         overlay_dir.mkdir(parents=True)
         overlay_file = overlay_dir / "routing_policy_overlay.json"
         overlay_file.write_text(
-            json.dumps({
-                "c_to_t_threshold": 2,
-                "allow_paid_spill": True,
-                "staleness_fallback": True,
-            }),
+            json.dumps(
+                {
+                    "c_to_t_threshold": 2,
+                    "allow_paid_spill": True,
+                    "staleness_fallback": True,
+                }
+            ),
             encoding="utf-8",
         )
         monkeypatch.setattr(gate_mod, "_REPO", tmp_path)
@@ -112,6 +116,7 @@ class TestOverlayAdvisory:
 
 
 # ── read_stdin ────────────────────────────────────────────────────────────────
+
 
 class TestReadStdin:
     def test_empty_stdin_returns_empty_dict(self, monkeypatch):
@@ -138,6 +143,7 @@ class TestReadStdin:
 
 # ── emit_advisory and emit_deny ───────────────────────────────────────────────
 
+
 class TestEmitAdvisory:
     def test_emit_advisory_writes_json(self, capsys):
         emit_advisory("ROUTER: test advisory")
@@ -161,6 +167,7 @@ class TestEmitAdvisory:
 
 
 # ── extract_file_refs and count_impacted ─────────────────────────────────────
+
 
 class TestExtractFileRefs:
     def test_no_file_refs_returns_empty(self):
@@ -186,6 +193,7 @@ class TestExtractFileRefs:
 
 # ── impact_fan_out ────────────────────────────────────────────────────────────
 
+
 class TestImpactFanOut:
     def test_returns_none_when_disabled(self, monkeypatch):
         monkeypatch.setattr("router.pipeline.impact.IMPACT_ENABLED", False)
@@ -200,6 +208,7 @@ class TestImpactFanOut:
 
 
 # ── cost_estimate_usd ─────────────────────────────────────────────────────────
+
 
 class TestCostEstimateUsd:
     def test_zero_tokens_returns_zero(self):
@@ -228,6 +237,7 @@ class TestCostEstimateUsd:
 
 # ── billing_for_route ─────────────────────────────────────────────────────────
 
+
 class TestBillingForRoute:
     def test_returns_dict_with_required_keys(self):
         result = billing_for_route("mock")
@@ -248,6 +258,7 @@ class TestBillingForRoute:
 
 # ── main() gate logic (blocked via shouldBlock) ──────────────────────────────
 
+
 class TestMainGateLogic:
     """Test the blocking decision logic extracted from main()."""
 
@@ -266,15 +277,17 @@ class TestMainGateLogic:
 
     def test_haiku_model_cap_blocks(self, monkeypatch, capsys):
         """Caller requesting haiku but classifier returning tier>1 should block."""
-        payload = json.dumps({
-            "tool_name": "Agent",
-            "tool_input": {
-                "description": "write unit tests",
-                "prompt": "",
-                "subagent_type": "general-purpose",
-                "model": "haiku",
-            },
-        })
+        payload = json.dumps(
+            {
+                "tool_name": "Agent",
+                "tool_input": {
+                    "description": "write unit tests",
+                    "prompt": "",
+                    "subagent_type": "general-purpose",
+                    "model": "haiku",
+                },
+            }
+        )
         monkeypatch.setattr("sys.stdin", MagicMock(read=lambda: payload))
 
         with patch("router.gate.log_entry"), patch("router.gate.audit_router_decision"):
@@ -288,15 +301,17 @@ class TestMainGateLogic:
 
     def test_opus_model_always_allowed(self, monkeypatch, capsys):
         """Caller requesting opus should always be allowed (native_claude, tier 4)."""
-        payload = json.dumps({
-            "tool_name": "Agent",
-            "tool_input": {
-                "description": "complex architecture task",
-                "prompt": "",
-                "subagent_type": "general-purpose",
-                "model": "opus",
-            },
-        })
+        payload = json.dumps(
+            {
+                "tool_name": "Agent",
+                "tool_input": {
+                    "description": "complex architecture task",
+                    "prompt": "",
+                    "subagent_type": "general-purpose",
+                    "model": "opus",
+                },
+            }
+        )
         monkeypatch.setattr("sys.stdin", MagicMock(read=lambda: payload))
 
         with patch("router.gate.log_entry"), patch("router.gate.audit_router_decision"):

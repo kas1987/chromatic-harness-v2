@@ -1,4 +1,5 @@
 """Unit tests for KimiAdapter (Moonshot AI)."""
+
 from __future__ import annotations
 
 import os
@@ -19,6 +20,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-kimi-1",
@@ -47,6 +49,7 @@ def _mock_response(status_code: int = 200, json_body: dict | None = None) -> Mag
 # ---------------------------------------------------------------------------
 # Construction
 # ---------------------------------------------------------------------------
+
 
 class TestKimiAdapterInit:
     def test_disabled_without_key(self):
@@ -89,6 +92,7 @@ class TestKimiAdapterInit:
 # health()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestKimiHealth:
     async def test_health_disabled(self):
@@ -126,6 +130,7 @@ class TestKimiHealth:
 # complete()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestKimiComplete:
     async def test_complete_disabled(self):
@@ -141,10 +146,15 @@ class TestKimiComplete:
             mp.setenv("MOONSHOT_API_KEY", "moonshot-secret")
             adapter = KimiAdapter()
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=_mock_response(200, {
-            "choices": [{"message": {"content": "Kimi long answer"}}],
-            "usage": {"prompt_tokens": 80, "completion_tokens": 40, "total_tokens": 120},
-        }))
+        mock_client.post = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "choices": [{"message": {"content": "Kimi long answer"}}],
+                    "usage": {"prompt_tokens": 80, "completion_tokens": 40, "total_tokens": 120},
+                },
+            )
+        )
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())
@@ -180,10 +190,15 @@ class TestKimiComplete:
             mp.setenv("MOONSHOT_API_KEY", "moonshot-secret")
             adapter = KimiAdapter()
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=_mock_response(200, {
-            "choices": [{"message": {"content": "ok"}}],
-            "usage": {"prompt_tokens": 50, "completion_tokens": 25, "total_tokens": 75},
-        }))
+        mock_client.post = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "choices": [{"message": {"content": "ok"}}],
+                    "usage": {"prompt_tokens": 50, "completion_tokens": 25, "total_tokens": 75},
+                },
+            )
+        )
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())

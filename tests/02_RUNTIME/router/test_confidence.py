@@ -32,6 +32,7 @@ def _make_req(score: float, band: ConfidenceBand | None = None) -> RouteRequest:
 
 # ── band_from_score ──────────────────────────────────────────────────────────
 
+
 class TestBandFromScore:
     def test_very_high_at_90(self):
         assert ConfidenceGate.band_from_score(90.0) == ConfidenceBand.VERY_HIGH
@@ -85,6 +86,7 @@ class TestBandFromScore:
 
 # ── score calculation ────────────────────────────────────────────────────────
 
+
 class TestScoreCalculation:
     def test_all_zeros_returns_zero(self):
         s = ConfidenceGate.score({})
@@ -115,10 +117,18 @@ class TestScoreCalculation:
 
     def test_weights_sum(self):
         """Verify the weighting totals to 1.0 by testing all at 50."""
-        inputs = {k: 50.0 for k in [
-            "objective_clarity", "provider_fit", "privacy_risk_clarity",
-            "cost_fit", "context_sufficiency", "reversibility", "testability"
-        ]}
+        inputs = {
+            k: 50.0
+            for k in [
+                "objective_clarity",
+                "provider_fit",
+                "privacy_risk_clarity",
+                "cost_fit",
+                "context_sufficiency",
+                "reversibility",
+                "testability",
+            ]
+        }
         result = ConfidenceGate.score(inputs)
         assert abs(result - 50.0) < 0.01
 
@@ -133,6 +143,7 @@ class TestScoreCalculation:
 
 
 # ── check() gate ─────────────────────────────────────────────────────────────
+
 
 class TestConfidenceGateCheck:
     def test_passes_at_60(self):

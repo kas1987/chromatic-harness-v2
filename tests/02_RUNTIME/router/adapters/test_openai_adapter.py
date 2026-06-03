@@ -1,4 +1,5 @@
 """Unit tests for the OpenAIAdapter."""
+
 from __future__ import annotations
 
 import os
@@ -20,6 +21,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-oai-1",
@@ -50,6 +52,7 @@ def _fake_completion(content: str = "GPT says hi", prompt_tokens: int = 12, comp
 # Construction
 # ---------------------------------------------------------------------------
 
+
 class TestOpenAIAdapterInit:
     def test_disabled_without_key(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -75,6 +78,7 @@ class TestOpenAIAdapterInit:
 # _get_client
 # ---------------------------------------------------------------------------
 
+
 class TestOpenAIGetClient:
     def test_raises_adapter_error_when_sdk_missing(self):
         with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test"}):
@@ -96,6 +100,7 @@ class TestOpenAIGetClient:
 # ---------------------------------------------------------------------------
 # health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestOpenAIAdapterHealth:
@@ -134,6 +139,7 @@ class TestOpenAIAdapterHealth:
 # ---------------------------------------------------------------------------
 # complete()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestOpenAIAdapterComplete:

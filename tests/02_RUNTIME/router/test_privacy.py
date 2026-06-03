@@ -38,6 +38,7 @@ def _make_req(
 
 # ── classify_text ────────────────────────────────────────────────────────────
 
+
 class TestClassifyText:
     @pytest.fixture
     def gate(self):
@@ -101,6 +102,7 @@ class TestClassifyText:
 
 
 # ── check() gate decisions ───────────────────────────────────────────────────
+
 
 class TestPrivacyGateCheck:
     @pytest.fixture
@@ -172,6 +174,7 @@ class TestPrivacyGateCheck:
 
 
 # ── PrivacyGate initialization ───────────────────────────────────────────────
+
 
 class TestPrivacyGateInit:
     def test_default_init(self):

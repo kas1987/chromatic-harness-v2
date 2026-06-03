@@ -1,4 +1,5 @@
 """Unit tests for the FeatherlessAdapter."""
+
 from __future__ import annotations
 
 import os
@@ -19,6 +20,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-fl-1",
@@ -47,6 +49,7 @@ def _mock_response(status_code: int = 200, json_body: dict | None = None) -> Mag
 # ---------------------------------------------------------------------------
 # Construction / auth
 # ---------------------------------------------------------------------------
+
 
 class TestFeatherlessAdapterInit:
     def test_disabled_without_key(self):
@@ -81,6 +84,7 @@ class TestFeatherlessAdapterInit:
 # ---------------------------------------------------------------------------
 # health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestFeatherlessHealth:
@@ -131,6 +135,7 @@ class TestFeatherlessHealth:
 # complete()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestFeatherlessComplete:
     async def test_complete_disabled(self):
@@ -146,10 +151,15 @@ class TestFeatherlessComplete:
             mp.setenv("FEATHERLESS_API_KEY", "fl-secret")
             adapter = FeatherlessAdapter()
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=_mock_response(200, {
-            "choices": [{"message": {"content": "classified!"}}],
-            "usage": {"prompt_tokens": 5, "completion_tokens": 2, "total_tokens": 7},
-        }))
+        mock_client.post = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "choices": [{"message": {"content": "classified!"}}],
+                    "usage": {"prompt_tokens": 5, "completion_tokens": 2, "total_tokens": 7},
+                },
+            )
+        )
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())
@@ -174,10 +184,15 @@ class TestFeatherlessComplete:
             mp.setenv("FEATHERLESS_API_KEY", "fl-secret")
             adapter = FeatherlessAdapter()
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=_mock_response(200, {
-            "choices": [{"message": {"content": "ok"}}],
-            "usage": {"prompt_tokens": 15, "completion_tokens": 7, "total_tokens": 22},
-        }))
+        mock_client.post = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "choices": [{"message": {"content": "ok"}}],
+                    "usage": {"prompt_tokens": 15, "completion_tokens": 7, "total_tokens": 22},
+                },
+            )
+        )
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())

@@ -1,4 +1,5 @@
 """Unit tests for PrismOrchestratorAdapter."""
+
 from __future__ import annotations
 
 import os
@@ -19,6 +20,7 @@ from router.contracts import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request(
     request_id: str = "req-prism-1",
@@ -51,6 +53,7 @@ def _mock_response(status_code: int = 200, json_body: dict | None = None) -> Mag
 # Construction
 # ---------------------------------------------------------------------------
 
+
 class TestPrismOrchestratorAdapterInit:
     def test_disabled_by_default(self):
         with patch.dict(os.environ, {}, clear=True):
@@ -77,6 +80,7 @@ class TestPrismOrchestratorAdapterInit:
 # ---------------------------------------------------------------------------
 # health()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 class TestPrismHealth:
@@ -120,6 +124,7 @@ class TestPrismHealth:
 # complete()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 class TestPrismComplete:
     async def test_complete_disabled(self):
@@ -153,11 +158,16 @@ class TestPrismComplete:
     async def test_complete_ok_false_returns_error(self):
         adapter = _enabled_adapter()
         mock_client = MagicMock()
-        mock_client.post = AsyncMock(return_value=_mock_response(200, {
-            "ok": False,
-            "error": "upstream failure",
-            "output": None,
-        }))
+        mock_client.post = AsyncMock(
+            return_value=_mock_response(
+                200,
+                {
+                    "ok": False,
+                    "error": "upstream failure",
+                    "output": None,
+                },
+            )
+        )
         adapter._client = mock_client
 
         resp = await adapter.complete(_make_request())

@@ -28,6 +28,7 @@ from router.confidence import ConfidenceGate
 
 # ── Fake adapter for testing ──────────────────────────────────────────────────
 
+
 class FakeAdapter(BaseAdapter):
     def __init__(self, name: str, *, mode: str = "ok", enabled: bool = True):
         super().__init__(name, {"enabled": enabled})
@@ -55,6 +56,7 @@ class FakeAdapter(BaseAdapter):
 
 
 # ── Helper factories ──────────────────────────────────────────────────────────
+
 
 def _make_req(
     privacy_class: PrivacyClass = PrivacyClass.P1,
@@ -95,6 +97,7 @@ def _router_with_mock() -> ChromaticRouter:
 
 
 # ── Basic routing ─────────────────────────────────────────────────────────────
+
 
 class TestBasicRouting:
     @pytest.mark.asyncio
@@ -152,6 +155,7 @@ class TestBasicRouting:
 
 # ── Privacy gate blocking ─────────────────────────────────────────────────────
 
+
 class TestPrivacyGateBlocking:
     @pytest.mark.asyncio
     async def test_p3_blocked(self):
@@ -201,6 +205,7 @@ class TestPrivacyGateBlocking:
 
 # ── Confidence gate blocking ───────────────────────────────────────────────────
 
+
 class TestConfidenceGateBlocking:
     @pytest.mark.asyncio
     async def test_below_60_blocked(self):
@@ -234,6 +239,7 @@ class TestConfidenceGateBlocking:
 
 
 # ── Fallback logic ────────────────────────────────────────────────────────────
+
 
 class TestFallbackLogic:
     @pytest.mark.asyncio
@@ -291,6 +297,7 @@ class TestFallbackLogic:
 
 # ── Adapter alias resolution ───────────────────────────────────────────────────
 
+
 class TestAdapterAliasResolution:
     def test_ollama_local_resolves_to_ollama(self):
         router = _router_with_mock()
@@ -319,6 +326,7 @@ class TestAdapterAliasResolution:
 
 
 # ── _build_request convenience method ────────────────────────────────────────
+
 
 class TestBuildRequest:
     @pytest.mark.asyncio
@@ -354,20 +362,25 @@ class TestBuildRequest:
 
 # ── Request prompt text extraction ───────────────────────────────────────────
 
+
 class TestRequestPromptText:
     def test_extracts_string_content_messages(self):
-        req = _make_req(messages=[
-            {"role": "user", "content": "hello world"},
-            {"role": "assistant", "content": "hi there"},
-        ])
+        req = _make_req(
+            messages=[
+                {"role": "user", "content": "hello world"},
+                {"role": "assistant", "content": "hi there"},
+            ]
+        )
         text = ChromaticRouter._request_prompt_text(req)
         assert "hello world" in text
         assert "hi there" in text
 
     def test_extracts_list_content_messages(self):
-        req = _make_req(messages=[
-            {"role": "user", "content": [{"type": "text", "text": "nested content"}]},
-        ])
+        req = _make_req(
+            messages=[
+                {"role": "user", "content": [{"type": "text", "text": "nested content"}]},
+            ]
+        )
         text = ChromaticRouter._request_prompt_text(req)
         assert "nested content" in text
 
@@ -383,15 +396,18 @@ class TestRequestPromptText:
         assert text == ""
 
     def test_ignores_empty_content(self):
-        req = _make_req(messages=[
-            {"role": "user", "content": ""},
-            {"role": "user", "content": "real content"},
-        ])
+        req = _make_req(
+            messages=[
+                {"role": "user", "content": ""},
+                {"role": "user", "content": "real content"},
+            ]
+        )
         text = ChromaticRouter._request_prompt_text(req)
         assert text == "real content"
 
 
 # ── Provider availability ─────────────────────────────────────────────────────
+
 
 class TestProviderAvailability:
     def test_mock_available(self):
