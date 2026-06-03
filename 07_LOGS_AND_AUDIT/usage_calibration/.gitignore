@@ -5,4 +5,5 @@ wtok_events.jsonl
 calibrated_caps.json
 calibration_history.jsonl
 ingest_state.json
+epochs.json
 # weight_table.json IS source/config and is committed.

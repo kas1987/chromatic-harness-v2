@@ -23,6 +23,7 @@ WTOK_EVENTS = CALIB_DIR / "wtok_events.jsonl"
 CALIBRATION_HISTORY = CALIB_DIR / "calibration_history.jsonl"
 CALIBRATED_CAPS = CALIB_DIR / "calibrated_caps.json"
 INGEST_STATE = CALIB_DIR / "ingest_state.json"
+EPOCHS = CALIB_DIR / "epochs.json"
 
 EDGE_SNAPSHOTS = EDGE_USAGE_DIR / "snapshots.jsonl"
 EDGE_CALIBRATED_CAPS = EDGE_USAGE_DIR / "calibrated_caps.json"  # feedback copy for statusline

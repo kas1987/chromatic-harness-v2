@@ -108,6 +108,7 @@ def test_calibrate_end_to_end(tmp_path, monkeypatch):
     monkeypatch.setattr(L, "CALIBRATED_CAPS", caps)
     monkeypatch.setattr(L, "EDGE_CALIBRATED_CAPS", edge)
     monkeypatch.setattr(L, "CALIBRATION_HISTORY", hist)
+    monkeypatch.setattr(L, "EPOCHS", tmp_path / "epochs.json")
 
     # 5 evenly-spaced events of 1000 wtok each; 5h pct climbs 1%/event.
     for i, ts in enumerate([100, 200, 300, 400, 500, 600], start=1):
@@ -127,3 +128,80 @@ def test_calibrate_end_to_end(tmp_path, monkeypatch):
     # Idempotent: same inputs => identical caps
     out2 = C.calibrate()
     assert out2["five_hour"]["cap_wtok"] == out["five_hour"]["cap_wtok"]
+    assert out["epoch_id"] == "e1"  # fresh registry starts at epoch e1
+
+
+# ── Epochs & regime detection (P2) ───────────────────────────────────────────
+def _point_paths_to_tmp(tmp_path, monkeypatch):
+    for attr, name in [("WTOK_EVENTS", "wtok_events.jsonl"),
+                       ("SNAPSHOTS_ARCHIVE", "snapshots_archive.jsonl"),
+                       ("CALIBRATED_CAPS", "calibrated_caps.json"),
+                       ("EDGE_CALIBRATED_CAPS", "edge_caps.json"),
+                       ("CALIBRATION_HISTORY", "calibration_history.jsonl"),
+                       ("EPOCHS", "epochs.json")]:
+        monkeypatch.setattr(L, attr, tmp_path / name)
+
+
+def test_detect_regime_opens_new_epoch_after_sustained_shift(tmp_path, monkeypatch):
+    _point_paths_to_tmp(tmp_path, monkeypatch)
+    # Establish an e1 baseline of ~100k via history.
+    for _ in range(3):
+        L.append_jsonl(L.CALIBRATION_HISTORY,
+                       {"epoch_id": "e1", "five_hour": {"confidence": "ok", "cap_wtok": 100000}})
+    epochs = {"epochs": [{"id": "e1", "start_ts": 0}], "current": "e1", "regime_streak": 0}
+    epoch = epochs["epochs"][0]
+    epoch["_latest_ts"] = 1000
+    shifted = {"five_hour": {"confidence": "ok", "cap_wtok": 200000},  # +100% vs baseline
+               "seven_day": {"confidence": "none", "cap_wtok": None}}
+
+    epochs, ep, r1 = C._detect_regime(epochs, epoch, shifted)
+    epochs, ep, r2 = C._detect_regime(epochs, ep, shifted)
+    epochs, ep, r3 = C._detect_regime(epochs, ep, shifted)
+    assert r1 is None and r2 is None       # streak building (< REGIME_CONFIRM)
+    assert r3 is not None                   # 3rd consecutive shift => new epoch
+    assert epochs["current"] == "e2"
+    assert ep["start_ts"] == 1000           # new epoch anchored at latest snapshot ts
+
+
+def test_detect_regime_resets_streak_when_stable(tmp_path, monkeypatch):
+    _point_paths_to_tmp(tmp_path, monkeypatch)
+    for _ in range(3):
+        L.append_jsonl(L.CALIBRATION_HISTORY,
+                       {"epoch_id": "e1", "five_hour": {"confidence": "ok", "cap_wtok": 100000}})
+    epochs = {"epochs": [{"id": "e1", "start_ts": 0}], "current": "e1", "regime_streak": 2}
+    epoch = epochs["epochs"][0]
+    stable = {"five_hour": {"confidence": "ok", "cap_wtok": 105000},  # +5% only
+              "seven_day": {"confidence": "none", "cap_wtok": None}}
+    epochs, ep, r = C._detect_regime(epochs, epoch, stable)
+    assert r is None and epochs["regime_streak"] == 0 and epochs["current"] == "e1"
+
+
+def test_recompute_from_ts_does_not_mutate_state(tmp_path, monkeypatch):
+    _point_paths_to_tmp(tmp_path, monkeypatch)
+    for i, ts in enumerate([100, 200, 300, 400, 500, 600], start=1):
+        L.append_jsonl(L.WTOK_EVENTS, {"ts": ts, "model": "claude-sonnet-4-6",
+                                       "request_id": f"r{i}", "raw": {}, "wtok": 1000})
+    for i, ts in enumerate([100, 200, 300, 400, 500, 600]):
+        L.append_jsonl(L.SNAPSHOTS_ARCHIVE,
+                       {"ts": ts, "five_hour": {"pct": 5 + i, "resets_at": 9999}})
+    out = C.calibrate(from_ts=300, write=False)
+    assert out["epoch_id"] == "recompute" and out["from_ts"] == 300
+    assert not L.EPOCHS.exists() and not L.CALIBRATION_HISTORY.exists()  # untouched
+
+
+def test_weights_override_changes_cap(tmp_path, monkeypatch):
+    _point_paths_to_tmp(tmp_path, monkeypatch)
+    # raw output-only usage; alternate weights double the output weight => 2x wtok => 2x cap.
+    for i, ts in enumerate([100, 200, 300, 400, 500, 600], start=1):
+        L.append_jsonl(L.WTOK_EVENTS, {"ts": ts, "model": "claude-sonnet-4-6",
+                                       "request_id": f"r{i}",
+                                       "raw": {"output_tokens": 200}, "wtok": 1000})
+    for i, ts in enumerate([100, 200, 300, 400, 500, 600]):
+        L.append_jsonl(L.SNAPSHOTS_ARCHIVE,
+                       {"ts": ts, "five_hour": {"pct": 5 + i, "resets_at": 9999}})
+    alt = tmp_path / "alt_weights.json"
+    L.write_json(alt, {"version": "alt", "weights": {"sonnet": {"output": 10.0}}})
+    base = C.calibrate(write=False)                       # stored wtok (1000/event)
+    rw = C.calibrate(weights_path=alt, write=False)       # 200*10 = 2000/event
+    assert base["five_hour"]["cap_wtok"] and rw["five_hour"]["cap_wtok"]
+    assert rw["five_hour"]["cap_wtok"] == 2 * base["five_hour"]["cap_wtok"]
