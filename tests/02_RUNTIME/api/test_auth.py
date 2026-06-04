@@ -180,16 +180,12 @@ class TestPasswordHashing:
         hashed = hash_password("abc")
         assert hashed.startswith("plain:")
 
-    def test_verify_password_returns_false_when_bcrypt_unavailable(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_verify_password_returns_false_when_bcrypt_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(auth, "_BCRYPT_AVAILABLE", False)
         # verify_password returns False when bcrypt is unavailable
         assert verify_password("any", "any") is False
 
-    def test_hash_password_raises_when_bcrypt_unavailable(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_hash_password_raises_when_bcrypt_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(auth, "_BCRYPT_AVAILABLE", False)
         with pytest.raises(RuntimeError, match="bcrypt not installed"):
             hash_password("secret")  # pragma: allowlist secret
@@ -202,32 +198,30 @@ class TestPasswordHashing:
 
 class TestCreateAccessToken:
     def test_returns_string(self) -> None:
-        token = create_access_token("user-1", "admin")
-        assert isinstance(token, str)
-        assert len(token) > 0
+        jwt_str = create_access_token("user-1", "admin")
+        assert isinstance(jwt_str, str)
+        assert len(jwt_str) > 0
 
     def test_token_is_decodable(self) -> None:
-        token = create_access_token("alice", "reviewer")
-        payload = decode_token(token)
+        jwt_str = create_access_token("alice", "reviewer")
+        payload = decode_token(jwt_str)
         assert payload["sub"] == "alice"
         assert payload["role"] == "reviewer"
 
     def test_token_contains_exp(self) -> None:
-        token = create_access_token("u", "executor")
-        payload = decode_token(token)
+        jwt_str = create_access_token("u", "executor")
+        payload = decode_token(jwt_str)
         assert "exp" in payload
 
-    def test_create_raises_when_deps_unavailable(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_raises_when_deps_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(auth, "_DEPS_AVAILABLE", False)
         with pytest.raises(RuntimeError, match="python-jose not installed"):
             create_access_token("u", "admin")
 
     def test_different_roles_encoded_correctly(self) -> None:
         for role in ("admin", "reviewer", "executor"):
-            token = create_access_token("u", role)
-            payload = decode_token(token)
+            jwt_str = create_access_token("u", role)
+            payload = decode_token(jwt_str)
             assert payload["role"] == role
 
 
@@ -255,9 +249,7 @@ class TestDecodeToken:
             decode_token(expired_token)
         assert exc_info.value.status_code == 401
 
-    def test_decode_raises_when_deps_unavailable(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decode_raises_when_deps_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(auth, "_DEPS_AVAILABLE", False)
         with pytest.raises(RuntimeError, match="python-jose not installed"):
             decode_token("any-token")
@@ -402,8 +394,8 @@ async def test_get_current_user_auth_enabled_valid_token_returns_user(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AUTH_ENABLED", "true")
-    token = create_access_token("bob", "reviewer")
-    user = await get_current_user(token=token)
+    jwt_str = create_access_token("bob", "reviewer")
+    user = await get_current_user(token=jwt_str)
     assert user is not None
     assert user.user_id == "bob"
     assert user.role == Role.reviewer
@@ -414,8 +406,8 @@ async def test_get_current_user_auth_enabled_admin_role(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("AUTH_ENABLED", "true")
-    token = create_access_token("carol", "admin")
-    user = await get_current_user(token=token)
+    jwt_str = create_access_token("carol", "admin")
+    user = await get_current_user(token=jwt_str)
     assert user is not None
     assert user.role == Role.admin
 

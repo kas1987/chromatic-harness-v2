@@ -255,14 +255,7 @@ class TestBuildEmpty:
         fake_module = MagicMock()
         fake_module.FakeCls = StubCls
 
-        yaml_content = (
-            'version: "1.0"\n'
-            "adapters:\n"
-            "  myp:\n"
-            "    module: fake_mod\n"
-            "    class: FakeCls\n"
-            "prefixes: {}\n"
-        )
+        yaml_content = 'version: "1.0"\nadapters:\n  myp:\n    module: fake_mod\n    class: FakeCls\nprefixes: {}\n'
         reg = tmp_path / "adapters.yaml"
         reg.write_text(yaml_content)
 
@@ -296,12 +289,7 @@ def test_exact_provider_is_built(provider: str, tmp_path):
     fake_module.FakeCls = stub_cls
 
     yaml_content = (
-        f'version: "1.0"\n'
-        f"adapters:\n"
-        f"  {provider}:\n"
-        f"    module: fake_mod\n"
-        f"    class: FakeCls\n"
-        f"prefixes: {{}}\n"
+        f'version: "1.0"\nadapters:\n  {provider}:\n    module: fake_mod\n    class: FakeCls\nprefixes: {{}}\n'
     )
     reg = tmp_path / "adapters.yaml"
     reg.write_text(yaml_content)
@@ -333,12 +321,7 @@ def test_exact_provider_config_passed_through(provider: str, tmp_path):
     fake_module.RecordCls = RecordCls
 
     yaml_content = (
-        f'version: "1.0"\n'
-        f"adapters:\n"
-        f"  {provider}:\n"
-        f"    module: fake_mod\n"
-        f"    class: RecordCls\n"
-        f"prefixes: {{}}\n"
+        f'version: "1.0"\nadapters:\n  {provider}:\n    module: fake_mod\n    class: RecordCls\nprefixes: {{}}\n'
     )
     reg = tmp_path / "adapters.yaml"
     reg.write_text(yaml_content)
@@ -535,14 +518,7 @@ def test_build_uses_provided_registry_path(tmp_path):
     fake_module = MagicMock()
     fake_module.CustomCls = stub_cls
 
-    yaml_content = (
-        'version: "1.0"\n'
-        "adapters:\n"
-        "  custom_p:\n"
-        "    module: fake_mod\n"
-        "    class: CustomCls\n"
-        "prefixes: {}\n"
-    )
+    yaml_content = 'version: "1.0"\nadapters:\n  custom_p:\n    module: fake_mod\n    class: CustomCls\nprefixes: {}\n'
     reg = tmp_path / "custom_adapters.yaml"
     reg.write_text(yaml_content)
 
@@ -570,8 +546,7 @@ def test_real_registry_has_entry_for_provider(provider: str):
     """Each documented provider name has an entry in the real adapters.yaml."""
     data = _load_registry(_REGISTRY_PATH)
     assert provider in data["adapters"], (
-        f"Expected '{provider}' in real adapters.yaml but it was not found. "
-        "Update EXACT_PROVIDERS in this test file."
+        f"Expected '{provider}' in real adapters.yaml but it was not found. Update EXACT_PROVIDERS in this test file."
     )
 
 
