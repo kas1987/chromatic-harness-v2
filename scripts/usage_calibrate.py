@@ -47,7 +47,9 @@ def _load_cumulative_timeline(weights=None):
     running_models: dict[str, float] = {}
     for e in events:
         if weights is not None and isinstance(e.get("raw"), dict):
-            w = L.wtok(e["raw"], e.get("model"), weights)
+            # Recompute from raw under the given table; fall back to the stored
+            # wtok for legacy/empty-raw events (raw={}) that would recompute to 0.
+            w = L.wtok(e["raw"], e.get("model"), weights) or (e.get("wtok", 0) or 0)
         else:
             w = e.get("wtok", 0) or 0
         running += w
