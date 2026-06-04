@@ -35,6 +35,10 @@ _MANIFEST = _REPO / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
 _HEALTH = _REPO / "07_LOGS_AND_AUDIT" / "harness_health" / "latest.json"
 _BUDGET_FORECAST = _REPO / "scripts" / "budget_forecast_snapshot.py"
 _FORECAST_LATEST = _REPO / "07_LOGS_AND_AUDIT" / "budget" / "forecast_latest.json"
+_USAGE_INGEST = _REPO / "scripts" / "usage_ingest.py"
+_USAGE_CALIBRATE = _REPO / "scripts" / "usage_calibrate.py"
+_USAGE_ROLLUP = _REPO / "scripts" / "usage_rollup.py"
+_USAGE_DASHBOARD = _REPO / "scripts" / "usage_dashboard.py"
 _TOKEN_GOV_LATEST = _REPO / "07_LOGS_AND_AUDIT" / "token_governance" / "latest.json"
 _BASELINE_AUDIT = _REPO / "scripts" / "baseline_audit.py"
 _GH_CI_HEALTH = _REPO / "scripts" / "gh_ci_health.py"
@@ -257,6 +261,32 @@ def _emit_ci_health() -> None:
         pass  # never break session start
 
 
+def _refresh_usage_calibration() -> None:
+    """Ingest edge snapshots + recalibrate token caps (fail-open).
+
+    Consumes ~/.claude/usage/snapshots.jsonl into the durable archive + token
+    events, then re-derives calibrated_caps.json (and the edge copy the
+    statusline reads). Never breaks session start.
+    """
+    if not (_USAGE_INGEST.is_file() and _USAGE_CALIBRATE.is_file()):
+        return
+    try:
+        run_safe([sys.executable, str(_USAGE_INGEST)], cwd=_REPO, timeout=60)
+        proc = run_safe([sys.executable, str(_USAGE_CALIBRATE)], cwd=_REPO, timeout=60)
+        if proc.returncode == 0 and proc.stdout.strip():
+            first = proc.stdout.strip().splitlines()[0]
+            print(f"  usage_calibration: {first}")
+        if _USAGE_ROLLUP.is_file():
+            rproc = run_safe([sys.executable, str(_USAGE_ROLLUP)], cwd=_REPO, timeout=60)
+            if rproc.returncode == 0 and rproc.stdout.strip():
+                print(f"  usage_rollup: {rproc.stdout.strip()}")
+        if _USAGE_DASHBOARD.is_file():
+            run_safe([sys.executable, str(_USAGE_DASHBOARD)], cwd=_REPO, timeout=60)
+        print()
+    except Exception:  # noqa: BLE001
+        pass  # never break session start
+
+
 def main() -> int:
     print("=== Chromatic Harness session start ===\n")
 
@@ -350,6 +380,8 @@ def main() -> int:
         except (subprocess.SubprocessError, OSError):
             print("  budget_forecast: unavailable")
     print()
+
+    _refresh_usage_calibration()
 
     _emit_baseline_alerts()
     _emit_ci_health()
