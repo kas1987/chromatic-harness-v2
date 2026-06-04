@@ -10,6 +10,12 @@ on:
       - main
       - "session/**"
 
+# Serialize per base branch; cancel stale in-progress runs so rapid successive
+# pushes don't race each other updating the same PR branches.
+concurrency:
+  group: auto-update-${{ github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
   pull-requests: write
@@ -35,18 +41,19 @@ jobs:
 
           echo "Base branch advanced: $BASE — scanning for stale PRs..."
 
-          # List open PRs targeting this base branch
-          prs=$(gh pr list \
+          # List open PRs targeting this base branch; store to file so Python
+          # can read it without conflicting with the heredoc stdin.
+          gh pr list \
             --repo "$REPO" \
             --base "$BASE" \
             --state open \
             --json number,autoMergeRequest,mergeStateStatus \
-            --limit 50)
+            --limit 50 > /tmp/prs.json
 
-          echo "$prs" | python3 - <<'PYEOF'
-          import json, subprocess, os, sys
+          python3 << 'PYEOF'
+          import json, subprocess, os
 
-          prs = json.loads(open('/dev/stdin').read() if False else sys.stdin.read())
+          prs = json.load(open('/tmp/prs.json'))
           repo = os.environ['REPO']
           updated = 0
 
