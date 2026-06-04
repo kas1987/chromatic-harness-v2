@@ -1,0 +1,77 @@
+name: Auto-update PR branches
+
+# Whenever the base branch advances (push), find all open PRs targeting it
+# that have auto-merge enabled and are BEHIND, and update them automatically.
+# This prevents PRs from getting stuck when strict branch protection is set.
+
+on:
+  push:
+    branches:
+      - main
+      - "session/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
+
+      - name: Update BEHIND PRs with auto-merge enabled
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          echo "Base branch advanced: $BASE — scanning for stale PRs..."
+
+          # List open PRs targeting this base branch
+          prs=$(gh pr list \
+            --repo "$REPO" \
+            --base "$BASE" \
+            --state open \
+            --json number,autoMergeRequest,mergeStateStatus \
+            --limit 50)
+
+          echo "$prs" | python3 - <<'PYEOF'
+          import json, subprocess, os, sys
+
+          prs = json.loads(open('/dev/stdin').read() if False else sys.stdin.read())
+          repo = os.environ['REPO']
+          updated = 0
+
+          for pr in prs:
+              num = pr['number']
+              has_auto_merge = pr.get('autoMergeRequest') is not None
+              state = pr.get('mergeStateStatus', '')
+
+              if not has_auto_merge:
+                  print(f"  PR #{num}: skipped (no auto-merge)")
+                  continue
+
+              if state == 'BEHIND':
+                  print(f"  PR #{num}: BEHIND — updating branch...")
+                  result = subprocess.run(
+                      ['gh', 'pr', 'update-branch', str(num), '--repo', repo],
+                      capture_output=True, text=True
+                  )
+                  if result.returncode == 0:
+                      print(f"  PR #{num}: branch updated ✓")
+                      updated += 1
+                  else:
+                      print(f"  PR #{num}: update failed — {result.stderr.strip()}")
+              else:
+                  print(f"  PR #{num}: {state} — no action needed")
+
+          print(f"\nDone: {updated} branch(es) updated.")
+          PYEOF
