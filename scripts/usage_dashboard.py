@@ -6,6 +6,7 @@ artifacts: current windows + forecast, cap-calibration trend, epoch timeline,
 and weekly/monthly rollup. Markdown + Mermaid xychart-beta, matching
 generate_dashboard.py. Read-only over the artifacts; run after calibrate+rollup.
 """
+
 from __future__ import annotations
 import sys
 from pathlib import Path
@@ -37,8 +38,7 @@ def _fmt_wtok(wtok):
 
 
 def _current_windows_table(caps):
-    rows = ["| Window | Used | Cap | Confidence | Forecast |",
-            "|--------|------|-----|-----------|----------|"]
+    rows = ["| Window | Used | Cap | Confidence | Forecast |", "|--------|------|-----|-----------|----------|"]
     for key, label in WINDOW_LABELS.items():
         c = (caps.get(key) or {}) if isinstance(caps, dict) else {}
         used = _fmt_wtok(c.get("used_wtok"))
@@ -67,9 +67,11 @@ def _cap_trend_chart(window, label):
     xs = ", ".join(str(i + 1) for i in range(len(series)))
     ys = ", ".join(str(v) for v in series)
     top = max(series) * 1.2 or 1
-    return (f"```mermaid\nxychart-beta\n    title \"{label} cap estimate (M wtok)\"\n"
-            f"    x-axis [{xs}]\n    y-axis \"M wtok\" 0 --> {round(top, 1)}\n"
-            f"    line [{ys}]\n```")
+    return (
+        f'```mermaid\nxychart-beta\n    title "{label} cap estimate (M wtok)"\n'
+        f'    x-axis [{xs}]\n    y-axis "M wtok" 0 --> {round(top, 1)}\n'
+        f"    line [{ys}]\n```"
+    )
 
 
 def _weekly_trend_chart(rollup):
@@ -80,9 +82,11 @@ def _weekly_trend_chart(rollup):
     labels = ", ".join(f'"{k[5:10]}"' for k, _ in items)  # MM-DD of the anchor
     vals = ", ".join(str(_m(b["wtok"])) for _, b in items)
     top = max((_m(b["wtok"]) for _, b in items), default=1) * 1.2 or 1
-    return (f"```mermaid\nxychart-beta\n    title \"Weekly usage (M wtok, Tue-1pm-ET weeks)\"\n"
-            f"    x-axis [{labels}]\n    y-axis \"M wtok\" 0 --> {round(top, 1)}\n"
-            f"    bar [{vals}]\n```")
+    return (
+        f'```mermaid\nxychart-beta\n    title "Weekly usage (M wtok, Tue-1pm-ET weeks)"\n'
+        f'    x-axis [{labels}]\n    y-axis "M wtok" 0 --> {round(top, 1)}\n'
+        f"    bar [{vals}]\n```"
+    )
 
 
 def _epoch_timeline(epochs):

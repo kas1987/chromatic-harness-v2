@@ -12,6 +12,7 @@ them). Estimates are aggregated by median. Writes calibrated_caps.json (harness
 
 Run after usage_ingest.py. Idempotent for a given input set.
 """
+
 from __future__ import annotations
 import argparse
 import bisect
@@ -24,11 +25,11 @@ import usage_calibration_lib as L
 
 WINDOWS = ("five_hour", "seven_day")
 WINDOW_SECONDS = {"five_hour": 5 * 3600, "seven_day": 7 * 86400}
-MIN_DELTA_PCT = 0.5          # ignore pairs whose % barely moved (coarse/idle)
-MIN_OK_ESTIMATES = 5         # below this => "provisional"
-MAX_OK_SPREAD_PCT = 25       # relative spread above this => "provisional"
-REGIME_THRESHOLD_PCT = 40    # firm-cap shift beyond this is a regime-change candidate
-REGIME_CONFIRM = 3           # consecutive candidate runs before opening a new epoch
+MIN_DELTA_PCT = 0.5  # ignore pairs whose % barely moved (coarse/idle)
+MIN_OK_ESTIMATES = 5  # below this => "provisional"
+MAX_OK_SPREAD_PCT = 25  # relative spread above this => "provisional"
+REGIME_THRESHOLD_PCT = 40  # firm-cap shift beyond this is a regime-change candidate
+REGIME_CONFIRM = 3  # consecutive candidate runs before opening a new epoch
 
 
 def _load_cumulative_timeline(weights=None):
@@ -70,7 +71,7 @@ def _is_reset(prev, cur):
     """True if a window reset happened between two snapshots of the same window."""
     if prev.get("pct") is None or cur.get("pct") is None:
         return True
-    if cur["pct"] < prev["pct"] - 1e-9:       # utilization dropped => reset
+    if cur["pct"] < prev["pct"] - 1e-9:  # utilization dropped => reset
         return True
     if prev.get("resets_at") != cur.get("resets_at"):  # window boundary moved
         return True
@@ -111,8 +112,12 @@ def _aggregate(estimates):
         conf = "ok"
     else:
         conf = "prov"
-    return {"cap_wtok": round(cap), "confidence": conf,
-            "n_estimates": n, "spread_pct": round(spread) if spread is not None else None}
+    return {
+        "cap_wtok": round(cap),
+        "confidence": conf,
+        "n_estimates": n,
+        "spread_pct": round(spread) if spread is not None else None,
+    }
 
 
 def _current_window_usage(window, snapshots, ts_list, cum):
@@ -167,9 +172,11 @@ def _load_epochs():
     """Return the epochs registry, initializing epoch e1 (from time 0) if absent."""
     data = L.read_json(L.EPOCHS)
     if not data or not data.get("epochs"):
-        data = {"epochs": [{"id": "e1", "start_ts": 0, "reason": "init",
-                            "opened_at": L._now_iso()}],
-                "current": "e1", "regime_streak": 0}
+        data = {
+            "epochs": [{"id": "e1", "start_ts": 0, "reason": "init", "opened_at": L._now_iso()}],
+            "current": "e1",
+            "regime_streak": 0,
+        }
     return data
 
 
@@ -243,8 +250,7 @@ def _detect_regime(epochs, epoch, caps, latest_ts=0):
     window, new_cap, base, dev = signal
     new_id = f"e{len(epochs['epochs']) + 1}"
     reason = f"{window} cap {round(base)}→{round(new_cap)} wtok ({round(dev)}% shift)"
-    new_epoch = {"id": new_id, "start_ts": latest_ts, "reason": reason,
-                 "opened_at": L._now_iso()}
+    new_epoch = {"id": new_id, "start_ts": latest_ts, "reason": reason, "opened_at": L._now_iso()}
     epochs["epochs"].append(new_epoch)
     epochs["current"] = new_id
     epochs["regime_streak"] = 0
@@ -270,8 +276,13 @@ def calibrate(from_ts=None, weights_path=None, write=True):
 
     if from_ts is not None:
         caps = _compute_caps(from_ts, snapshots, ts_list, cum)
-        out = {"updated_at": L._now_iso(), "weight_table_version": version,
-               "epoch_id": "recompute", "from_ts": from_ts, **caps}
+        out = {
+            "updated_at": L._now_iso(),
+            "weight_table_version": version,
+            "epoch_id": "recompute",
+            "from_ts": from_ts,
+            **caps,
+        }
         if write:
             L.write_json(L.CALIBRATED_CAPS, out)
             L.write_json(L.EDGE_CALIBRATED_CAPS, out)
@@ -307,19 +318,21 @@ def _parse_from(value):
         return int(value)
     except ValueError:
         from datetime import datetime
+
         return int(datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp())
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Calibrate Anthropic token caps from logged usage.")
-    ap.add_argument("--from", dest="from_ts", metavar="DATE|EPOCH",
-                    help="Recompute over [DATE, now] only; does not mutate epochs/history.")
-    ap.add_argument("--weights", metavar="PATH",
-                    help="Alternate weight_table.json to recompute wtok under.")
-    ap.add_argument("--reset-epochs", action="store_true",
-                    help="Delete the epoch registry and start a fresh epoch e1.")
-    ap.add_argument("--dry-run", action="store_true",
-                    help="Compute and print but do not persist.")
+    ap.add_argument(
+        "--from",
+        dest="from_ts",
+        metavar="DATE|EPOCH",
+        help="Recompute over [DATE, now] only; does not mutate epochs/history.",
+    )
+    ap.add_argument("--weights", metavar="PATH", help="Alternate weight_table.json to recompute wtok under.")
+    ap.add_argument("--reset-epochs", action="store_true", help="Delete the epoch registry and start a fresh epoch e1.")
+    ap.add_argument("--dry-run", action="store_true", help="Compute and print but do not persist.")
     args = ap.parse_args(argv)
 
     if args.reset_epochs:
@@ -329,16 +342,16 @@ def main(argv=None):
             pass
         print("epochs reset")
 
-    out = calibrate(from_ts=_parse_from(args.from_ts),
-                    weights_path=args.weights,
-                    write=not args.dry_run)
+    out = calibrate(from_ts=_parse_from(args.from_ts), weights_path=args.weights, write=not args.dry_run)
     if out.get("regime_change"):
         print(f"REGIME CHANGE → new epoch {out['epoch_id']}: {out['regime_change']}")
     for w in WINDOWS:
         c = out[w]
-        print(f"{w}: cap={c['cap_wtok']} wtok  conf={c['confidence']}  "
-              f"n={c['n_estimates']}  spread={c['spread_pct']}%  "
-              f"[epoch {out['epoch_id']}]")
+        print(
+            f"{w}: cap={c['cap_wtok']} wtok  conf={c['confidence']}  "
+            f"n={c['n_estimates']}  spread={c['spread_pct']}%  "
+            f"[epoch {out['epoch_id']}]"
+        )
 
 
 if __name__ == "__main__":
