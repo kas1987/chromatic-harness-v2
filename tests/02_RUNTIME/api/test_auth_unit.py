@@ -66,7 +66,14 @@ _jose_jwt_mock = mock.MagicMock()
 def _jwt_encode(payload: dict, key: str, algorithm: str = "HS256") -> str:
     import json as _json
 
-    data = _json.dumps(payload).encode()
+    # Convert datetime values (e.g. exp) to Unix timestamps so json.dumps works.
+    serialisable = {}
+    for k, v in payload.items():
+        if isinstance(v, datetime):
+            serialisable[k] = v.timestamp()
+        else:
+            serialisable[k] = v
+    data = _json.dumps(serialisable).encode()
     return "mock." + _base64.b64encode(data).decode()
 
 

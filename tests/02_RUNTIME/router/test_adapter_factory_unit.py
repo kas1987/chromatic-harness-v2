@@ -36,11 +36,19 @@
 
 from __future__ import annotations
 
+import sys
 import types
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Ensure 02_RUNTIME is on sys.path before importing router packages.
+# pytest.ini lists "pythonpath = 02_RUNTIME" but the installed pytest version
+# does not support that option, so we insert manually here.
+_RUNTIME = Path(__file__).resolve().parents[3] / "02_RUNTIME"
+if str(_RUNTIME) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME))
 
 import router.adapters.adapter_factory as factory_mod  # noqa: F401
 from router.adapters.adapter_factory import _instantiate, _load_registry, build
