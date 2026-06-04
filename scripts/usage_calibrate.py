@@ -266,10 +266,16 @@ def calibrate(from_ts=None, weights_path=None, write=True):
     epochs/history; return the caps (persist only when write=True).
     weights_path overrides the weight table for the wtok timeline.
     """
+    # Load the weight table to get an accurate version tag regardless of path.
+    # When weights_path is given, also recompute per-event wtok from raw usage so
+    # weight_table_version and the cap estimates are consistent.
+    # In normal mode (no weights_path), stored per-event wtok is used for performance;
+    # version reflects the current committed table (the same one used at ingest time
+    # unless the table was manually changed between ingest and calibration).
     if weights_path:
         weights, version = L.load_weights(weights_path)
     else:
-        weights, version = (None, L.load_weights()[1])
+        weights, version = None, L.load_weights()[1]
     ts_list, cum, _ = _load_cumulative_timeline(weights=weights)
     snapshots = [s for s in L.iter_jsonl(L.SNAPSHOTS_ARCHIVE) if s.get("ts") is not None]
     latest_ts = max((s["ts"] for s in snapshots), default=0)
