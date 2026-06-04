@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-03T15:25:29Z",
+  "generated_at_utc": "2026-06-04T16:55:59Z",
   "overall_status": "red",
   "readiness_score": 0,
   "counts": {
@@ -29,8 +29,8 @@
     {
       "name": "unified_guard_fresh",
       "status": "pass",
-      "message": "age_min=17.76",
-      "value": 17.76
+      "message": "age_min=29.99",
+      "value": 29.99
     },
     {
       "name": "handoff_present",
@@ -65,9 +65,9 @@
     {
       "name": "agent_log_fresh_and_populated",
       "status": "pass",
-      "message": "age_min=45.82 lines=49",
+      "message": "age_min=30.1 lines=49",
       "value": {
-        "age_min": 45.82,
+        "age_min": 30.1,
         "lines": 49
       }
     },
