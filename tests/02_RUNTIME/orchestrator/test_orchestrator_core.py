@@ -42,10 +42,21 @@
 # 7. The autonomy_level boundary condition (tool_budget > 20 → L2) uses strict greater-than,
 #    so tool_budget == 20 stays at L1.  This boundary is not documented in a docstring or schema;
 #    it is easy to introduce an off-by-one regression.
+#
+# 8. IMPORT SHADOW BUG (infrastructure): tests/02_RUNTIME/orchestrator/__init__.py creates a
+#    Python package named "orchestrator" that shadows the runtime namespace package at
+#    02_RUNTIME/orchestrator/.  Because tests/02_RUNTIME/orchestrator appears first in sys.path,
+#    "from orchestrator.orchestrator import ..." always resolves to the test package (which has
+#    no orchestrator.py submodule), causing ModuleNotFoundError.  This file works around the
+#    problem by loading the source module via importlib.util.spec_from_file_location with the
+#    unique alias "orchestrator_core_under_test", mirroring the approach used in
+#    test_confidence_engine.py.  The root cause is the __init__.py in the test directory; removing
+#    it or renaming the test package would fix the issue for all orchestrator tests.
 """
 
 from __future__ import annotations
 
+import importlib.util
 import sys
 import types
 from pathlib import Path
@@ -58,16 +69,30 @@ import pytest
 # ---------------------------------------------------------------------------
 
 _RUNTIME = Path(__file__).resolve().parents[3] / "02_RUNTIME"
+_ORCH_PY = _RUNTIME / "orchestrator" / "orchestrator.py"
+
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
 
 # ---------------------------------------------------------------------------
-# Stub registry helpers
+# Module-level stub injection — must happen BEFORE loading orchestrator.py
 # ---------------------------------------------------------------------------
+#
+# orchestrator.py does top-level "from scope.guard import DispatchGuard" and
+# "from magnets.base_magnet import MagnetEvent" at import time.  Those modules
+# transitively depend on aiosqlite and other packages that are not installed in
+# the test environment.  We therefore stub them in sys.modules before the first
+# spec_from_file_location call.
+#
+# We CANNOT use setdefault for modules that are already registered (from a previous
+# test run in the same process) because that would overwrite a real module with a
+# MagicMock.  The guards below replicate the pattern from test_orchestrator_engine.py.
 
 
-def _make_confidence_band_stub():
+def _ensure_stubs() -> None:
+    """Idempotently register stubs for all heavy dependencies of orchestrator.py."""
+
     class _ConfidenceBand:
         VERY_HIGH = "very_high"
         HIGH = "high"
@@ -75,35 +100,21 @@ def _make_confidence_band_stub():
         LOW = "low"
         BLOCKED = "blocked"
 
-        def __init__(self, v):
+        def __init__(self, v: str) -> None:
             self.value = v
 
-    return _ConfidenceBand
-
-
-def _make_task_type_stub():
     class _TaskType:
         PLANNING = "planning"
         CODING = "coding"
 
-        def __init__(self, v):
+        def __init__(self, v: str) -> None:
             self.value = v
 
-    return _TaskType
-
-
-def _make_privacy_class_stub():
     class _PrivacyClass:
         P1 = "P1"
 
-        def __init__(self, v):
+        def __init__(self, v: str) -> None:
             self.value = v
-
-    return _PrivacyClass
-
-
-def _make_route_stubs():
-    """Return (RouteInput, RouteConstraints, RouteRequest) stub classes."""
 
     class _RouteInput:
         def __init__(self, **kw):
@@ -120,24 +131,14 @@ def _make_route_stubs():
             for k, v in kw.items():
                 setattr(self, k, v)
 
-    return _RouteInput, _RouteConstraints, _RouteRequest
-
-
-def _ensure_stubs():
-    """Idempotently register all stubs needed by orchestrator.py module-level imports."""
-    _ConfidenceBand = _make_confidence_band_stub()
-    _TaskType = _make_task_type_stub()
-    _PrivacyClass = _make_privacy_class_stub()
-    _RouteInput, _RouteConstraints, _RouteRequest = _make_route_stubs()
-
     class _RouteConfidence:
-        def __init__(self, score=0.0, band=None, reason=""):
+        def __init__(self, score: float = 0.0, band=None, reason: str = "") -> None:
             self.score = score
             self.band = band
             self.reason = reason
 
     class _RouteAudit:
-        def __init__(self, caller="unknown", **kw):
+        def __init__(self, caller: str = "unknown", **kw) -> None:
             self.caller = caller
 
     heavy = {
@@ -158,7 +159,7 @@ def _ensure_stubs():
     for name, stub in heavy.items():
         sys.modules.setdefault(name, stub)
 
-    # router.contracts
+    # router.contracts — wire up only when our stub is the registered module
     rc = sys.modules["router.contracts"]
     if isinstance(rc, MagicMock):
         rc.TaskType = _TaskType
@@ -183,45 +184,64 @@ def _ensure_stubs():
     # magnets.magnet_orchestrator.MagnetOrchestrator + MagnetReport
     if isinstance(sys.modules.get("magnets.magnet_orchestrator"), MagicMock):
         mag_orch_cls = MagicMock()
-        mag_orch_instance = MagicMock()
-        mag_orch_instance.registered_magnets.return_value = ["scope_magnet", "security_magnet"]
-        mag_orch_cls.return_value = mag_orch_instance
+        mag_inst = MagicMock()
+        mag_inst.registered_magnets.return_value = ["scope_magnet", "security_magnet"]
+        mag_orch_cls.return_value = mag_inst
         sys.modules["magnets.magnet_orchestrator"].MagnetOrchestrator = mag_orch_cls
         sys.modules["magnets.magnet_orchestrator"].MagnetReport = MagicMock
 
     # scope.guard.DispatchGuard
     if isinstance(sys.modules.get("scope.guard"), MagicMock):
         dg_cls = MagicMock()
-        dg_instance = AsyncMock()
+        dg_inst = AsyncMock()
         guarded = MagicMock()
         guarded.mission = {"metadata": {}}
         guarded.scope_baseline = MagicMock(expected_scope="02_RUNTIME/", baseline_count=10)
         guarded.injected_context = {"governance_rules": [{"name": "file_scope_rule"}]}
         guarded.scope_header = "FILE_SCOPE: 02_RUNTIME/"
-        dg_instance.guard.return_value = guarded
-        dg_cls.return_value = dg_instance
+        dg_inst.guard.return_value = guarded
+        dg_cls.return_value = dg_inst
         sys.modules["scope.guard"].DispatchGuard = dg_cls
 
     # router.observability.ObservabilityLogger
     if isinstance(sys.modules.get("router.observability"), MagicMock):
         obs_cls = MagicMock()
-        obs_instance = MagicMock()
-        obs_cls.return_value = obs_instance
+        obs_inst = MagicMock()
+        obs_cls.return_value = obs_inst
         sys.modules["router.observability"].ObservabilityLogger = obs_cls
 
 
-def _import_orchestrator():
-    _ensure_stubs()
-    from orchestrator.orchestrator import Orchestrator, MissionPacket
+# Run stubs at module import time so that _load_orch_module() below succeeds.
+_ensure_stubs()
 
-    return Orchestrator, MissionPacket
+
+# ---------------------------------------------------------------------------
+# Load orchestrator.py by file path (avoids the package-name shadow bug)
+# ---------------------------------------------------------------------------
+
+_ORCH_MODULE_ALIAS = "orchestrator_core_under_test"
+
+
+def _load_orch_module():
+    """Load orchestrator.py into sys.modules under a unique alias and return it."""
+    if _ORCH_MODULE_ALIAS in sys.modules:
+        return sys.modules[_ORCH_MODULE_ALIAS]
+    _ensure_stubs()
+    spec = importlib.util.spec_from_file_location(_ORCH_MODULE_ALIAS, _ORCH_PY)
+    mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+    sys.modules[_ORCH_MODULE_ALIAS] = mod
+    spec.loader.exec_module(mod)  # type: ignore[union-attr]
+    return mod
+
+
+# Load once at module import time.
+_orch_mod = _load_orch_module()
+Orchestrator = _orch_mod.Orchestrator
+MissionPacket = _orch_mod.MissionPacket
 
 
 def _make_mission(**overrides):
     """Factory: return a MissionPacket with sensible defaults, overriding as needed."""
-    _ensure_stubs()
-    from orchestrator.orchestrator import MissionPacket
-
     defaults = dict(
         mission_id="CHR-MISSION-CORE0001",
         objective="test the system",
@@ -286,7 +306,6 @@ def _setup_stubs():
 
 @pytest.fixture()
 def orch():
-    Orchestrator, _ = _import_orchestrator()
     return Orchestrator()
 
 
@@ -358,7 +377,7 @@ class TestSynthesizeMission:
             patch("importlib.util.spec_from_file_location", return_value=fake_spec),
             patch("importlib.util.module_from_spec", return_value=fake_agent_lead_mod),
             patch(
-                "magnets.magnet_orchestrator.MagnetOrchestrator",
+                "orchestrator_core_under_test.MagnetOrchestrator",
                 return_value=fake_mag_orch,
             ),
             fake_mag_orch,
@@ -523,7 +542,7 @@ class TestSynthesizeMission:
         with (
             patch("importlib.util.spec_from_file_location", side_effect=capturing_spec),
             patch("importlib.util.module_from_spec", return_value=fake_module),
-            patch("magnets.magnet_orchestrator.MagnetOrchestrator", return_value=fake_mag_orch),
+            patch("orchestrator_core_under_test.MagnetOrchestrator", return_value=fake_mag_orch),
         ):
             orch.synthesize_mission(mission, [])
 
@@ -641,9 +660,6 @@ class TestSynthesizeMission:
 
 class TestMissionPacketDataModel:
     def setup_method(self):
-        _ensure_stubs()
-        from orchestrator.orchestrator import MissionPacket
-
         self.MP = MissionPacket
 
     def test_all_required_fields_stored(self):
@@ -708,11 +724,9 @@ class TestMissionPacketDataModel:
 
 class TestCreateMission:
     def setup_method(self):
-        Orchestrator, _ = _import_orchestrator()
         self.orch = Orchestrator()
 
     def test_returns_mission_packet_type(self):
-        from orchestrator.orchestrator import MissionPacket
 
         result = self.orch.create_mission("write integration tests")
         assert isinstance(result, MissionPacket)
@@ -782,7 +796,6 @@ class TestCreateMission:
 
 class TestCreateMissionFromTask:
     def setup_method(self):
-        Orchestrator, _ = _import_orchestrator()
         self.orch = Orchestrator()
 
     def _task(self, **kw):
@@ -916,8 +929,18 @@ class TestCreateMissionFromTask:
 
 class TestAttachMagnets:
     def setup_method(self):
-        Orchestrator, _ = _import_orchestrator()
+        # Patch MagnetOrchestrator at the module level so attach_magnets doesn't
+        # try to instantiate the real registry (which transitively imports yaml).
+        self._mag_orch_cls = MagicMock()
+        self._mag_orch_inst = MagicMock()
+        self._mag_orch_inst.registered_magnets.return_value = ["scope_magnet", "security_magnet"]
+        self._mag_orch_cls.return_value = self._mag_orch_inst
+        self._patcher = patch("orchestrator_core_under_test.MagnetOrchestrator", self._mag_orch_cls)
+        self._patcher.start()
         self.orch = Orchestrator()
+
+    def teardown_method(self):
+        self._patcher.stop()
 
     def test_returns_list(self):
         result = self.orch.attach_magnets(_make_mission())
@@ -942,7 +965,7 @@ class TestAttachMagnets:
         mag_orch_instance.registered_magnets.return_value = custom_magnets
         mag_orch_cls.return_value = mag_orch_instance
 
-        with patch("magnets.magnet_orchestrator.MagnetOrchestrator", mag_orch_cls):
+        with patch("orchestrator_core_under_test.MagnetOrchestrator", mag_orch_cls):
             result = self.orch.attach_magnets(_make_mission())
 
         assert result == custom_magnets
@@ -955,8 +978,17 @@ class TestAttachMagnets:
 
 class TestDispatch:
     def setup_method(self):
-        Orchestrator, _ = _import_orchestrator()
+        # dispatch() → attach_magnets() → MagnetOrchestrator(); stub it out
+        self._mag_orch_cls = MagicMock()
+        self._mag_orch_inst = MagicMock()
+        self._mag_orch_inst.registered_magnets.return_value = ["scope_magnet", "security_magnet"]
+        self._mag_orch_cls.return_value = self._mag_orch_inst
+        self._patcher = patch("orchestrator_core_under_test.MagnetOrchestrator", self._mag_orch_cls)
+        self._patcher.start()
         self.orch = Orchestrator()
+
+    def teardown_method(self):
+        self._patcher.stop()
 
     def test_returns_dict(self):
         assert isinstance(self.orch.dispatch(_make_mission()), dict)
@@ -1072,9 +1104,7 @@ class TestGuardAndInject:
         dg_instance.guard.return_value = guarded
         dg_cls.return_value = dg_instance
 
-        with patch("scope.guard.DispatchGuard", dg_cls):
-            from orchestrator.orchestrator import Orchestrator
-
+        with patch("orchestrator_core_under_test.DispatchGuard", dg_cls):
             orch_local = Orchestrator()
             result = await orch_local.guard_and_inject(self._mp(), file_scope="")
 
@@ -1093,9 +1123,7 @@ class TestGuardAndInject:
         dg_instance.guard.return_value = guarded
         dg_cls.return_value = dg_instance
 
-        with patch("scope.guard.DispatchGuard", dg_cls):
-            from orchestrator.orchestrator import Orchestrator
-
+        with patch("orchestrator_core_under_test.DispatchGuard", dg_cls):
             orch_local = Orchestrator()
             result = await orch_local.guard_and_inject(self._mp())
 
@@ -1116,9 +1144,7 @@ class TestGuardAndInject:
         dg_instance.guard.return_value = guarded
         dg_cls.return_value = dg_instance
 
-        with patch("scope.guard.DispatchGuard", dg_cls):
-            from orchestrator.orchestrator import Orchestrator
-
+        with patch("orchestrator_core_under_test.DispatchGuard", dg_cls):
             orch_local = Orchestrator()
             mp = self._mp()
             await orch_local.guard_and_inject(mp)
@@ -1138,9 +1164,7 @@ class TestGuardAndInject:
         dg_instance.guard.return_value = guarded
         dg_cls.return_value = dg_instance
 
-        with patch("scope.guard.DispatchGuard", dg_cls):
-            from orchestrator.orchestrator import Orchestrator
-
+        with patch("orchestrator_core_under_test.DispatchGuard", dg_cls):
             orch_local = Orchestrator()
             await orch_local.guard_and_inject(self._mp(), file_scope="tests/")
 
@@ -1160,9 +1184,7 @@ class TestGuardAndInject:
         dg_instance.guard.return_value = guarded
         dg_cls.return_value = dg_instance
 
-        with patch("scope.guard.DispatchGuard", dg_cls):
-            from orchestrator.orchestrator import Orchestrator
-
+        with patch("orchestrator_core_under_test.DispatchGuard", dg_cls):
             orch_local = Orchestrator()
             await orch_local.guard_and_inject(self._mp(), agent_id="my_custom_agent")
 
@@ -1370,78 +1392,66 @@ class TestRouteToProvider:
 
     @pytest.mark.asyncio
     async def test_returns_dict(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp()
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_provider_key_in_result(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp(selected_provider="openai")
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["provider"] == "openai"
 
     @pytest.mark.asyncio
     async def test_model_key_in_result(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp(selected_model="gpt-4o")
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["model"] == "gpt-4o"
 
     @pytest.mark.asyncio
     async def test_reason_key_in_result(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp(route_reason="privacy constraint")
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["reason"] == "privacy constraint"
 
     @pytest.mark.asyncio
     async def test_fallback_used_key_in_result(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp(fallback_used=True)
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["fallback_used"] is True
 
     @pytest.mark.asyncio
     async def test_latency_ms_is_int(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp(latency_ms=350.7)
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert isinstance(result["latency_ms"], int)
@@ -1449,43 +1459,37 @@ class TestRouteToProvider:
 
     @pytest.mark.asyncio
     async def test_none_latency_ms_becomes_zero(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp(latency_ms=None)
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["latency_ms"] == 0
 
     @pytest.mark.asyncio
     async def test_warnings_passed_through(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         resp = self._fake_route_resp()
         resp.logs = MagicMock(warnings=["rate_limit_warning"], errors=[])
         mock_router.route.return_value = resp
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["warnings"] == ["rate_limit_warning"]
 
     @pytest.mark.asyncio
     async def test_errors_passed_through(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         resp = self._fake_route_resp()
         resp.logs = MagicMock(warnings=[], errors=["provider_unavailable"])
         mock_router.route.return_value = resp
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["errors"] == ["provider_unavailable"]
@@ -1493,13 +1497,11 @@ class TestRouteToProvider:
     @pytest.mark.parametrize("task_type", ["planning", "coding", "review"])
     @pytest.mark.asyncio
     async def test_task_type_forwarded_to_route_request(self, task_type):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp()
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             await orch.route_to_provider(self._mp(), task_type=task_type)
 
         call_args = mock_router.route.call_args
@@ -1508,14 +1510,12 @@ class TestRouteToProvider:
 
     @pytest.mark.asyncio
     async def test_mission_objective_forwarded_to_route_request(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mp = _make_mission(objective="specific objective text")
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp()
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             await orch.route_to_provider(mp)
 
         call_args = mock_router.route.call_args
@@ -1524,13 +1524,11 @@ class TestRouteToProvider:
 
     @pytest.mark.asyncio
     async def test_cost_estimate_usd_in_result(self):
-        from orchestrator.orchestrator import Orchestrator
-
         orch = Orchestrator()
         mock_router = AsyncMock()
         mock_router.route.return_value = self._fake_route_resp(cost_estimate_usd=0.05)
 
-        with patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router):
+        with patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router):
             result = await orch.route_to_provider(self._mp())
 
         assert result["cost_estimate_usd"] == 0.05
@@ -1543,11 +1541,9 @@ class TestRouteToProvider:
 
 class TestCompleteMission:
     def _mp(self, **overrides):
-        return _make_mission(
-            mission_id="CHR-MISSION-DONE0001",
-            confidence_required=80.0,
-            **overrides,
-        )
+        defaults = {"mission_id": "CHR-MISSION-DONE0001", "confidence_required": 80.0}
+        defaults.update(overrides)
+        return _make_mission(**defaults)
 
     def test_does_not_raise_with_full_args(self, orch):
         orch.complete_mission(
@@ -1593,7 +1589,7 @@ class TestCompleteMission:
 
         with patch("router.confidence.ConfidenceGate", cg_mock):
             orch.complete_mission(
-                self._mp(confidence_required=80.0),
+                self._mp(),  # _mp() already sets confidence_required=80.0
                 model="claude-haiku",
                 role="worker",
                 files_touched=[],
@@ -1734,8 +1730,16 @@ class TestLifecycleIntegration:
     """Cross-method lifecycle tests covering create → guard → dispatch → complete."""
 
     def setup_method(self):
-        Orchestrator, _ = _import_orchestrator()
+        self._mag_orch_cls = MagicMock()
+        self._mag_orch_inst = MagicMock()
+        self._mag_orch_inst.registered_magnets.return_value = ["scope_magnet", "security_magnet"]
+        self._mag_orch_cls.return_value = self._mag_orch_inst
+        self._patcher = patch("orchestrator_core_under_test.MagnetOrchestrator", self._mag_orch_cls)
+        self._patcher.start()
         self.orch = Orchestrator()
+
+    def teardown_method(self):
+        self._patcher.stop()
 
     def test_create_then_dispatch_preserves_mission_id(self):
         mp = self.orch.create_mission("build feature Y")
@@ -1765,24 +1769,19 @@ class TestLifecycleIntegration:
 
     @pytest.mark.asyncio
     async def test_full_lifecycle_create_guard_dispatch(self):
-        from orchestrator.orchestrator import Orchestrator
-
-        orch = Orchestrator()
-        mp = orch.create_mission("full lifecycle test")
-        guard_result = await orch.guard_and_inject(mp, file_scope="")
-        dispatch_result = orch.dispatch(mp)
+        # Use self.orch which already has MagnetOrchestrator patched in setup_method
+        mp = self.orch.create_mission("full lifecycle test")
+        guard_result = await self.orch.guard_and_inject(mp, file_scope="")
+        dispatch_result = self.orch.dispatch(mp)
         assert guard_result["mission_id"] == dispatch_result["mission_id"]
         assert dispatch_result["status"] == "ready_for_runtime"
 
     @pytest.mark.asyncio
     async def test_guard_then_verify_no_scope_passthrough(self):
         """guard_and_inject followed by verify_scope_after_work with empty scope must pass."""
-        from orchestrator.orchestrator import Orchestrator
-
-        orch = Orchestrator()
-        mp = orch.create_mission("verify after guard")
-        await orch.guard_and_inject(mp, file_scope="")
-        result = await orch.verify_scope_after_work(mp, baseline={})
+        mp = self.orch.create_mission("verify after guard")
+        await self.orch.guard_and_inject(mp, file_scope="")
+        result = await self.orch.verify_scope_after_work(mp, baseline={})
         assert result["passed"] is True
 
     def test_multiple_missions_have_independent_metadata(self):
@@ -1794,10 +1793,7 @@ class TestLifecycleIntegration:
     @pytest.mark.asyncio
     async def test_route_then_complete_does_not_raise(self):
         """route_to_provider result can feed complete_mission without errors."""
-        from orchestrator.orchestrator import Orchestrator
-
-        orch = Orchestrator()
-        mp = orch.create_mission("end-to-end route and complete")
+        mp = self.orch.create_mission("end-to-end route and complete")
 
         mock_router = AsyncMock()
         mock_router.route.return_value = MagicMock(
@@ -1813,11 +1809,11 @@ class TestLifecycleIntegration:
         obs_cls = MagicMock(return_value=obs_instance)
 
         with (
-            patch("orchestrator.orchestrator.ChromaticRouter", return_value=mock_router),
+            patch("orchestrator_core_under_test.ChromaticRouter", return_value=mock_router),
             patch("router.observability.ObservabilityLogger", obs_cls),
         ):
-            route_result = await orch.route_to_provider(mp, task_type="planning")
-            orch.complete_mission(
+            route_result = await self.orch.route_to_provider(mp, task_type="planning")
+            self.orch.complete_mission(
                 mp,
                 model=route_result["model"],
                 role="worker",
@@ -1835,8 +1831,16 @@ class TestLifecycleIntegration:
 
 class TestEdgeCases:
     def setup_method(self):
-        Orchestrator, _ = _import_orchestrator()
+        self._mag_orch_cls = MagicMock()
+        self._mag_orch_inst = MagicMock()
+        self._mag_orch_inst.registered_magnets.return_value = ["scope_magnet", "security_magnet"]
+        self._mag_orch_cls.return_value = self._mag_orch_inst
+        self._patcher = patch("orchestrator_core_under_test.MagnetOrchestrator", self._mag_orch_cls)
+        self._patcher.start()
         self.orch = Orchestrator()
+
+    def teardown_method(self):
+        self._patcher.stop()
 
     @pytest.mark.parametrize(
         "intent",

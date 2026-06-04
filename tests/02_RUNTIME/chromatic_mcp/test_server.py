@@ -52,8 +52,13 @@ if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
 # ---------------------------------------------------------------------------
-# Register MCP SDK stubs BEFORE importing server.py so the module-level
+# Register complete MCP SDK stubs BEFORE importing server.py so the module-level
 # try/except succeeds and Server / stdio_server / types are not None.
+#
+# Strategy: always overwrite (not setdefault) so that even if test_mcp_modules.py
+# ran first with incomplete stubs, our stubs take precedence. Then evict the
+# cached chromatic_mcp.server module so it re-executes the try/except block
+# with our complete stubs in place.
 # ---------------------------------------------------------------------------
 
 
@@ -78,6 +83,11 @@ class _FakeTool:
         self.name = name
         self.description = description
         self.inputSchema = inputSchema
+
+
+def _fake_stdio_server():
+    """Async generator factory standing in for mcp.server.stdio.stdio_server."""
+    raise NotImplementedError("replace in tests via monkeypatch or patch")
 
 
 class _FakeServer:
@@ -116,7 +126,8 @@ class _FakeServer:
         return {"init": True}
 
 
-# Build stub modules
+# Build stub modules — use direct assignment to ensure our stubs are active
+# even if another test file registered incomplete stubs first.
 _mcp_pkg = types.ModuleType("mcp")
 _mcp_server_pkg = types.ModuleType("mcp.server")
 _mcp_stdio_pkg = types.ModuleType("mcp.server.stdio")
@@ -125,13 +136,18 @@ _mcp_types_pkg = types.ModuleType("mcp.types")
 _mcp_types_pkg.TextContent = _FakeTextContent  # type: ignore[attr-defined]
 _mcp_types_pkg.Tool = _FakeTool  # type: ignore[attr-defined]
 _mcp_server_pkg.Server = _FakeServer  # type: ignore[attr-defined]
+_mcp_stdio_pkg.stdio_server = _fake_stdio_server  # type: ignore[attr-defined]
 _mcp_pkg.server = _mcp_server_pkg  # type: ignore[attr-defined]
 _mcp_pkg.types = _mcp_types_pkg  # type: ignore[attr-defined]
 
-sys.modules.setdefault("mcp", _mcp_pkg)
-sys.modules.setdefault("mcp.server", _mcp_server_pkg)
-sys.modules.setdefault("mcp.server.stdio", _mcp_stdio_pkg)
-sys.modules.setdefault("mcp.types", _mcp_types_pkg)
+# Always overwrite so our stubs beat any previously-registered incomplete stubs.
+sys.modules["mcp"] = _mcp_pkg
+sys.modules["mcp.server"] = _mcp_server_pkg
+sys.modules["mcp.server.stdio"] = _mcp_stdio_pkg
+sys.modules["mcp.types"] = _mcp_types_pkg
+
+# Evict any previously-cached server module so it re-imports with our stubs.
+sys.modules.pop("chromatic_mcp.server", None)
 
 # Now safe to import the server module.
 from chromatic_mcp import server as srv  # noqa: E402
@@ -390,7 +406,9 @@ class TestHandleCallTool:
     async def test_call_tool_non_ascii_preserved(self) -> None:
         """ensure_ascii=False means non-ASCII chars are kept verbatim."""
         server = srv._build_server()
-        with patch("chromatic_mcp.handlers.call_tool") as mock_ct:
+        # server.py does `from chromatic_mcp.handlers import call_tool` so patch
+        # the reference inside server module, not the original in handlers.
+        with patch("chromatic_mcp.server.call_tool") as mock_ct:
             mock_ct.return_value = {"ok": True, "message": "héllo wörld"}
             result = await server._call_tool_handler("anything", {})
         assert "héllo wörld" in result[0].text
@@ -399,7 +417,9 @@ class TestHandleCallTool:
     async def test_call_tool_delegates_to_call_tool_function(self) -> None:
         """handle_call_tool must pass name and arguments through to handlers.call_tool."""
         server = srv._build_server()
-        with patch("chromatic_mcp.handlers.call_tool") as mock_ct:
+        # server.py does `from chromatic_mcp.handlers import call_tool` so patch
+        # the reference inside server module, not the original in handlers.
+        with patch("chromatic_mcp.server.call_tool") as mock_ct:
             mock_ct.return_value = {"ok": True}
             await server._call_tool_handler("beads_ready", {"arg": "val"})
         mock_ct.assert_called_once_with("beads_ready", {"arg": "val"})
@@ -410,21 +430,32 @@ class TestHandleCallTool:
 # ---------------------------------------------------------------------------
 
 
+def _make_stdio_cm(rs=None, ws=None):
+    """Return a callable that acts as stdio_server() — returns an async CM."""
+    _rs = rs or AsyncMock()
+    _ws = ws or AsyncMock()
+
+    @asynccontextmanager
+    async def _fake_stdio_cm():
+        yield _rs, _ws
+
+    def _factory():
+        return _fake_stdio_cm()
+
+    return _factory, _rs, _ws
+
+
 class TestRunStdioLifecycle:
     @pytest.mark.asyncio
     async def test_run_stdio_calls_server_run(self) -> None:
         """run_stdio must await server.run(read_stream, write_stream, init_opts)."""
         fake_server = _FakeServer(srv.SERVER_NAME)
         fake_server.run = AsyncMock()
-
-        async def _fake_stdio():
-            rs = AsyncMock()
-            ws = AsyncMock()
-            yield rs, ws
+        factory, _, _ = _make_stdio_cm()
 
         with (
             patch.object(srv, "_build_server", return_value=fake_server),
-            patch.object(srv, "stdio_server", new=_fake_stdio),
+            patch.object(srv, "stdio_server", new=factory),
         ):
             await srv.run_stdio()
 
@@ -437,13 +468,11 @@ class TestRunStdioLifecycle:
         fake_server.run = AsyncMock()
         rs_sentinel = object()
         ws_sentinel = object()
-
-        async def _fake_stdio():
-            yield rs_sentinel, ws_sentinel
+        factory, _, _ = _make_stdio_cm(rs=rs_sentinel, ws=ws_sentinel)
 
         with (
             patch.object(srv, "_build_server", return_value=fake_server),
-            patch.object(srv, "stdio_server", new=_fake_stdio),
+            patch.object(srv, "stdio_server", new=factory),
         ):
             await srv.run_stdio()
 
@@ -457,13 +486,11 @@ class TestRunStdioLifecycle:
         fake_server = _FakeServer(srv.SERVER_NAME)
         fake_server.run = AsyncMock()
         expected_opts = {"init": True}  # matches _FakeServer.create_initialization_options
-
-        async def _fake_stdio():
-            yield AsyncMock(), AsyncMock()
+        factory, _, _ = _make_stdio_cm()
 
         with (
             patch.object(srv, "_build_server", return_value=fake_server),
-            patch.object(srv, "stdio_server", new=_fake_stdio),
+            patch.object(srv, "stdio_server", new=factory),
         ):
             await srv.run_stdio()
 
@@ -475,13 +502,11 @@ class TestRunStdioLifecycle:
         """run_stdio must call _build_server() exactly once."""
         fake_server = _FakeServer(srv.SERVER_NAME)
         fake_server.run = AsyncMock()
-
-        async def _fake_stdio():
-            yield AsyncMock(), AsyncMock()
+        factory, _, _ = _make_stdio_cm()
 
         with (
             patch.object(srv, "_build_server", return_value=fake_server) as mock_build,
-            patch.object(srv, "stdio_server", new=_fake_stdio),
+            patch.object(srv, "stdio_server", new=factory),
         ):
             await srv.run_stdio()
 
@@ -495,10 +520,18 @@ class TestRunStdioLifecycle:
 
 class TestMain:
     def test_main_calls_asyncio_run(self) -> None:
-        """main() must call asyncio.run with a coroutine from run_stdio."""
-        with patch("chromatic_mcp.server.asyncio") as mock_asyncio:
+        """main() must call asyncio.run with a coroutine from run_stdio.
+
+        Note: asyncio is imported inside main() (lazy import), so we patch
+        asyncio.run at the top-level asyncio module namespace.
+        """
+
+        def _close_coro(coro):
+            coro.close()  # prevent "coroutine never awaited" ResourceWarning
+
+        with patch("asyncio.run", side_effect=_close_coro) as mock_run:
             srv.main()
-        mock_asyncio.run.assert_called_once()
+        mock_run.assert_called_once()
 
     def test_main_passes_run_stdio_coroutine(self) -> None:
         """The argument passed to asyncio.run must be a coroutine from run_stdio."""
@@ -509,8 +542,7 @@ class TestMain:
             # Close the coroutine to avoid ResourceWarning
             coro.close()
 
-        with patch("chromatic_mcp.server.asyncio") as mock_asyncio:
-            mock_asyncio.run.side_effect = _capture_run
+        with patch("asyncio.run", side_effect=_capture_run):
             srv.main()
 
         assert "coro" in captured_arg

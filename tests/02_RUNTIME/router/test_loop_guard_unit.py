@@ -43,10 +43,23 @@ from pathlib import Path
 
 import pytest
 
+
+# Locate the repo root robustly (works with all pytest --import-mode values).
+# Uses pytest.ini as the unique root marker (only present once, at repo root).
+def _find_repo_root() -> Path:
+    candidate = Path(__file__).resolve()
+    for _ in range(10):
+        candidate = candidate.parent
+        if (candidate / "pytest.ini").is_file():
+            return candidate
+    raise RuntimeError("Could not locate repo root (pytest.ini not found)")
+
+
+_RUNTIME = _find_repo_root() / "02_RUNTIME"
+
 # Ensure 02_RUNTIME is on sys.path before importing router packages.
 # pytest.ini lists "pythonpath = 02_RUNTIME" but the installed pytest version
 # does not support that option, so we insert manually here.
-_RUNTIME = Path(__file__).resolve().parents[3] / "02_RUNTIME"
 if str(_RUNTIME) not in sys.path:
     sys.path.insert(0, str(_RUNTIME))
 
