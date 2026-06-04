@@ -8,6 +8,10 @@ Tests cover:
 - get_current_user FastAPI dependency (auth disabled, missing token, valid token)
 - require_admin / require_reviewer / require_executor dependencies
 - Behaviour when jose / bcrypt are unavailable (_DEPS_AVAILABLE = False path)
+- Module-level constants (ALGORITHM, Role enum string values)
+- WWW-Authenticate and detail message on 401/403 responses
+- Expired token propagation through get_current_user
+- require_reviewer None passthrough; require_executor reviewer passthrough
 
 # DEFICIENCIES NOTED
 # 1. SECRET_KEY is read at module import time from os.environ, so tests that need a
@@ -20,6 +24,9 @@ Tests cover:
 #    test_api_endpoints.py is replicated here with a real-exception JWTError.
 # 4. get_current_user is an async FastAPI dependency; it is tested here by calling
 #    it directly with `await`, which requires asyncio_mode = strict (set in pytest.ini).
+# 5. Role(payload.get("role", Role.executor)) will raise ValueError for unrecognised
+#    role strings in JWT payloads — this is unguarded in the source and surfaces as a
+#    500 rather than a 401. Not tested here to avoid masking the underlying deficiency.
 """
 
 from __future__ import annotations
@@ -111,6 +118,8 @@ from fastapi import HTTPException  # noqa: E402
 
 import auth  # noqa: E402
 from auth import (  # noqa: E402
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
     CurrentUser,
     Role,
     _ROLE_RANK,
@@ -244,9 +253,9 @@ class TestDecodeToken:
         past = datetime.now(timezone.utc) - timedelta(seconds=1)
         payload = {"sub": "ghost", "role": "executor", "exp": past.timestamp()}
         raw = _json.dumps(payload).encode()
-        expired_token = "mock." + _base64.b64encode(raw).decode()
+        stale_jwt = "mock." + _base64.b64encode(raw).decode()
         with pytest.raises(HTTPException) as exc_info:
-            decode_token(expired_token)
+            decode_token(stale_jwt)
         assert exc_info.value.status_code == 401
 
     def test_decode_raises_when_deps_unavailable(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -354,7 +363,7 @@ async def test_get_current_user_auth_disabled_returns_none(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("AUTH_ENABLED", raising=False)
-    result = await get_current_user(token=None)
+    result = await get_current_user(None)
     assert result is None
 
 
@@ -363,8 +372,8 @@ async def test_get_current_user_auth_disabled_ignores_token(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("AUTH_ENABLED", raising=False)
-    # Even if a token is passed, when auth is disabled it should be ignored.
-    result = await get_current_user(token="some-token")
+    # Even if a bearer string is passed, when auth is disabled it should be ignored.
+    result = await get_current_user("some-bearer-value")
     assert result is None
 
 
