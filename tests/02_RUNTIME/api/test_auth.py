@@ -383,7 +383,7 @@ async def test_get_current_user_auth_enabled_no_token_raises_401(
 ) -> None:
     monkeypatch.setenv("AUTH_ENABLED", "true")
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(token=None)
+        await get_current_user(None)
     assert exc_info.value.status_code == 401
 
 
@@ -394,7 +394,7 @@ async def test_get_current_user_auth_enabled_empty_token_raises_401(
     monkeypatch.setenv("AUTH_ENABLED", "true")
     # OAuth2PasswordBearer passes None for missing token; empty string is falsy.
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(token="")
+        await get_current_user("")
     assert exc_info.value.status_code == 401
 
 
@@ -404,7 +404,7 @@ async def test_get_current_user_auth_enabled_valid_token_returns_user(
 ) -> None:
     monkeypatch.setenv("AUTH_ENABLED", "true")
     jwt_str = create_access_token("bob", "reviewer")
-    user = await get_current_user(token=jwt_str)
+    user = await get_current_user(jwt_str)
     assert user is not None
     assert user.user_id == "bob"
     assert user.role == Role.reviewer
@@ -416,7 +416,7 @@ async def test_get_current_user_auth_enabled_admin_role(
 ) -> None:
     monkeypatch.setenv("AUTH_ENABLED", "true")
     jwt_str = create_access_token("carol", "admin")
-    user = await get_current_user(token=jwt_str)
+    user = await get_current_user(jwt_str)
     assert user is not None
     assert user.role == Role.admin
 
@@ -427,7 +427,7 @@ async def test_get_current_user_invalid_token_raises_401(
 ) -> None:
     monkeypatch.setenv("AUTH_ENABLED", "true")
     with pytest.raises(HTTPException) as exc_info:
-        await get_current_user(token="not-a-real-token")
+        await get_current_user("not-a-real-token")
     assert exc_info.value.status_code == 401
 
 
@@ -443,8 +443,8 @@ async def test_get_current_user_missing_role_defaults_to_executor(
     future = datetime.now(timezone.utc) + timedelta(hours=1)
     payload = {"sub": "norole", "exp": future.timestamp()}
     raw = _json.dumps(payload).encode()
-    token = "mock." + _base64.b64encode(raw).decode()
-    user = await get_current_user(token=token)
+    mock_jwt = "mock." + _base64.b64encode(raw).decode()
+    user = await get_current_user(mock_jwt)
     assert user is not None
     # payload.get("role", Role.executor) — should fall back to Role.executor
     assert user.role == Role.executor
@@ -524,4 +524,244 @@ async def test_require_executor_passes_for_admin() -> None:
 @pytest.mark.asyncio
 async def test_require_executor_passes_when_none() -> None:
     result = await require_executor(user=None)
+    assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Additional edge-case tests not in the original suite
+# ---------------------------------------------------------------------------
+
+
+class TestModuleConstants:
+    """Verify module-level constants are as expected."""
+
+    def test_algorithm_is_hs256(self) -> None:
+        assert ALGORITHM == "HS256"
+
+    def test_access_token_expire_minutes_positive(self) -> None:
+        assert ACCESS_TOKEN_EXPIRE_MINUTES > 0
+
+    def test_role_admin_string_value(self) -> None:
+        # Role inherits from str so Role.admin == "admin"
+        assert Role.admin == "admin"
+        assert Role.admin.value == "admin"
+
+    def test_role_reviewer_string_value(self) -> None:
+        assert Role.reviewer == "reviewer"
+        assert Role.reviewer.value == "reviewer"
+
+    def test_role_executor_string_value(self) -> None:
+        assert Role.executor == "executor"
+        assert Role.executor.value == "executor"
+
+    def test_role_enum_has_three_members(self) -> None:
+        assert len(list(Role)) == 3
+
+
+class TestAdditionalRoleRankCoverage:
+    """Extra _ROLE_RANK assertions not covered in TestRoleRankConstants."""
+
+    def test_all_three_roles_present_in_rank(self) -> None:
+        for role in (Role.admin, Role.reviewer, Role.executor):
+            assert role in _ROLE_RANK
+
+    def test_rank_values_are_non_negative_integers(self) -> None:
+        for _role, rank in _ROLE_RANK.items():
+            assert isinstance(rank, int)
+            assert rank >= 0
+
+
+class TestAdditionalPasswordCoverage:
+    """Edge cases for password functions not in TestPasswordHashing."""
+
+    def test_hash_and_verify_unicode_password(self) -> None:
+        pw = "pässwørd-café"
+        hashed = hash_password(pw)
+        assert verify_password(pw, hashed) is True
+
+    def test_verify_wrong_unicode_password_fails(self) -> None:
+        hashed = hash_password("pässwørd")
+        assert verify_password("password", hashed) is False
+
+    def test_hash_returns_str_not_bytes(self) -> None:
+        result = hash_password("test")  # pragma: allowlist secret
+        assert isinstance(result, str)
+        assert not isinstance(result, bytes)
+
+    def test_hash_embeds_password(self) -> None:
+        # Shim encodes as "plain:<pw>" so password text appears in hash
+        hashed = hash_password("unique-test-value")
+        assert "unique-test-value" in hashed
+
+    def test_verify_empty_against_empty_hash(self) -> None:
+        hashed = hash_password("")
+        assert verify_password("", hashed) is True
+
+
+class TestAdditionalTokenCoverage:
+    """Edge cases for token functions not in TestCreateAccessToken/TestDecodeToken."""
+
+    def test_empty_user_id_round_trips(self) -> None:
+        jwt_str = create_access_token("", "executor")
+        payload = decode_token(jwt_str)
+        assert payload["sub"] == ""
+
+    def test_long_user_id_round_trips(self) -> None:
+        uid = "a" * 256
+        jwt_str = create_access_token(uid, "admin")
+        payload = decode_token(jwt_str)
+        assert payload["sub"] == uid
+
+    def test_decode_token_returns_dict_with_sub_and_role(self) -> None:
+        jwt_str = create_access_token("frank", "reviewer")
+        payload = decode_token(jwt_str)
+        assert "sub" in payload
+        assert "role" in payload
+
+    def test_401_error_detail_no_key_leakage(self) -> None:
+        """The error detail must not leak internal token/key details."""
+        with pytest.raises(HTTPException) as exc_info:
+            decode_token("tampered-garbage")
+        detail = exc_info.value.detail
+        assert "SECRET" not in detail
+        assert "Traceback" not in detail
+
+    def test_future_expiry_token_decodes_fine(self) -> None:
+        import json as _json
+
+        future = datetime.now(timezone.utc) + timedelta(hours=24)
+        payload = {"sub": "fresh", "role": "admin", "exp": future.timestamp()}
+        raw = _json.dumps(payload).encode()
+        mock_jwt = "mock." + _base64.b64encode(raw).decode()
+        result = decode_token(mock_jwt)
+        assert result["sub"] == "fresh"
+
+
+class TestAdditionalCurrentUserCoverage:
+    """Targeted CurrentUser tests for paths not exercised above."""
+
+    def test_has_role_reviewer_over_executor_is_true(self) -> None:
+        u = CurrentUser("u", Role.reviewer)
+        assert u.has_role(Role.executor) is True
+
+    def test_require_role_raises_http_exception(self) -> None:
+        u = CurrentUser("u", Role.executor)
+        with pytest.raises(HTTPException):
+            u.require_role(Role.reviewer)
+
+    def test_require_role_403_has_no_www_authenticate_header(self) -> None:
+        """403 Forbidden must not carry WWW-Authenticate (only 401 should)."""
+        u = CurrentUser("u", Role.executor)
+        with pytest.raises(HTTPException) as exc_info:
+            u.require_role(Role.admin)
+        headers = exc_info.value.headers or {}
+        assert "WWW-Authenticate" not in headers
+
+    def test_user_id_empty_string_allowed(self) -> None:
+        u = CurrentUser("", Role.executor)
+        assert u.user_id == ""
+
+
+# ---------------------------------------------------------------------------
+# Additional async get_current_user / require_* coverage
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_expired_token_raises_401(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An expired token must raise 401 through the full dependency path."""
+    import json as _json
+
+    monkeypatch.setenv("AUTH_ENABLED", "true")
+    past = datetime.now(timezone.utc) - timedelta(seconds=5)
+    payload = {"sub": "expired-user", "role": "admin", "exp": past.timestamp()}
+    raw = _json.dumps(payload).encode()
+    mock_jwt = "mock." + _base64.b64encode(raw).decode()
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(mock_jwt)
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_missing_token_detail_not_authenticated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AUTH_ENABLED", "true")
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(None)
+    assert exc_info.value.detail == "Not authenticated"
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_missing_token_www_authenticate_header(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AUTH_ENABLED", "true")
+    with pytest.raises(HTTPException) as exc_info:
+        await get_current_user(None)
+    assert exc_info.value.headers.get("WWW-Authenticate") == "Bearer"
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_executor_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AUTH_ENABLED", "true")
+    jwt_str = create_access_token("dan", "executor")
+    user = await get_current_user(jwt_str)
+    assert user is not None
+    assert user.role == Role.executor
+    assert user.user_id == "dan"
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_returns_current_user_instance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AUTH_ENABLED", "true")
+    jwt_str = create_access_token("eve", "reviewer")
+    user = await get_current_user(jwt_str)
+    assert isinstance(user, CurrentUser)
+
+
+@pytest.mark.asyncio
+async def test_require_reviewer_passes_when_user_is_none() -> None:
+    """require_reviewer must pass through None (auth disabled path)."""
+    result = await require_reviewer(user=None)
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_require_executor_passes_for_reviewer() -> None:
+    user = CurrentUser("u", Role.reviewer)
+    result = await require_executor(user=user)
+    assert result is user
+
+
+@pytest.mark.asyncio
+async def test_require_admin_detail_mentions_admin_role() -> None:
+    user = CurrentUser("u", Role.reviewer)
+    with pytest.raises(HTTPException) as exc_info:
+        await require_admin(user=user)
+    assert "admin" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_require_reviewer_detail_mentions_reviewer_role() -> None:
+    user = CurrentUser("u", Role.executor)
+    with pytest.raises(HTTPException) as exc_info:
+        await require_reviewer(user=user)
+    assert "reviewer" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_is_auth_enabled_false_means_auth_disabled_returns_none_for_any_input(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Confirm auth disabled path ignores invalid tokens and returns None."""
+    monkeypatch.setenv("AUTH_ENABLED", "false")
+    # Passing a completely bogus token — should still return None
+    result = await get_current_user("Bearer GARBAGE")
     assert result is None
