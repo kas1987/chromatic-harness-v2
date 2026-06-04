@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Merge confidence gate — composite verdict for PR auto-merge (Option B, Phase 1).
+"""Merge confidence gate — composite verdict for PR auto-merge (Option B, Phase 2).
 
 Does NOT re-implement the existing gates. It runs them, folds their signals into a
 single confidence score → band → verdict, and writes an audit artifact + (optionally)
@@ -320,7 +320,7 @@ _HEADLINE = {
 def render_comment(report: dict[str, Any]) -> str:
     v = report["verdict"]
     lines = [
-        "## 🔀 Merge confidence gate — **advisory (Phase 1)**",
+        "## 🔀 Merge confidence gate — **enforcing (Phase 2)**",
         "",
         f"{_EMOJI.get(v['verdict'], '•')} **{v['verdict'].replace('_', '-')}** — {_HEADLINE.get(v['verdict'], '')}",
         "",
@@ -331,8 +331,7 @@ def render_comment(report: dict[str, Any]) -> str:
     lines += [f"- {r}" for r in v["reasons"]]
     lines += [
         "",
-        "_Advisory only — this check does not block merges yet. "
-        "It will once thresholds are validated and `merge-gate` is added to branch protection._",
+        "_This is a required status check — a `block` verdict prevents merging._",
     ]
     return "\n".join(lines)
 
@@ -356,7 +355,7 @@ def _post_comment(pr: int, body: str) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Merge confidence gate (Option B, Phase 1 advisory)")
+    ap = argparse.ArgumentParser(description="Merge confidence gate (Option B, Phase 2 enforcing)")
     ap.add_argument("--base", default=os.environ.get("GITHUB_BASE_REF") or "main")
     # str (not int): workflow_dispatch passes an empty PR number; tolerate it.
     ap.add_argument("--pr", default=os.environ.get("MERGE_GATE_PR") or "")
@@ -386,7 +385,7 @@ def main() -> int:
     for r in verdict["reasons"]:
         print(f"  - {r}")
     print(f"  artifact   : {artifact}")
-    print(f"\n{sep}\nmerge-gate: {verdict['verdict'].upper()} (advisory)\n{sep}")
+    print(f"\n{sep}\nmerge-gate: {verdict['verdict'].upper()} (enforcing)\n{sep}")
 
     if args.comment and pr:
         _post_comment(pr, render_comment(report))
@@ -394,7 +393,7 @@ def main() -> int:
     if args.json:
         print(json.dumps(report, indent=2))
 
-    # Phase 1: advisory — never block. Phase 2 (--enforce): block on "block".
+    # Phase 2 (--enforce): block on "block" verdict.
     if args.enforce and verdict["verdict"] == "block":
         return 1
     return 0

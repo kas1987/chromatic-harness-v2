@@ -20,3 +20,11 @@ jobs:
         with:
           repo-token: ${{ steps.app-token.outputs.token || github.token }}  # pragma: allowlist secret
           sync-labels: true
+
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}  # pragma: allowlist secret
+        run: |
+          gh pr merge "${{ github.event.pull_request.number }}" \
+            --auto --squash \
+            --repo "${{ github.repository }}" || true

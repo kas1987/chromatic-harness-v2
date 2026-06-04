@@ -1,11 +1,8 @@
 name: Merge confidence gate
 
-# Option B, Phase 1 — ADVISORY. This job composes the existing PR gates
-# (ai_review_gate, pr_size_gate, secret/privacy diff scan) into a single
-# confidence verdict and posts it as a PR comment. It always exits 0 and is
-# NOT a required status check, so it cannot block a merge yet. Once the
-# thresholds are validated on live PRs, flip to enforcing by adding `--enforce`
-# to the step below and appending "merge-gate" to the branch-protection contexts.
+# Option B, Phase 2 — ENFORCING. Composes ai_review_gate, pr_size_gate,
+# secret/privacy diff scan into a single confidence verdict. Exits 1 on "block"
+# verdict (score < 70 or hard signal). Required status check on protected branches.
 
 on:
   pull_request:
@@ -36,10 +33,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Merge confidence gate (advisory)
+      - name: Merge confidence gate (enforcing)
         run: |
           python scripts/merge_confidence_gate.py \
             --base "${{ github.base_ref }}" \
             --pr "${{ github.event.pull_request.number }}" \
             --comment \
-            --json
+            --json \
+            --enforce

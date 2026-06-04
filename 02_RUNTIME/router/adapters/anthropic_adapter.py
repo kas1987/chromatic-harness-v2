@@ -69,25 +69,63 @@ class AnthropicAdapter(BaseAdapter):
             client = self._get_client()
             start = time.time()
 
-            messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
-            response = await client.messages.create(
-                model=self.cfg.get("model", "claude-3-5-sonnet-20241022"),
-                max_tokens=req.constraints.max_tokens or 2048,
-                messages=messages,
-                timeout=self.cfg.get("timeout", 30),
-            )
+            raw = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
+
+            # Separate ALL system messages (anywhere in the list) and route them
+            # via the top-level system= param with prompt caching. Anthropic rejects
+            # role="system" inside messages=[] and caching won't apply otherwise.
+            system_msgs = [m for m in raw if isinstance(m, dict) and m.get("role") == "system"]
+            chat_messages = [m for m in raw if not (isinstance(m, dict) and m.get("role") == "system")]
+
+            # Guard: API requires at least one user/assistant turn.
+            if not chat_messages:
+                chat_messages = [{"role": "user", "content": req.objective}]
+
+            system_param: list[dict] | None = None
+            if system_msgs:
+                # Merge all system content; handle both str and list-of-blocks formats.
+                parts: list[str] = []
+                for sm in system_msgs:
+                    content = sm.get("content", "")
+                    if isinstance(content, str):
+                        parts.append(content)
+                    elif isinstance(content, list):
+                        parts.extend(
+                            p.get("text", "")
+                            for p in content
+                            if isinstance(p, dict) and p.get("type") == "text"
+                        )
+                system_text = "\n".join(p for p in parts if p)
+                if system_text:
+                    system_param = [{"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}]
+
+            create_kwargs: dict[str, Any] = {
+                "model": self.cfg.get("model", "claude-3-5-sonnet-20241022"),
+                "max_tokens": req.constraints.max_tokens or 2048,
+                "messages": chat_messages,
+                "timeout": self.cfg.get("timeout", 30),
+            }
+            if system_param:
+                create_kwargs["system"] = system_param
+
+            response = await client.messages.create(**create_kwargs)
 
             latency_ms = int((time.time() - start) * 1000)
             content = response.content[0].text
+            usage = response.usage
+            cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
+            cache_write = getattr(usage, "cache_creation_input_tokens", 0) or 0
 
             return RouteResponse(
                 request_id=req.request_id,
                 selected_provider=self.name,
                 output=RouteOutput(type=OutputType.TEXT, content=content),
                 usage=RouteUsage(
-                    input_tokens=response.usage.input_tokens,
-                    output_tokens=response.usage.output_tokens,
-                    total_tokens=response.usage.input_tokens + response.usage.output_tokens,
+                    input_tokens=usage.input_tokens,
+                    output_tokens=usage.output_tokens,
+                    total_tokens=usage.input_tokens + usage.output_tokens,
+                    cache_read_tokens=cache_read,
+                    cache_write_tokens=cache_write,
                 ),
                 latency_ms=latency_ms,
                 logs=logs,
