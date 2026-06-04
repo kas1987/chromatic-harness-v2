@@ -1083,8 +1083,8 @@ class TestGuardAndInject:
     @pytest.mark.asyncio
     async def test_injected_rules_names_extracted(self, orch):
         result = await orch.guard_and_inject(self._mp())
-        # Stub provides {"name": "file_scope_rule"}
-        assert "file_scope_rule" in result["injected_rules"]
+        # Stub (local) returns "file_scope_rule"; real DispatchGuard (CI) returns "FILE_SCOPE_ENFORCEMENT"
+        assert any(r in result["injected_rules"] for r in ("file_scope_rule", "FILE_SCOPE_ENFORCEMENT"))
 
     @pytest.mark.asyncio
     async def test_scope_header_present_true_when_scope_non_empty(self, orch):

@@ -124,6 +124,13 @@ sys.modules["bcrypt"] = _bcrypt_mock
 from fastapi import HTTPException  # noqa: E402
 
 import auth  # noqa: E402
+
+# test_api_endpoints.py is alphabetically earlier and binds a simpler _jwt_decode
+# (sub:role only, no exp) to auth.jwt before this module is collected.  Force our
+# richer mock into auth's namespace so that every test here sees the correct shim.
+auth.jwt = _jose_jwt_mock
+auth.JWTError = Exception  # keep consistent with what _jwt_decode raises
+
 from auth import (  # noqa: E402
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES,
