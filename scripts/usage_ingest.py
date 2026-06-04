@@ -10,6 +10,7 @@ Two idempotent steps:
 
 Run periodically (cron / autopilot). Safe to run repeatedly.
 """
+
 from __future__ import annotations
 import sys
 from pathlib import Path
@@ -77,15 +78,18 @@ def ingest_transcripts():
                 "cache_creation": usage.get("cache_creation_input_tokens", 0),
                 "cache_read": usage.get("cache_read_input_tokens", 0),
             }
-            L.append_jsonl(L.WTOK_EVENTS, {
-                "ts": _iso_to_epoch(entry.get("timestamp")),
-                "session_id": entry.get("sessionId"),
-                "model": model,
-                "request_id": rid,
-                "raw": raw,
-                "wtok": round(L.wtok(raw, model, weights), 2),
-                "weight_table_version": version,
-            })
+            L.append_jsonl(
+                L.WTOK_EVENTS,
+                {
+                    "ts": _iso_to_epoch(entry.get("timestamp")),
+                    "session_id": entry.get("sessionId"),
+                    "model": model,
+                    "request_id": rid,
+                    "raw": raw,
+                    "wtok": round(L.wtok(raw, model, weights), 2),
+                    "weight_table_version": version,
+                },
+            )
             emitted += 1
     return emitted
 
@@ -95,6 +99,7 @@ def _iso_to_epoch(iso):
         return None
     try:
         from datetime import datetime
+
         return int(datetime.fromisoformat(str(iso).replace("Z", "+00:00")).timestamp())
     except Exception:
         return None
