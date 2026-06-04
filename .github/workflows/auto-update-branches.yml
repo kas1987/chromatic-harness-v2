@@ -48,7 +48,7 @@ jobs:
             --base "$BASE" \
             --state open \
             --json number,autoMergeRequest,mergeStateStatus \
-            --limit 50 > /tmp/prs.json
+            --limit 200 > /tmp/prs.json
 
           python3 << 'PYEOF'
           import json, subprocess, os
