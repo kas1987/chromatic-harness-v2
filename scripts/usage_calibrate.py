@@ -79,7 +79,7 @@ def _is_reset(prev, cur):
 
 def _estimate_caps(window, snapshots, ts_list, cum):
     """Collect cap estimates for one window from consecutive same-window pairs."""
-    pts = [(s["ts"], s.get(window)) for s in snapshots if s.get("ts") and s.get(window)]
+    pts = [(s["ts"], s.get(window)) for s in snapshots if s.get("ts") is not None and s.get(window)]
     pts.sort(key=lambda p: p[0])
     estimates = []
     for (t1, w1), (t2, w2) in zip(pts, pts[1:]):
@@ -211,13 +211,16 @@ def _compute_caps(epoch_start, snapshots, ts_list, cum):
     return caps
 
 
-def _detect_regime(epochs, epoch, caps):
+def _detect_regime(epochs, epoch, caps, latest_ts=0):
     """Update regime streak; open a new epoch on a sustained firm-cap shift.
 
     Returns (epochs, epoch, regime_event_or_None). A regime is flagged when a
     window whose cap is 'ok' deviates from its established epoch baseline by more
     than REGIME_THRESHOLD_PCT for REGIME_CONFIRM consecutive runs — then we
     re-baseline into a fresh epoch rather than blend pre/post-change data.
+
+    latest_ts is passed explicitly (rather than stored on the epoch dict) to
+    avoid mutating epoch with temporary state that could leak into epochs.json.
     """
     signal = None
     for window in WINDOWS:  # prefer five_hour (moves faster), fall back to weekly
@@ -239,7 +242,6 @@ def _detect_regime(epochs, epoch, caps):
     # Sustained shift confirmed → open a new epoch starting now.
     window, new_cap, base, dev = signal
     new_id = f"e{len(epochs['epochs']) + 1}"
-    latest_ts = epoch.get("_latest_ts", 0)
     reason = f"{window} cap {round(base)}→{round(new_cap)} wtok ({round(dev)}% shift)"
     new_epoch = {"id": new_id, "start_ts": latest_ts, "reason": reason,
                  "opened_at": L._now_iso()}
@@ -263,7 +265,7 @@ def calibrate(from_ts=None, weights_path=None, write=True):
     else:
         weights, version = (None, L.load_weights()[1])
     ts_list, cum, _ = _load_cumulative_timeline(weights=weights)
-    snapshots = [s for s in L.iter_jsonl(L.SNAPSHOTS_ARCHIVE) if s.get("ts")]
+    snapshots = [s for s in L.iter_jsonl(L.SNAPSHOTS_ARCHIVE) if s.get("ts") is not None]
     latest_ts = max((s["ts"] for s in snapshots), default=0)
 
     if from_ts is not None:
@@ -277,12 +279,10 @@ def calibrate(from_ts=None, weights_path=None, write=True):
 
     epochs = _load_epochs()
     epoch = _current_epoch(epochs)
-    epoch["_latest_ts"] = latest_ts
     caps = _compute_caps(epoch["start_ts"], snapshots, ts_list, cum)
-    epochs, epoch, regime = _detect_regime(epochs, epoch, caps)
+    epochs, epoch, regime = _detect_regime(epochs, epoch, caps, latest_ts)
     if regime:  # re-baseline: recompute within the freshly opened epoch
         caps = _compute_caps(epoch["start_ts"], snapshots, ts_list, cum)
-    epoch.pop("_latest_ts", None)
 
     out = {
         "updated_at": L._now_iso(),

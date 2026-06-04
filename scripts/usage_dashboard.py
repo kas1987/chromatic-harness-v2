@@ -40,7 +40,7 @@ def _current_windows_table(caps):
     rows = ["| Window | Used | Cap | Confidence | Forecast |",
             "|--------|------|-----|-----------|----------|"]
     for key, label in WINDOW_LABELS.items():
-        c = caps.get(key) or {} if isinstance(caps, dict) else {}
+        c = (caps.get(key) or {}) if isinstance(caps, dict) else {}
         used = _fmt_wtok(c.get("used_wtok"))
         cap = _fmt_wtok(c.get("cap_wtok"))
         conf = c.get("confidence", "none")

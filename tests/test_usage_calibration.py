@@ -157,15 +157,14 @@ def test_detect_regime_opens_new_epoch_after_sustained_shift(tmp_path, monkeypat
         L.append_jsonl(L.CALIBRATION_HISTORY, {"epoch_id": "e1", "five_hour": {"confidence": "ok", "cap_wtok": 100000}})
     epochs = {"epochs": [{"id": "e1", "start_ts": 0}], "current": "e1", "regime_streak": 0}
     epoch = epochs["epochs"][0]
-    epoch["_latest_ts"] = 1000
     shifted = {
         "five_hour": {"confidence": "ok", "cap_wtok": 200000},  # +100% vs baseline
         "seven_day": {"confidence": "none", "cap_wtok": None},
     }
 
-    epochs, ep, r1 = C._detect_regime(epochs, epoch, shifted)
-    epochs, ep, r2 = C._detect_regime(epochs, ep, shifted)
-    epochs, ep, r3 = C._detect_regime(epochs, ep, shifted)
+    epochs, ep, r1 = C._detect_regime(epochs, epoch, shifted, 1000)
+    epochs, ep, r2 = C._detect_regime(epochs, ep, shifted, 1000)
+    epochs, ep, r3 = C._detect_regime(epochs, ep, shifted, 1000)
     assert r1 is None and r2 is None  # streak building (< REGIME_CONFIRM)
     assert r3 is not None  # 3rd consecutive shift => new epoch
     assert epochs["current"] == "e2"
@@ -182,7 +181,7 @@ def test_detect_regime_resets_streak_when_stable(tmp_path, monkeypatch):
         "five_hour": {"confidence": "ok", "cap_wtok": 105000},  # +5% only
         "seven_day": {"confidence": "none", "cap_wtok": None},
     }
-    epochs, ep, r = C._detect_regime(epochs, epoch, stable)
+    epochs, ep, r = C._detect_regime(epochs, epoch, stable, 1000)
     assert r is None and epochs["regime_streak"] == 0 and epochs["current"] == "e1"
 
 
