@@ -23,15 +23,14 @@ _PROFILE_PATH = _REPO / "config" / "pre_session" / "mcp.profile.yaml"
 
 
 def _load_settings() -> dict:
-    for name in ("settings.local.yaml", "settings.example.yaml"):
-        path = _REPO / "config" / "pre_session" / name
-        if path.exists():
-            try:
-                import yaml  # type: ignore[import-untyped]
+    path = _REPO / "config" / "pre_session" / "settings.local.yaml"
+    if path.exists():
+        try:
+            import yaml  # type: ignore[import-untyped]
 
-                return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-            except Exception:
-                pass
+            return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            pass
     return {}
 
 

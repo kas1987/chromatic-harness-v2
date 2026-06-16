@@ -421,11 +421,12 @@ def _write_reports(report: dict[str, Any]) -> tuple[Path, Path, Path]:
         "",
     ]
     for c in report["checks"]:
-        lines.append(f"- {c['status'].upper()} {c['name']}: {c['message']}")
+        msg = c["message"].replace("\n", " ").replace("\r", "")
+        lines.append(f"- {c['status'].upper()} {c['name']}: {msg}")
     lines += ["", "## Refresh Chain", ""]
     if report.get("refresh_steps"):
         for r in report["refresh_steps"]:
-            extra = r.get("error", "")
+            extra = r.get("error", "").replace("\n", " ").replace("\r", "")
             lines.append(f"- {r['status'].upper()} {r['name']}" + (f": {extra}" if extra else ""))
     else:
         lines.append("- Refresh chain skipped.")

@@ -153,16 +153,19 @@ def _run_bd(
     cmd = [*resolve_bd_argv(), *args]
     if runner:
         return runner(cmd, cwd)
-    return subprocess.run(
-        cmd,
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=60,
-        check=False,
-    )
+    try:
+        return subprocess.run(
+            cmd,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=60,
+            check=False,
+        )
+    except FileNotFoundError:
+        return subprocess.CompletedProcess(cmd, returncode=1, stdout="", stderr="")
 
 
 def _parse_bead_id(output: str) -> str:
