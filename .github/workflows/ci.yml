@@ -21,7 +21,7 @@ jobs:
         uses: actions/create-github-app-token@v3
         continue-on-error: true
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
 
       - uses: actions/checkout@v6
@@ -80,8 +80,14 @@ jobs:
       - name: Federation repo role registry validation
         run: python scripts/validate_repo_role_registry.py
 
-      - name: Governance gate — secret scan (blocking)
-        run: python scripts/security_scan.py --no-deps
+      - name: Governance gate — secret + dependency scan (blocking)
+        # Dependency audit was previously skipped (--no-deps), so 282/283
+        # historical scans recorded deps=skipped while still passing. Install
+        # pip-audit and run the FULL scan so a vulnerable dependency blocks the
+        # gate, matching harness-observability-check.yml.
+        run: |
+          python -m pip install --quiet pip-audit
+          python scripts/security_scan.py
 
       - name: Governance gates — advisory reports (non-blocking)
         env:
@@ -122,10 +128,37 @@ jobs:
       - name: Lint
         run: |
           pip install ruff==0.15.15
-          ruff check src/ tests/
+          ruff check .
 
       - name: Format check
         run: ruff format --check src/ tests/
+
+      - name: Setup Node for markdown lint
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Markdown lint (changed files)
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          CHANGED_MD="$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA" | grep -E '\\.md$' || true)"
+          if [[ -z "$CHANGED_MD" ]]; then
+            echo "No changed markdown files to lint."
+            exit 0
+          fi
+
+          echo "Linting changed markdown files:"
+          echo "$CHANGED_MD"
+          # markdownlint-cli2 is scoped to touched files to avoid legacy-doc debt blocking CI.
+          npx --yes markdownlint-cli2 $CHANGED_MD
 
       - name: Type check
         run: |
