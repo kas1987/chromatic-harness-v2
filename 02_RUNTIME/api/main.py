@@ -87,6 +87,10 @@ _conf_mod = _load_module("confidence_engine", os.path.join(_RUNTIME, "orchestrat
 NOW = lambda: datetime.now(timezone.utc).isoformat()  # noqa: E731
 
 
+def _ok(payload):
+    return {"status": "ok", "data": payload}
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
@@ -98,7 +102,7 @@ app = FastAPI(title="Chromatic Harness v2 API", version="2.0.0", lifespan=lifesp
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "2.0.0"}
+    return _ok({"status": "ok", "version": "2.0.0"})
 
 
 @app.post("/route")
@@ -219,7 +223,7 @@ async def auth_me(
     return UserResponse(user_id=current_user.user_id, username=row[0], role=row[1], created_at=row[2])
 
 
-@app.post("/missions", response_model=MissionResponse)
+@app.post("/missions", response_model=dict)
 async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)):
     orch = Orchestrator()
     packet = orch.create_mission(req.objective)
@@ -248,23 +252,34 @@ async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = D
         (packet.mission_id, json.dumps(data), NOW()),
     )
     await db.commit()
-    return MissionResponse(**data)
+    return _ok(data)
 
 
-@app.get("/missions", response_model=list[MissionResponse])
+@app.get("/missions", response_model=dict)
 async def list_missions(db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute("SELECT data FROM missions ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
-    return [MissionResponse(**json.loads(r[0])) for r in rows]
+    return _ok([json.loads(r[0]) for r in rows])
 
 
-@app.get("/missions/{mission_id}", response_model=MissionResponse)
+@app.get("/missions/{mission_id}", response_model=dict)
 async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="Mission not found")
-    return MissionResponse(**json.loads(row[0]))
+    return _ok(json.loads(row[0]))
+
+
+@app.get("/missions/{mission_id}/gates")
+async def get_mission_gates(
+    mission_id: str,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    async with db.execute("SELECT mission_id FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
+        if not await cur.fetchone():
+            raise HTTPException(status_code=404, detail="Mission not found")
+    return _ok([])
 
 
 @app.post("/missions/{mission_id}/events", response_model=MagnetEventResponse)
@@ -395,7 +410,7 @@ async def get_mission_analytics(mission_id: str, db: aiosqlite.Connection = Depe
     )
 
 
-@app.post("/missions/{mission_id}/synthesize", response_model=AgentLeadResponse)
+@app.post("/missions/{mission_id}/synthesize", response_model=dict)
 async def synthesize_mission(
     mission_id: str,
     auto_create_bead: bool = Query(default=False, alias="create_bead"),
@@ -439,24 +454,25 @@ async def synthesize_mission(
             source=sb.get("source", "agent_lead"),
             mission_id=mission_id,
         )
-        bead_created = await create_bead(bead_req, db)
+        bead_created = await _build_bead(bead_req, db)
 
-    return AgentLeadResponse(
-        mission_id=mission_id,
-        decision=output.decision,
-        composite_score=output.composite_score,
-        final_report=output.final_report,
-        pr_package=output.pr_package,
-        next_steps=output.next_steps,
-        audit_log=output.audit_log,
-        handoff_prep=output.handoff_prep,
-        suggested_bead=output.suggested_bead,
-        bead_created=bead_created,
+    return _ok(
+        AgentLeadResponse(
+            mission_id=mission_id,
+            decision=output.decision,
+            composite_score=output.composite_score,
+            final_report=output.final_report,
+            pr_package=output.pr_package,
+            next_steps=output.next_steps,
+            audit_log=output.audit_log,
+            handoff_prep=output.handoff_prep,
+            suggested_bead=output.suggested_bead,
+            bead_created=bead_created,
+        ).model_dump()
     )
 
 
-@app.post("/beads", response_model=BeadResponse)
-async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def _build_bead(req: CreateBeadRequest, db: aiosqlite.Connection) -> BeadResponse:
     bead_id = f"BEAD-{str(uuid.uuid4())[:8].upper()}"
     ts = NOW()
     data = {
@@ -477,11 +493,16 @@ async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends
     return BeadResponse(**data)
 
 
-@app.get("/beads", response_model=list[BeadResponse])
+@app.post("/beads", response_model=dict)
+async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)):
+    return _ok((await _build_bead(req, db)).model_dump())
+
+
+@app.get("/beads", response_model=dict)
 async def list_beads(db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute("SELECT data FROM beads ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
-    return [BeadResponse(**json.loads(r[0])) for r in rows]
+    return _ok([json.loads(r[0]) for r in rows])
 
 
 # ─── Agent Profiles ───────────────────────────────────────────────────────────
@@ -503,7 +524,7 @@ def _agent_data_to_response(data: dict) -> AgentProfileResponse:
     return AgentProfileResponse(**data)
 
 
-@app.post("/agents", response_model=AgentProfileResponse, status_code=201)
+@app.post("/agents", response_model=dict, status_code=201)
 async def register_agent(req: RegisterAgentRequest, db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (req.agent_id,)) as cur:
         existing = await cur.fetchone()
@@ -532,26 +553,26 @@ async def register_agent(req: RegisterAgentRequest, db: aiosqlite.Connection = D
         (req.agent_id, json.dumps(data), ts, ts),
     )
     await db.commit()
-    return _agent_data_to_response(data)
+    return _ok(_agent_data_to_response(data).model_dump())
 
 
-@app.get("/agents", response_model=list[AgentProfileResponse])
+@app.get("/agents", response_model=dict)
 async def list_agents(db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute("SELECT data FROM agent_profiles ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
-    return [_agent_data_to_response(json.loads(r[0])) for r in rows]
+    return _ok([_agent_data_to_response(json.loads(r[0])).model_dump() for r in rows])
 
 
-@app.get("/agents/{agent_id}", response_model=AgentProfileResponse)
+@app.get("/agents/{agent_id}", response_model=dict)
 async def get_agent(agent_id: str, db: aiosqlite.Connection = Depends(get_db)):
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
         raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
-    return _agent_data_to_response(json.loads(row[0]))
+    return _ok(_agent_data_to_response(json.loads(row[0])).model_dump())
 
 
-@app.post("/agents/{agent_id}/executions", response_model=AgentProfileResponse)
+@app.post("/agents/{agent_id}/executions", response_model=dict)
 async def record_execution(
     agent_id: str,
     req: RecordExecutionRequest,
@@ -580,10 +601,10 @@ async def record_execution(
         (json.dumps(data), ts, agent_id),
     )
     await db.commit()
-    return _agent_data_to_response(data)
+    return _ok(_agent_data_to_response(data).model_dump())
 
 
-@app.post("/agents/{agent_id}/promote", response_model=AgentProfileResponse)
+@app.post("/agents/{agent_id}/promote", response_model=dict)
 async def promote_agent(
     agent_id: str,
     req: PromoteAgentRequest,
@@ -604,12 +625,12 @@ async def promote_agent(
         (json.dumps(data), ts, agent_id),
     )
     await db.commit()
-    return _agent_data_to_response(data)
+    return _ok(_agent_data_to_response(data).model_dump())
 
 
 @app.get("/agents/meta/level-thresholds")
 async def level_thresholds():
-    return {"data": _LEVEL_THRESHOLDS}
+    return _ok(_LEVEL_THRESHOLDS)
 
 
 async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict:
@@ -626,7 +647,9 @@ async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict:
             metadata=getattr(mission, "metadata", {}),
         ),
         constraints=RouteConstraints(
-            privacy_class=PrivacyClass(getattr(mission, "privacy_class", "P1")) if isinstance(getattr(mission, "privacy_class", None), str) else getattr(mission, "privacy_class", PrivacyClass.P1),
+            privacy_class=PrivacyClass(getattr(mission, "privacy_class", "P1"))
+            if isinstance(getattr(mission, "privacy_class", None), str)
+            else getattr(mission, "privacy_class", PrivacyClass.P1),
             max_cost_usd=getattr(mission, "max_cost_usd", 0.25),
         ),
     )
