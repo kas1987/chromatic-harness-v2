@@ -9,7 +9,11 @@
     "source_intent": {"type": "string"},
     "agent_role": {"type": "string"},
     "model": {"type": "string"},
-    "autonomy_level": {"type": "string", "enum": ["L0", "L1", "L2", "L3", "L4", "L5"]},
+    "autonomy_level": {
+      "type": "string",
+      "enum": ["L0", "L1", "L2", "L3", "L4", "L5"],
+      "$comment": "L0-L4 may be set by prompt modes (operator/auditor/designer). L5 requires metadata.human_approved=true; the validator rejects L5 without it."
+    },
     "confidence_required": {"type": "number", "minimum": 0, "maximum": 100},
     "risk_level": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
     "allowed_tools": {"type": "array", "items": {"type": "string"}},
@@ -19,6 +23,26 @@
     "tool_budget": {"type": "object"},
     "stop_conditions": {"type": "array", "items": {"type": "string"}},
     "required_outputs": {"type": "array", "items": {"type": "string"}},
-    "evidence_required": {"type": "array", "items": {"type": "string"}}
+    "evidence_required": {"type": "array", "items": {"type": "string"}},
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "human_approved": {
+          "type": "boolean",
+          "default": false,
+          "$comment": "Must be true for autonomy_level=L5. Never set by prompt modes."
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["operator", "auditor", "designer"],
+          "$comment": "Advisory only. Does not override CMP gate decisions."
+        },
+        "mode_autonomy_ceiling": {
+          "type": "string",
+          "enum": ["L0", "L1", "L2", "L3", "L4"],
+          "$comment": "Maximum autonomy_level a mode may suggest. Always <= L4."
+        }
+      }
+    }
   }
 }

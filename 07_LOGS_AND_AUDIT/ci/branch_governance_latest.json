@@ -1,0 +1,228 @@
+{
+  "generated_at": "2026-06-16T20:12:45.294216+00:00",
+  "default_branch": "main",
+  "caps": {
+    "local_max_total": 35,
+    "remote_max_total": 80
+  },
+  "counts": {
+    "local_total": 30,
+    "remote_total": 38,
+    "local_stale": 9,
+    "remote_stale": 15,
+    "local_gone_upstream": 1,
+    "local_merged_candidates": 1
+  },
+  "violations": [],
+  "local_stale": [
+    {
+      "name": "archive/concurrent-unpushed-all",
+      "upstream": "",
+      "upstream_track": "",
+      "last_commit_at": "2026-06-01 09:51:44 -0400",
+      "age_days": 15.26,
+      "category": "default",
+      "stale_threshold_days": 14.0
+    },
+    {
+      "name": "feat/0yoy-kos-stage7-canon-registry",
+      "upstream": "",
+      "upstream_track": "",
+      "last_commit_at": "2026-05-31 19:10:29 -0400",
+      "age_days": 15.88,
+      "category": "feature",
+      "stale_threshold_days": 14.0
+    },
+    {
+      "name": "session/auto-mode-governance-20260530",
+      "upstream": "",
+      "upstream_track": "",
+      "last_commit_at": "2026-05-30 18:32:44 -0400",
+      "age_days": 16.9,
+      "category": "session",
+      "stale_threshold_days": 3.0
+    },
+    {
+      "name": "session/observability-pdr",
+      "upstream": "origin/session/chromatic-harness-v2-initial",
+      "upstream_track": "[ahead 5, behind 210]",
+      "last_commit_at": "2026-06-01 14:11:47 -0400",
+      "age_days": 15.08,
+      "category": "session",
+      "stale_threshold_days": 3.0
+    },
+    {
+      "name": "temp/fix-rollout-guide",
+      "upstream": "origin/docs/multi-drive-rollout-guide",
+      "upstream_track": "[behind 12]",
+      "last_commit_at": "2026-06-03 13:54:52 -0400",
+      "age_days": 13.1,
+      "category": "temp",
+      "stale_threshold_days": 3.0
+    },
+    {
+      "name": "worktree-agent-a322faf27a5783ee8",
+      "upstream": "",
+      "upstream_track": "",
+      "last_commit_at": "2026-06-01 09:01:47 -0400",
+      "age_days": 15.3,
+      "category": "worktree",
+      "stale_threshold_days": 3.0
+    },
+    {
+      "name": "worktree-agent-a8bb0fc9ecbded666",
+      "upstream": "",
+      "upstream_track": "",
+      "last_commit_at": "2026-06-01 09:06:08 -0400",
+      "age_days": 15.3,
+      "category": "worktree",
+      "stale_threshold_days": 3.0
+    },
+    {
+      "name": "worktree-agent-aa297fee174d02d06",
+      "upstream": "",
+      "upstream_track": "",
+      "last_commit_at": "2026-06-01 09:02:57 -0400",
+      "age_days": 15.3,
+      "category": "worktree",
+      "stale_threshold_days": 3.0
+    },
+    {
+      "name": "worktree-agent-ac33ba751d33dbe79",
+      "upstream": "",
+      "upstream_track": "",
+      "last_commit_at": "2026-06-01 09:20:24 -0400",
+      "age_days": 15.29,
+      "category": "worktree",
+      "stale_threshold_days": 3.0
+    }
+  ],
+  "remote_stale": [
+    {
+      "name": "chore/8tse-run-safe-shell",
+      "last_commit_at": "2026-06-02 00:42:51 -0400",
+      "age_days": 14.65,
+      "category": "chore",
+      "stale_threshold_days": 10.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "chore/j2r0-closeout",
+      "last_commit_at": "2026-06-02 00:32:41 -0400",
+      "age_days": 14.65,
+      "category": "chore",
+      "stale_threshold_days": 10.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "chore/xarw3-repoint-claude-config",
+      "last_commit_at": "2026-06-02 15:18:39 -0400",
+      "age_days": 14.04,
+      "category": "chore",
+      "stale_threshold_days": 10.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/8lri.3-runtime-layer-map",
+      "last_commit_at": "2026-06-02 14:40:50 -0400",
+      "age_days": 14.06,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-1-collision-status",
+      "last_commit_at": "2026-06-02 11:08:30 -0400",
+      "age_days": 14.21,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-2-routing-policy",
+      "last_commit_at": "2026-06-02 11:23:49 -0400",
+      "age_days": 14.2,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-3-loop-budget-guard",
+      "last_commit_at": "2026-06-02 14:24:21 -0400",
+      "age_days": 14.08,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-4-review-intake-live",
+      "last_commit_at": "2026-06-02 11:41:00 -0400",
+      "age_days": 14.19,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-5-error-logs-to-flywheel",
+      "last_commit_at": "2026-06-02 12:38:11 -0400",
+      "age_days": 14.15,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-6-wiki-convergence",
+      "last_commit_at": "2026-06-02 12:59:36 -0400",
+      "age_days": 14.13,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-7-root-hygiene",
+      "last_commit_at": "2026-06-02 13:08:03 -0400",
+      "age_days": 14.13,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-8-skill-profiles",
+      "last_commit_at": "2026-06-02 13:04:25 -0400",
+      "age_days": 14.13,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "feat/omh-9-playbook-index",
+      "last_commit_at": "2026-06-02 13:06:18 -0400",
+      "age_days": 14.13,
+      "category": "feature",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "fix/e2e-git-snapshot-isolation",
+      "last_commit_at": "2026-06-02 11:29:23 -0400",
+      "age_days": 14.2,
+      "category": "fix",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    },
+    {
+      "name": "fix/session-start-bd-prime-windows",
+      "last_commit_at": "2026-06-02 12:45:57 -0400",
+      "age_days": 14.14,
+      "category": "fix",
+      "stale_threshold_days": 14.0,
+      "has_open_pr": false
+    }
+  ],
+  "local_gone_upstream": [
+    "feat/console-mode-switcher"
+  ],
+  "local_merged_candidates": [
+    "feat/u8uj-2-local"
+  ]
+}

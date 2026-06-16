@@ -4,6 +4,32 @@ on:
   schedule:
     - cron: "0 13 * * 1"
   workflow_dispatch:
+    inputs:
+      swot_apply:
+        description: "Allow SWOT loop to create/close beads"
+        type: boolean
+        required: true
+        default: false
+      swot_drain:
+        description: "Run workflow self-heal drain during SWOT loop"
+        type: boolean
+        required: true
+        default: true
+      swot_close_generated:
+        description: "Close generated SWOT beads after strict audit passes"
+        type: boolean
+        required: true
+        default: false
+      swot_branch_mode:
+        description: "Branch autonomy mode while draining"
+        type: choice
+        required: true
+        default: local
+        options:
+          - off
+          - local
+          - subagent
+          - cloud
 
 jobs:
   governance-summary:
@@ -18,6 +44,26 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: SWOT autonomy loop
+        env:
+          SWOT_APPLY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_apply || 'false' }}
+          SWOT_DRAIN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_drain || 'true' }}
+          SWOT_CLOSE_GENERATED: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_close_generated || 'false' }}
+          SWOT_BRANCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_branch_mode || 'local' }}
+        run: |
+          ARGS="--write --branch-mode ${SWOT_BRANCH_MODE}"
+          ARGS="$ARGS --audit-strict"
+          if [ "${SWOT_DRAIN}" = "true" ]; then
+            ARGS="$ARGS --drain"
+          fi
+          if [ "${SWOT_APPLY}" = "true" ]; then
+            ARGS="$ARGS --apply"
+          fi
+          if [ "${SWOT_CLOSE_GENERATED}" = "true" ]; then
+            ARGS="$ARGS --close-generated"
+          fi
+          python scripts/swot_autonomy_loop.py $ARGS
 
       - name: Validate CI policy matrix
         run: python scripts/validate_ci_policy_matrix.py
@@ -54,6 +100,7 @@ jobs:
             07_LOGS_AND_AUDIT/ci/branch_governance_latest.md
             07_LOGS_AND_AUDIT/ci/branch_governance_enforce_latest.json
             07_LOGS_AND_AUDIT/ci/branch_governance_autonomy_latest.json
+            07_LOGS_AND_AUDIT/ci/swot_autonomy_latest.json
             07_LOGS_AND_AUDIT/ci/weekly_summary_latest.json
             07_LOGS_AND_AUDIT/ci/weekly_summary_latest.md
           if-no-files-found: error

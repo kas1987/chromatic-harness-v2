@@ -112,3 +112,25 @@
 {"event": "knowledge_feedback", "new_candidates": 0, "session_id": "d91ede4a-c3b6-4fab-b15c-850cc7db7291", "timestamp": "2026-06-03T15:05:21.459929+00:00"}
 {"event": "knowledge_feedback", "new_candidates": 0, "session_id": "b9462c12-a785-40e5-ad30-ad2167e41025", "timestamp": "2026-06-03T15:25:28.404699+00:00"}
 {"date": "2026-06-03", "branch": "claude/repo-harness-completeness-aU9KE", "commit": "1e63a8b60dd240ea40993b1efdb09931e0846539", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "897df0d5-7a77-4f50-b569-0601360bfcb9", "timestamp": "2026-06-03T18:03:20.593291+00:00"}
+{"date": "2026-06-03", "branch": "temp/fix-dep-trigger-2", "commit": "43bd8eae002a2b41b6b6c29cbdc9bc98c59e845a", "beads_closed": 1, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "b0f4cdc6-c4b8-4d0f-ae4f-fc0bcd9eb08f", "timestamp": "2026-06-03T18:31:44.095570+00:00"}
+{"date": "2026-06-03", "branch": "fix/check-rate-limit-fstring", "commit": "01e3d39dd354bd817cb96427329c9a75506493d6", "beads_closed": 1, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "aedfddf3-47f0-4ff9-b87c-22bdc0fe92d7", "timestamp": "2026-06-03T19:25:43.349891+00:00"}
+{"date": "2026-06-03", "branch": "fix/check-rate-limit-fstring", "commit": "01e3d39dd354bd817cb96427329c9a75506493d6", "beads_closed": 1, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "bd1d1dee-5842-4b90-994d-edae1ca19f3a", "timestamp": "2026-06-03T21:24:35.518861+00:00"}
+{"date": "2026-06-03", "branch": "feat/router-prompt-caching-and-pruning", "commit": "06e3d72d0fed55ddfd6a7d5211cba548ffb399f8", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "53c9809b-c837-46bd-9f09-83c7542a2366", "timestamp": "2026-06-03T23:00:13.438297+00:00"}
+{"date": "2026-06-03", "branch": "feat/router-prompt-caching-and-pruning", "commit": "a54f645215487839e5d04d6e9d701781baefc151", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "ace80964-816d-45ad-950e-27744719a388", "timestamp": "2026-06-04T01:10:18.622196+00:00"}
+{"date": "2026-06-03", "branch": "feat/auto-update-pr-branches", "commit": "9e2f6764f8083cea664fed725549bf8b85363b4f", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "ce43bb22-8716-4b13-8c1b-7e31df53ce3b", "timestamp": "2026-06-04T17:13:03.105884+00:00"}
+{"date": "2026-06-04", "branch": "feat/auto-update-pr-branches", "commit": "def967ee49da027a3b768cfa591ee5c87453dd09", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "aebec390-b775-4c33-86af-9e8957d7c2ab", "timestamp": "2026-06-04T17:23:02.402458+00:00"}
+{"date": "2026-06-04", "branch": "feat/auto-update-pr-branches", "commit": "def967ee49da027a3b768cfa591ee5c87453dd09", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "0b37cf00-3dfd-4e3f-b021-62a6695bd533", "timestamp": "2026-06-04T21:44:37.493671+00:00"}
+{"date": "2026-06-04", "branch": "feat/auto-update-pr-branches", "commit": "def967ee49da027a3b768cfa591ee5c87453dd09", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "592696f0-46a7-4c4d-84f1-9c8446e2cd71", "timestamp": "2026-06-16T16:06:58.119566+00:00"}
+{"date": "2026-06-16", "branch": "feat/auto-update-pr-branches", "commit": "51907d3998f511e24422dfce0232cc53189101f5", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "5b0f92ae-9290-4d17-9130-df15ec2950b5", "timestamp": "2026-06-16T16:07:54.043416+00:00"}
+{"date": "2026-06-16", "branch": "feat/auto-update-pr-branches", "commit": "51907d3998f511e24422dfce0232cc53189101f5", "beads_closed": 0, "notes": ""}

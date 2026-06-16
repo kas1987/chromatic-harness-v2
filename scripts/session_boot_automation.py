@@ -19,6 +19,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 _REPO = Path(__file__).resolve().parents[1]
 _SCRIPTS = _REPO / "scripts"
 
@@ -91,6 +93,17 @@ def _read_audit_risk(root: Path) -> str:
         return "unknown"
 
 
+def _load_branch_policy() -> dict:
+    cfg = _repo_root() / "config" / "ci" / "branch_governance.yaml"
+    if not cfg.is_file():
+        return {}
+    try:
+        data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def _run_context_pipeline(*, force: bool) -> int:
     """Trim audit; rebuild + bootstrap when risk is orange/red or --force."""
     root = _repo_root()
@@ -150,6 +163,9 @@ def run_boot(
 ) -> int:
     errors: list[str] = []
     notices: list[str] = []
+    branch_policy = _load_branch_policy()
+    startup_awareness = branch_policy.get("startup_awareness") if isinstance(branch_policy.get("startup_awareness"), dict) else {}
+    autonomy_cfg = branch_policy.get("autonomy") if isinstance(branch_policy.get("autonomy"), dict) else {}
 
     if _run([str(_SCRIPTS / "check_agent_operations.py")], timeout=30, quiet=True) != 0:
         errors.append("check_agent_operations failed")
@@ -187,14 +203,20 @@ def run_boot(
     if _run([str(_SCRIPTS / "validate_intake_loop.py")], timeout=60, quiet=True) != 0:
         errors.append("validate_intake_loop failed")
 
+    run_branch_audit = bool(startup_awareness.get("run_branch_audit", True))
     branch_audit_script = _SCRIPTS / "branch_governance_audit.py"
-    if branch_audit_script.is_file():
+    if run_branch_audit and branch_audit_script.is_file():
         if _run([str(branch_audit_script), "--write"], timeout=120, quiet=True) != 0:
             notices.append("branch_governance_audit failed")
 
-    branch_mode = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_MODE", "off").strip().lower()
+    env_mode = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_MODE")
+    branch_mode = (env_mode if env_mode is not None else str(autonomy_cfg.get("mode") or "off")).strip().lower()
     if branch_mode in {"local", "subagent", "cloud"}:
-        branch_apply = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_APPLY", "0") == "1"
+        env_apply = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_APPLY")
+        if env_apply is None:
+            branch_apply = bool(autonomy_cfg.get("apply_mutations", False))
+        else:
+            branch_apply = env_apply in {"1", "true", "yes", "on"}
         autonomy_args = [
             str(_SCRIPTS / "branch_governance_autonomy.py"),
             "--mode",

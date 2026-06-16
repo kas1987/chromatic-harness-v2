@@ -1,0 +1,95 @@
+scope: gen-hooks-and-process-flows
+date: 2026-04-05
+workflows:
+  - id: wf_user_prompt_ingress
+    name: User Prompt Hook Ingress
+    entrypoints:
+      - POST /hooks/user-prompt
+    participants:
+      - src/middleware/hop-middleware.ts
+      - src/routes/hooks.ts
+      - src/routing/session-routing-store.ts
+    systems:
+      - SQLite (gen.db)
+      - OpenTelemetry spans
+    outputs:
+      - normalized prompt metadata
+      - suggested llm
+      - dispatch updates preamble
+    documented: true
+    observed: true
+
+  - id: wf_pretool_policy_routing
+    name: Pretool Guard and LLM Routing
+    entrypoints:
+      - POST /hooks/pretool
+    participants:
+      - src/routes/hooks.ts
+      - src/core/budget-guard.ts
+      - src/budget/budget-store.ts
+      - src/routing/routing-decision-log.ts
+    systems:
+      - SQLite (budget_states, routing_decisions)
+      - OpenTelemetry spans and counters
+    outputs:
+      - allow or stop decision
+      - warning message
+      - suggested llm
+      - routing decision row
+    documented: true
+    observed: true
+
+  - id: wf_posttool_learning
+    name: Posttool Outcome and Learning Capture
+    entrypoints:
+      - POST /hooks/posttool
+    participants:
+      - src/routes/hooks.ts
+      - src/learning/learning-service.ts
+      - src/learning/learning-store.ts
+      - src/budget/budget-store.ts
+    systems:
+      - SQLite (task_outcomes, budget_states)
+      - OpenTelemetry spans and observability events
+    outputs:
+      - learning outcome row
+      - token and call counters
+      - routing reconciliation row
+    documented: true
+    observed: true
+
+  - id: wf_delegate_whole_task
+    name: Whole Task Delegation
+    entrypoints:
+      - POST /api/delegate
+    participants:
+      - src/routes/delegate.ts
+      - src/context/delegate-queue.ts
+      - src/context/delegation-log.ts
+      - src/llm/llm-selector.ts
+    systems:
+      - SQLite (delegation_log)
+      - provider APIs (claude, gemini, lm-studio, ollama, gpt)
+    outputs:
+      - delegated result
+      - fallback chain telemetry
+      - delegation attempt rows
+    documented: partial
+    observed: partial
+
+  - id: wf_hop_dispatch
+    name: Hop Dispatch to Local or Remote MCP
+    entrypoints:
+      - middleware on POST /hooks/user-prompt with metadata.intent_tag
+    participants:
+      - src/middleware/hop-middleware.ts
+      - src/channels/channel-broadcaster.ts
+    systems:
+      - in-memory queue
+      - SSE channels
+      - optional remote MCP endpoint
+    outputs:
+      - hop audit record
+      - local channel event or remote forward
+    documented: true
+    observed: true

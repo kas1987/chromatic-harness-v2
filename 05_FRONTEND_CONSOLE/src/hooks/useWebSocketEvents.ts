@@ -23,8 +23,10 @@ export function useWebSocketEvents(missionId: string | null) {
   useEffect(() => {
     if (!missionId) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const url = `${protocol}//${window.location.host}/ws/missions/${missionId}/events`;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
+    const protocol = apiBase.startsWith('https') ? 'wss:' : 'ws:';
+    const host = apiBase.replace(/^https?:\/\//, '');
+    const url = `${protocol}//${host}/ws/missions/${missionId}/events`;
 
     const ws = new WebSocket(url);
 

@@ -1,0 +1,44 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: gen-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+    # GPU passthrough — requires NVIDIA Container Toolkit on the host.
+    # Remove the `deploy` block entirely if running CPU-only.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  gen:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gen
+    ports:
+      - "43123:43123"
+    volumes:
+      - gen-db:/app/data
+    environment:
+      GEN_PORT: "43123"
+      DATABASE_PATH: /app/data/gen.db
+      GEN_TOKEN: ${GEN_TOKEN:-change-me-in-production}
+      # Ollama embeddings — set GEN_EMBEDDING_MODEL to any model you've pulled.
+      # Default: nomic-embed-text (run `docker exec gen-ollama ollama pull nomic-embed-text` once)
+      GEN_EMBEDDING_URL: http://ollama:11434/v1/embeddings
+      GEN_EMBEDDING_KEY: ollama
+      GEN_EMBEDDING_MODEL: ${GEN_EMBEDDING_MODEL:-nomic-embed-text}
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama-models:
+  gen-db:

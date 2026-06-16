@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-06-16T20:12:16.710628+00:00",
+  "mode": "dry_run",
+  "current_branch": "feat/command-center-p1-p2",
+  "results": [
+    {
+      "branch": "feat/console-mode-switcher",
+      "action": "dry_run",
+      "command": "git branch -D -- feat/console-mode-switcher",
+      "ok": true
+    },
+    {
+      "branch": "feat/u8uj-2-local",
+      "action": "dry_run",
+      "command": "git branch -d -- feat/u8uj-2-local",
+      "ok": true
+    }
+  ],
+  "deleted_count": 2,
+  "failed_count": 0
+}

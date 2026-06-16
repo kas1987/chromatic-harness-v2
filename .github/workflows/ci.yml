@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: SWOT autonomy preflight (PDR/bead plan + strict audit)
+        run: python scripts/swot_autonomy_loop.py --write --audit-strict
+
       # Several governance/intake checks shell out to `bd` (beads). Install it so the
       # checks run for real on the runner instead of FileNotFound-ing.
       - name: Install beads (bd)
@@ -137,6 +140,7 @@ jobs:
             07_LOGS_AND_AUDIT/ci/branch_governance_latest.json
             07_LOGS_AND_AUDIT/ci/branch_governance_latest.md
             07_LOGS_AND_AUDIT/ci/branch_governance_enforce_latest.json
+            07_LOGS_AND_AUDIT/ci/swot_autonomy_latest.json
           if-no-files-found: ignore
 
       - name: Hook audit (no HIGH findings)

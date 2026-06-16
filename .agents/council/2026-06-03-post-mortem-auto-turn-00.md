@@ -1,22 +1,22 @@
 # Post-Mortem Council Report - Auto Turn Closeout
 
-- generated_at_utc: 20260603T014947Z
+- generated_at_utc: 20260603T230108Z
 - auto_turn_index: 0
 - auto_turn_threshold: 5
 - artifact_kind: post_mortem
 - invoked_by: claude_code
 
 ## Outcome
-- budget_decision: spawn
+- budget_decision: halt_human
 - epic_policy_allow_create: False
 - epic_policy_confidence: 0.0
-- epic_policy_reason: bd live query failed — blocking to prevent duplicate creation
+- epic_policy_reason: budget decision is halt_human
 - harvest_mode: session_end
 - auto_start_ok: False
 
 ## Artifacts
 - closeout_telemetry_latest: .agents/handoffs/closeout_telemetry_latest.json
-- closeout_telemetry_history: .agents/handoffs/closeout_telemetry_20260603T014947Z.json
+- closeout_telemetry_history: .agents/handoffs/closeout_telemetry_20260603T230108Z.json
 
 ## Notes
 - Generated automatically because auto-turn threshold was reached.

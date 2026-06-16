@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-06-16T16:21:34.364290+00:00",
+  "policy": {
+    "errors": [],
+    "check_count": 8
+  },
+  "runtime": {
+    "sample_count": 0,
+    "budget": {
+      "lanes": {
+        "fast_lane": {
+          "median_target": 8.0,
+          "p95_target": 15.0,
+          "median_actual": 0.0,
+          "p95_actual": 0.0,
+          "over_budget": false
+        },
+        "deep_lane": {
+          "median_target": 20.0,
+          "p95_target": 35.0,
+          "median_actual": 0.0,
+          "p95_actual": 0.0,
+          "over_budget": false
+        }
+      },
+      "over_budget": false
+    }
+  },
+  "promotion": {
+    "recommendations": [
+      {
+        "name": "Governance gates \u2014 advisory reports (non-blocking)",
+        "current_enforcement": "advisory",
+        "recommended_enforcement": "advisory",
+        "ready_for_promotion": false,
+        "reasons": [
+          "continue_on_error_enabled"
+        ]
+      }
+    ]
+  },
+  "branch_governance": {
+    "local_total": 27,
+    "remote_total": 36,
+    "local_stale": 9,
+    "remote_stale": 7,
+    "violations": 0
+  }
+}

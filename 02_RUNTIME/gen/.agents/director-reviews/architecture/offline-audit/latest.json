@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-04-28T05:27:43.188Z",
+  "model": "qwen3:4b",
+  "rootsScanned": 8,
+  "sampleCount": 6,
+  "successCount": 0,
+  "failureCount": 6,
+  "avgConfidence": 0,
+  "lowConfidenceCount": 0,
+  "samples": [
+    {
+      "filePath": "D:\\.04_Prism\\.markdownlint.key-docs.json",
+      "extension": ".json",
+      "confidence": 0,
+      "risk": "high",
+      "latencyMs": 2610,
+      "ok": false,
+      "error": "No JSON response"
+    },
+    {
+      "filePath": "D:\\.04_Prism\\.mcp.json",
+      "extension": ".json",
+      "confidence": 0,
+      "risk": "high",
+      "latencyMs": 1202,
+      "ok": false,
+      "error": "No JSON response"
+    },
+    {
+      "filePath": "D:\\.04_Prism\\.tmp_debug_keys.py",
+      "extension": ".py",
+      "confidence": 0,
+      "risk": "high",
+      "latencyMs": 1302,
+      "ok": false,
+      "error": "No JSON response"
+    },
+    {
+      "filePath": "D:\\.04_Prism\\AGENTS.md",
+      "extension": ".md",
+      "confidence": 0,
+      "risk": "high",
+      "latencyMs": 1396,
+      "ok": false,
+      "error": "No JSON response"
+    },
+    {
+      "filePath": "D:\\.04_Prism\\AUTOSTART_AUDIT_REPORT.md",
+      "extension": ".md",
+      "confidence": 0,
+      "risk": "high",
+      "latencyMs": 1577,
+      "ok": false,
+      "error": "No JSON response"
+    },
+    {
+      "filePath": "D:\\.04_Prism\\BIG_LOVE_PHOTO5_COMPREHENSIVE_GUIDE.md",
+      "extension": ".md",
+      "confidence": 0,
+      "risk": "high",
+      "latencyMs": 2132,
+      "ok": false,
+      "error": "No JSON response"
+    }
+  ]
+}
