@@ -15,7 +15,9 @@ import {
   type SynthesisResult,
 } from "@/lib/api";
 import { useTheme } from "@/lib/theme";
+import { useMode } from "@/lib/mode";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import ModeSwitcher from "@/components/ModeSwitcher";
 import AgentProfiles from "@/components/AgentProfiles";
 import AgentRegistration from "@/components/AgentRegistration";
 import MissionReplay from "@/components/MissionReplay";
@@ -26,6 +28,9 @@ const BRANCH = process.env.NEXT_PUBLIC_BRANCH || "main";
 
 export default function ConsolePage() {
   const { theme } = useTheme();
+  // Advisory/UI-only console mode — changes labels, hints, and emphasis only.
+  // Never overrides CMP, gates, or autonomy enforcement (the runtime is authoritative).
+  const { mode } = useMode();
 
   // Theme-derived style helpers (recomputed when the active asset pack changes).
   const PANEL: React.CSSProperties = {
@@ -98,6 +103,8 @@ export default function ConsolePage() {
   }, [refresh]);
 
   async function handleCreateMission() {
+    // Advisory read-only guard: non-mutating modes (Auditor) cannot create missions.
+    if (!mode.mutating) return;
     if (!newObjective.trim()) return;
     await createMission({ objective: newObjective });
     setNewObjective("");
@@ -144,11 +151,17 @@ export default function ConsolePage() {
           <span style={chip}>Repo <b style={{ color: theme.text }}>{REPO}</b></span>
           <span style={chip}>Branch <b style={{ color: theme.text }}>{BRANCH}</b></span>
           <span style={chip}>Confidence <b style={{ color: theme.accent }}>{selected ? `${selected.confidence_required}%` : "—"}</b></span>
+          <ModeSwitcher />
           <ThemeSwitcher />
           <span style={BADGE(apiStatus === "ok" ? theme.success : apiStatus === "err" ? theme.danger : theme.muted)}>
             API {apiStatus}
           </span>
         </div>
+      </div>
+
+      {/* Advisory mode banner — UI-only hint; does not override CMP/gates. */}
+      <div style={{ color: theme.muted, fontSize: 11, marginTop: -8, marginBottom: 16 }}>
+        {mode.hint + " · autonomy " + mode.autonomyBand}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -161,20 +174,28 @@ export default function ConsolePage() {
               value={newObjective}
               onChange={e => setNewObjective(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleCreateMission()}
-              placeholder="New mission objective…"
+              placeholder={mode.mutating ? "New mission objective…" : "Read-only mode — creation disabled"}
+              disabled={!mode.mutating}
               style={{
-                flex: 1, background: theme.panelBg, border: `1px solid ${theme.panelBorder}`,
-                color: theme.text, padding: "4px 8px", borderRadius: 3, fontFamily: "monospace", fontSize: 12,
+                flex: 1, background: theme.panelBg,
+                border: `1px solid ${mode.mutating ? theme.panelBorder : theme.panelBorder}`,
+                color: mode.mutating ? theme.text : theme.muted,
+                padding: "4px 8px", borderRadius: 3, fontFamily: "monospace", fontSize: 12,
+                cursor: mode.mutating ? "text" : "not-allowed",
               }}
             />
             <button
               onClick={handleCreateMission}
+              disabled={!mode.mutating}
               style={{
-                background: theme.accent, border: "none", color: "#fff",
-                padding: "4px 10px", borderRadius: 3, cursor: "pointer", fontFamily: "monospace", fontSize: 12,
+                background: mode.mutating ? theme.accent : theme.panelBorder, border: "none",
+                color: mode.mutating ? "#fff" : theme.muted,
+                padding: "4px 10px", borderRadius: 3,
+                cursor: mode.mutating ? "pointer" : "not-allowed",
+                fontFamily: "monospace", fontSize: 12,
               }}
             >
-              GO
+              {mode.primaryAction}
             </button>
           </div>
           {missions.length === 0 && <p style={{ color: theme.muted, fontSize: 12 }}>No missions yet.</p>}
@@ -404,12 +425,12 @@ export default function ConsolePage() {
                 <div style={{ color: theme.muted, fontSize: 10, marginTop: 2 }}>{action.desc}</div>
               </div>
               <button style={{
-                background: selected ? action.color : theme.panelBorder,
-                border: "none", color: selected ? "#fff" : theme.muted,
+                background: selected && mode.mutating ? action.color : theme.panelBorder,
+                border: "none", color: selected && mode.mutating ? "#fff" : theme.muted,
                 padding: "3px 10px", borderRadius: 3,
-                cursor: selected ? "pointer" : "default", fontSize: 11,
+                cursor: selected && mode.mutating ? "pointer" : "not-allowed", fontSize: 11,
               }}
-                disabled={!selected}
+                disabled={!selected || !mode.mutating}
               >
                 Run
               </button>

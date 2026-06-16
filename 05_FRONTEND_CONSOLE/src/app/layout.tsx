@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/lib/theme";
+import { ModeProvider } from "@/lib/mode";
 
 export const metadata: Metadata = {
   title: "Chromatic Harness v2 Console",
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           minHeight: "100vh",
         }}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ModeProvider>{children}</ModeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
