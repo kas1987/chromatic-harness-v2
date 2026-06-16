@@ -1,0 +1,10 @@
+# Generated runtime telemetry — do not commit (durable local library, not source).
+snapshots_archive.jsonl
+snapshots_archive.jsonl.*
+wtok_events.jsonl
+calibrated_caps.json
+calibration_history.jsonl
+ingest_state.json
+epochs.json
+# weight_table.json IS source/config and is committed.
+rollup.json
