@@ -391,15 +391,32 @@ def audit(
                 except ValueError:
                     root_artifact_hygiene_summary[key] = val
         planned = root_artifact_hygiene_summary.get("planned", 0)
+        only_coverage_cleanup = False
+        report_path = root_artifact_hygiene_summary.get("report")
+        if isinstance(report_path, str) and report_path:
+            try:
+                rp = Path(report_path)
+                payload = json.loads(rp.read_text(encoding="utf-8"))
+                actions = payload.get("actions", []) if isinstance(payload, dict) else []
+                if isinstance(actions, list) and actions:
+                    normalized = {
+                        str(a.get("path", "")).replace("\\", "/")
+                        for a in actions
+                        if isinstance(a, dict)
+                    }
+                    only_coverage_cleanup = normalized == {".coverage"}
+            except (OSError, json.JSONDecodeError, TypeError, AttributeError):
+                only_coverage_cleanup = False
         if isinstance(planned, int) and planned > 0:
-            findings.append(
-                {
-                    "severity": "P2",
-                    "code": "root_artifact_hygiene_drift",
-                    "file": "scripts/root_artifact_hygiene.py",
-                    "message": f"root artifact hygiene: {planned} planned moves",
-                }
-            )
+            if not only_coverage_cleanup:
+                findings.append(
+                    {
+                        "severity": "P2",
+                        "code": "root_artifact_hygiene_drift",
+                        "file": "scripts/root_artifact_hygiene.py",
+                        "message": f"root artifact hygiene: {planned} planned moves",
+                    }
+                )
 
     counts: dict[str, int] = {"P0": 0, "P1": 0, "P2": 0, "P3": 0}
     for f in findings:

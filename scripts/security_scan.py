@@ -146,11 +146,12 @@ def scan_dependencies() -> dict:
     code, out = _run(cmd, timeout=180)
     if code == 127 or "No module named" in out or "tool-not-found" in out:
         return {
-            "status": "not_instrumented",
+            "status": "error",
             "note": "pip-audit not installed; run `pip install pip-audit` to enable dependency scanning",
             "scope": scope,
             "vulnerabilities": [],
-            "high_severity": 0,
+            # Treat missing dependency instrumentation as a blocking failure.
+            "high_severity": 1,
         }
     # pip-audit prints a human summary to stderr; the JSON is on stdout. Find the
     # first '{' so the merged stream still parses.

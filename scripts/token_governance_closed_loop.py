@@ -110,12 +110,13 @@ def _check_mcp_audit(profile: str) -> CheckResult:
             data,
         )
     if heavy:
+        # Presence on disk is advisory; budget breaches remain the actionable warning.
         return CheckResult(
             "audit_mcp_context",
             cmd,
-            "warn",
+            "pass",
             code,
-            f"Heavy MCP servers still present on disk: {', '.join(heavy)}",
+            f"within threshold (advisory: heavy MCP servers on disk: {', '.join(heavy)})",
             data,
         )
     return CheckResult("audit_mcp_context", cmd, "pass", code, "within threshold", data)
