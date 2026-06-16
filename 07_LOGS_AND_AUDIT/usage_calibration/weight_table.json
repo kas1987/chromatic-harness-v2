@@ -1,0 +1,19 @@
+{
+  "version": "2026-06-pricing",
+  "reference": "sonnet-input",
+  "source": "C:/.00_Governance/model-effort-routing.csv (canonical per-model pricing). Thinking tokens bill at the model's OUTPUT rate and already arrive inside output_tokens, so no separate thinking weight is needed. Keep in sync: bump 'version' when governance pricing changes, then recalibrate from the snapshot library.",
+  "note": "Weights normalize (model, token_type) into a single 'weighted token' (wtok) unit, scaled so claude-sonnet input = 1.0. Derived from published per-1M USD pricing (sonnet input $3 => 1.0). Used to back out Anthropic's hidden rate-limit caps; same weights scale both our usage and the derived cap, so caps are expressed in this unit.",
+  "weights": {
+    "sonnet": { "input": 1.0,    "output": 5.0,    "cache_creation": 1.25,   "cache_read": 0.10   },
+    "opus":   { "input": 5.0,    "output": 25.0,   "cache_creation": 6.25,   "cache_read": 0.50   },
+    "haiku":  { "input": 0.2667, "output": 1.3333, "cache_creation": 0.3333, "cache_read": 0.02667 },
+    "default":{ "input": 1.0,    "output": 5.0,    "cache_creation": 1.25,   "cache_read": 0.10   }
+  },
+  "context_windows": {
+    "_note": "Per-model context-window ceilings (tokens). Drives the statusline context-bar thresholds (yellow >=55%, red >=70%) relative to the applicable model's window.",
+    "sonnet": 200000,
+    "haiku": 200000,
+    "opus": 1000000,
+    "default": 200000
+  }
+}
