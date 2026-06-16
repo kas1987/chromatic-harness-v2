@@ -62,8 +62,6 @@ def test_check_reports_drift_then_clean(fake_repo: tuple[Path, Path]) -> None:
     assert sync_mod.check() == []
 
 
-def test_sync_missing_source_returns_error(
-    fake_repo: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_sync_missing_source_returns_error(fake_repo: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sync_mod, "SRC", Path("/nonexistent/workflows"))
     assert sync_mod.sync(quiet=True) == 1
