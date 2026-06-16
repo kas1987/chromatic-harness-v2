@@ -1,0 +1,45 @@
+version: 1
+generated_at: "2026-06-16"
+default_branch: "main"
+protected_branches:
+  - "main"
+  - "master"
+  - "session/chromatic-harness-v2-initial"
+protected_prefixes:
+  - "release/"
+  - "hotfix/"
+
+branch_limits:
+  local:
+    max_total: 35
+  remote:
+    max_total: 80
+
+staleness_days:
+  feature: 14
+  fix: 14
+  chore: 10
+  docs: 14
+  temp: 3
+  session: 3
+  worktree: 3
+  dependabot: 7
+  default: 14
+
+auto_delete:
+  local_prefixes:
+    - "temp/"
+    - "session/"
+    - "worktree-"
+    - "worktree/"
+  require_gone_upstream_for_force_delete: true
+
+startup_awareness:
+  enabled: true
+  run_branch_audit: true
+
+autonomy:
+  mode: "local"
+  apply_mutations: false
+  allow_subagent_mode: true
+  allow_cloud_mode: true

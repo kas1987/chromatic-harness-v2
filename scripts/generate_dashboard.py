@@ -20,6 +20,40 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Token-level inference — enrich ledger rows that have model but no c_level/t_level.
+# Fail-open: if import fails, use identity.
+try:
+    _SCRIPTS = Path(__file__).resolve().parent
+    if str(_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(_SCRIPTS))
+    from token_level_inference import classify_event as _classify_event  # type: ignore[import]
+except Exception:  # pragma: no cover
+
+    def _classify_event(ev):  # type: ignore[misc]
+        return ev
+
+
+def _enrich_ledger_row(row: dict) -> dict:
+    """Return row with c_level/t_level inferred from cost_center.model when missing."""
+    try:
+        cc = row.get("cost_center") or {}
+        proxy = {
+            "model": cc.get("model") or row.get("model") or "",
+            "c_level": cc.get("c_level"),
+            "t_level": cc.get("t_level"),
+            "confidence": row.get("confidence"),
+        }
+        enriched = _classify_event(proxy)
+        if enriched.get("c_level") or enriched.get("t_level"):
+            row = dict(row)
+            row["_c_level"] = enriched.get("c_level")
+            row["_t_level"] = enriched.get("t_level")
+            row["_confidence"] = enriched.get("confidence")
+        return row
+    except Exception:  # fail-open
+        return row
+
+
 _REPO = Path(__file__).resolve().parents[1]
 _SCORECARD = _REPO / "05_REPORTS" / "KPI_SCORECARD.md"
 _LEDGER = _REPO / "07_LOGS_AND_AUDIT" / "budget" / "ledger.jsonl"
@@ -78,9 +112,7 @@ def _parse_scorecard_sessions(path: Path) -> list[dict]:
     return [{"session_count": session_count, "kpis": kpis}]
 
 
-def _pct_series(
-    kpi_name: str, n: int, *, baseline: float, current: float
-) -> list[float]:
+def _pct_series(kpi_name: str, n: int, *, baseline: float, current: float) -> list[float]:
     """Build a simple interpolated series from baseline to current across n sessions."""
     if n <= 1:
         return [baseline]
@@ -94,12 +126,11 @@ def generate_telemetry_summary(*, dry_run: bool = False) -> str:
     # Token ledger digest — count all rows, sample last 2000 for spend
     ledger_total_lines = 0
     if _LEDGER.exists():
-        ledger_total_lines = sum(
-            1 for ln in _LEDGER.read_text(encoding="utf-8").splitlines() if ln.strip()
-        )
-    ledger_rows = _load_jsonl(_LEDGER, tail=2000)
+        ledger_total_lines = sum(1 for ln in _LEDGER.read_text(encoding="utf-8").splitlines() if ln.strip())
+    ledger_rows = [_enrich_ledger_row(r) for r in _load_jsonl(_LEDGER, tail=2000)]
     total_usd = sum(float(r.get("usd") or 0) for r in ledger_rows)
     by_axis: dict[str, float] = {}
+    inferred_count = sum(1 for r in ledger_rows if r.get("_confidence") == "inferred")
     for r in ledger_rows:
         axis = str(r.get("axis") or "?")
         by_axis[axis] = by_axis.get(axis, 0.0) + float(r.get("usd") or 0)
@@ -114,9 +145,7 @@ def generate_telemetry_summary(*, dry_run: bool = False) -> str:
     health_status = str(health.get("overall_status") or "unknown")
     health_ts = str(health.get("generated_at_utc") or "")
 
-    axis_lines = "\n".join(
-        f"  - Axis {ax}: ${v:.2f}" for ax, v in sorted(by_axis.items())
-    )
+    axis_lines = "\n".join(f"  - Axis {ax}: ${v:.2f}" for ax, v in sorted(by_axis.items()))
 
     summary = f"""# Telemetry Summary — chromatic-harness-v2
 
@@ -131,6 +160,7 @@ def generate_telemetry_summary(*, dry_run: bool = False) -> str:
 | Sampled entries (last 2000) | {len(ledger_rows):,} |
 | Total USD (sampled last 2000) | ${total_usd:.2f} |
 | Axis breakdown | P={by_axis.get("P", 0):.2f} / D={by_axis.get("D", 0):.2f} / F={by_axis.get("F", 0):.2f} |
+| Rows with inferred tier (classify_event) | {inferred_count} |
 
 ## Governance Health
 
@@ -169,9 +199,7 @@ def generate_dashboard(*, dry_run: bool = False) -> str:
 
     # Coverage pct series — read from scorecard, fall back to 33%
     cov_current = 33.0
-    cov_kpi = kpis.get("% sessions started from state files") or kpis.get(
-        "% sessions from state files"
-    )
+    cov_kpi = kpis.get("% sessions started from state files") or kpis.get("% sessions from state files")
     if cov_kpi:
         try:
             cov_current = float(cov_kpi["current"].replace("%", "").strip())
@@ -182,9 +210,7 @@ def generate_dashboard(*, dry_run: bool = False) -> str:
 
     # Decision log entries — read from scorecard, fall back to 4
     dec_current = 4
-    dec_kpi = kpis.get("% actions logged to decision log") or kpis.get(
-        "Decision log entries"
-    )
+    dec_kpi = kpis.get("% actions logged to decision log") or kpis.get("Decision log entries")
     if dec_kpi:
         m_dec = re.search(r"(\d+)", dec_kpi.get("current", ""))
         if m_dec:
@@ -262,13 +288,9 @@ xychart-beta
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Generate KPI dashboard and telemetry summary"
-    )
+    parser = argparse.ArgumentParser(description="Generate KPI dashboard and telemetry summary")
     parser.add_argument("--summary", action="store_true", help="Telemetry summary only")
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Print without writing files"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Print without writing files")
     args = parser.parse_args()
 
     if args.summary:

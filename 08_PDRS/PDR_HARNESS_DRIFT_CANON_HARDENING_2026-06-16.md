@@ -1,6 +1,6 @@
 # PDR - Drift Reduction and Root Canon Hardening
 
-**Status:** draft · **Beads:** trsk-drift-canon-hardening · **Date:** 2026-06-16 <!-- pragma: allowlist secret -->
+**Status:** in-progress · **Beads:** chromatic-harness-v2-zdnm · **Date:** 2026-06-16 <!-- pragma: allowlist secret -->
 
 Reduce root and structural drift by enforcing canonical layout checks and guided remediation for safe drift categories.
 
@@ -15,13 +15,14 @@ Reduce root and structural drift by enforcing canonical layout checks and guided
 ## 2. Reuse Survey
 
 | Asset | Location | Role |
-|-------|----------|------|
+| ------- | ---------- | ------ |
 | drift latest artifact | 07_LOGS_AND_AUDIT/drift/latest.json | baseline signal and recommendations |
 | canon registry | 00_SOURCE_OF_TRUTH/canon_registry.yaml | expected structure source of truth |
 | root artifact hygiene | 07_LOGS_AND_AUDIT/root_artifacts/latest_root_artifact_hygiene.json | complementary hygiene checks |
 | pre-session inventory | config/pre_session/inventory.snapshot.json | current inventory snapshot |
 
 Out of scope for reuse:
+
 - No migration to an entirely new repository layout system.
 
 ---
@@ -71,7 +72,7 @@ How will we PROVE it is live (not just unit-tested)?
 ## 6. Lean Impact  ⚠️ MANDATORY
 
 | Question | Answer |
-|----------|--------|
+| ---------- | -------- |
 | Boot tax? | None for runtime; checks run in CI and explicit validation tasks. |
 | Always-on vs event-driven? | Event-driven on CI runs and explicit commands. |
 | On-demand vs always-injected? | On-demand enforcement in governance pipeline only. |
@@ -83,7 +84,7 @@ How will we PROVE it is live (not just unit-tested)?
 ## 7. Decomposition
 
 | Bead | Artifact | Depends on |
-|------|----------|------------|
+| ------ | ---------- | ------------ |
 | B1 | This PDR | - |
 | B2 | Drift triage schema and script updates | B1 |
 | B3 | CI drift policy gate and allowlist/exception mechanism | B2 |
@@ -113,7 +114,7 @@ How will we PROVE it is live (not just unit-tested)?
 ## 10. Risks
 
 | Risk | Likelihood | Mitigation |
-|------|-----------|------------|
+| ------ | ----------- | ------------ |
 | Over-blocking valid repository changes | Medium | Exception workflow and explicit allowlist |
 | Under-classifying risky entries | Medium | Conservative default classification to suspicious |
 

@@ -1,6 +1,6 @@
 # PDR - Security Dependency Gate Completion
 
-**Status:** draft · **Beads:** trsk-security-dependency-gate · **Date:** 2026-06-16 <!-- pragma: allowlist secret -->
+**Status:** in-progress · **Beads:** chromatic-harness-v2-ckqr · **Date:** 2026-06-16 <!-- pragma: allowlist secret -->
 
 Complete dependency vulnerability scanning in local and CI governance flows so security posture is not reported as partially skipped.
 
@@ -15,13 +15,14 @@ Complete dependency vulnerability scanning in local and CI governance flows so s
 ## 2. Reuse Survey
 
 | Asset | Location | Role |
-|-------|----------|------|
+| ------- | ---------- | ------ |
 | security artifact | 07_LOGS_AND_AUDIT/security/latest.json | current status source |
 | requirements and pyproject | requirements.txt, pyproject.toml | dependency inventory |
 | existing CI workflows | .github/workflows/ | integration point for gating |
 | observability health checks | scripts/validate_event_schema.py and related CI checks | precedent for enforcement pattern |
 
 Out of scope for reuse:
+
 - No custom vulnerability database build.
 
 ---
@@ -46,7 +47,7 @@ Key contract additions:
 {
   "dependencies": {
     "status": "ok|warn|fail",
-    "scanner": "<tool>",
+    "scanner": "[tool]",
     "high_severity": 0,
     "critical_severity": 0,
     "last_scan_utc": "ISO8601"
@@ -73,7 +74,7 @@ How will we PROVE it is live (not just unit-tested)?
 ## 6. Lean Impact  ⚠️ MANDATORY
 
 | Question | Answer |
-|----------|--------|
+| ---------- | -------- |
 | Boot tax? | None for runtime service path. |
 | Always-on vs event-driven? | Event-driven in CI and optional local hook invocation. |
 | On-demand vs always-injected? | On-demand scans on dependency changes or explicit run. |
@@ -85,7 +86,7 @@ How will we PROVE it is live (not just unit-tested)?
 ## 7. Decomposition
 
 | Bead | Artifact | Depends on |
-|------|----------|------------|
+| ------ | ---------- | ------------ |
 | B1 | This PDR | - |
 | B2 | Scanner adapter script + JSON contract | B1 |
 | B3 | CI workflow integration + required check policy | B2 |
@@ -114,7 +115,7 @@ How will we PROVE it is live (not just unit-tested)?
 ## 10. Risks
 
 | Risk | Likelihood | Mitigation |
-|------|-----------|------------|
+| ------ | ----------- | ------------ |
 | Scanner false positives causing merge friction | Medium | Allowlist/exception policy with audit trail |
 | Network/tool availability issues | Medium | Cache and fallback modes for local runs |
 

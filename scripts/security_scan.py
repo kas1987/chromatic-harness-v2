@@ -29,6 +29,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 from common_harness import run_safe  # noqa: E402
+from log_retention import prune_dir  # noqa: E402
 
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "security"
 
@@ -249,6 +250,10 @@ def main() -> int:
 
     result = run_scan(include_deps=not args.no_deps)
     artifact = write_artifact(result, ts)
+    try:
+        prune_dir(ARTIFACT_DIR, keep=50, apply=True)
+    except Exception as exc:  # fail-open
+        print(f"[security_scan] prune_dir error: {exc}", file=sys.stderr)
 
     s = result["secrets"]
     d = result["dependencies"]

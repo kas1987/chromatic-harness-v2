@@ -25,6 +25,15 @@ for _p in (REPO, RUNTIME, REPO / "scripts"):
 from common_harness import run_safe  # noqa: E402
 from intake.queue import append_entry, list_entries  # noqa: E402
 
+# Log-retention helper — prune old per-run token_governance_*.json files.
+# Fail-open: if import fails, prune is silently skipped.
+try:
+    from log_retention import prune_dir as _prune_dir  # type: ignore[import]
+except Exception:  # pragma: no cover
+
+    def _prune_dir(*_a, **_kw):  # type: ignore[misc]
+        return (0, 0, 0)
+
 
 @dataclass
 class CheckResult:
@@ -552,6 +561,17 @@ def main() -> int:
     }
 
     run_path, latest_path, summary_md = _write_reports(report)
+
+    # Retention: prune old per-run token_governance_*.json files after writing.
+    # Protected files (latest.json, history.jsonl, *.md) are never pruned.
+    try:
+        _prune_dir(
+            REPO / "07_LOGS_AND_AUDIT" / "token_governance",
+            keep=50,
+            apply=True,
+        )
+    except Exception as _prune_exc:  # fail-open — never block audit path
+        print(f"[token_governance] retention prune error (non-fatal): {_prune_exc}", file=sys.stderr)
 
     print(
         json.dumps(

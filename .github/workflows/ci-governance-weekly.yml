@@ -1,0 +1,59 @@
+name: CI Governance Weekly
+
+on:
+  schedule:
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+
+jobs:
+  governance-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate CI policy matrix
+        run: python scripts/validate_ci_policy_matrix.py
+
+      - name: Generate CI runtime budget report
+        env:
+          GH_TOKEN: ${{ github.token }}  # pragma: allowlist secret
+        run: python scripts/ci_runtime_budget_report.py
+
+      - name: Generate gate promotion candidates
+        run: python scripts/ci_gate_promotion_candidates.py
+
+      - name: Branch governance audit (hard caps)
+        run: python scripts/branch_governance_audit.py --write --enforce-hard-cap
+
+      - name: Branch governance enforce (dry-run)
+        run: python scripts/branch_governance_enforce.py --write
+
+      - name: Branch governance autonomy (local dry-run)
+        run: python scripts/branch_governance_autonomy.py --mode local --write
+
+      - name: Build weekly CI governance summary
+        run: python scripts/ci_governance_weekly_summary.py
+
+      - name: Upload CI governance artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-governance-weekly
+          path: |
+            07_LOGS_AND_AUDIT/ci/policy_matrix_latest.json
+            07_LOGS_AND_AUDIT/ci/runtime_budget_latest.json
+            07_LOGS_AND_AUDIT/ci/gate_promotion_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.md
+            07_LOGS_AND_AUDIT/ci/branch_governance_enforce_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_autonomy_latest.json
+            07_LOGS_AND_AUDIT/ci/weekly_summary_latest.json
+            07_LOGS_AND_AUDIT/ci/weekly_summary_latest.md
+          if-no-files-found: error

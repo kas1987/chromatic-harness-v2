@@ -14,6 +14,135 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 entries:
   - id: glossary-v1
     title: "Chromatic Glossary"
@@ -123,4 +252,1423 @@ entries:
     promoted_at: 2026-05-31
     promoted_by: agent
     tags: []
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v1
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v1
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v1
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v1
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v2
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v2
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v2
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v2
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v1
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v3
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v3
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v3
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v3
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v2
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v4
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v4
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v4
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v4
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v3
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v5
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v5
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v5
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v5
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v4
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v6
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v6
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v6
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v6
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v5
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v7
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v7
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v7
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v7
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v6
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v1
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v8
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v8
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v9
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v8
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v9
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v8
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v9
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v7
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v9
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v2
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v8
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v3
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v10
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v10
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v10
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v10
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v9
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v4
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v11
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v11
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v11
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v11
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v10
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v5
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v12
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v12
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v12
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v12
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v11
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v13
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v13
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v13
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v13
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v12
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-03
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v14
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v14
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v14
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v14
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v13
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v6
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v15
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v15
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v15
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v15
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v14
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v7
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v16
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v16
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v16
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v16
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v15
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v8
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v17
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v17
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v17
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v17
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v16
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v9
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v18
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v18
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v18
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v19
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v18
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v19
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v17
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v19
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v10
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v19
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v18
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v11
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-04
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v20
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v20
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v20
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v20
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v19
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v12
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v21
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v21
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v21
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v21
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v20
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v13
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v22
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v22
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v22
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v22
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v21
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v14
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
+    status: active
+
+  - id: 2026-04-26-mcp-stdio-client-lifecycle-v23
+    title: "MCP stdio one-shot client lifecycle"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-04-26-mcp-stdio-client-lifecycle.md
+    source_bead: 2026-04-26-mcp-stdio-client-lifecycle
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [mcp, stdio, subprocess, python, lifecycle, integration]
+    status: active
+
+  - id: 2026-06-02-atomic-multi-constant-path-move-v23
+    title: "Update all hardcoded DEFAULT_* path constants in one atomic commit"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-atomic-multi-constant-path-move.md
+    source_bead: 2026-06-02-atomic-multi-constant-path-move
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [refactoring, paths, constants, atomicity]
+    status: active
+
+  - id: 2026-06-02-dead-hook-subsystem-detection-v23
+    title: "Use git config core.hooksPath to find the live hooks directory"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-dead-hook-subsystem-detection.md
+    source_bead: 2026-06-02-dead-hook-subsystem-detection
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [git, hooks, devops, dead-code]
+    status: active
+
+  - id: 2026-06-02-moving-python-grep-slash-and-dot-v23
+    title: "Grep both slash-path and dotted-import forms when moving Python dirs"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-moving-python-grep-slash-and-dot.md
+    source_bead: 2026-06-02-moving-python-grep-slash-and-dot
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [python, refactoring, ci, imports]
+    status: active
+
+  - id: 2026-06-02-wiki-duplicate-clone-split-brain-v22
+    title: "Two local wiki clones cause silent split-brain for path-based promotion tools"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-02-wiki-duplicate-clone-split-brain.md
+    source_bead: 2026-06-02-wiki-duplicate-clone-split-brain
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [wiki, operations, git, split-brain]
+    status: active
+
+  - id: 2026-06-03-ruff-format-not-black-ci-gate-v15
+    title: "Always run ruff format (not black) before committing; normalise to LF on Windows"
+    version: 1.0
+    source_type: candidate
+    source_ref: .agents/candidates/2026-06-03-ruff-format-not-black-ci-gate.md
+    source_bead: 2026-06-03-ruff-format-not-black-ci-gate
+    promoted_at: 2026-06-16
+    promoted_by: agent
+    tags: [ci, formatting, ruff, black, windows, crlf, gitattributes]
     status: active

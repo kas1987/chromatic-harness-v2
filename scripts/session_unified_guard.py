@@ -21,6 +21,7 @@ from typing import Any
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 from common_harness import run_safe  # noqa: E402
+from log_retention import prune_dir  # noqa: E402
 
 
 def _run(cmd: list[str], timeout: int = 900) -> dict[str, Any]:
@@ -189,6 +190,10 @@ def main() -> int:
     }
     run_path = _write_receipt(payload)
     payload["artifact"] = str(run_path.relative_to(REPO)).replace("\\", "/")
+    try:
+        prune_dir(REPO / "07_LOGS_AND_AUDIT" / "unified_guard", keep=50, apply=True)
+    except Exception as exc:  # fail-open
+        print(f"[session_unified_guard] prune_dir error: {exc}", file=sys.stderr)
     print(json.dumps(payload, indent=2))
     return 0 if ok else 1
 

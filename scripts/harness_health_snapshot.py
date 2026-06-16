@@ -21,10 +21,25 @@ PRE_SESSION = LOGS / "pre_session" / "latest.json"
 TOKEN_GOV = LOGS / "token_governance" / "latest.json"
 GOV_INTEL = LOGS / "governance_intelligence" / "latest.json"
 AGENT_LOG = LOGS / "AGENT_RUN_LOG.jsonl"
+
+# Freshness thresholds for external input files (hours)
+_FRESHNESS_WARN_H = 24  # yellow if older than this
+_FRESHNESS_FAIL_H = 72  # red if older than this
+
+# Which input paths to subject to freshness checks, keyed by logical name.
+_FRESHNESS_INPUTS: dict[str, Path] = {}  # populated after all paths defined
 CG_SCORECARD = LOGS / "codegraph_effectiveness" / "summary_latest.json"
 BUDGET_FORECAST = LOGS / "budget" / "forecast_latest.json"
 BUDGET_ACCURACY = LOGS / "budget" / "forecast_accuracy_latest.json"
 BUDGET_CHANNEL_TREND = LOGS / "budget" / "forecast_channel_trend_latest.json"
+
+# Build the freshness-check map (only inputs that carry generated_at / queued_at
+# or whose mtime age is meaningful for staleness detection).
+_FRESHNESS_INPUTS = {
+    "governance_intelligence": GOV_INTEL,
+    "token_governance": TOKEN_GOV,
+    "usage_calibration": LOGS / "usage_calibration" / "latest.json",
+}
 
 
 def _utc_now() -> datetime:
@@ -69,6 +84,96 @@ def _line_count(path: Path) -> int:
         return sum(1 for _ in fh)
 
 
+def _input_age_hours(path: Path, data: dict[str, Any]) -> float | None:
+    """Return age of an input file in hours.
+
+    Prefers the ``generated_at`` / ``queued_at`` field inside the JSON payload
+    so the reported age reflects when the data was actually produced rather than
+    when the file was last touched. Falls back to file mtime. Returns None when
+    the file does not exist (skip freshness check, treated as missing elsewhere).
+
+    Fail-open: any parse error falls back to mtime; if mtime also fails, None.
+    """
+    if not path.is_file():
+        return None
+    now = _utc_now()
+    # Try embedded timestamp fields in priority order
+    for field in ("generated_at", "generated_at_utc", "queued_at", "timestamp"):
+        raw = data.get(field)
+        ts = _parse_ts(raw)
+        if ts is not None:
+            try:
+                return (now - ts).total_seconds() / 3600.0
+            except Exception:  # noqa: BLE001
+                pass
+    # Fallback: file mtime
+    try:
+        mtime = datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        return (now - mtime).total_seconds() / 3600.0
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _check_input_freshness(
+    checks: list[Check],
+    inputs: dict[str, Path],
+    data_map: dict[str, dict[str, Any]],
+    warn_h: float = _FRESHNESS_WARN_H,
+    fail_h: float = _FRESHNESS_FAIL_H,
+) -> list[dict[str, Any]]:
+    """Add freshness checks for each external input and return stale summaries.
+
+    Fail-open: any exception inside is caught; the check degrades to a warning
+    so a broken input file can never crash the snapshot.
+    """
+    stale_inputs: list[dict[str, Any]] = []
+    for name, path in inputs.items():
+        try:
+            data = data_map.get(name, {})
+            age_h = _input_age_hours(path, data)
+            if age_h is None:
+                # File absent — not a freshness issue (covered by other checks)
+                continue
+            age_h_r = round(age_h, 2)
+            if age_h >= fail_h:
+                _add_check(
+                    checks,
+                    f"input_freshness_{name}",
+                    False,
+                    f"input '{name}' is {age_h_r}h old (fail threshold: {fail_h}h)",
+                    value={"age_h": age_h_r, "threshold_fail_h": fail_h},
+                    warn=False,
+                )
+                stale_inputs.append({"input": name, "age_h": age_h_r, "level": "fail"})
+            elif age_h >= warn_h:
+                _add_check(
+                    checks,
+                    f"input_freshness_{name}",
+                    False,
+                    f"input '{name}' is {age_h_r}h old (warn threshold: {warn_h}h)",
+                    value={"age_h": age_h_r, "threshold_warn_h": warn_h},
+                    warn=True,
+                )
+                stale_inputs.append({"input": name, "age_h": age_h_r, "level": "warn"})
+            else:
+                _add_check(
+                    checks,
+                    f"input_freshness_{name}",
+                    True,
+                    f"input '{name}' is {age_h_r}h old (ok)",
+                    value={"age_h": age_h_r},
+                )
+        except Exception as exc:  # noqa: BLE001 — fail-open
+            _add_check(
+                checks,
+                f"input_freshness_{name}",
+                False,
+                f"freshness check error for '{name}': {exc}",
+                warn=True,
+            )
+    return stale_inputs
+
+
 @dataclass
 class Check:
     name: str
@@ -77,7 +182,9 @@ class Check:
     value: Any | None = None
 
 
-def _add_check(checks: list[Check], name: str, passed: bool, message: str, value: Any | None = None, warn: bool = False) -> None:
+def _add_check(
+    checks: list[Check], name: str, passed: bool, message: str, value: Any | None = None, warn: bool = False
+) -> None:
     status = "pass" if passed else ("warn" if warn else "fail")
     checks.append(Check(name=name, status=status, message=message, value=value))
 
@@ -87,7 +194,7 @@ def _coverage(source: dict[str, Any], key: str) -> float:
 
 
 def _coverage_llm_applicable(source: dict[str, Any], key: str) -> tuple[float, int]:
-    llm_cov = (((source.get("canonical_coverage_llm_applicable") or {}).get("coverage") or {}).get(key) or {})
+    llm_cov = ((source.get("canonical_coverage_llm_applicable") or {}).get("coverage") or {}).get(key) or {}
     value = llm_cov.get("coverage")
     if value is None:
         return _coverage(source, key), 0
@@ -110,7 +217,7 @@ def _build_markdown(snapshot: dict[str, Any]) -> str:
         "|---|---|---|",
     ]
     for c in checks:
-        lines.append(f"| {c.get('name','')} | {c.get('status','')} | {c.get('message','')} |")
+        lines.append(f"| {c.get('name', '')} | {c.get('status', '')} | {c.get('message', '')} |")
 
     lines.extend(
         [
@@ -143,7 +250,7 @@ def main() -> int:
 
     unified = _read_json(UNIFIED_GUARD)
     pre = _read_json(PRE_SESSION)
-    token = _read_json(TOKEN_GOV)
+    token = _read_json(TOKEN_GOV)  # pragma: allowlist secret
     intel = _read_json(GOV_INTEL)
     cg = _read_json(CG_SCORECARD)
     forecast = _read_json(BUDGET_FORECAST)
@@ -151,6 +258,17 @@ def main() -> int:
     channel_trend = _read_json(BUDGET_CHANNEL_TREND)
 
     checks: list[Check] = []
+
+    # --- Freshness guards (Task: freshness guard) ---
+    # Check age of external input files; warn >24h, fail >72h. Fail-open.
+    _freshness_data_map = {
+        "governance_intelligence": intel,
+        "token_governance": token,
+        "usage_calibration": _read_json(
+            _FRESHNESS_INPUTS.get("usage_calibration", LOGS / "usage_calibration" / "latest.json")
+        ),
+    }
+    stale_inputs = _check_input_freshness(checks, _FRESHNESS_INPUTS, _freshness_data_map)
 
     unified_ok = bool(unified.get("ok") is True)
     _add_check(checks, "unified_guard_ok", unified_ok, f"ok={unified.get('ok')}")
@@ -241,12 +359,20 @@ def main() -> int:
     )
 
     optimization_state = str(weekly.get("optimization_state") or "unknown") if forecast_ready else "unknown"
-    gap_to_target = float(
-        weekly.get("forecast_gap_to_target_usd", weekly.get("forecast_gap_to_90_pct_target_usd") or 0.0)
-    ) if forecast_ready else 0.0
-    need_per_day = float(
-        weekly.get("daily_spend_needed_to_hit_target_usd", weekly.get("daily_spend_needed_to_hit_90_pct_usd") or 0.0)
-    ) if forecast_ready else 0.0
+    gap_to_target = (
+        float(weekly.get("forecast_gap_to_target_usd", weekly.get("forecast_gap_to_90_pct_target_usd") or 0.0))
+        if forecast_ready
+        else 0.0
+    )
+    need_per_day = (
+        float(
+            weekly.get(
+                "daily_spend_needed_to_hit_target_usd", weekly.get("daily_spend_needed_to_hit_90_pct_usd") or 0.0
+            )
+        )
+        if forecast_ready
+        else 0.0
+    )
     target_pct = float(weekly.get("target_utilization_pct") or 90.0) if forecast_ready else 90.0
     _add_check(
         checks,
@@ -271,7 +397,11 @@ def main() -> int:
         warn=not accuracy_present,
     )
     acc_status = str(forecast_accuracy.get("status") or "unknown") if accuracy_present else "unknown"
-    week_mape = float((((forecast_accuracy.get("metrics") or {}).get("week") or {}).get("mape_pct") or 0.0)) if accuracy_present else 0.0
+    week_mape = (
+        float((((forecast_accuracy.get("metrics") or {}).get("week") or {}).get("mape_pct") or 0.0))
+        if accuracy_present
+        else 0.0
+    )
     _add_check(
         checks,
         "forecast_accuracy_weekly",
@@ -335,10 +465,7 @@ def main() -> int:
         "overall_status": overall_status,
         "readiness_score": readiness_score,
         "counts": {"pass": pass_count, "warn": warn_count, "fail": fail_count},
-        "checks": [
-            {"name": c.name, "status": c.status, "message": c.message, "value": c.value}
-            for c in checks
-        ],
+        "checks": [{"name": c.name, "status": c.status, "message": c.message, "value": c.value} for c in checks],
         "coverage": {
             "provider": cov_provider,
             "model": cov_model,
@@ -360,6 +487,7 @@ def main() -> int:
             "budget_forecast_accuracy": str(BUDGET_ACCURACY.relative_to(REPO)),
             "budget_channel_trend": str(BUDGET_CHANNEL_TREND.relative_to(REPO)),
         },
+        "stale_inputs": stale_inputs,
         "budget_weekly": {
             "current_usd": weekly.get("current_usd") if forecast_ready else None,
             "cap_usd": weekly.get("cap_usd") if forecast_ready else None,
@@ -368,7 +496,9 @@ def main() -> int:
             "target_utilization_pct": weekly.get("target_utilization_pct") if forecast_ready else None,
             "target_utilization_usd": weekly.get("target_utilization_usd") if forecast_ready else None,
             "forecast_gap_to_target_usd": weekly.get("forecast_gap_to_target_usd") if forecast_ready else None,
-            "daily_spend_needed_to_hit_target_usd": weekly.get("daily_spend_needed_to_hit_target_usd") if forecast_ready else None,
+            "daily_spend_needed_to_hit_target_usd": weekly.get("daily_spend_needed_to_hit_target_usd")
+            if forecast_ready
+            else None,
             "optimization_state": optimization_state,
         },
         "forecast_accuracy": {
