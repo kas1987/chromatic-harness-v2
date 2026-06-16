@@ -9,3 +9,7 @@
 git_hooks/** text eol=lf
 hooks/** text eol=lf
 .beads/hooks/** text eol=lf
+
+# Python source must be LF on all platforms — black/flake8 on Linux CI
+# will reformat CRLF files, causing spurious format-check failures.
+*.py text eol=lf
