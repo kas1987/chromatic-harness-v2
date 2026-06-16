@@ -1,19 +1,19 @@
 {
   "audit": "token_governance_closed_loop",
-  "timestamp": "2026-06-16T03:52:20.601328+00:00",
+  "timestamp": "2026-06-16T04:15:42.618687+00:00",
   "root": "/home/user/chromatic-harness-v2",
-  "status": "red",
+  "status": "green",
   "counts": {
-    "pass": 1,
+    "pass": 4,
     "warn": 0,
-    "fail": 3
+    "fail": 0
   },
   "checks": [
     {
       "name": "session_context_report",
-      "status": "fail",
-      "returncode": 1,
-      "message": "ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps",
+      "status": "pass",
+      "returncode": 0,
+      "message": "no warnings",
       "command": [
         "/usr/local/bin/python",
         "/home/user/chromatic-harness-v2/scripts/session_context_report.py",
@@ -25,9 +25,9 @@
     },
     {
       "name": "audit_mcp_context",
-      "status": "fail",
-      "returncode": 1,
-      "message": "ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps\nSet config/pre_session/settings.local.yaml mcp_descriptors_path",
+      "status": "pass",
+      "returncode": 0,
+      "message": "within threshold",
       "command": [
         "/usr/local/bin/python",
         "/home/user/chromatic-harness-v2/scripts/audit_mcp_context.py",
@@ -48,9 +48,9 @@
     },
     {
       "name": "daily_harness_audit_strict",
-      "status": "fail",
-      "returncode": 1,
-      "message": "status=red",
+      "status": "pass",
+      "returncode": 0,
+      "message": "status=green",
       "command": [
         "/usr/local/bin/python",
         "/home/user/chromatic-harness-v2/scripts/daily_harness_audit.py",
@@ -65,7 +65,7 @@
     {
       "name": "quota_proxy_read",
       "status": "ok",
-      "started_at": "2026-06-16T03:52:20.435468+00:00",
+      "started_at": "2026-06-16T04:15:42.458690+00:00",
       "detail": {
         "weekly_pct": null,
         "stale": null,
@@ -75,26 +75,29 @@
     {
       "name": "portfolio_token_telemetry",
       "status": "ok",
-      "started_at": "2026-06-16T03:52:20.447811+00:00",
+      "started_at": "2026-06-16T04:15:42.469982+00:00",
       "detail": {
         "ledger_path": "/home/user/chromatic-harness-v2/07_LOGS_AND_AUDIT/budget/ledger.jsonl",
-        "rows": 0,
+        "rows": 6,
         "bridged_usd": 0.0,
         "confidence_band": {
-          "total_events": 0,
-          "known_events": 0,
-          "unknown_events": 0,
+          "total_events": 6,
+          "known_events": 2,
+          "unknown_events": 4,
           "total_usd": 0.0,
           "unknown_usd": 0.0,
-          "by_axis": {}
+          "by_axis": {
+            "D": 0.0,
+            "P": 0.0
+          }
         },
-        "unknown_pct": 0.0
+        "unknown_pct": 66.67
       }
     },
     {
       "name": "portfolio_token_forecast",
       "status": "ok",
-      "started_at": "2026-06-16T03:52:20.466756+00:00",
+      "started_at": "2026-06-16T04:15:42.487809+00:00",
       "detail": {
         "out": "/home/user/chromatic-harness-v2/07_LOGS_AND_AUDIT/budget/forecast_latest.json",
         "axis_prepaid": {
@@ -112,11 +115,11 @@
     {
       "name": "controller",
       "status": "ok",
-      "started_at": "2026-06-16T03:52:20.521003+00:00",
+      "started_at": "2026-06-16T04:15:42.537526+00:00",
       "detail": {
-        "c_to_t_threshold": 2,
-        "previous_threshold": 1,
-        "direction": 1,
+        "c_to_t_threshold": 4,
+        "previous_threshold": 4,
+        "direction": 0,
         "allow_paid_spill": false,
         "staleness_fallback": true
       }
@@ -124,74 +127,25 @@
     {
       "name": "token_economy_exporter",
       "status": "ok",
-      "started_at": "2026-06-16T03:52:20.525794+00:00",
+      "started_at": "2026-06-16T04:15:42.539383+00:00",
       "detail": {
-        "bytes": 699
+        "bytes": 1052
       }
     }
   ],
-  "suggestions": [
-    {
-      "id": "token-gov-context-budget",
-      "title": "Reduce session context budget pressure and warnings",
-      "goal": "Address session_context_report warnings and keep pre-session context within budget",
-      "priority": "P2",
-      "tier": 2,
-      "type": "task",
-      "context": {
-        "category": "token_governance",
-        "source_check": "session_context_report",
-        "message": "ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps"
-      }
-    },
-    {
-      "id": "token-gov-mcp-trim",
-      "title": "Trim MCP token surface below profile warning threshold",
-      "goal": "Disable or prune heavy MCP descriptors and re-run audit_mcp_context + session_context_report",
-      "priority": "P1",
-      "tier": 1,
-      "type": "task",
-      "context": {
-        "category": "token_governance",
-        "source_check": "audit_mcp_context",
-        "message": "ERROR: mcps path not found: C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps\nSet config/pre_session/settings.local.yaml mcp_descriptors_path"
-      }
-    },
-    {
-      "id": "token-gov-daily-audit-remediation",
-      "title": "Remediate strict daily audit findings affecting token governance",
-      "goal": "Resolve red/yellow strict daily audit findings and enforce green baseline",
-      "priority": "P1",
-      "tier": 2,
-      "type": "task",
-      "context": {
-        "category": "token_governance",
-        "source_check": "daily_harness_audit_strict",
-        "message": "status=red"
-      }
-    }
-  ],
-  "queue_actions": [
-    {
-      "id": "token-gov-context-budget",
-      "status": "queued",
-      "queued_at": "2026-06-16T03:52:20Z"
-    },
-    {
-      "id": "token-gov-mcp-trim",
-      "status": "queued",
-      "queued_at": "2026-06-16T03:52:20Z"
-    },
-    {
-      "id": "token-gov-daily-audit-remediation",
-      "status": "queued",
-      "queued_at": "2026-06-16T03:52:20Z"
-    }
-  ],
+  "suggestions": [],
+  "queue_actions": [],
   "intake_result": {
-    "ok": false,
-    "returncode": 1,
-    "stderr": "ser/chromatic-harness-v2/02_RUNTIME/intake/auto_intake.py\", line 351, in drain_queue\n    existing_titles = _existing_open_titles(cwd=repo, runner=runner)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/user/chromatic-harness-v2/02_RUNTIME/intake/auto_intake.py\", line 74, in _existing_open_titles\n    proc = _run_bd(\n           ^^^^^^^^\n  File \"/home/user/chromatic-harness-v2/02_RUNTIME/intake/auto_intake.py\", line 156, in _run_bd\n    return subprocess.run(\n           ^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/subprocess.py\", line 548, in run\n    with Popen(*popenargs, **kwargs) as process:\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.11/subprocess.py\", line 1026, in __init__\n    self._execute_child(args, executable, preexec_fn, close_fds,\n  File \"/usr/lib/python3.11/subprocess.py\", line 1955, in _execute_child\n    raise child_exception_type(errno_num, err_msg, err_filename)\nFileNotFoundError: [Errno 2] No such file or directory: 'bd'\n",
-    "result": {}
+    "ok": true,
+    "returncode": 0,
+    "stderr": "",
+    "result": {
+      "processed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "deferred": 0,
+      "bd_available": false,
+      "results": []
+    }
   }
 }

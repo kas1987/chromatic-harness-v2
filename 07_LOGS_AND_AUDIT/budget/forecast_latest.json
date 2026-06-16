@@ -322,9 +322,12 @@
         "spends_quota": true
       }
     ],
-    "ledger_events_by_axis": {},
+    "ledger_events_by_axis": {
+      "D": 4,
+      "P": 2
+    },
     "ledger_events_by_c_level": {},
-    "ledger_rows": 0,
+    "ledger_rows": 6,
     "note": "spend prepaid Axis-P quota on highest complexity (C3/C4); keep C1/C2 on free local"
   },
   "dollar_forecast": {
@@ -363,5 +366,5 @@
       "weekly forecast mape high; increase smoothing window"
     ]
   },
-  "portfolio_forecast_generated_at": "2026-06-16T03:52:20.469260+00:00"
+  "portfolio_forecast_generated_at": "2026-06-16T04:15:42.488418+00:00"
 }
