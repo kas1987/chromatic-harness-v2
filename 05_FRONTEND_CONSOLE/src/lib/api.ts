@@ -10,6 +10,7 @@ export interface MissionPacket {
   stop_conditions?: string[];
   autonomy_level?: 0 | 1 | 2 | 3 | 4 | 5;
   confidence_required?: number;
+  mode?: string;
 }
 
 export interface Mission {
@@ -104,6 +105,7 @@ export async function createMission(packet: MissionPacket): Promise<Mission> {
     packet,
     scope: packet.scope || ["src/**/*"],
     required_gates: packet.required_gates || ["intent", "scope"],
+    mode: packet.mode,
   });
 }
 

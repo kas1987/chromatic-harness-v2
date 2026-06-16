@@ -27,6 +27,10 @@ import BeadsKanban from "@/components/BeadsKanban";
 import ConfidenceGate from "@/components/ConfidenceGate";
 import EventStream from "@/components/EventStream";
 import AgentActivity from "@/components/AgentActivity";
+import HarnessHealth from "@/components/HarnessHealth";
+import BudgetPanel from "@/components/BudgetPanel";
+import GitCI from "@/components/GitCI";
+import useHarnessData from "@/hooks/useHarnessData";
 
 const REPO = process.env.NEXT_PUBLIC_REPO || "chromatic-harness-v2";
 const BRANCH = process.env.NEXT_PUBLIC_BRANCH || "main";
@@ -36,6 +40,7 @@ export default function ConsolePage() {
   // Advisory/UI-only console mode — changes labels, hints, and emphasis only.
   // Never overrides CMP, gates, or autonomy enforcement (the runtime is authoritative).
   const { mode } = useMode();
+  const { data: harnessData, loading: harnessLoading } = useHarnessData(30000);
 
   // Theme-derived style helpers (recomputed when the active asset pack changes).
   const PANEL: React.CSSProperties = {
@@ -118,7 +123,7 @@ export default function ConsolePage() {
     // Advisory read-only guard: non-mutating modes (Auditor) cannot create missions.
     if (!mode.mutating) return;
     if (!newObjective.trim()) return;
-    await createMission({ objective: newObjective });
+    await createMission({ objective: newObjective, mode: mode.id });
     setNewObjective("");
     refresh();
   }
@@ -365,23 +370,30 @@ export default function ConsolePage() {
           </div>
         </div>
 
-        {/* d. Tool Budget */}
+        {/* d. Token Budget */}
         <div className="cc-panel cc-panel-sm">
-          <p className="cc-panel-title">Tool Budget</p>
-          <div className="cc-stat-value">{toolPct}%</div>
-          <div className="cc-stat-label">
-            Used · {displayEvents.length}/{Math.ceil(displayEvents.length / Math.max(1, toolPct) * 100)} Calls
-          </div>
-          <div className="cc-progress-bar cc-progress-bar-lg" style={{ marginTop: 8 }}>
-            <div
-              className="cc-progress-fill"
-              style={{
-                width: toolPct + "%",
-                background:
-                  toolPct > 80 ? "#ef4444" : toolPct > 60 ? "#f59e0b" : "#22c55e",
-              }}
-            />
-          </div>
+          <p className="cc-panel-title">Token Budget</p>
+          {harnessData?.health?.budget_weekly ? (() => {
+            const bw = harnessData.health.budget_weekly;
+            const pct = Math.round((bw.current_usd / Math.max(0.01, bw.cap_usd)) * 100);
+            const over = bw.current_usd > bw.cap_usd;
+            return (
+              <>
+                <div className="cc-stat-value" style={{ color: over ? "#ef4444" : pct > 80 ? "#f59e0b" : "#22c55e" }}>
+                  ${bw.current_usd.toFixed(2)}
+                </div>
+                <div className="cc-stat-label">/ ${bw.cap_usd.toFixed(0)} weekly cap {over && <span style={{color:"#ef4444",fontWeight:"bold"}}> OVER</span>}</div>
+                <div className="cc-progress-bar cc-progress-bar-lg" style={{ marginTop: 8 }}>
+                  <div className="cc-progress-fill" style={{ width: Math.min(100, pct) + "%", background: over ? "#ef4444" : pct > 80 ? "#f59e0b" : "#22c55e" }} />
+                </div>
+              </>
+            );
+          })() : (
+            <>
+              <div className="cc-stat-value">{toolPct}%</div>
+              <div className="cc-stat-label">Tool calls used</div>
+            </>
+          )}
         </div>
 
         {/* e. Latest Failure */}
@@ -435,7 +447,14 @@ export default function ConsolePage() {
       {/* ── 3. LIVE PIPELINE ──────────────────────────────────────────── */}
       <PipelineFlow mission={selected} events={displayEvents} />
 
-      {/* ── 4. MAIN SECTION ───────────────────────────────────────────── */}
+      {/* ── 4. HARNESS STATUS ROW ─────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
+        <HarnessHealth health={harnessData?.health ?? null} tokens={harnessData?.tokens ?? null} loading={harnessLoading} />
+        <BudgetPanel health={harnessData?.health ?? null} loading={harnessLoading} />
+        <GitCI git={harnessData?.git ?? null} ci={harnessData?.ci ?? null} loading={harnessLoading} />
+      </div>
+
+      {/* ── 5. MAIN SECTION ───────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 14, marginBottom: 14 }}>
         {/* Left column */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
