@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-06-03T15:25:28.541694+00:00",
+  "generated_at": "2026-06-16T04:21:09.146362+00:00",
   "rigs_scanned": [
     "chromatic-harness-v2"
   ],
-  "artifacts_found": 154,
-  "unique_count": 83,
+  "artifacts_found": 155,
+  "unique_count": 84,
   "duplicate_count": 71,
   "promoted": [],
   "skipped": [
@@ -125,7 +125,7 @@
       "reason": "duplicate of 2026-05-30-integration-testing-patterns.md"
     }
   ],
-  "dry_run": false,
-  "min_confidence": 0.6,
+  "dry_run": true,
+  "min_confidence": 0.5,
   "global_hub": false
 }
