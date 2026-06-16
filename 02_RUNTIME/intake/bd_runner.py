@@ -18,3 +18,15 @@ def resolve_bd_argv() -> list[str]:
         if path:
             return [path]
     return ["bd"]
+
+
+def bd_available() -> bool:
+    """True when a `bd` executable is resolvable on this environment's PATH.
+
+    Used to distinguish a real beads failure from an environment that simply
+    has no beads CLI installed (cloud/CI/fresh container), so callers can
+    degrade gracefully instead of treating absence as failure.
+    """
+    if os.name == "nt":
+        return any(shutil.which(name) for name in ("bd.cmd", "bd.exe", "bd"))
+    return shutil.which("bd") is not None

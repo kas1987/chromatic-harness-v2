@@ -77,13 +77,16 @@ def validate(root: Path | None = None, *, machine_checks: bool | None = None) ->
         installed = HOME_WF / "ship.js"
         if not installed.is_file():
             errors.append(
-                "Lite workflows not installed in ~/.claude/workflows — run scripts/sync_claude_workflows.ps1"
+                "Lite workflows not installed in ~/.claude/workflows — run "
+                "python scripts/sync_claude_workflows.py (cross-platform) or "
+                "scripts/sync_claude_workflows.ps1"
             )
         else:
             text = installed.read_text(encoding="utf-8", errors="replace").lower()
             if "label:" in text and "/crank" in text and "do not run /crank" not in text:
                 errors.append(
-                    "~/.claude/workflows/ship.js still invokes /crank — re-run sync_claude_workflows.ps1"
+                    "~/.claude/workflows/ship.js still invokes /crank — re-run "
+                    "python scripts/sync_claude_workflows.py"
                 )
 
         gcount = _global_session_start_count()

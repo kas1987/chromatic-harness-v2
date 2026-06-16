@@ -150,6 +150,16 @@ def run_boot(
 ) -> int:
     errors: list[str] = []
 
+    # Self-provision lite workflows into ~/.claude/workflows so the harness heals
+    # its own environment on every fresh/ephemeral container (cloud, CI, new host).
+    # Best-effort: a provisioning hiccup must not block boot; the validator still
+    # reports genuine drift downstream.
+    _run(
+        [str(_SCRIPTS / "sync_claude_workflows.py"), "--quiet"],
+        timeout=30,
+        quiet=True,
+    )
+
     if _run([str(_SCRIPTS / "check_agent_operations.py")], timeout=30, quiet=True) != 0:
         errors.append("check_agent_operations failed")
 

@@ -61,6 +61,9 @@ def main() -> int:
             claim=not args.no_claim,
         )
     print(json.dumps(report.to_dict(), indent=2))
+    # Deferred drains (no bd CLI in this environment) are an expected degraded
+    # state, not a failure, so they do not increment report.failed and exit 0 —
+    # keeping boot/governance chains green on infrastructure without beads.
     return 1 if report.failed else 0
 
 

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 from activity.lanes import apply_lane_to_bead_fields, normalize_lane
-from intake.bd_runner import resolve_bd_argv
+from intake.bd_runner import bd_available, resolve_bd_argv
 from intake.queue import (
     IntakeEntry,
     default_queue_path,
@@ -108,6 +108,8 @@ class DrainReport:
     processed: int = 0
     failed: int = 0
     skipped: int = 0
+    deferred: int = 0
+    bd_available: bool = True
     results: list[ProcessResult] = field(default_factory=list)
 
     def to_dict(self) -> dict:
@@ -115,6 +117,8 @@ class DrainReport:
             "processed": self.processed,
             "failed": self.failed,
             "skipped": self.skipped,
+            "deferred": self.deferred,
+            "bd_available": self.bd_available,
             "results": [r.to_dict() for r in self.results],
         }
 
@@ -351,9 +355,28 @@ def drain_queue(
     qpath = queue_path or default_queue_path(repo)
     report = DrainReport()
     queued = list_queued(path=qpath, repo_root=repo)
-    existing_titles = _existing_open_titles(cwd=repo, runner=runner)
     if limit is not None:
         queued = queued[:limit]
+
+    # When no beads CLI is installed (cloud/CI/fresh container) and we are not
+    # simulating, entries cannot be turned into beads. Defer them — leaving them
+    # queued for a beads-capable environment — instead of recording failures
+    # that would red-flag the whole boot/governance chain.
+    report.bd_available = dry_run or runner is not None or bd_available()
+    if not report.bd_available:
+        for entry in queued:
+            report.results.append(
+                ProcessResult(
+                    entry.id,
+                    entry.kind,
+                    "deferred",
+                    message="bd unavailable; entry left queued",
+                )
+            )
+            report.deferred += 1
+        return report
+
+    existing_titles = _existing_open_titles(cwd=repo, runner=runner)
 
     for entry in queued:
         result = process_entry(
@@ -370,6 +393,8 @@ def drain_queue(
             report.processed += 1
         elif result.status == "skipped":
             report.skipped += 1
+        elif result.status == "deferred":
+            report.deferred += 1
         else:
             report.failed += 1
     return report

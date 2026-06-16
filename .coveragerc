@@ -1,5 +1,8 @@
 [run]
 source = 02_RUNTIME
+# Keep the transient coverage data file out of the repo root so root-artifact
+# hygiene stays clean across local, CI, and ephemeral cloud environments.
+data_file = 07_LOGS_AND_AUDIT/coverage/.coverage
 omit =
     */test_*.py
     *_test.py

@@ -12,6 +12,8 @@ dist/
 build/
 .pytest_cache/
 .coverage
+.coverage.*
+07_LOGS_AND_AUDIT/coverage/
 htmlcov/
 
 # Timestamped per-run audit dumps (ephemeral; latest.json/history.jsonl are tracked)

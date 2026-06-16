@@ -204,7 +204,7 @@ def test_intake_entry_lane_from_context() -> None:
 
 # ── intake.bd_runner ──────────────────────────────────────────────────────────
 
-from intake.bd_runner import resolve_bd_argv  # noqa: E402
+from intake.bd_runner import bd_available, resolve_bd_argv  # noqa: E402
 
 
 def test_resolve_bd_argv_returns_list() -> None:
@@ -218,6 +218,16 @@ def test_resolve_bd_argv_last_element() -> None:
     assert result[-1].endswith("bd") or result[-1] == "bd"
 
 
+def test_bd_available_true_when_resolvable() -> None:
+    with patch("intake.bd_runner.shutil.which", return_value="/usr/bin/bd"):
+        assert bd_available() is True
+
+
+def test_bd_available_false_when_absent() -> None:
+    with patch("intake.bd_runner.shutil.which", return_value=None):
+        assert bd_available() is False
+
+
 # ── intake.auto_intake ────────────────────────────────────────────────────────
 
 from intake.auto_intake import (  # noqa: E402
@@ -225,11 +235,20 @@ from intake.auto_intake import (  # noqa: E402
     ProcessResult,
     _existing_open_titles,
     _normalize_title,
+    _run_bd,
     _should_skip,
     drain_queue,
     process_entry,
     simple_decompose,
 )
+
+
+def test_run_bd_degrades_on_missing_executable(tmp_path: Path) -> None:
+    """A missing bd executable must not crash the intake process."""
+    with patch("intake.auto_intake.subprocess.run", side_effect=FileNotFoundError):
+        proc = _run_bd(["list"], cwd=tmp_path)
+    assert proc.returncode == 1
+    assert proc.stdout == ""
 
 
 def test_normalize_title_lowercases_and_strips() -> None:
@@ -443,6 +462,66 @@ def test_drain_report_to_dict() -> None:
     d = r.to_dict()
     assert d["processed"] == 2
     assert d["failed"] == 1
+    assert d["deferred"] == 0
+    assert d["bd_available"] is True
+
+
+def test_drain_queue_defers_when_bd_unavailable(tmp_path: Path) -> None:
+    """No bd in this environment: entries defer (not fail) and stay queued."""
+    q = tmp_path / "q.jsonl"
+    for i in range(2):
+        append_entry(
+            {
+                "id": f"defer-{i}",
+                "source": "manual",
+                "kind": "goal",
+                "status": "queued",
+                "title": f"Task {i}",
+                "goal": f"Goal {i}",
+            },
+            path=q,
+        )
+
+    with patch("intake.auto_intake.bd_available", return_value=False):
+        report = drain_queue(repo_root=tmp_path, queue_path=q)
+
+    assert report.bd_available is False
+    assert report.deferred == 2
+    assert report.failed == 0
+    assert report.processed == 0
+    assert all(r.status == "deferred" for r in report.results)
+    # Entries must remain queued so a beads-capable environment can process them.
+    assert len(list_queued(path=q, repo_root=tmp_path)) == 2
+
+
+def test_drain_queue_processes_when_runner_supplied(tmp_path: Path) -> None:
+    """A supplied runner means bd is effectively present: no deferral."""
+    q = tmp_path / "q.jsonl"
+
+    def fake_runner(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess:
+        if "list" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, "[]", "")
+        if "create" in cmd:
+            return subprocess.CompletedProcess(cmd, 0, "chromatic-harness-v2-d9\n", "")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    append_entry(
+        {
+            "id": "run-1",
+            "source": "manual",
+            "kind": "goal",
+            "status": "queued",
+            "title": "Task",
+            "goal": "Goal",
+        },
+        path=q,
+    )
+    with patch("intake.auto_intake.bd_available", return_value=False):
+        report = drain_queue(repo_root=tmp_path, queue_path=q, runner=fake_runner)
+
+    assert report.bd_available is True
+    assert report.deferred == 0
+    assert report.processed == 1
 
 
 def test_existing_open_titles_empty_on_bd_failure(tmp_path: Path) -> None:
