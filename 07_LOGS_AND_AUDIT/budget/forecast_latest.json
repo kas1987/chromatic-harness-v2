@@ -282,17 +282,14 @@
     }
   },
   "axis_prepaid": {
-    "weekly_quota_pct": 5.0,
+    "weekly_quota_pct": null,
     "target_pct": 90.0,
-    "pace_needed": 14.2413,
-    "projected_close_pct": 33.9325,
-    "reset_at": "2026-06-08T19:47:43.385552+00:00",
-    "status": "red",
-    "fresh": true,
-    "source": "manual",
-    "current_pace_pct_per_day": 4.8475,
-    "reset_days": 5.9685,
-    "under_by_pct": 56.0675
+    "pace_needed": null,
+    "projected_close_pct": null,
+    "reset_at": null,
+    "status": "stale",
+    "fresh": false,
+    "source": "absent"
   },
   "roi_card": {
     "routing_card": [
@@ -325,13 +322,9 @@
         "spends_quota": true
       }
     ],
-    "ledger_events_by_axis": {
-      "P": 1913,
-      "D": 3432,
-      "F": 1271
-    },
+    "ledger_events_by_axis": {},
     "ledger_events_by_c_level": {},
-    "ledger_rows": 6616,
+    "ledger_rows": 0,
     "note": "spend prepaid Axis-P quota on highest complexity (C3/C4); keep C1/C2 on free local"
   },
   "dollar_forecast": {
@@ -343,33 +336,32 @@
     "note": "ccusage $ is the Axis D estimator only; Axis P comes from quota_state"
   },
   "forecast_variance": {
-    "status": "red",
+    "status": "yellow",
     "metrics": {
       "day": {
         "samples": 84,
-        "mae_usd": 1218.3129,
-        "mape_pct": 42302.53
+        "mae_usd": 1217.6957,
+        "mape_pct": 39.29
       },
       "week": {
         "samples": 84,
-        "mae_usd": 1218.3129,
-        "mape_pct": 42302.53
+        "mae_usd": 1217.6957,
+        "mape_pct": 39.29
       },
       "month": {
         "samples": 84,
-        "mae_usd": 1411.895,
-        "mape_pct": 1494.6
+        "mae_usd": 1391.6522,
+        "mape_pct": 39.29
       }
     },
     "coverage": {
-      "forecast_rows": 86,
-      "daily_ledger_rows": 4616,
+      "forecast_rows": 84,
+      "daily_ledger_rows": 0,
       "scored_rows": 84
     },
     "recommendations": [
-      "weekly forecast mape high; increase smoothing window",
-      "daily forecast noisy; reduce intraday projection weight"
+      "weekly forecast mape high; increase smoothing window"
     ]
   },
-  "portfolio_forecast_generated_at": "2026-06-02T20:33:01.537555+00:00"
+  "portfolio_forecast_generated_at": "2026-06-16T03:52:20.469260+00:00"
 }
