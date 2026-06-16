@@ -15,6 +15,20 @@ interface MagnetEventMessage {
   data: Record<string, any>;
 }
 
+function resolveWsBase(): string {
+  // Point the WebSocket at the backend, not the Next host. Prefer an explicit
+  // WS url, else derive from the HTTP API base (http->ws), else same-origin.
+  const explicit = process.env.NEXT_PUBLIC_WS_URL;
+  if (explicit) return explicit.replace(/\/$/, '');
+  const api = process.env.NEXT_PUBLIC_API_URL; // e.g. http://localhost:8787
+  if (api) return api.replace(/^http/, 'ws').replace(/\/$/, '');
+  if (typeof window !== 'undefined') {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${proto}//${window.location.host}`;
+  }
+  return 'ws://localhost:8787';
+}
+
 export function useWebSocketEvents(missionId: string | null) {
   const [events, setEvents] = useState<MagnetEvent[]>([]);
   const [connected, setConnected] = useState(false);
@@ -23,8 +37,7 @@ export function useWebSocketEvents(missionId: string | null) {
   useEffect(() => {
     if (!missionId) return;
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const url = `${protocol}//${window.location.host}/ws/missions/${missionId}/events`;
+    const url = `${resolveWsBase()}/ws/missions/${missionId}/events`;
 
     const ws = new WebSocket(url);
 

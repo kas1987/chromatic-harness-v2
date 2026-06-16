@@ -19,6 +19,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher";
 import AgentProfiles from "@/components/AgentProfiles";
 import AgentRegistration from "@/components/AgentRegistration";
 import MissionReplay from "@/components/MissionReplay";
+import useWebSocketEvents from "@/hooks/useWebSocketEvents";
 
 const REPO = process.env.NEXT_PUBLIC_REPO || "chromatic-harness-v2";
 const BRANCH = process.env.NEXT_PUBLIC_BRANCH || "main";
@@ -70,6 +71,9 @@ export default function ConsolePage() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [beadFilter, setBeadFilter] = useState<"all" | "pending" | "active" | "done">("all");
   const [beadPriorityFilter, setBeadPriorityFilter] = useState<"all" | "p0" | "p1" | "p2" | "p3">("all");
+
+  // Live magnet events for the selected mission via WebSocket (backend :8787).
+  const { events: wsEvents, connected: wsLive } = useWebSocketEvents(selected?.mission_id ?? null);
 
   const refresh = useCallback(async () => {
     try {
@@ -124,6 +128,9 @@ export default function ConsolePage() {
     if (beadPriorityFilter !== "all" && String(b.priority) !== beadPriorityFilter.replace("p", "")) return false;
     return true;
   });
+
+  // Prefer live WebSocket events; fall back to the 5s-polled events when not connected.
+  const displayEvents = wsLive && wsEvents.length > 0 ? wsEvents : events;
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -195,10 +202,15 @@ export default function ConsolePage() {
           <p style={HEADING}>
             Magnet Event Stream
             {selected && <span style={{ color: theme.muted, fontWeight: "normal", textTransform: "none", letterSpacing: 0 }}> — {selected.mission_id}</span>}
+            {selected && (
+              <span style={{ marginLeft: 8, fontSize: 10, fontWeight: "normal", letterSpacing: 0, textTransform: "none", color: wsLive ? theme.success : theme.muted }}>
+                {wsLive ? "● live" : "○ polling"}
+              </span>
+            )}
           </p>
           {!selected && <p style={{ color: theme.muted, fontSize: 12 }}>Select a mission to view events.</p>}
-          {events.length === 0 && selected && <p style={{ color: theme.muted, fontSize: 12 }}>No events yet.</p>}
-          {events.slice(-20).reverse().map(ev => (
+          {displayEvents.length === 0 && selected && <p style={{ color: theme.muted, fontSize: 12 }}>No events yet.</p>}
+          {displayEvents.slice(-20).reverse().map(ev => (
             <div key={ev.event_id} style={{
               padding: "5px 8px", marginBottom: 3, borderRadius: 3, fontSize: 11,
               background: theme.panelBg, borderLeft: `3px solid ${riskColor(ev.risk_delta)}`,
@@ -236,8 +248,8 @@ export default function ConsolePage() {
                 <div>Autonomy: <span style={{ color: theme.text }}>{selected.autonomy_level}</span></div>
                 <div style={{ marginTop: 4 }}>Magnets: <span style={{ color: theme.text }}>{selected.magnets.join(", ")}</span></div>
                 <div style={{ marginTop: 4 }}>
-                  Risk events: <span style={{ color: events.filter(e => e.risk_delta > 0.1).length > 0 ? theme.warning : theme.success }}>
-                    {events.filter(e => e.risk_delta > 0.1).length}
+                  Risk events: <span style={{ color: displayEvents.filter(e => e.risk_delta > 0.1).length > 0 ? theme.warning : theme.success }}>
+                    {displayEvents.filter(e => e.risk_delta > 0.1).length}
                   </span>
                 </div>
                 {selected.stop_conditions.length > 0 && (
