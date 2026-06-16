@@ -49,3 +49,17 @@ python scripts/install_visual_control_plane.py --target C:\Path\To\Repo
 ## Operating principle
 
 `CHROMATIC_TREES.md` remains the governing source of truth. This package visualizes and validates the harness; it does not replace repo governance.
+
+## Command Prompt System
+
+Three interchangeable prompt modes for the Harness Command Center.
+
+| Mode | Prompt template | PDR |
+|---|---|---|
+| Operator | `docs/prompts/operator_command_prompt.md` | `docs/pdr/PDR_OPERATOR_COMMAND_PROMPT.md` |
+| Auditor | `docs/prompts/auditor_command_prompt.md` | `docs/pdr/PDR_AUDITOR_COMMAND_PROMPT.md` |
+| Designer | `docs/prompts/designer_command_prompt.md` | `docs/pdr/PDR_DESIGNER_COMMAND_PROMPT.md` |
+
+See `docs/playbooks/COMMAND_PROMPT_SYSTEM_PLAYBOOK.md` for switching instructions.
+Asset packs: `assets/prompt_variants/` | UI mockup: `05_FRONTEND_CONSOLE/mockups/COMMAND_CENTER_MODE_SWITCHER.md`
+Schemas: `schemas/command_prompt_pack.schema.json`, `schemas/command_action.schema.json`, `schemas/asset_swap_pack.schema.json`
