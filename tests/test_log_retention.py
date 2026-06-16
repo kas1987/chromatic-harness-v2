@@ -11,7 +11,40 @@ _SCRIPTS = REPO / "scripts"
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-from log_retention import prune_dir  # noqa: E402
+from log_retention import prune_dir, rotate_jsonl  # noqa: E402
+
+
+def test_rotate_jsonl_caps_lines(tmp_path: Path):
+    f = tmp_path / "history.jsonl"
+    f.write_text("".join(f'{{"i":{i}}}\n' for i in range(100)), encoding="utf-8")
+    # dry-run reports but does not modify
+    kept, dropped, freed = rotate_jsonl(f, max_lines=10, apply=False)
+    assert (kept, dropped) == (10, 90) and freed > 0
+    assert len(f.read_text(encoding="utf-8").splitlines()) == 100
+    # apply trims to newest 10 (tail preserved)
+    kept, dropped, freed = rotate_jsonl(f, max_lines=10, apply=True)
+    lines = f.read_text(encoding="utf-8").splitlines()
+    assert kept == 10 and dropped == 90
+    assert lines[0] == '{"i":90}' and lines[-1] == '{"i":99}'
+
+
+def test_rotate_jsonl_noop_when_small(tmp_path: Path):
+    f = tmp_path / "history.jsonl"
+    f.write_text('{"a":1}\n{"a":2}\n', encoding="utf-8")
+    assert rotate_jsonl(f, max_lines=10, apply=True) == (2, 0, 0)
+
+
+def test_rotate_jsonl_archives(tmp_path: Path):
+    f = tmp_path / "history.jsonl"
+    f.write_text("".join(f"line{i}\n" for i in range(20)), encoding="utf-8")
+    adir = tmp_path / "arch"
+    rotate_jsonl(f, max_lines=5, apply=True, archive_dir=adir)
+    archived = (adir / "history.jsonl.rotated").read_text(encoding="utf-8").splitlines()
+    assert archived[0] == "line0" and len(archived) == 15
+
+
+def test_rotate_jsonl_missing_file(tmp_path: Path):
+    assert rotate_jsonl(tmp_path / "nope.jsonl", apply=True) == (0, 0, 0)
 
 
 def _make(p: Path, age_days: float):

@@ -89,6 +89,9 @@ jobs:
           python -m pip install --quiet pip-audit
           python scripts/security_scan.py
 
+      - name: Governance gate — large-file / ignored-regression (blocking)
+        run: python scripts/large_file_gate.py --all
+
       - name: Governance gates — advisory reports (non-blocking)
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }} # pragma: allowlist secret

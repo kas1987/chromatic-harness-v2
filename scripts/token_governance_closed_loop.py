@@ -29,9 +29,13 @@ from intake.queue import append_entry, list_entries  # noqa: E402
 # Fail-open: if import fails, prune is silently skipped.
 try:
     from log_retention import prune_dir as _prune_dir  # type: ignore[import]
+    from log_retention import rotate_jsonl as _rotate_jsonl  # type: ignore[import]
 except Exception:  # pragma: no cover
 
     def _prune_dir(*_a, **_kw):  # type: ignore[misc]
+        return (0, 0, 0)
+
+    def _rotate_jsonl(*_a, **_kw):  # type: ignore[misc]
         return (0, 0, 0)
 
 
@@ -572,6 +576,17 @@ def main() -> int:
         )
     except Exception as _prune_exc:  # fail-open — never block audit path
         print(f"[token_governance] retention prune error (non-fatal): {_prune_exc}", file=sys.stderr)
+
+    # Rotation: cap the protected, tracked history.jsonl by bytes so it cannot
+    # balloon the repo (entries are large; line caps are ineffective here).
+    try:
+        _rotate_jsonl(
+            REPO / "07_LOGS_AND_AUDIT" / "token_governance" / "history.jsonl",
+            max_bytes=4 * 1024 * 1024,
+            apply=True,
+        )
+    except Exception as _rot_exc:  # fail-open — never block audit path
+        print(f"[token_governance] history rotation error (non-fatal): {_rot_exc}", file=sys.stderr)
 
     print(
         json.dumps(
