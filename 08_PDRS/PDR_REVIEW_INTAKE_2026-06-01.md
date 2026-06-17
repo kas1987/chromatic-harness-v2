@@ -1,7 +1,7 @@
 # PDR: GitHub Review Intake to Agent Dispatch
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | PDR ID | PDR-REVIEW-INTAKE-001 |
 | System | Chromatic Harness |
 | Status | Implemented & Proven (epic tmx5; see docs/pdr/review_intake/ACCEPTANCE_PROOF.md) |
@@ -80,7 +80,7 @@ Resolution Log + Learning Log
 ## 6. Event Sources
 
 | Source | Event | Reason |
-|---|---|---|
+| --- | --- | --- |
 | PR review | `pull_request_review` | Capture approval, changes requested, dismissed/edited reviews |
 | Inline review comment | `pull_request_review_comment` | Most precise source for code-level fixes |
 | PR/issue comment | `issue_comment` | Capture broader reviewer instructions |
@@ -105,7 +105,7 @@ Schemas live in `schemas/`.
 Each finding receives a confidence score from 0 to 100.
 
 | Band | Action |
-|---:|---|
+| ---: | --- |
 | 90-100 | Auto-patch allowed if scoped and reversible |
 | 75-89 | Auto-patch allowed with validation |
 | 60-74 | Draft or plan only unless low risk |
@@ -127,7 +127,7 @@ confidence =
 ## 9. Finding Classification
 
 | Class | Default Agent | Auto-Fix Default |
-|---|---|---|
+| --- | --- | --- |
 | lint_style | Janitor / Sentinel | Yes |
 | test_failure | Auditor / Sentinel | Yes, if scoped |
 | bug_fix | Sentinel | Yes, with tests |
@@ -227,7 +227,7 @@ docs/pdr/review_intake/
 ## 14. Risks
 
 | Risk | Impact | Mitigation |
-|---|---|---|
+| --- | --- | --- |
 | Duplicate findings | Agent rework | Dedupe key and stale-event checks |
 | Vague review comments | Bad patches | Confidence gate and reviewer clarification status |
 | Multi-agent collision | Broken PR branch | PR branch lock |
@@ -238,7 +238,7 @@ docs/pdr/review_intake/
 ## 15. Decision Log
 
 | Date | Decision | Rationale |
-|---|---|---|
+| --- | --- | --- |
 | 2026-06-01 | Use queue-first dispatch | Keeps agents bounded and auditable |
 | 2026-06-01 | Use JSONL for findings/logs | Append-only, easy audit, low friction |
 | 2026-06-01 | Start with GitHub Action | Faster MVP than GitHub App |

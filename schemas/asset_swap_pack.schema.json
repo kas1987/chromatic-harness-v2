@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Asset Swap Pack",
+  "type": "object",
+  "required": ["asset_pack_id", "name", "style", "colors", "components"],
+  "properties": {
+    "asset_pack_id": {"type": "string"},
+    "name": {"type": "string"},
+    "style": {"type": "string"},
+    "colors": {"type": "object"},
+    "components": {"type": "object"},
+    "backgrounds": {"type": "array", "items": {"type": "string"}},
+    "icons": {"type": "array", "items": {"type": "string"}},
+    "motion": {"type": "array", "items": {"type": "string"}}
+  }
+}

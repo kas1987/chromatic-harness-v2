@@ -1,0 +1,16 @@
+{
+    "version": 1,
+    "generated_at": "2026-06-16",
+    "targets": {
+        "fast_lane": {
+            "median_minutes": 8,
+            "p95_minutes": 15,
+            "measurement": "github_actions_job_duration"
+        },
+        "deep_lane": {
+            "median_minutes": 20,
+            "p95_minutes": 35,
+            "measurement": "github_actions_job_duration"
+        }
+    }
+}

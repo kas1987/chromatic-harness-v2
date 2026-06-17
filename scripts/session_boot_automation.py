@@ -149,6 +149,7 @@ def run_boot(
     mcps_path: str | None,
 ) -> int:
     errors: list[str] = []
+    notices: list[str] = []
 
     if _run([str(_SCRIPTS / "check_agent_operations.py")], timeout=30, quiet=True) != 0:
         errors.append("check_agent_operations failed")
@@ -185,6 +186,25 @@ def run_boot(
 
     if _run([str(_SCRIPTS / "validate_intake_loop.py")], timeout=60, quiet=True) != 0:
         errors.append("validate_intake_loop failed")
+
+    branch_audit_script = _SCRIPTS / "branch_governance_audit.py"
+    if branch_audit_script.is_file():
+        if _run([str(branch_audit_script), "--write"], timeout=120, quiet=True) != 0:
+            notices.append("branch_governance_audit failed")
+
+    branch_mode = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_MODE", "off").strip().lower()
+    if branch_mode in {"local", "subagent", "cloud"}:
+        branch_apply = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_APPLY", "0") == "1"
+        autonomy_args = [
+            str(_SCRIPTS / "branch_governance_autonomy.py"),
+            "--mode",
+            branch_mode,
+            "--write",
+        ]
+        if branch_apply:
+            autonomy_args.append("--apply")
+        if _run(autonomy_args, timeout=240, quiet=True) != 0:
+            notices.append(f"branch_governance_autonomy failed ({branch_mode})")
 
     if not fresh or force:
         if _run_context_pipeline(force=force) != 0:
@@ -229,11 +249,30 @@ def run_boot(
                 "invoked_by": invoked_by,
                 "boot_mode": "fresh_skip" if fresh else ("full" if full else "fast"),
             }
+            bg_path = _repo_root() / "07_LOGS_AND_AUDIT" / "ci" / "branch_governance_latest.json"
+            if bg_path.is_file():
+                try:
+                    bg = json.loads(bg_path.read_text(encoding="utf-8"))
+                    counts = bg.get("counts") or {}
+                    summary["branch_governance"] = {
+                        "local_total": counts.get("local_total", 0),
+                        "remote_total": counts.get("remote_total", 0),
+                        "local_stale": counts.get("local_stale", 0),
+                        "remote_stale": counts.get("remote_stale", 0),
+                        "violations": len(bg.get("violations") or []),
+                    }
+                except (json.JSONDecodeError, OSError):
+                    pass
+            if notices:
+                summary["notices"] = notices
             print(json.dumps(summary, indent=2))
         except (json.JSONDecodeError, OSError):
             pass
     else:
         errors.append("manifest missing after boot")
+
+    if notices:
+        print("Session boot notices:", ", ".join(notices), file=sys.stderr)
 
     if errors:
         print("Session boot completed with errors:", ", ".join(errors), file=sys.stderr)

@@ -155,3 +155,37 @@ schemas:
       - scripts/generate_harness_mermaid.py
     jsonl_paths: []
     notes: Singleton JSON array; validated by validate_visual_registry.py.
+
+  # ── Command Prompt System (Command Center modes + asset themes) ──────────────
+
+  - id: command_prompt_pack
+    schema_path: schemas/command_prompt_pack.schema.json
+    title: Chromatic Command Prompt Pack
+    consumers:
+      - scripts/validate_command_prompt_pack.py
+    jsonl_paths: []
+    notes: >
+      Defines an Operator/Auditor/Designer command-prompt mode for the Command
+      Center mode switcher. Advisory layer ABOVE CMP; never overrides gate verdicts.
+
+  - id: command_action
+    schema_path: schemas/command_action.schema.json
+    title: Chromatic Command Action
+    consumers:
+      - scripts/validate_command_prompt_pack.py
+    jsonl_paths: []
+    notes: >
+      Per-mode Command Center action (label, risk_level, requires_confidence,
+      result_event_type). Drives the mode switcher's allowed-action buttons.
+
+  - id: asset_swap_pack
+    schema_path: schemas/asset_swap_pack.schema.json
+    title: Chromatic Asset Swap Pack
+    consumers:
+      - scripts/generate_console_themes.py
+      - scripts/validate_command_prompt_pack.py
+    jsonl_paths: []
+    notes: >
+      Visual theme pack (colors/components) for the console. Source of truth for
+      assets/prompt_variants/*.asset_pack.yaml; consumed by generate_console_themes.py
+      to emit the typed themes module (no runtime YAML dependency).

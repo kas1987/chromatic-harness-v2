@@ -1,0 +1,12 @@
+# Large-file allowlist for scripts/large_file_gate.py
+#
+# Files matching these globs are EXEMPT from the >45 MB block. Use ONLY for
+# genuine, intended large assets that must live in git (preferably via Git LFS).
+# One fnmatch glob per line; '#' starts a comment.
+#
+# Prefer the alternatives before adding an entry:
+#   - generated logs / telemetry  -> add to .gitignore + git rm --cached
+#   - append-only audit jsonl      -> rotate via scripts/log_retention.py --rotate
+#   - real binary assets           -> track with Git LFS, then allowlist here
+#
+# (no entries yet)

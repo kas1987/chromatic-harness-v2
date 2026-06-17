@@ -128,6 +128,7 @@ def audit(
     findings: list[dict[str, Any]] = []
     lock_metrics_summary: dict[str, Any] = {}
     bead_hygiene_summary: dict[str, Any] = {}
+    branch_governance_summary: dict[str, Any] = {}
 
     for rel in CORE_FILES:
         if not (root / rel).exists():
@@ -300,6 +301,49 @@ def audit(
     if run_tests and (root / "tests").exists():
         command_results.append(run_cmd(root, ["pytest", "tests", "-q"], timeout=120))
 
+    # --- Drift gate (Task: strict wiring) ---
+    # Run drift_gate.py as a subprocess so it can write its own artifacts cleanly.
+    # A non-zero exit (score below DRIFT_MIN_SCORE or missing protected paths) is
+    # surfaced as P1 under --strict so drift is a real gate signal; P2 otherwise.
+    # Fail-open: any exception or parse error downgrades to a P3 warning.
+    drift_gate_script = root / "scripts" / "drift_gate.py"
+    if drift_gate_script.is_file():
+        drift_result = run_cmd(root, ["python", str(drift_gate_script), "--json"], timeout=60)
+        command_results.append(drift_result)
+        try:
+            # drift_gate --json appends JSON after the human-readable summary;
+            # extract the last JSON object from stdout.
+            stdout_text = drift_result.get("stdout") or ""
+            json_start = stdout_text.rfind("{")
+            drift_data: dict[str, Any] = {}
+            if json_start >= 0:
+                drift_data = json.loads(stdout_text[json_start:])
+            drift_passed = drift_data.get("passed", drift_result.get("ok", True))
+            drift_score = drift_data.get("score")
+            drift_trend = drift_data.get("trend", "unknown")
+            if not drift_passed:
+                severity = "P1" if strict else "P2"
+                findings.append(
+                    {
+                        "severity": severity,
+                        "code": "drift_gate_failed",
+                        "file": "scripts/drift_gate.py",
+                        "message": (
+                            f"drift gate failed: score={drift_score} trend={drift_trend}; "
+                            "check 07_LOGS_AND_AUDIT/drift/latest.json for details"
+                        ),
+                    }
+                )
+        except Exception as exc:  # noqa: BLE001 — fail-open
+            findings.append(
+                {
+                    "severity": "P3",
+                    "code": "drift_gate_parse_warning",
+                    "file": "scripts/drift_gate.py",
+                    "message": f"could not parse drift_gate output: {exc}",
+                }
+            )
+
     pre_session = root / "07_LOGS_AND_AUDIT" / "pre_session" / "latest.json"
     if pre_session.is_file():
         try:
@@ -391,13 +435,100 @@ def audit(
                 except ValueError:
                     root_artifact_hygiene_summary[key] = val
         planned = root_artifact_hygiene_summary.get("planned", 0)
+        only_coverage_cleanup = False
+        report_path = root_artifact_hygiene_summary.get("report")
+        if isinstance(report_path, str) and report_path:
+            try:
+                rp = Path(report_path)
+                payload = json.loads(rp.read_text(encoding="utf-8"))
+                actions = payload.get("actions", []) if isinstance(payload, dict) else []
+                if isinstance(actions, list) and actions:
+                    normalized = {str(a.get("path", "")).replace("\\", "/") for a in actions if isinstance(a, dict)}
+                    only_coverage_cleanup = normalized == {".coverage"}
+            except (OSError, json.JSONDecodeError, TypeError, AttributeError):
+                only_coverage_cleanup = False
         if isinstance(planned, int) and planned > 0:
+            if not only_coverage_cleanup:
+                findings.append(
+                    {
+                        "severity": "P2",
+                        "code": "root_artifact_hygiene_drift",
+                        "file": "scripts/root_artifact_hygiene.py",
+                        "message": f"root artifact hygiene: {planned} planned moves",
+                    }
+                )
+
+    branch_audit_script = root / "scripts" / "branch_governance_audit.py"
+    if branch_audit_script.is_file():
+        branch_result = run_cmd(root, ["python", "scripts/branch_governance_audit.py", "--write"], timeout=120)
+        command_results.append(branch_result)
+        branch_path = root / "07_LOGS_AND_AUDIT" / "ci" / "branch_governance_latest.json"
+        try:
+            branch_payload = (
+                json.loads(branch_path.read_text(encoding="utf-8"))
+                if branch_path.is_file()
+                else json.loads(branch_result.get("stdout") or "{}")
+            )
+        except Exception:
+            branch_payload = {}
+
+        counts = branch_payload.get("counts") if isinstance(branch_payload, dict) else {}
+        counts = counts if isinstance(counts, dict) else {}
+        violations = branch_payload.get("violations") if isinstance(branch_payload, dict) else []
+        violations = violations if isinstance(violations, list) else []
+        local_gone = branch_payload.get("local_gone_upstream") if isinstance(branch_payload, dict) else []
+        local_gone = local_gone if isinstance(local_gone, list) else []
+
+        branch_governance_summary = {
+            "status": branch_payload.get("status", "unknown") if isinstance(branch_payload, dict) else "unknown",
+            "local_total": int(counts.get("local_total", 0) or 0),
+            "remote_total": int(counts.get("remote_total", 0) or 0),
+            "local_stale": int(counts.get("local_stale", 0) or 0),
+            "remote_stale": int(counts.get("remote_stale", 0) or 0),
+            "violations": len(violations),
+            "local_gone_upstream": len(local_gone),
+        }
+
+        if violations:
+            findings.append(
+                {
+                    "severity": "P1",
+                    "code": "branch_governance_hard_cap_violation",
+                    "file": "07_LOGS_AND_AUDIT/ci/branch_governance_latest.json",
+                    "message": f"branch governance hard-cap violations={len(violations)}",
+                }
+            )
+
+        if branch_governance_summary["local_gone_upstream"] > 0:
             findings.append(
                 {
                     "severity": "P2",
-                    "code": "root_artifact_hygiene_drift",
-                    "file": "scripts/root_artifact_hygiene.py",
-                    "message": f"root artifact hygiene: {planned} planned moves",
+                    "code": "branch_governance_gone_upstream",
+                    "file": "07_LOGS_AND_AUDIT/ci/branch_governance_latest.json",
+                    "message": (
+                        "local branches track gone upstream refs: "
+                        f"{branch_governance_summary['local_gone_upstream']}"
+                    ),
+                }
+            )
+
+        stale_total = branch_governance_summary["local_stale"] + branch_governance_summary["remote_stale"]
+        if stale_total >= 25:
+            findings.append(
+                {
+                    "severity": "P2",
+                    "code": "branch_governance_stale_pressure",
+                    "file": "07_LOGS_AND_AUDIT/ci/branch_governance_latest.json",
+                    "message": f"stale branches total={stale_total} (local+remote)",
+                }
+            )
+        elif stale_total >= 10:
+            findings.append(
+                {
+                    "severity": "P3",
+                    "code": "branch_governance_stale_warning",
+                    "file": "07_LOGS_AND_AUDIT/ci/branch_governance_latest.json",
+                    "message": f"stale branches warning total={stale_total}",
                 }
             )
 
@@ -421,6 +552,7 @@ def audit(
         "counts": counts,
         "lock_metrics": lock_metrics_summary,
         "bead_hygiene": bead_hygiene_summary,
+        "branch_governance": branch_governance_summary,
         "root_artifact_hygiene": root_artifact_hygiene_summary,
         "findings": sorted(findings, key=lambda f: severity_rank(f.get("severity", "P3"))),
         "commands": command_results,
@@ -469,6 +601,21 @@ def write_reports(root: Path, result: dict[str, Any]) -> None:
             f"- Total events: {lock_metrics.get('total_events', 0)}",
             f"- Timeout threshold: {lock_metrics.get('threshold_timeout_rate', 0.0)}",
             f"- Min sample size: {lock_metrics.get('min_sample_size', 0)}",
+        ]
+    lines.append("")
+    branch_summary = result.get("branch_governance") or {}
+    if branch_summary:
+        lines += [
+            "",
+            "## Branch Governance",
+            "",
+            f"- Status: {branch_summary.get('status', 'unknown')}",
+            f"- Local total: {branch_summary.get('local_total', 0)}",
+            f"- Remote total: {branch_summary.get('remote_total', 0)}",
+            f"- Local stale: {branch_summary.get('local_stale', 0)}",
+            f"- Remote stale: {branch_summary.get('remote_stale', 0)}",
+            f"- Violations: {branch_summary.get('violations', 0)}",
+            f"- Gone upstream locals: {branch_summary.get('local_gone_upstream', 0)}",
         ]
     lines.append("")
 

@@ -16,6 +16,12 @@ and gates listed below, never in the command itself.
 | `/recover` | Inspect and recover stalled work, stale leases, or duplicate artifacts | `recovery_policy` | `scripts/emergency_recovery.py` / `scripts/lease_manager.py` | Inspect by default | human_for_mutation | Allowed |
 | `/queue` | Read or import queue state through approved queue tooling | `bd_queue` | `bd` / `scripts/next_work.py` | Conditional | queue_policy | Allowed |
 | `/explain` | Explain existing artifacts and decisions to the human | `read_only_artifacts` | — | No | — | Allowed |
+| `/mode:operator` | Switch the Command Center pre-context to Operator mode (execution framing). Shapes mission-packet metadata and UI only; grants no additional gate authority.
+ | `read_only_artifacts` | — | No | confidence, lease | Allowed |
+| `/mode:auditor` | Switch the Command Center pre-context to Auditor mode (read-only inspection). Lowers the autonomy floor to L0-L2; cannot raise it or mutate state.
+ | `read_only_artifacts` | — | No | — | Allowed |
+| `/mode:designer` | Switch the Command Center pre-context to Designer mode (asset/theme composition). Frontend scope only; cannot touch runtime, governance, or schemas.
+ | `read_only_artifacts` | — | No | confidence | Allowed |
 
 ## Forbidden Logic Guardrails
 
@@ -31,3 +37,6 @@ Each command declares logic it may **never** implement (enforced by
 | `/recover` | force_delete, unapproved_override |
 | `/queue` | arbitrary_reprioritization, hidden_claim |
 | `/explain` | decision_override |
+| `/mode:operator` | approval_decision, release_override, state_mutation, decision_override, unapproved_override, skip_verifier, skip_collision, direct_file_mutation |
+| `/mode:auditor` | approval_decision, release_override, state_mutation, decision_override, unapproved_override, direct_file_mutation, queue_claim, hidden_claim |
+| `/mode:designer` | approval_decision, release_override, state_mutation, decision_override, unapproved_override, direct_ship, hidden_agent_dispatch |

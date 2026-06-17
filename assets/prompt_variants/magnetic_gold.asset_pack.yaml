@@ -1,0 +1,14 @@
+asset_pack_id: magnetic_gold
+name: Magnetic Gold Operations
+style: black and gold magnet observability console
+colors:
+  primary: '#facc15'
+  secondary: '#a855f7'
+  success: '#22c55e'
+  warning: '#f59e0b'
+  danger: '#ef4444'
+components:
+  panels: amber_holographic
+  gauges: gold_confidence_arc
+  graphs: magnet_inflection_chain
+  cards: observability_probe_cards

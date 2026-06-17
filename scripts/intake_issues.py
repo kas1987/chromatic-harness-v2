@@ -182,16 +182,20 @@ def main() -> int:
     ap.add_argument("--queued-at", default="", help="ISO timestamp override")
     args = ap.parse_args()
 
-    issues = fetch_open_issues()
-    if not issues:
-        print("No open issues found (or gh unavailable).", file=sys.stderr)
-        return 1
-
     queued_at = args.queued_at
     if not queued_at:
         import datetime
 
         queued_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    issues = fetch_open_issues()
+    if not issues:
+        # Keep latest snapshot in sync with reality when there are no open issues
+        # so downstream audits do not report stale staged intake records.
+        latest = write_staged([], queued_at)
+        print("No open issues found; wrote empty intake snapshot.")
+        print(f"artifact: {latest}")
+        return 0
 
     records = [parse_issue(i) for i in issues]
     valid = [r for r in records if r["valid"]]

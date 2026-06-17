@@ -18,6 +18,7 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 _REPO = Path(__file__).resolve().parents[1]
 _RUNTIME = _REPO / "02_RUNTIME"
@@ -25,35 +26,105 @@ sys.path.insert(0, str(_RUNTIME))
 
 from router.context_manifest import ContextResourceManifest  # noqa: E402
 
-NATIVE_TOOLS = [
-    ("Shell", "Run terminal commands (git, bd, pytest, docker)"),
-    ("Read", "Read files including images"),
-    ("Write / StrReplace / Delete", "Create and edit files"),
-    ("Grep", "Ripgrep search"),
-    ("Glob", "Find files by pattern"),
-    ("WebSearch / WebFetch", "Web lookup when enabled"),
-    ("GenerateImage", "Image generation when explicitly requested"),
-    ("ReadLints", "IDE linter diagnostics"),
-    ("EditNotebook", "Jupyter cell edits"),
-    ("CallMcpTool", "Invoke MCP server tools"),
-    ("FetchMcpResource", "Read MCP resources"),
-    ("Task", "Spawn subagents (explore, shell, ci-investigator, etc.)"),
-    ("SwitchMode", "Plan vs agent mode"),
-    ("AskQuestion", "Structured user multiple-choice"),
-    ("Await", "Poll background shells"),
-]
-
-SUBAGENTS = [
-    "generalPurpose",
-    "explore",
-    "shell",
-    "cursor-guide",
-    "ci-investigator",
-    "best-of-n-runner",
-    "granola-engineer",
-    "devsecops",
-    "investigator",
-]
+TOOL_PROFILES: dict[str, dict[str, Any]] = {
+    "cursor": {
+        "display_name": "Cursor",
+        "native_tools": [
+            ("Shell", "Run terminal commands (git, bd, pytest, docker)"),
+            ("Read", "Read files including images"),
+            ("Write / StrReplace / Delete", "Create and edit files"),
+            ("Grep", "Ripgrep search"),
+            ("Glob", "Find files by pattern"),
+            ("WebSearch / WebFetch", "Web lookup when enabled"),
+            ("GenerateImage", "Image generation when explicitly requested"),
+            ("ReadLints", "IDE linter diagnostics"),
+            ("EditNotebook", "Jupyter cell edits"),
+            ("CallMcpTool", "Invoke MCP server tools"),
+            ("FetchMcpResource", "Read MCP resources"),
+            ("Task", "Spawn subagents (explore, shell, ci-investigator, etc.)"),
+            ("SwitchMode", "Plan vs agent mode"),
+            ("AskQuestion", "Structured user multiple-choice"),
+            ("Await", "Poll background shells"),
+        ],
+        "subagents": [
+            "generalPurpose",
+            "explore",
+            "shell",
+            "cursor-guide",
+            "ci-investigator",
+            "best-of-n-runner",
+            "granola-engineer",
+            "devsecops",
+            "investigator",
+        ],
+        "surface_map_label": "CRG -> Cursor mapping (baseline)",
+        "surface_map_header": "Cursor surface",
+        "surface_map_rows": [
+            ("read", "Read", "Native"),
+            ("write", "Write", "Native"),
+            ("edit", "StrReplace", "Native"),
+            ("bash", "Shell", "Native"),
+            ("audit", "Skills (on-demand Read)", "Pull"),
+            ("test", "Skills (on-demand Read)", "Pull"),
+            ("security", "Skills + Opsera MCP", "Pull / MCP"),
+            ("council", "Skills (on-demand Read)", "Pull"),
+            ("github_read", "plugin-github-github", "MCP (auth required)"),
+            ("github_write", "plugin-github-github", "MCP (auth required)"),
+            ("web_search", "WebSearch / Playwright", "Native / MCP"),
+            ("shell_execute", "Shell / remote MCP", "Native"),
+            ("secrets_read", "Blocked by policy", "Critical - gate"),
+            ("browser", "plugin-playwright-playwright", "MCP"),
+            ("codex_team", "Task subagents", "Native"),
+        ],
+    },
+    "vscode": {
+        "display_name": "VS Code",
+        "native_tools": [
+            ("run_in_terminal", "Run shell commands in a persistent PowerShell terminal"),
+            ("read_file / list_dir", "Read files and inspect workspace structure"),
+            ("file_search / grep_search / semantic_search", "Find files and code quickly"),
+            ("apply_patch / create_file", "Edit and create files safely"),
+            ("get_errors", "Read compiler/linter diagnostics"),
+            ("run_task / create_and_run_task", "Run and define VS Code tasks"),
+            ("runSubagent", "Delegate exploration or specialized workflows"),
+            ("vscode_askQuestions", "Collect structured user input"),
+            ("vscode_listCodeUsages / vscode_renameSymbol", "Symbol-aware code navigation and rename"),
+            ("copilot_getNotebookSummary / edit_notebook_file", "Notebook-aware editing workflow"),
+            ("open_browser_page / read_page", "Browser automation and state inspection"),
+            ("fetch_webpage", "Fetch and summarize web pages"),
+            ("memory", "Persist user/session/repo notes"),
+            ("get_changed_files", "Inspect git staged/unstaged changes"),
+            ("testFailure", "Retrieve recent test failure details"),
+            ("task_complete", "Mark task completion for the session"),
+        ],
+        "subagents": [
+            "Explore",
+            "Context Architect",
+            "modernize",
+            "planning-coordinator",
+            "execution-coordinator",
+        ],
+        "surface_map_label": "CRG -> VS Code tool mapping (baseline)",
+        "surface_map_header": "VS Code surface",
+        "surface_map_rows": [
+            ("read", "read_file", "Native"),
+            ("write", "apply_patch / create_file", "Native"),
+            ("edit", "apply_patch", "Native"),
+            ("bash", "run_in_terminal", "Native"),
+            ("audit", "skill Read + runSubagent", "Pull"),
+            ("test", "run_task / run_in_terminal", "Native"),
+            ("security", "security tools (activated MCP) + scripts", "Pull / MCP"),
+            ("council", "runSubagent", "Native"),
+            ("github_read", "github_repo / github_text_search", "MCP (auth may be required)"),
+            ("github_write", "git commands via run_in_terminal", "Controlled"),
+            ("web_search", "fetch_webpage", "Native"),
+            ("shell_execute", "run_in_terminal", "Native"),
+            ("secrets_read", "Blocked by policy", "Critical - gate"),
+            ("browser", "open_browser_page + page interaction tools", "Native"),
+            ("codex_team", "runSubagent", "Native"),
+        ],
+    },
+}
 
 HARNESS_MCP_FAMILIES = [
     ("filesystem.read", "Inspect files", "Low"),
@@ -67,25 +138,6 @@ HARNESS_MCP_FAMILIES = [
     ("secrets.read", "Secret access", "Critical"),
     ("deploy.production", "Production deploy", "Critical"),
 ]
-
-CRG_TO_CURSOR_MAP = [
-    ("read", "Read", "Native"),
-    ("write", "Write", "Native"),
-    ("edit", "StrReplace", "Native"),
-    ("bash", "Shell", "Native"),
-    ("audit", "Skills (on-demand Read)", "Pull"),
-    ("test", "Skills (on-demand Read)", "Pull"),
-    ("security", "Skills + Opsera MCP", "Pull / MCP"),
-    ("council", "Skills (on-demand Read)", "Pull"),
-    ("github_read", "plugin-github-github", "MCP (auth required)"),
-    ("github_write", "plugin-github-github", "MCP (auth required)"),
-    ("web_search", "WebSearch / Playwright", "Native / MCP"),
-    ("shell_execute", "Shell / remote MCP", "Native"),
-    ("secrets_read", "Blocked by policy", "Critical — gate"),
-    ("browser", "plugin-playwright-playwright", "MCP"),
-    ("codex_team", "Task subagents", "Native"),
-]
-
 
 def _load_settings() -> dict:
     for name in ("settings.local.yaml", "settings.example.yaml"):
@@ -150,29 +202,43 @@ def crg_manifest_rows() -> list[dict]:
     return rows
 
 
-def build_snapshot(mcps_path: Path) -> dict:
+def build_snapshot(mcps_path: Path, tool_profile: str) -> dict:
+    if tool_profile not in TOOL_PROFILES:
+        raise ValueError(f"unknown tool profile: {tool_profile}")
+
+    profile = TOOL_PROFILES[tool_profile]
+    native_tools = profile["native_tools"]
+    subagents = profile["subagents"]
+    map_rows = profile["surface_map_rows"]
+
     servers = scan_mcp_servers(mcps_path)
     total_mcp_tools = sum(s["tool_count"] for s in servers)
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repo": str(_REPO),
         "mcp_descriptors_path": str(mcps_path),
+        "tool_profile": tool_profile,
+        "tool_surface": profile["display_name"],
         "summary": {
-            "native_tool_count": len(NATIVE_TOOLS),
-            "subagent_count": len(SUBAGENTS),
+            "native_tool_count": len(native_tools),
+            "subagent_count": len(subagents),
             "mcp_server_count": len(servers),
             "mcp_tool_count": total_mcp_tools,
             "crg_resource_count": len(crg_manifest_rows()),
         },
-        "native_tools": [{"name": n, "purpose": p} for n, p in NATIVE_TOOLS],
-        "subagents": SUBAGENTS,
+        "native_tools": [{"name": n, "purpose": p} for n, p in native_tools],
+        "subagents": subagents,
         "mcp_servers": servers,
         "crg_manifest": crg_manifest_rows(),
         "harness_mcp_families": [
             {"family": f, "purpose": p, "risk": r} for f, p, r in HARNESS_MCP_FAMILIES
         ],
-        "crg_to_cursor_mapping": [
-            {"crg_id": a, "cursor_surface": b, "notes": c} for a, b, c in CRG_TO_CURSOR_MAP
+        "surface_map": {
+            "section_title": profile["surface_map_label"],
+            "header": profile["surface_map_header"],
+        },
+        "crg_to_surface_mapping": [
+            {"crg_id": a, "surface": b, "notes": c} for a, b, c in map_rows
         ],
     }
 
@@ -189,6 +255,11 @@ def _md_table(headers: list[str], rows: list[list[str]]) -> str:
 
 def render_full_doc(snapshot: dict) -> str:
     s = snapshot["summary"]
+    tool_surface = snapshot.get("tool_surface", "Cursor")
+    section_title = snapshot.get("surface_map", {}).get(
+        "section_title", "CRG -> Tool mapping (baseline)"
+    )
+    section_header = snapshot.get("surface_map", {}).get("header", "Tool surface")
     lines = [
         "# Pre-Session Tools, Resources, and MCP Inventory",
         "",
@@ -207,7 +278,7 @@ def render_full_doc(snapshot: dict) -> str:
         _md_table(
             ["Category", "Count"],
             [
-                ["Native Cursor tools", str(s["native_tool_count"])],
+                [f"Native {tool_surface} tools", str(s["native_tool_count"])],
                 ["Subagent types", str(s["subagent_count"])],
                 ["MCP servers (registered)", str(s["mcp_server_count"])],
                 ["MCP tools (descriptors)", str(s["mcp_tool_count"])],
@@ -227,7 +298,7 @@ def render_full_doc(snapshot: dict) -> str:
         "",
         "---",
         "",
-        "## Native Cursor tools",
+        f"## Native {tool_surface} tools",
         "",
         _md_table(
             ["Tool", "Purpose"],
@@ -242,7 +313,7 @@ def render_full_doc(snapshot: dict) -> str:
         "",
         "---",
         "",
-        "## MCP servers (Cursor workspace)",
+        "## MCP servers (workspace descriptors)",
         "",
     ]
     for server in snapshot["mcp_servers"]:
@@ -308,13 +379,13 @@ def render_full_doc(snapshot: dict) -> str:
             "",
             "---",
             "",
-            "## CRG → Cursor mapping (baseline)",
+            f"## {section_title}",
             "",
             _md_table(
-                ["CRG resource", "Cursor surface", "Notes"],
+                ["CRG resource", section_header, "Notes"],
                 [
-                    [m["crg_id"], m["cursor_surface"], m["notes"]]
-                    for m in snapshot["crg_to_cursor_mapping"]
+                    [m["crg_id"], m["surface"], m["notes"]]
+                    for m in snapshot["crg_to_surface_mapping"]
                 ],
             ),
             "",
@@ -355,6 +426,7 @@ def render_full_doc(snapshot: dict) -> str:
 
 def render_handoffs_index(snapshot: dict) -> str:
     s = snapshot["summary"]
+    tool_surface = snapshot.get("tool_surface", "Cursor")
     return f"""# Pre-Session Inventory (Quick Reference)
 
 > Full doc: [docs/PRE_SESSION_AND_TOOLS.md](../docs/PRE_SESSION_AND_TOOLS.md)  
@@ -364,7 +436,7 @@ def render_handoffs_index(snapshot: dict) -> str:
 
 | Category | Count |
 |----------|------:|
-| Native tools | {s['native_tool_count']} |
+| Native {tool_surface} tools | {s['native_tool_count']} |
 | MCP servers | {s['mcp_server_count']} |
 | MCP tools | {s['mcp_tool_count']} |
 | CRG resources | {s['crg_resource_count']} |
@@ -394,9 +466,25 @@ See [SESSION_COMPACT.md](SESSION_COMPACT.md) for compaction protocol.
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate pre-session inventory docs")
     parser.add_argument("--mcps-path", type=Path, help="Cursor mcps descriptors directory")
+    parser.add_argument(
+        "--tool-profile",
+        choices=sorted(TOOL_PROFILES.keys()),
+        default=None,
+        help="Tool surface profile used for native-tool and CRG mapping tables",
+    )
     args = parser.parse_args()
 
     settings = _load_settings()
+    preferred_tool_profile = str(settings.get("tool_profile", "vscode")).strip() or "vscode"
+    if preferred_tool_profile not in TOOL_PROFILES:
+        print(
+            "ERROR: invalid tool_profile in settings. "
+            f"Expected one of: {', '.join(sorted(TOOL_PROFILES.keys()))}",
+            file=sys.stderr,
+        )
+        return 1
+
+    tool_profile = args.tool_profile or preferred_tool_profile
     mcps_path = args.mcps_path
     if mcps_path is None:
         raw = settings.get("mcp_descriptors_path", "")
@@ -410,7 +498,7 @@ def main() -> int:
         )
         return 1
 
-    snapshot = build_snapshot(mcps_path)
+    snapshot = build_snapshot(mcps_path, tool_profile=tool_profile)
 
     out_json = _REPO / "config" / "pre_session" / "inventory.snapshot.json"
     out_doc = _REPO / "docs" / "PRE_SESSION_AND_TOOLS.md"
