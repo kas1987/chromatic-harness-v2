@@ -60,6 +60,57 @@ export interface HarnessGit {
   untracked: number;
 }
 
+export interface BeadEvent {
+  id: string;
+  kind: string;
+  created_at: string;
+  actor: string;
+  issue_id: string;
+  extra?: {
+    field?: string;
+    new_value?: string;
+    old_value?: string;
+    reason?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface HarnessGoModeFactors {
+  objective_clarity: number;
+  scope_clarity: number;
+  evidence_quality: number;
+  reversibility: number;
+  tool_fit: number;
+  risk_awareness: number;
+  testability: number;
+}
+
+export interface HarnessGoMode {
+  confidence: {
+    score: number;
+    band: string;
+    action: string;
+    may_mutate: boolean;
+    factors: HarnessGoModeFactors;
+  };
+  dispatch_allowed: boolean;
+  selected?: { id: string; title: string; priority: string };
+  decision: string;
+}
+
+export interface HarnessSecurity {
+  passed: boolean;
+  high_severity_total: number;
+  secrets?: { status: string; total: number; high_severity: number };
+  timestamp: string;
+}
+
+export interface HarnessUnifiedGuard {
+  ok: boolean;
+  codegraph_status?: string;
+  timestamp?: string;
+}
+
 export interface HarnessBundle {
   health: HarnessHealth | null;
   tokens: TokenGovernance | null;
@@ -68,6 +119,10 @@ export interface HarnessBundle {
   beads_interactions: string[];
   git: HarnessGit | null;
   timestamp: string;
+  go_mode: HarnessGoMode | null;
+  security: HarnessSecurity | null;
+  unified_guard: HarnessUnifiedGuard | null;
+  bead_events: BeadEvent[];
 }
 
 export default function useHarnessData(intervalMs = 30000) {

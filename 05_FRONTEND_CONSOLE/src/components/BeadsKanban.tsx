@@ -15,9 +15,24 @@ interface Bead {
   updated_at: string;
 }
 
+interface BeadEvent {
+  id: string;
+  kind: string;
+  created_at: string;
+  actor: string;
+  issue_id: string;
+  extra?: {
+    field?: string;
+    new_value?: string;
+    old_value?: string;
+    reason?: string;
+  };
+}
+
 interface BeadsKanbanProps {
   beads: Bead[];
   onBeadClick?: (bead: Bead) => void;
+  beadEvents?: BeadEvent[];
 }
 
 const COLS = [
@@ -77,13 +92,43 @@ const FILTER_OPTIONS = [
   { value: "score", label: "Scores" },
 ];
 
-export default function BeadsKanban({ beads, onBeadClick }: BeadsKanbanProps) {
+// Derive synthetic beads from bead events (real project bead activity)
+function eventsToBeads(events: BeadEvent[]): Bead[] {
+  const seen = new Map<string, { status: string; time: string; actor: string; reason?: string }>();
+  for (const ev of events) {
+    if (ev.kind === 'field_change' && ev.extra?.field === 'status') {
+      const prev = seen.get(ev.issue_id);
+      if (!prev || ev.created_at > prev.time) {
+        seen.set(ev.issue_id, {
+          status: ev.extra.new_value ?? 'open',
+          time: ev.created_at,
+          actor: ev.actor,
+          reason: ev.extra.reason,
+        });
+      }
+    }
+  }
+  return Array.from(seen.entries()).map(([issue_id, info]) => ({
+    bead_id: issue_id,
+    type: 'action' as const,
+    title: info.reason ? info.reason.slice(0, 60) : issue_id,
+    source: info.actor,
+    priority: issue_id.includes('-fipg') || issue_id.includes('-pdyq') ? 'p1' as const : 'p2' as const,
+    status: info.status === 'closed' ? 'done' as const : info.status === 'in_progress' ? 'active' as const : 'pending' as const,
+    created_at: info.time,
+    updated_at: info.time,
+  }));
+}
+
+export default function BeadsKanban({ beads, onBeadClick, beadEvents = [] }: BeadsKanbanProps) {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredCol, setHoveredCol] = useState<string | null>(null);
 
+  const allBeads = [...eventsToBeads(beadEvents), ...beads];
+
   const filtered =
-    typeFilter === "all" ? beads : beads.filter((b) => b.type === typeFilter);
+    typeFilter === "all" ? allBeads : allBeads.filter((b) => b.type === typeFilter);
 
   const byCol: Record<string, Bead[]> = {};
   for (const c of COLS) byCol[c.id] = [];

@@ -1,14 +1,16 @@
 "use client";
 
 import type { Mission, MagnetEvent } from "@/lib/api";
+import type { HarnessGoMode } from "@/hooks/useHarnessData";
 
 interface ConfidenceGateProps {
   mission: Mission | null;
   events: MagnetEvent[];
+  goMode?: HarnessGoMode | null;
 }
 
-export default function ConfidenceGate({ mission, events }: ConfidenceGateProps) {
-  const pct = mission?.confidence_required ?? 0;
+export default function ConfidenceGate({ mission, events, goMode }: ConfidenceGateProps) {
+  const pct = goMode?.confidence?.score ?? mission?.confidence_required ?? 0;
   const riskEvents = events.filter((e) => e.risk_delta > 0.1).length;
 
   const gateDecision =
@@ -33,20 +35,15 @@ export default function ConfidenceGate({ mission, events }: ConfidenceGateProps)
   const allowedAction =
     pct >= 70 ? "Scoped Execution" : pct >= 50 ? "Read Only" : "Halt";
 
+  const liveFactors = goMode?.confidence?.factors;
   const FACTORS = [
-    { label: "Objective Clarity", value: Math.min(100, Math.max(0, pct + 14)) },
-    { label: "Scope Clarity", value: Math.min(100, Math.max(0, pct + 7)) },
-    {
-      label: "Evidence Quality",
-      value: Math.min(100, Math.max(0, pct - 5 + events.length * 2)),
-    },
-    { label: "Reversibility", value: Math.min(100, Math.max(0, pct + 12)) },
-    {
-      label: "Risk Awareness",
-      value: Math.min(100, Math.max(0, pct - 8 + riskEvents * -3)),
-    },
-    { label: "Tool Fit", value: Math.min(100, Math.max(0, pct + 16)) },
-    { label: "Testability", value: Math.min(100, Math.max(0, pct + 4)) },
+    { label: "Objective Clarity", value: liveFactors?.objective_clarity ?? Math.min(100, Math.max(0, pct + 14)) },
+    { label: "Scope Clarity", value: liveFactors?.scope_clarity ?? Math.min(100, Math.max(0, pct + 7)) },
+    { label: "Evidence Quality", value: liveFactors?.evidence_quality ?? Math.min(100, Math.max(0, pct - 5 + events.length * 2)) },
+    { label: "Reversibility", value: liveFactors?.reversibility ?? Math.min(100, Math.max(0, pct + 12)) },
+    { label: "Risk Awareness", value: liveFactors?.risk_awareness ?? Math.min(100, Math.max(0, pct - 8 + riskEvents * -3)) },
+    { label: "Tool Fit", value: liveFactors?.tool_fit ?? Math.min(100, Math.max(0, pct + 16)) },
+    { label: "Testability", value: liveFactors?.testability ?? Math.min(100, Math.max(0, pct + 4)) },
   ];
 
   const factorColor = (value: number) =>
@@ -257,6 +254,13 @@ export default function ConfidenceGate({ mission, events }: ConfidenceGateProps)
           </div>
         </div>
       </div>
+      {goMode && (
+        <div style={{ marginTop: 8, fontSize: 11, color: goMode.dispatch_allowed ? '#22c55e' : '#f59e0b', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'monospace' }}>DISPATCH:</span>
+          <span style={{ fontWeight: 600 }}>{goMode.dispatch_allowed ? 'ALLOWED' : 'BLOCKED'}</span>
+          {goMode.selected && <span style={{ color: '#94a3b8', fontSize: 10 }}>{goMode.selected.id}</span>}
+        </div>
+      )}
     </div>
   );
 }

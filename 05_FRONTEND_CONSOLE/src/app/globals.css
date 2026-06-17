@@ -535,15 +535,18 @@ pre {
 .cc-grid-bottom-left { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .cc-grid-main { display: grid; grid-template-columns: 320px 1fr; gap: 12px; }
 
-/* Panel base */
+/* Panel base — glassmorphism */
 .cc-panel {
-  background: var(--color-surface, #12121a);
-  border: 1px solid var(--cc-panel-border, #1e293b);
-  border-radius: 8px;
-  padding: 16px;
+  background: rgba(18, 18, 26, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.035);
+  border-radius: 10px;
+  padding: 14px;
   position: relative;
 }
-.cc-panel-sm { padding: 12px; }
+.cc-panel-sm { padding: 10px; }
 .cc-panel-title {
   font-family: var(--font-heading, Inter, sans-serif);
   font-size: 10px; font-weight: 700;
@@ -596,3 +599,254 @@ pre {
 
 @media (max-width:1300px) { .cc-grid-top { grid-template-columns:repeat(3,1fr); } }
 @media (max-width:900px)  { .cc-grid-top { grid-template-columns:repeat(2,1fr); } .cc-grid-main { grid-template-columns:1fr; } }
+
+/* ============================================================
+   GRID CARD SYSTEM — Glassmorphism Draggable Command Center
+   ============================================================ */
+
+/* Aurora page background enhancement */
+.cc-aurora-page {
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(124,58,237,0.12) 0%, transparent 40%),
+    radial-gradient(ellipse at 85% 90%, rgba(6,182,212,0.08) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, rgba(12,10,22,0.9) 0%, transparent 80%),
+    linear-gradient(180deg, #0a0a0f 0%, #0d0b18 100%);
+}
+
+/* Dot-grid canvas for draggable cards */
+.cg-canvas {
+  position: relative;
+  background-image: radial-gradient(circle, rgba(124,58,237,0.18) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0;
+  border-radius: 12px;
+  border: 1px solid rgba(124,58,237,0.1);
+  overflow: visible;
+}
+
+/* Glassmorphism grid card */
+.grid-card {
+  position: absolute;
+  border-radius: 12px;
+  overflow: visible;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.grid-card:hover { z-index: 20 !important; }
+
+/* Header / drag handle */
+.grid-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  cursor: grab;
+  user-select: none;
+  background: rgba(0,0,0,0.18);
+  border-radius: 12px 12px 0 0;
+  position: relative;
+  z-index: 2;
+}
+.grid-card__header:active { cursor: grabbing; }
+.grid-card--minimized .grid-card__header {
+  border-bottom: none;
+  border-radius: 12px;
+}
+
+/* Body */
+.grid-card__body {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124,58,237,0.3) transparent;
+  position: relative;
+  z-index: 1;
+}
+.grid-card__body::-webkit-scrollbar { width: 3px; }
+.grid-card__body::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.3); border-radius: 2px; }
+
+/* Resize handle */
+.grid-card__resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  cursor: se-resize;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 3px 4px;
+  z-index: 3;
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+}
+.grid-card:hover .grid-card__resize { opacity: 1; }
+
+/* Card control buttons */
+.grid-card-btn {
+  background: transparent;
+  border: 1px solid rgba(124,58,237,0.18);
+  border-radius: 4px;
+  color: rgba(148,163,184,0.6);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  width: 20px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all var(--duration-fast) var(--ease-out);
+  user-select: none;
+  flex-shrink: 0;
+}
+.grid-card-btn:hover {
+  background: rgba(124,58,237,0.2);
+  border-color: rgba(124,58,237,0.5);
+  color: #c4b5fd;
+}
+.grid-card-btn--danger:hover {
+  background: rgba(239,68,68,0.15);
+  border-color: rgba(239,68,68,0.4);
+  color: #f87171;
+}
+
+/* Filter bar */
+.cg-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(18,18,26,0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(124,58,237,0.1);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+.cg-filter-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(71,85,105,0.9);
+  font-family: var(--font-heading, Inter, sans-serif);
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+.cg-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid rgba(124,58,237,0.28);
+  background: rgba(124,58,237,0.12);
+  color: rgba(196,181,253,0.95);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  font-family: var(--font-heading, Inter, sans-serif);
+  user-select: none;
+}
+.cg-filter-chip:hover {
+  background: rgba(124,58,237,0.25);
+  border-color: rgba(124,58,237,0.55);
+  transform: translateY(-1px);
+}
+.cg-filter-chip--off {
+  background: transparent;
+  border-color: rgba(71,85,105,0.25);
+  color: rgba(71,85,105,0.7);
+}
+.cg-filter-chip--off:hover {
+  background: rgba(71,85,105,0.08);
+  border-color: rgba(71,85,105,0.45);
+  color: rgba(148,163,184,0.8);
+}
+
+/* Status dot animations */
+@keyframes pulse-red    { 0%,100%{box-shadow:0 0 6px rgba(239,68,68,0.6);}  50%{box-shadow:0 0 14px rgba(239,68,68,0.9);} }
+@keyframes pulse-amber  { 0%,100%{box-shadow:0 0 6px rgba(245,158,11,0.5);} 50%{box-shadow:0 0 12px rgba(245,158,11,0.8);} }
+@keyframes pulse-blue   { 0%,100%{box-shadow:0 0 6px rgba(59,130,246,0.5);} 50%{box-shadow:0 0 12px rgba(59,130,246,0.8);} }
+.animate-pulse-red   { animation: pulse-red   1.4s ease-in-out infinite; }
+.animate-pulse-amber { animation: pulse-amber 1.8s ease-in-out infinite; }
+.animate-pulse-blue  { animation: pulse-blue  1.2s ease-in-out infinite; }
+
+/* Section title for command center */
+.cg-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.cg-section-title__label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-primary-400, #a78bfa);
+  font-family: var(--font-heading, Inter, sans-serif);
+}
+.cg-section-title__hint {
+  font-size: 9px;
+  color: rgba(71,85,105,0.7);
+  font-family: var(--font-mono, monospace);
+}
+
+/* ── Dock zone edge indicators ─────────────────────────────────────── */
+.cg-canvas {
+  --cg-dock-glow: rgba(124, 58, 237, 0.10);
+}
+.cg-canvas::before,
+.cg-canvas::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; width: 6px;
+  pointer-events: none;
+  z-index: 2;
+  border-radius: 3px;
+}
+.cg-canvas::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(124,58,237,0.18), transparent);
+}
+.cg-canvas::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(124,58,237,0.18), transparent);
+}
+
+/* Docked card (nav-tab mode) — already styled inline but class hook for overrides */
+.grid-card--docked {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.grid-card--docked:hover {
+  box-shadow: 0 0 20px rgba(139,92,246,0.25), 0 8px 32px rgba(0,0,0,0.4) !important;
+}
+
+/* Transparent override for nested cc-panel inside a GridCard body */
+.hg-card-content .cc-panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-radius: 0;
+}
+.hg-card-content .cc-panel-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(71,85,105,0.9);
+  margin-top: 0;
+  margin-bottom: 8px;
+}

@@ -30,7 +30,11 @@ import AgentActivity from "@/components/AgentActivity";
 import HarnessHealth from "@/components/HarnessHealth";
 import BudgetPanel from "@/components/BudgetPanel";
 import GitCI from "@/components/GitCI";
+import GovernancePanel from "@/components/GovernancePanel";
+import CommandCenter from "@/components/CommandCenter";
+import HarnessGrid, { type PanelDef } from "@/components/HarnessGrid";
 import useHarnessData from "@/hooks/useHarnessData";
+import type { CardStatus } from "@/components/GridCard";
 
 const REPO = process.env.NEXT_PUBLIC_REPO || "chromatic-harness-v2";
 const BRANCH = process.env.NEXT_PUBLIC_BRANCH || "main";
@@ -181,11 +185,13 @@ export default function ConsolePage() {
 
   return (
     <div
+      className="cc-aurora-page"
       style={{
         maxWidth: 1600,
         margin: "0 auto",
         padding: "16px 20px",
         fontFamily: "var(--font-body, sans-serif)",
+        minHeight: "100vh",
       }}
     >
       {/* ── 1. HEADER BAR ─────────────────────────────────────────────── */}
@@ -447,148 +453,206 @@ export default function ConsolePage() {
       {/* ── 3. LIVE PIPELINE ──────────────────────────────────────────── */}
       <PipelineFlow mission={selected} events={displayEvents} />
 
-      {/* ── 4. HARNESS STATUS ROW ─────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
-        <HarnessHealth health={harnessData?.health ?? null} tokens={harnessData?.tokens ?? null} loading={harnessLoading} />
-        <BudgetPanel health={harnessData?.health ?? null} loading={harnessLoading} />
-        <GitCI git={harnessData?.git ?? null} ci={harnessData?.ci ?? null} loading={harnessLoading} />
-      </div>
+      {/* ── 4–7. HARNESS OPERATIONS GRID ─────────────────────────────── */}
+      {(() => {
+        // Derive per-panel status from live harness data
+        const hs = harnessData?.health;
+        const bw = hs?.budget_weekly;
+        const hgStatus: Record<string, CardStatus> = {
+          harnessHealth: harnessLoading ? "running" :
+            hs?.overall_status === "green" ? "green" :
+            hs?.overall_status === "yellow" ? "amber" : "red",
+          budgetPanel: harnessLoading ? "running" :
+            !bw ? "idle" :
+            bw.current_usd > bw.cap_usd ? "red" :
+            bw.current_usd / bw.cap_usd > 0.8 ? "amber" : "green",
+          gitCI: harnessLoading ? "running" :
+            !harnessData?.ci ? "idle" :
+            (harnessData.ci.violations?.length ?? 0) > 0 ? "amber" : "green",
+          governance: harnessLoading ? "running" :
+            (harnessData?.security?.high_severity_total ?? 0) > 0 ? "red" :
+            (harnessData?.drift?.audit?.missing_required?.length ?? 0) > 0 ? "amber" : "green",
+          magnets: selected ? (displayEvents.some(e => e.risk_delta > 0.3) ? "red" : displayEvents.some(e => e.risk_delta > 0.1) ? "amber" : "green") : "idle",
+          confidence: selected ? (reviews[0]?.risk_level === "high" ? "red" : reviews[0]?.risk_level === "medium" ? "amber" : reviews[0] ? "green" : "idle") : "idle",
+          agentActivity: agents.length > 0 ? "green" : "idle",
+          beadsKanban: activeBeads > 0 ? "running" : doneBeads > 0 ? "green" : "idle",
+          eventStream: wsLive ? "running" : "idle",
+          missions: missions.length > 0 ? "green" : "idle",
+          review: reviews[0]?.risk_level === "high" ? "red" : reviews[0]?.risk_level === "medium" ? "amber" : reviews[0] ? "green" : "idle",
+        };
 
-      {/* ── 5. MAIN SECTION ───────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 14, marginBottom: 14 }}>
-        {/* Left column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <MagnetsConsole mission={selected} events={displayEvents} />
-          <AgentActivity agents={agents} missions={missions} />
-        </div>
-        {/* Right column */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <ConfidenceGate mission={selected} events={displayEvents} />
-          <BeadsKanban beads={beads} />
-        </div>
-      </div>
-
-      {/* ── 5. EVENT STREAM ───────────────────────────────────────────── */}
-      <EventStream events={displayEvents} wsLive={wsLive} missionId={selected?.mission_id ?? null} />
-
-      {/* ── 6. EXISTING PANELS (bottom) ───────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
-        {/* Mission Creation */}
-        <div className="cc-panel">
-          <p className="cc-panel-title">Missions ({missions.length})</p>
-          <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-            <input
-              className="chromatic-input"
-              value={newObjective}
-              onChange={e => setNewObjective(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleCreateMission()}
-              placeholder={mode.mutating ? "New mission objective…" : "Read-only mode — creation disabled"}
-              disabled={!mode.mutating}
-              style={{ flex: 1, cursor: mode.mutating ? "text" : "not-allowed" }}
-            />
-            <button
-              className={"chromatic-button chromatic-button-primary"}
-              onClick={handleCreateMission}
-              disabled={!mode.mutating}
-              style={{ cursor: mode.mutating ? "pointer" : "not-allowed" }}
-            >
-              {mode.primaryAction}
-            </button>
-          </div>
-          {missions.length === 0 && (
-            <p style={{ color: "var(--cc-muted, #475569)", fontSize: 12 }}>No missions yet.</p>
-          )}
-          {missions.map(m => (
-            <div
-              key={m.mission_id}
-              onClick={() => handleSelectMission(m)}
-              style={{
-                padding: "6px 8px",
-                marginBottom: 4,
-                borderRadius: 3,
-                background: theme.panelBg,
-                cursor: "pointer",
-                fontSize: 12,
-                border:
-                  "1px solid " +
-                  (selected?.mission_id === m.mission_id ? theme.accent : theme.panelBorder),
-              }}
-            >
-              <span style={{ color: theme.accent }}>{m.mission_id}</span>
-              <span style={{ marginLeft: 8 }}>{m.objective.slice(0, 60)}</span>
-              <div style={{ marginTop: 3 }}>
-                <span style={{ color: theme.muted, fontSize: 10 }}>
-                  conf={m.confidence_required} · {m.magnets.length} magnets · {m.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Independent Review */}
-        <div className="cc-panel">
-          <p className="cc-panel-title">Independent Review</p>
-          {!selected && (
-            <p style={{ color: theme.muted, fontSize: 12 }}>Select a mission to run a review.</p>
-          )}
-          {selected && (
-            <>
-              <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-                <button
-                  className="chromatic-button chromatic-button-primary"
-                  onClick={() => handleTriggerReview(false)}
-                  disabled={reviewLoading}
-                  style={{ fontSize: 12 }}
-                >
-                  {reviewLoading ? "Running…" : "Synthesize"}
-                </button>
-                <button
-                  className="chromatic-button chromatic-button-primary"
-                  onClick={() => handleTriggerReview(true)}
-                  disabled={reviewLoading}
-                  style={{ fontSize: 12, background: "var(--color-success, #22c55e)" }}
-                >
-                  + Create Bead
-                </button>
-              </div>
-              {reviews.length === 0 && (
-                <p style={{ color: theme.muted, fontSize: 12 }}>No reviews yet.</p>
-              )}
-              {reviews.map((r, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: "6px 8px",
-                    marginBottom: 6,
-                    borderRadius: 3,
-                    background: theme.panelBg,
-                    fontSize: 12,
-                    border: `1px solid ${theme.panelBorder}`,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
-                    <span
-                      style={BADGE(
-                        r.risk_level === "high"
-                          ? theme.danger
-                          : r.risk_level === "medium"
-                          ? theme.warning
-                          : theme.success
-                      )}
-                    >
-                      {r.risk_level}
-                    </span>
-                    <span style={{ marginLeft: 8, color: theme.text }}>{r.recommendation}</span>
-                    {r.bead_created && <span style={BADGE(theme.success)}>bead created</span>}
-                  </div>
-                  <div style={{ color: theme.muted, fontSize: 11 }}>
-                    conf={Math.round((r.confidence_score || 0) * 100)}% · {r.summary?.slice(0, 80)}
-                  </div>
+        const hgPanels: Record<string, PanelDef> = {
+          harnessHealth: {
+            label: "Harness Health",
+            icon: "♡",
+            status: hgStatus.harnessHealth,
+            defaultRect: { x: 0,   y: 0,   w: 240, h: 200 },
+            content: <HarnessHealth health={harnessData?.health ?? null} tokens={harnessData?.tokens ?? null} loading={harnessLoading} />,
+          },
+          budgetPanel: {
+            label: "Budget",
+            icon: "◈",
+            status: hgStatus.budgetPanel,
+            defaultRect: { x: 260, y: 0,   w: 220, h: 200 },
+            content: <BudgetPanel health={harnessData?.health ?? null} loading={harnessLoading} />,
+          },
+          gitCI: {
+            label: "Git / CI",
+            icon: "⑂",
+            status: hgStatus.gitCI,
+            defaultRect: { x: 500, y: 0,   w: 220, h: 200 },
+            content: <GitCI git={harnessData?.git ?? null} ci={harnessData?.ci ?? null} loading={harnessLoading} />,
+          },
+          governance: {
+            label: "Governance",
+            icon: "⬡",
+            status: hgStatus.governance,
+            defaultRect: { x: 740, y: 0,   w: 260, h: 200 },
+            content: <GovernancePanel drift={harnessData?.drift ?? null} security={harnessData?.security ?? null} unified_guard={harnessData?.unified_guard ?? null} tokens={harnessData?.tokens ?? null} loading={harnessLoading} />,
+          },
+          magnets: {
+            label: "Magnets",
+            icon: "◉",
+            status: hgStatus.magnets,
+            defaultRect: { x: 0,   y: 220, w: 340, h: 260 },
+            content: <MagnetsConsole mission={selected} events={displayEvents} />,
+          },
+          confidence: {
+            label: "Confidence Gate",
+            icon: "◎",
+            status: hgStatus.confidence,
+            defaultRect: { x: 360, y: 220, w: 380, h: 260 },
+            content: <ConfidenceGate mission={selected} events={displayEvents} goMode={harnessData?.go_mode ?? null} />,
+          },
+          agentActivity: {
+            label: "Agent Activity",
+            icon: "⊕",
+            status: hgStatus.agentActivity,
+            defaultRect: { x: 760, y: 220, w: 240, h: 120 },
+            content: <AgentActivity agents={agents} missions={missions} />,
+          },
+          beadsKanban: {
+            label: "Beads Kanban",
+            icon: "⊞",
+            status: hgStatus.beadsKanban,
+            defaultRect: { x: 760, y: 360, w: 240, h: 120 },
+            content: <BeadsKanban beads={beads} beadEvents={harnessData?.bead_events ?? []} />,
+          },
+          eventStream: {
+            label: "Event Stream",
+            icon: "≋",
+            status: hgStatus.eventStream,
+            defaultRect: { x: 0,   y: 500, w: 1000, h: 160 },
+            content: <EventStream events={displayEvents} wsLive={wsLive} missionId={selected?.mission_id ?? null} />,
+          },
+          missions: {
+            label: "Missions",
+            icon: "▶",
+            status: hgStatus.missions,
+            defaultRect: { x: 0,   y: 680, w: 490, h: 300 },
+            content: (
+              <div>
+                <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                  <input
+                    className="chromatic-input"
+                    value={newObjective}
+                    onChange={e => setNewObjective(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleCreateMission()}
+                    placeholder={mode.mutating ? "New mission objective…" : "Read-only mode — creation disabled"}
+                    disabled={!mode.mutating}
+                    style={{ flex: 1, cursor: mode.mutating ? "text" : "not-allowed" }}
+                  />
+                  <button
+                    className="chromatic-button chromatic-button-primary"
+                    onClick={handleCreateMission}
+                    disabled={!mode.mutating}
+                    style={{ cursor: mode.mutating ? "pointer" : "not-allowed", fontSize: 11 }}
+                  >
+                    {mode.primaryAction}
+                  </button>
                 </div>
-              ))}
-            </>
-          )}
-        </div>
+                {missions.length === 0 && (
+                  <div style={{ fontSize: 11, color: "#475569", padding: "8px 0" }}>No missions yet.</div>
+                )}
+                {missions.map(m => (
+                  <div
+                    key={m.mission_id}
+                    onClick={() => handleSelectMission(m)}
+                    style={{
+                      padding: "6px 8px", marginBottom: 4, borderRadius: 4,
+                      background: "rgba(0,0,0,0.25)", cursor: "pointer", fontSize: 11,
+                      border: "1px solid " + (selected?.mission_id === m.mission_id ? theme.accent : "rgba(255,255,255,0.06)"),
+                    }}
+                  >
+                    <span style={{ color: theme.accent, fontWeight: 600 }}>{m.mission_id}</span>
+                    <span style={{ marginLeft: 8, color: "#94a3b8" }}>{m.objective.slice(0, 55)}</span>
+                    <div style={{ marginTop: 2, fontSize: 9, color: "#475569" }}>
+                      conf={m.confidence_required} · {m.magnets.length} magnets · {m.status}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ),
+          },
+          review: {
+            label: "Indep. Review",
+            icon: "✦",
+            status: hgStatus.review,
+            defaultRect: { x: 510, y: 680, w: 490, h: 300 },
+            content: (
+              <div>
+                {!selected ? (
+                  <div style={{ fontSize: 11, color: "#475569", padding: "8px 0" }}>Select a mission to run a review.</div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+                      <button
+                        className="chromatic-button chromatic-button-primary"
+                        onClick={() => handleTriggerReview(false)}
+                        disabled={reviewLoading}
+                        style={{ fontSize: 11 }}
+                      >
+                        {reviewLoading ? "Running…" : "Synthesize"}
+                      </button>
+                      <button
+                        className="chromatic-button chromatic-button-primary"
+                        onClick={() => handleTriggerReview(true)}
+                        disabled={reviewLoading}
+                        style={{ fontSize: 11, background: "var(--color-success, #22c55e)" }}
+                      >
+                        + Create Bead
+                      </button>
+                    </div>
+                    {reviews.length === 0 && (
+                      <div style={{ fontSize: 11, color: "#475569", padding: "8px 0" }}>No reviews yet.</div>
+                    )}
+                    {reviews.map((r, i) => (
+                      <div key={i} style={{ padding: "6px 8px", marginBottom: 6, borderRadius: 4, background: "rgba(0,0,0,0.25)", fontSize: 11, border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                          <span style={BADGE(r.risk_level === "high" ? theme.danger : r.risk_level === "medium" ? theme.warning : theme.success)}>
+                            {r.risk_level}
+                          </span>
+                          <span style={{ color: "#94a3b8" }}>{r.recommendation}</span>
+                          {r.bead_created && <span style={BADGE(theme.success)}>bead created</span>}
+                        </div>
+                        <div style={{ color: "#475569", fontSize: 10 }}>
+                          conf={Math.round((r.confidence_score || 0) * 100)}% · {r.summary?.slice(0, 80)}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            ),
+          },
+        };
+
+        return <HarnessGrid panels={hgPanels} storagePrefix="hg" minHeight={1000} />;
+      })()}
+
+      {/* ── COMMAND CENTER ────────────────────────────────────────────── */}
+      <div style={{ marginTop: 14 }}>
+        <CommandCenter />
       </div>
 
       {/* Agent Profiles + Registration */}

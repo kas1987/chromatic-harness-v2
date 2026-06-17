@@ -49,6 +49,12 @@ export async function GET() {
   const ci = readJson(path.join(REPO_ROOT, '07_LOGS_AND_AUDIT', 'ci', 'branch_governance_latest.json'));
   const beads_interactions = readLastLines(path.join(REPO_ROOT, '.beads', 'interactions.jsonl'), 50);
   const git = getGitStatus();
+  const go_mode = readJson(path.join(REPO_ROOT, '07_LOGS_AND_AUDIT', 'go_mode', 'latest.json'));
+  const security = readJson(path.join(REPO_ROOT, '07_LOGS_AND_AUDIT', 'security', 'latest.json'));
+  const unified_guard = readJson(path.join(REPO_ROOT, '07_LOGS_AND_AUDIT', 'unified_guard', 'latest.json'));
+  const bead_events: unknown[] = readLastLines(path.join(REPO_ROOT, '.beads', 'interactions.jsonl'), 50).map((line: string) => {
+    try { return JSON.parse(line); } catch { return null; }
+  }).filter((x: unknown): x is object => x !== null);
 
   return NextResponse.json({
     health,
@@ -57,6 +63,10 @@ export async function GET() {
     ci,
     beads_interactions,
     git,
+    go_mode,
+    security,
+    unified_guard,
+    bead_events,
     timestamp: new Date().toISOString(),
   });
 }
