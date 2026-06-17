@@ -53,9 +53,11 @@ jobs:
           python3 << 'PYEOF'
           import json, subprocess, os
 
+          import sys
           prs = json.load(open('/tmp/prs.json'))
           repo = os.environ['REPO']
           updated = 0
+          failed = 0
 
           for pr in prs:
               num = pr['number']
@@ -77,8 +79,11 @@ jobs:
                       updated += 1
                   else:
                       print(f"  PR #{num}: update failed — {result.stderr.strip()}")
+                      failed += 1
               else:
                   print(f"  PR #{num}: {state} — no action needed")
 
-          print(f"\nDone: {updated} branch(es) updated.")
+          print(f"\nDone: {updated} branch(es) updated, {failed} failed.")
+          if failed:
+              sys.exit(1)
           PYEOF

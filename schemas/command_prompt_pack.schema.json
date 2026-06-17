@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Command Prompt Pack",
+  "type": "object",
+  "required": ["id", "name", "mode", "purpose", "default_autonomy", "required_outputs"],
+  "properties": {
+    "id": {"type": "string"},
+    "name": {"type": "string"},
+    "mode": {"type": "string", "enum": ["operator", "auditor", "designer"]},
+    "purpose": {"type": "string"},
+    "default_autonomy": {"type": "string"},
+    "allowed_actions": {"type": "array", "items": {"type": "string"}},
+    "forbidden_actions": {"type": "array", "items": {"type": "string"}},
+    "required_outputs": {"type": "array", "items": {"type": "string"}},
+    "stop_conditions": {"type": "array", "items": {"type": "string"}}
+  }
+}

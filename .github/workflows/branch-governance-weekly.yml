@@ -1,0 +1,36 @@
+name: Branch Governance Weekly
+
+on:
+  schedule:
+    - cron: "15 13 * * 1"
+  workflow_dispatch:
+
+jobs:
+  branch-governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Branch governance audit (hard caps)
+        run: python scripts/branch_governance_audit.py --write --enforce-hard-cap
+
+      - name: Branch governance enforce (dry-run)
+        run: python scripts/branch_governance_enforce.py --write
+
+      - name: Upload branch governance artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: branch-governance-weekly
+          path: |
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.md
+            07_LOGS_AND_AUDIT/ci/branch_governance_enforce_latest.json
+          if-no-files-found: error

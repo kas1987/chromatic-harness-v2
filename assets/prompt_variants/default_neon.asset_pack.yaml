@@ -1,0 +1,15 @@
+asset_pack_id: default_neon
+name: Default Neon Command Center
+style: dark neon operations console
+colors:
+  cmp: '#8b5cf6'
+  runtime: '#3b82f6'
+  mcp: '#22c55e'
+  magnets: '#facc15'
+  beads: '#14b8a6'
+  risk: '#f97316'
+components:
+  panels: glass_neon
+  gauges: circular_glow
+  graphs: node_pipeline
+  cards: bordered_dark_cards
