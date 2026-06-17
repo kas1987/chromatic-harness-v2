@@ -354,7 +354,6 @@ SUITES = [
             "test_mission_packet.py",
         ],
     ),
-<<<<<<< HEAD
     (
         "repo format + gitattributes hygiene",
         [
@@ -367,8 +366,6 @@ SUITES = [
             "test_usage_calibration.py",
         ],
     ),
-=======
->>>>>>> origin/session/chromatic-harness-v2-initial
 ]
 
 

@@ -443,15 +443,7 @@ def audit(
                 payload = json.loads(rp.read_text(encoding="utf-8"))
                 actions = payload.get("actions", []) if isinstance(payload, dict) else []
                 if isinstance(actions, list) and actions:
-<<<<<<< HEAD
-                    normalized = {
-                        str(a.get("path", "")).replace("\\", "/")
-                        for a in actions
-                        if isinstance(a, dict)
-                    }
-=======
                     normalized = {str(a.get("path", "")).replace("\\", "/") for a in actions if isinstance(a, dict)}
->>>>>>> origin/session/chromatic-harness-v2-initial
                     only_coverage_cleanup = normalized == {".coverage"}
             except (OSError, json.JSONDecodeError, TypeError, AttributeError):
                 only_coverage_cleanup = False
@@ -465,8 +457,6 @@ def audit(
                         "message": f"root artifact hygiene: {planned} planned moves",
                     }
                 )
-<<<<<<< HEAD
-=======
 
     branch_audit_script = root / "scripts" / "branch_governance_audit.py"
     if branch_audit_script.is_file():
@@ -516,8 +506,7 @@ def audit(
                     "code": "branch_governance_gone_upstream",
                     "file": "07_LOGS_AND_AUDIT/ci/branch_governance_latest.json",
                     "message": (
-                        "local branches track gone upstream refs: "
-                        f"{branch_governance_summary['local_gone_upstream']}"
+                        f"local branches track gone upstream refs: {branch_governance_summary['local_gone_upstream']}"
                     ),
                 }
             )
@@ -541,7 +530,6 @@ def audit(
                     "message": f"stale branches warning total={stale_total}",
                 }
             )
->>>>>>> origin/session/chromatic-harness-v2-initial
 
     counts: dict[str, int] = {"P0": 0, "P1": 0, "P2": 0, "P3": 0}
     for f in findings:

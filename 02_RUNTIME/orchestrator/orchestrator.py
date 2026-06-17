@@ -57,14 +57,10 @@ class Orchestrator:
         """Build a mission packet from a workflow task-graph node or CLI task dict."""
         title = task.get("title") or task.get("objective", "")
         allowed_files = task.get("allowed_files") or []
-<<<<<<< HEAD
-        confidence_required = float(task.get("confidence_required", task.get("confidence_score", 75)))
-=======
         # Source task dict is a workflow task-graph node, which uses the
         # workflow-domain key `confidence_required`; accept it (and a canonical
         # `confidence_score`) and project onto the CMP packet's confidence_score.
         confidence_score = int(task.get("confidence_required", task.get("confidence_score", 75)))
->>>>>>> origin/session/chromatic-harness-v2-initial
         stop_conditions = list(
             task.get(
                 "stop_conditions",
@@ -171,7 +167,6 @@ class Orchestrator:
             "modified_outside_scope": result.modified_outside,
         }
 
-<<<<<<< HEAD
     async def route_to_provider(
         self,
         mission: MissionPacket,
@@ -182,6 +177,7 @@ class Orchestrator:
         global ChromaticRouter
         if ChromaticRouter is None:
             from router.router import ChromaticRouter as _CR
+
             ChromaticRouter = _CR
         from router.contracts import RouteRequest, RouteInput, RouteConstraints, TaskType, PrivacyClass
 
@@ -209,8 +205,6 @@ class Orchestrator:
             "errors": resp.logs.errors,
         }
 
-=======
->>>>>>> origin/session/chromatic-harness-v2-initial
     def dispatch(self, mission: MissionPacket) -> dict[str, Any]:
         return {
             "mission_id": mission.mission_id,
@@ -268,13 +262,8 @@ class Orchestrator:
                 self.confidence_score = s
                 self.output = out
 
-<<<<<<< HEAD
-        fake_req = _FakeReq(mission.mission_id, _FakeConf(band, mission.confidence_required))
-        fake_resp = _FakeResp(model, mission.confidence_required, _FakeOutput(result))
-=======
         fake_req = _FakeReq(mission.mission_id, _FakeConf(band, mission.confidence_score))
         fake_resp = _FakeResp(model, mission.confidence_score, _FakeOutput(result))
->>>>>>> origin/session/chromatic-harness-v2-initial
         logger._log_agent_run(
             fake_req,  # type: ignore[arg-type]
             fake_resp,  # type: ignore[arg-type]

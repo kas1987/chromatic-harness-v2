@@ -131,11 +131,7 @@ def _inject_learnings() -> None:
 
 
 def _bd_argv(args: list[str]) -> list[str]:
-<<<<<<< HEAD
     """Return the resolved argv list for bd, Windows-safe."""
-=======
-    """Return the argv list for bd with a Windows-safe PATH fallback."""
->>>>>>> origin/session/chromatic-harness-v2-initial
     bd = shutil.which("bd")
     if bd is not None:
         return [bd, *args]
@@ -390,14 +386,7 @@ def main() -> int:
     _emit_baseline_alerts()
     _emit_ci_health()
 
-<<<<<<< HEAD
     _bd(["prime"])
-=======
-    try:
-        subprocess.run(["bd", "prime"], cwd=_REPO, check=False)
-    except FileNotFoundError:
-        print("bd not on PATH — install beads or skip", file=sys.stderr)
->>>>>>> origin/session/chromatic-harness-v2-initial
 
     return 0
 
