@@ -26,14 +26,18 @@ jobs:
     steps:
       - name: Generate App token
         id: app-token
+        if: ${{ env.APP_ID != '' }}
         uses: actions/create-github-app-token@v3
+        continue-on-error: true
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
 
       - name: Update BEHIND PRs with auto-merge enabled
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}  # pragma: allowlist secret
           REPO: ${{ github.repository }}
           BASE: ${{ github.ref_name }}
         run: |

@@ -18,8 +18,7 @@ Turn the user's command into the smallest safe next execution step.
 Return:
 1. Objective
 2. Confidence score
-3. Risk level
-4. Dispatch packet
-5. Tool budget
-6. Stop conditions
-7. Next action
+3. Dispatch packet
+4. Execution plan
+5. Stop conditions
+6. Next action

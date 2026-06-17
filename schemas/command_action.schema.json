@@ -12,5 +12,13 @@
     "minimum_confidence": {"type": "number", "minimum": 0, "maximum": 100},
     "result_event_type": {"type": "string"},
     "description": {"type": "string"}
+  },
+  "if": {
+    "properties": {
+      "requires_confidence": { "const": true }
+    }
+  },
+  "then": {
+    "required": ["minimum_confidence"]
   }
 }
