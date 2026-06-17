@@ -86,9 +86,7 @@ def _approved_candidates() -> set[str] | None:
     candidate_files = [
         p
         for p in CANDIDATES_DIR.iterdir()
-        if p.suffix == ".md"
-        and p.name not in ("SCHEMA.md",)
-        and not p.name.startswith("_")
+        if p.suffix == ".md" and p.name not in ("SCHEMA.md",) and not p.name.startswith("_")
     ]
     if not candidate_files:
         return None  # Dir exists but empty — treat as backward-compatible
@@ -137,10 +135,7 @@ def _promote_one(src: Path, wiki_root: Path, *, execute: bool) -> str | None:
     dest = wiki_root / WIKI_LEARNINGS / f"{slug}.md"
     if dest.is_file():
         existing = dest.read_text(encoding="utf-8", errors="replace")
-        if (
-            hashlib.sha256(existing.replace("\r\n", "\n").encode("utf-8")).hexdigest()
-            == hashlib.sha256(text.replace("\r\n", "\n").encode("utf-8")).hexdigest()
-        ):
+        if hashlib.sha256(existing.encode()).hexdigest() == hashlib.sha256(text.encode()).hexdigest():
             return None
 
     header = meta.copy()

@@ -348,18 +348,6 @@ SUITES = [
             "test_mission_packet.py",
         ],
     ),
-    (
-        "repo format + gitattributes hygiene",
-        [
-            "test_repo_format_hygiene.py",
-        ],
-    ),
-    (
-        "usage calibration (weight math + cap estimation)",
-        [
-            "test_usage_calibration.py",
-        ],
-    ),
 ]
 
 

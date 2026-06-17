@@ -1,18 +1,20 @@
 {
   "schema": "routing_policy_overlay/v1",
-  "generated_at": "2026-06-16T20:12:48.580266Z",
-  "c_to_t_threshold": 4,
+  "generated_at": "2026-06-02T20:37:42.906298Z",
+  "c_to_t_threshold": 1,
   "allow_paid_spill": false,
-  "staleness_fallback": true,
+  "staleness_fallback": false,
   "deadband_hold": false,
-  "direction": 0,
+  "direction": -1,
   "target_pct": 90.0,
   "deadband_pct": 2.0,
   "reasons": [
-    "staleness_fallback: Axis P signal missing/stale (>300s) -> conservative (raise bar, forbid paid spill)"
+    "axis_d_hard_ceiling: $ cap exhausted -> forbid paid spill",
+    "under_target: projected 33.83 < 90.0 -> lower C->T bar (route C3/C4 to native_claude)",
+    "rate_limit: at C-level bound, no further move"
   ],
   "_hysteresis": {
-    "previous_threshold": 4,
+    "previous_threshold": 1,
     "pending_dir": 0,
     "pending_ticks": 0
   }

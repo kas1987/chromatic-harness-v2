@@ -1,155 +1,94 @@
 {
-  "generated_at": "2026-06-16T20:12:22.116491+00:00",
-  "repo": "C:\\Users\\kas41\\chromatic-harness-v2",
-  "mcp_descriptors_path": "C:\\Users\\kas41\\.cursor\\projects\\c-Users-kas41-chromatic-harness-v2\\mcps",
-  "tool_profile": "vscode",
-  "tool_surface": "VS Code",
+  "generated_at": "2026-06-03T01:37:29.823159+00:00",
+  "repo": "/home/user/chromatic-harness-v2",
+  "mcp_descriptors_path": "/home/user/chromatic-harness-v2/tests/fixtures/mcp_minimal",
   "summary": {
-    "native_tool_count": 16,
-    "subagent_count": 5,
-    "mcp_server_count": 4,
-    "mcp_tool_count": 36,
+    "native_tool_count": 15,
+    "subagent_count": 9,
+    "mcp_server_count": 1,
+    "mcp_tool_count": 1,
     "crg_resource_count": 15
   },
   "native_tools": [
     {
-      "name": "run_in_terminal",
-      "purpose": "Run shell commands in a persistent PowerShell terminal"
+      "name": "Shell",
+      "purpose": "Run terminal commands (git, bd, pytest, docker)"
     },
     {
-      "name": "read_file / list_dir",
-      "purpose": "Read files and inspect workspace structure"
+      "name": "Read",
+      "purpose": "Read files including images"
     },
     {
-      "name": "file_search / grep_search / semantic_search",
-      "purpose": "Find files and code quickly"
+      "name": "Write / StrReplace / Delete",
+      "purpose": "Create and edit files"
     },
     {
-      "name": "apply_patch / create_file",
-      "purpose": "Edit and create files safely"
+      "name": "Grep",
+      "purpose": "Ripgrep search"
     },
     {
-      "name": "get_errors",
-      "purpose": "Read compiler/linter diagnostics"
+      "name": "Glob",
+      "purpose": "Find files by pattern"
     },
     {
-      "name": "run_task / create_and_run_task",
-      "purpose": "Run and define VS Code tasks"
+      "name": "WebSearch / WebFetch",
+      "purpose": "Web lookup when enabled"
     },
     {
-      "name": "runSubagent",
-      "purpose": "Delegate exploration or specialized workflows"
+      "name": "GenerateImage",
+      "purpose": "Image generation when explicitly requested"
     },
     {
-      "name": "vscode_askQuestions",
-      "purpose": "Collect structured user input"
+      "name": "ReadLints",
+      "purpose": "IDE linter diagnostics"
     },
     {
-      "name": "vscode_listCodeUsages / vscode_renameSymbol",
-      "purpose": "Symbol-aware code navigation and rename"
+      "name": "EditNotebook",
+      "purpose": "Jupyter cell edits"
     },
     {
-      "name": "copilot_getNotebookSummary / edit_notebook_file",
-      "purpose": "Notebook-aware editing workflow"
+      "name": "CallMcpTool",
+      "purpose": "Invoke MCP server tools"
     },
     {
-      "name": "open_browser_page / read_page",
-      "purpose": "Browser automation and state inspection"
+      "name": "FetchMcpResource",
+      "purpose": "Read MCP resources"
     },
     {
-      "name": "fetch_webpage",
-      "purpose": "Fetch and summarize web pages"
+      "name": "Task",
+      "purpose": "Spawn subagents (explore, shell, ci-investigator, etc.)"
     },
     {
-      "name": "memory",
-      "purpose": "Persist user/session/repo notes"
+      "name": "SwitchMode",
+      "purpose": "Plan vs agent mode"
     },
     {
-      "name": "get_changed_files",
-      "purpose": "Inspect git staged/unstaged changes"
+      "name": "AskQuestion",
+      "purpose": "Structured user multiple-choice"
     },
     {
-      "name": "testFailure",
-      "purpose": "Retrieve recent test failure details"
-    },
-    {
-      "name": "task_complete",
-      "purpose": "Mark task completion for the session"
+      "name": "Await",
+      "purpose": "Poll background shells"
     }
   ],
   "subagents": [
-    "Explore",
-    "Context Architect",
-    "modernize",
-    "planning-coordinator",
-    "execution-coordinator"
+    "generalPurpose",
+    "explore",
+    "shell",
+    "cursor-guide",
+    "ci-investigator",
+    "best-of-n-runner",
+    "granola-engineer",
+    "devsecops",
+    "investigator"
   ],
   "mcp_servers": [
     {
-      "id": "cursor-app-control",
-      "display_name": "cursor-app-control",
-      "tool_count": 5,
+      "id": "plugin-test-server",
+      "display_name": "test-server",
+      "tool_count": 1,
       "tools": [
-        "create_project",
-        "move_agent_to_cloned_root",
-        "move_agent_to_root",
-        "open_automation",
-        "rename_chat"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "cursor-ide-browser",
-      "display_name": "cursor-ide-browser",
-      "tool_count": 16,
-      "tools": [
-        "browser_cdp",
-        "browser_click",
-        "browser_drag",
-        "browser_fill",
-        "browser_get_bounding_box",
-        "browser_highlight",
-        "browser_lock",
-        "browser_mouse_click_xy",
-        "browser_navigate",
-        "browser_press_key",
-        "browser_scroll",
-        "browser_select_option",
-        "browser_snapshot",
-        "browser_tabs",
-        "browser_take_screenshot",
-        "browser_type"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "user-codegraph",
-      "display_name": "codegraph",
-      "tool_count": 10,
-      "tools": [
-        "codegraph_callees",
-        "codegraph_callers",
-        "codegraph_context",
-        "codegraph_explore",
-        "codegraph_files",
-        "codegraph_impact",
-        "codegraph_node",
-        "codegraph_search",
-        "codegraph_status",
-        "codegraph_trace"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "user-review-daemon",
-      "display_name": "review-daemon",
-      "tool_count": 5,
-      "tools": [
-        "review_enqueue",
-        "review_package",
-        "review_run",
-        "review_ship",
-        "review_status"
+        "sample_tool"
       ],
       "status": "active"
     }
@@ -435,84 +374,80 @@
       "risk": "Critical"
     }
   ],
-  "surface_map": {
-    "section_title": "CRG -> VS Code tool mapping (baseline)",
-    "header": "VS Code surface"
-  },
-  "crg_to_surface_mapping": [
+  "crg_to_cursor_mapping": [
     {
       "crg_id": "read",
-      "surface": "read_file",
+      "cursor_surface": "Read",
       "notes": "Native"
     },
     {
       "crg_id": "write",
-      "surface": "apply_patch / create_file",
+      "cursor_surface": "Write",
       "notes": "Native"
     },
     {
       "crg_id": "edit",
-      "surface": "apply_patch",
+      "cursor_surface": "StrReplace",
       "notes": "Native"
     },
     {
       "crg_id": "bash",
-      "surface": "run_in_terminal",
+      "cursor_surface": "Shell",
       "notes": "Native"
     },
     {
       "crg_id": "audit",
-      "surface": "skill Read + runSubagent",
+      "cursor_surface": "Skills (on-demand Read)",
       "notes": "Pull"
     },
     {
       "crg_id": "test",
-      "surface": "run_task / run_in_terminal",
-      "notes": "Native"
+      "cursor_surface": "Skills (on-demand Read)",
+      "notes": "Pull"
     },
     {
       "crg_id": "security",
-      "surface": "security tools (activated MCP) + scripts",
+      "cursor_surface": "Skills + Opsera MCP",
       "notes": "Pull / MCP"
     },
     {
       "crg_id": "council",
-      "surface": "runSubagent",
-      "notes": "Native"
+      "cursor_surface": "Skills (on-demand Read)",
+      "notes": "Pull"
     },
     {
       "crg_id": "github_read",
-      "surface": "github_repo / github_text_search",
-      "notes": "MCP (auth may be required)"
+      "cursor_surface": "plugin-github-github",
+      "notes": "MCP (auth required)"
     },
     {
       "crg_id": "github_write",
-      "surface": "git commands via run_in_terminal",
-      "notes": "Controlled"
+      "cursor_surface": "plugin-github-github",
+      "notes": "MCP (auth required)"
     },
     {
       "crg_id": "web_search",
-      "surface": "fetch_webpage",
-      "notes": "Native"
+      "cursor_surface": "WebSearch / Playwright",
+      "notes": "Native / MCP"
     },
     {
       "crg_id": "shell_execute",
-      "surface": "run_in_terminal",
+      "cursor_surface": "Shell / remote MCP",
       "notes": "Native"
     },
     {
       "crg_id": "secrets_read",
-      "surface": "Blocked by policy",
-      "notes": "Critical - gate"
+      "cursor_surface": "Blocked by policy",
+      "notes": "Critical \u2014 gate"
     },
     {
       "crg_id": "browser",
-      "surface": "open_browser_page + page interaction tools",
-      "notes": "Native"
+      "cursor_surface": "plugin-playwright-playwright",
+      "notes": "MCP"
     },
     {
       "crg_id": "codex_team",
-      "surface": "runSubagent",
+      "cursor_surface": "Task subagents",
       "notes": "Native"
     }
   ]

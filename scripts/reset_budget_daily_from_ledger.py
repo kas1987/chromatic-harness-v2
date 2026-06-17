@@ -20,52 +20,6 @@ LEDGER = BUDGET / "ledger.jsonl"
 DAILY = BUDGET / "daily.jsonl"
 STAMP = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
-# Token-level inference: fill c_level/t_level from model name when missing.
-# Fail-open: if import fails, use identity.
-try:
-    _SCRIPTS = Path(__file__).resolve().parent
-    if str(_SCRIPTS) not in sys.path:
-        sys.path.insert(0, str(_SCRIPTS))
-    from token_level_inference import classify_event as _classify_event  # type: ignore[import]
-except Exception:  # pragma: no cover
-
-    def _classify_event(ev):  # type: ignore[misc]
-        return ev
-
-
-def _classify_ledger_row(row: dict) -> dict:
-    """Lift cost_center.model into a flat event for classify_event, then sync back."""
-    try:
-        cc = row.get("cost_center") or {}
-        # Build a flat proxy with the fields classify_event expects
-        proxy = {
-            "model": cc.get("model") or row.get("model") or "",
-            "c_level": cc.get("c_level"),
-            "t_level": cc.get("t_level"),
-            "confidence": row.get("confidence"),
-        }
-        enriched = _classify_event(proxy)
-        # Only update row if inference actually filled something
-        changed = False
-        if enriched.get("c_level") and not cc.get("c_level"):
-            cc = dict(cc)
-            cc["c_level"] = enriched["c_level"]
-            row = dict(row)
-            row["cost_center"] = cc
-            changed = True
-        if enriched.get("t_level") and not cc.get("t_level"):
-            cc = dict(row.get("cost_center") or cc)
-            cc["t_level"] = enriched["t_level"]
-            row = dict(row)
-            row["cost_center"] = cc
-            changed = True
-        if changed and enriched.get("confidence") == "inferred":
-            row = dict(row)
-            row["confidence"] = "inferred"
-        return row
-    except Exception:  # fail-open
-        return row
-
 
 def is_test(row):
     cc = row.get("cost_center") or {}
@@ -89,15 +43,8 @@ def main():
         if is_test(r):
             continue
         did = r.get("decision_id")
-        if did:
-            by_id[did] = r
-        else:
-            no_id.append(r)
+        (by_id.__setitem__(did, r) if did else no_id.append(r))
     kept = list(by_id.values()) + no_id
-
-    # Enrich: infer c_level/t_level from model name where missing (router decisions
-    # with real levels are preserved — classify_event only fills null/unknown slots).
-    kept = [_classify_ledger_row(r) for r in kept]
 
     today_prefix = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     out_rows, total = [], 0.0
@@ -106,17 +53,13 @@ def main():
         usd = float(r.get("usd") or 0.0)
         model = (r.get("cost_center") or {}).get("model") or "unknown"
         prefix = "today" if ts[:10] == today_prefix else "ledger"
-        cc = r.get("cost_center") or {}
         out_rows.append(
             {
                 "timestamp": ts,
                 "amount_usd": round(usd, 6),
                 "source": f"{prefix}:{model}",
-                "note": "" if r.get("confidence") in ("known", "inferred") else "unknown_usage",
+                "note": "" if r.get("confidence") == "known" else "unknown_usage",
                 "decision_id": r.get("decision_id"),
-                "c_level": cc.get("c_level"),
-                "t_level": cc.get("t_level"),
-                "confidence": r.get("confidence"),
             }
         )
         total += usd
