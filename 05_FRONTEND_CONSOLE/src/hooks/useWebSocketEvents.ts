@@ -23,9 +23,10 @@ export function useWebSocketEvents(missionId: string | null) {
   useEffect(() => {
     if (!missionId) return;
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787';
-    const protocol = apiBase.startsWith('https') ? 'wss:' : 'ws:';
-    const host = apiBase.replace(/^https?:\/\//, '');
+    // Derive WS URL from the current window host so subscriptions reach the
+    // console-api WS manager (which binds to the same origin), not the REST backend.
+    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = typeof window !== 'undefined' ? window.location.host : 'localhost:3000';
     const url = `${protocol}//${host}/ws/missions/${missionId}/events`;
 
     const ws = new WebSocket(url);
