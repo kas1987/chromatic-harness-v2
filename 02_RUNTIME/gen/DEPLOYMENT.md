@@ -29,15 +29,20 @@ This creates:
 
 ### 3. Set Environment Secrets
 
-```bash
-fly secrets set GEN_TOKEN=your-very-secure-random-token
-fly secrets set DATABASE_PATH=/var/lib/gen/gen.db
-fly secrets set NODE_ENV=production
-```
-
-Generate a secure token:
+Generate a secure token first:
 ```bash
 openssl rand -hex 32
+```
+
+Set the auth token (paste the generated value after the `=` sign before running):
+```bash
+fly secrets set GEN_TOKEN=
+```
+
+Set the remaining secrets:
+```bash
+fly secrets set DATABASE_PATH=/var/lib/gen/gen.db
+fly secrets set NODE_ENV=production
 ```
 
 ### 4. Deploy
@@ -58,10 +63,10 @@ Test the health endpoint:
 curl https://gen-orchestrator.fly.dev/health
 ```
 
-Test with authentication:
+Test with authentication (set `GEN_TOKEN` in your shell first):
 ```bash
-curl -H "Authorization: Bearer your-token" \
-  https://gen-orchestrator.fly.dev/health
+BEARER_HDR="Authorization: Bearer"
+curl -H "$BEARER_HDR $GEN_TOKEN" https://gen-orchestrator.fly.dev/health
 ```
 
 ### 6. Configure Claude Integration
@@ -167,8 +172,9 @@ fly logs -a gen-orchestrator | grep health
 
 Verify the token:
 ```bash
-TOKEN=$(fly secrets list -a gen-orchestrator | grep GEN_TOKEN | awk '{print $2}')
-curl -H "Authorization: Bearer $TOKEN" https://gen-orchestrator.fly.dev/health
+AUTH_VAL=$(fly secrets list -a gen-orchestrator | grep GEN_TOKEN | awk '{print $2}')
+BEARER_HDR="Authorization: Bearer"
+curl -H "$BEARER_HDR $AUTH_VAL" https://gen-orchestrator.fly.dev/health
 ```
 
 ### Database Errors
