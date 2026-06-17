@@ -1,0 +1,31 @@
+app = "gen-orchestrator"
+primary_region = "lhr"
+
+[build]
+dockerfile = "Dockerfile"
+
+[env]
+NODE_ENV = "production"
+GEN_PORT = "3000"
+
+[[services]]
+internal_port = 3000
+processes = ["app"]
+protocol = "tcp"
+
+[services.http_checks.checks.status]
+grace_period = "10s"
+interval = "30s"
+method = "GET"
+path = "/health"
+timeout = "5s"
+type = "http"
+
+[[services.ports]]
+port = 80
+handlers = ["http"]
+force_https = true
+
+[[services.ports]]
+port = 443
+handlers = ["http"]

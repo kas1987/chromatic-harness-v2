@@ -1,0 +1,39 @@
+{
+  "epic_id": "ag-gen-observability-fast-20260405",
+  "goal": "all",
+  "phase": "implementation",
+  "complexity": "fast",
+  "test_first": true,
+  "cycle": 1,
+  "max_cycles": 1,
+  "verdicts": {
+    "discovery": "DONE",
+    "pre_mortem": "WARN",
+    "implementation": "DONE",
+    "validation": "SKIPPED_FAST_PATH"
+  },
+  "contract_surfaces": {
+    "repo": "d:\\.04_Prism\\gen",
+    "database": "d:\\.04_Prism\\gen\\gen.db",
+    "diagnostics_script": "d:\\.04_Prism\\gen\\scripts\\diagnose_gen_observability.py",
+    "routing_hook": "d:\\.04_Prism\\gen\\src\\routes\\hooks.ts",
+    "delegate_surface": "d:\\.04_Prism\\gen\\src\\routes\\delegate.ts",
+    "hop_surface": "d:\\.04_Prism\\gen\\src\\middleware\\hop-middleware.ts"
+  },
+  "done_criteria": [
+    "Create a reusable diagnostics script for Gen observability coverage",
+    "Run the script against the live gen.db",
+    "Identify measurable-now signals vs missing schema/data",
+    "Identify holistic offload and delegation surfaces already implemented"
+  ],
+  "discovery_summary": {
+    "problem": "The architecture documents support tool/provider/token/cost/delegation analytics, but the live database is too sparse to answer those questions reliably.",
+    "quick_findings": [
+      "routing_decisions table missing in live gen.db",
+      "task_outcomes missing active_llm/prompt_intent/prompt_scope/suggested_llm columns",
+      "delegation_log exists but has no rows",
+      "budget_states has external_calls but tokens_used is effectively zero"
+    ],
+    "chosen_fast_path": "Implement a live diagnostics script instead of a larger dashboard so operators can inspect observability readiness immediately."
+  }
+}

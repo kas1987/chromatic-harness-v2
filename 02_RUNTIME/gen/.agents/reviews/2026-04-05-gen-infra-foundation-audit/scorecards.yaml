@@ -1,0 +1,62 @@
+date: 2026-04-05
+scope: gen-hooks-and-process-flows
+scorecard:
+  rubric:
+    scale: 1-5
+    weighted: true
+  dimensions:
+    - name: goal_clarity
+      weight: 0.10
+      score: 4
+      confidence: observed
+      notes: Hook pipeline purpose and boundaries are explicit in code and docs.
+
+    - name: goal_alignment
+      weight: 0.15
+      score: 2
+      confidence: observed
+      notes: Core intent is strong, but live data does not support key audit outcomes.
+
+    - name: completeness
+      weight: 0.15
+      score: 2
+      confidence: observed
+      notes: Critical tables and route wiring are incomplete in active environment.
+
+    - name: knowledge_sufficiency
+      weight: 0.15
+      score: 2
+      confidence: observed
+      notes: Existing telemetry is insufficient for provider or token economics diagnostics.
+
+    - name: knowledge_currentness
+      weight: 0.10
+      score: 2
+      confidence: observed
+      notes: Runtime DB schema lags current code expectations.
+
+    - name: operational_coherence
+      weight: 0.10
+      score: 3
+      confidence: strong_inference
+      notes: Fail-open behavior is coherent, but not paired with durable compensating controls.
+
+    - name: efficiency
+      weight: 0.10
+      score: 3
+      confidence: strong_inference
+      notes: Session routing and queue structures exist, but sparse telemetry prevents optimization.
+
+    - name: observability
+      weight: 0.10
+      score: 1
+      confidence: observed
+      notes: routing_decisions and cost_accuracy data is absent in active DB.
+
+    - name: control_adequacy
+      weight: 0.05
+      score: 2
+      confidence: observed
+      notes: Guardrails exist but enforcement mode can be bypassed depending on runtime toggles.
+  composite_weighted_score: 2.30
+  band: warning

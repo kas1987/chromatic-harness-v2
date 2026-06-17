@@ -29,6 +29,12 @@ SUITES = [
         ],
     ),
     (
+        "mission packet contract (unified plan+dispatch + L5 gate)",
+        [
+            "test_mission_packet_validator.py",
+        ],
+    ),
+    (
         "magnets pipeline (7 canonical + orchestrator)",
         [
             "test_canonical_magnets.py",
@@ -348,6 +354,7 @@ SUITES = [
             "test_mission_packet.py",
         ],
     ),
+<<<<<<< HEAD
     (
         "repo format + gitattributes hygiene",
         [
@@ -360,6 +367,8 @@ SUITES = [
             "test_usage_calibration.py",
         ],
     ),
+=======
+>>>>>>> origin/session/chromatic-harness-v2-initial
 ]
 
 

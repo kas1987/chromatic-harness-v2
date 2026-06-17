@@ -19,6 +19,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import yaml
+
 _REPO = Path(__file__).resolve().parents[1]
 _SCRIPTS = _REPO / "scripts"
 
@@ -91,6 +93,17 @@ def _read_audit_risk(root: Path) -> str:
         return "unknown"
 
 
+def _load_branch_policy() -> dict:
+    cfg = _repo_root() / "config" / "ci" / "branch_governance.yaml"
+    if not cfg.is_file():
+        return {}
+    try:
+        data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def _run_context_pipeline(*, force: bool) -> int:
     """Trim audit; rebuild + bootstrap when risk is orange/red or --force."""
     root = _repo_root()
@@ -149,6 +162,12 @@ def run_boot(
     mcps_path: str | None,
 ) -> int:
     errors: list[str] = []
+    notices: list[str] = []
+    branch_policy = _load_branch_policy()
+    startup_awareness = (
+        branch_policy.get("startup_awareness") if isinstance(branch_policy.get("startup_awareness"), dict) else {}
+    )
+    autonomy_cfg = branch_policy.get("autonomy") if isinstance(branch_policy.get("autonomy"), dict) else {}
 
     if _run([str(_SCRIPTS / "check_agent_operations.py")], timeout=30, quiet=True) != 0:
         errors.append("check_agent_operations failed")
@@ -185,6 +204,31 @@ def run_boot(
 
     if _run([str(_SCRIPTS / "validate_intake_loop.py")], timeout=60, quiet=True) != 0:
         errors.append("validate_intake_loop failed")
+
+    run_branch_audit = bool(startup_awareness.get("run_branch_audit", True))
+    branch_audit_script = _SCRIPTS / "branch_governance_audit.py"
+    if run_branch_audit and branch_audit_script.is_file():
+        if _run([str(branch_audit_script), "--write"], timeout=120, quiet=True) != 0:
+            notices.append("branch_governance_audit failed")
+
+    env_mode = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_MODE")
+    branch_mode = (env_mode if env_mode is not None else str(autonomy_cfg.get("mode") or "off")).strip().lower()
+    if branch_mode in {"local", "subagent", "cloud"}:
+        env_apply = os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_APPLY")
+        if env_apply is None:
+            branch_apply = bool(autonomy_cfg.get("apply_mutations", False))
+        else:
+            branch_apply = env_apply in {"1", "true", "yes", "on"}
+        autonomy_args = [
+            str(_SCRIPTS / "branch_governance_autonomy.py"),
+            "--mode",
+            branch_mode,
+            "--write",
+        ]
+        if branch_apply:
+            autonomy_args.append("--apply")
+        if _run(autonomy_args, timeout=240, quiet=True) != 0:
+            notices.append(f"branch_governance_autonomy failed ({branch_mode})")
 
     if not fresh or force:
         if _run_context_pipeline(force=force) != 0:
@@ -229,11 +273,30 @@ def run_boot(
                 "invoked_by": invoked_by,
                 "boot_mode": "fresh_skip" if fresh else ("full" if full else "fast"),
             }
+            bg_path = _repo_root() / "07_LOGS_AND_AUDIT" / "ci" / "branch_governance_latest.json"
+            if bg_path.is_file():
+                try:
+                    bg = json.loads(bg_path.read_text(encoding="utf-8"))
+                    counts = bg.get("counts") or {}
+                    summary["branch_governance"] = {
+                        "local_total": counts.get("local_total", 0),
+                        "remote_total": counts.get("remote_total", 0),
+                        "local_stale": counts.get("local_stale", 0),
+                        "remote_stale": counts.get("remote_stale", 0),
+                        "violations": len(bg.get("violations") or []),
+                    }
+                except (json.JSONDecodeError, OSError):
+                    pass
+            if notices:
+                summary["notices"] = notices
             print(json.dumps(summary, indent=2))
         except (json.JSONDecodeError, OSError):
             pass
     else:
         errors.append("manifest missing after boot")
+
+    if notices:
+        print("Session boot notices:", ", ".join(notices), file=sys.stderr)
 
     if errors:
         print("Session boot completed with errors:", ", ".join(errors), file=sys.stderr)

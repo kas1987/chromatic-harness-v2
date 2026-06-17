@@ -34,12 +34,23 @@ schemas:
 
   - id: mission_packet
     schema_path: 01_PROTOCOLS/CMP/mission_packet.schema.json
-    title: Mission Packet
+    title: Mission Packet (Unified — plan + dispatch)
     consumers:
+      - scripts/validate_mission_packet.py
+      - MISSIONS/scripts/validate_mission_packet.py
       - 02_RUNTIME/api/models.py
-      - 02_RUNTIME/router/gate.py
+      - 02_RUNTIME/orchestrator/orchestrator.py
     jsonl_paths: []
-    notes: CMP mission envelope; validated at API intake boundary.
+    notes: >
+      Single unified Mission Packet schema covering the whole lifecycle. BASE
+      fields are required for every packet; the PLAN profile (triggered by
+      `level` M1-M4) adds governance rigor; the DISPATCH profile (triggered by
+      `autonomy_level` L0-L5) adds the runtime contract. L5 requires
+      metadata.human_approved=true. Canonical field names: allowed_files/
+      forbidden_files, required_output, confidence_score (int 0-100). Authored
+      packets live under MISSIONS/; this is the one entry point (the former
+      separate MISSIONS/schemas copy and `mission_pack_governance` id were folded
+      in here). Kept in lockstep with scripts/validate_mission_packet.py.
 
   - id: intake_queue
     schema_path: 01_PROTOCOLS/INTAKE/intake_queue.schema.json
@@ -155,3 +166,37 @@ schemas:
       - scripts/generate_harness_mermaid.py
     jsonl_paths: []
     notes: Singleton JSON array; validated by validate_visual_registry.py.
+
+  # ── Command Prompt System (Command Center modes + asset themes) ──────────────
+
+  - id: command_prompt_pack
+    schema_path: schemas/command_prompt_pack.schema.json
+    title: Chromatic Command Prompt Pack
+    consumers:
+      - scripts/validate_command_prompt_pack.py
+    jsonl_paths: []
+    notes: >
+      Defines an Operator/Auditor/Designer command-prompt mode for the Command
+      Center mode switcher. Advisory layer ABOVE CMP; never overrides gate verdicts.
+
+  - id: command_action
+    schema_path: schemas/command_action.schema.json
+    title: Chromatic Command Action
+    consumers:
+      - scripts/validate_command_prompt_pack.py
+    jsonl_paths: []
+    notes: >
+      Per-mode Command Center action (label, risk_level, requires_confidence,
+      result_event_type). Drives the mode switcher's allowed-action buttons.
+
+  - id: asset_swap_pack
+    schema_path: schemas/asset_swap_pack.schema.json
+    title: Chromatic Asset Swap Pack
+    consumers:
+      - scripts/generate_console_themes.py
+      - scripts/validate_command_prompt_pack.py
+    jsonl_paths: []
+    notes: >
+      Visual theme pack (colors/components) for the console. Source of truth for
+      assets/prompt_variants/*.asset_pack.yaml; consumed by generate_console_themes.py
+      to emit the typed themes module (no runtime YAML dependency).

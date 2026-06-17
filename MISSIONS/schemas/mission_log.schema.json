@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chromatic Harness Mission Log Entry",
+  "type": "object",
+  "required": ["mission_id", "level", "status", "agent", "confidence_score", "files_touched", "validation", "result", "next_task"],
+  "properties": {
+    "mission_id": { "type": "string" },
+    "level": { "enum": ["M1", "M2", "M3", "M4"] },
+    "status": { "type": "string" },
+    "agent": { "type": "string" },
+    "model": { "type": "string" },
+    "confidence_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "tools_used": { "type": "array", "items": { "type": "string" } },
+    "files_touched": { "type": "array", "items": { "type": "string" } },
+    "validation": { "type": "array", "items": { "type": "string" } },
+    "result": { "type": "string" },
+    "next_task": { "type": "string" }
+  }
+}

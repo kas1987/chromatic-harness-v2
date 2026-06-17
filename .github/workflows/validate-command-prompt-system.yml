@@ -1,0 +1,27 @@
+name: Validate Command Prompt System
+
+on:
+  pull_request:
+    paths:
+      - '01_PROTOCOLS/COMMAND_PROMPTS/**'
+      - 'templates/prompts/**'
+      - '05_FRONTEND_CONSOLE/assets/prompt_variants/**'
+      - 'schemas/command_prompt_pack.schema.json'
+      - 'schemas/asset_swap_pack.schema.json'
+
+jobs:
+  validate-command-prompts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate command prompt files exist
+        run: |
+          test -f 01_PROTOCOLS/COMMAND_PROMPTS/COMMAND_PROMPT_SPEC.md
+          test -f templates/prompts/operator_command_prompt.md
+          test -f templates/prompts/auditor_command_prompt.md
+          test -f templates/prompts/designer_command_prompt.md
+          test -f schemas/command_prompt_pack.schema.json
+          test -f schemas/asset_swap_pack.schema.json

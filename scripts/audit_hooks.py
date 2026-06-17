@@ -163,6 +163,42 @@ def _findings(rows: list[dict]) -> list[dict]:
         if r.get("event") in ("PreToolUse", "preToolUse") and "Agent" in str(r.get("matcher", ""))
     ]
 
+    # PreToolUse/Bash hooks run on EVERY Bash tool call. A Python subprocess adds
+    # ~500ms of synchronous latency per call — a session with 100 Bash calls burns
+    # ~50 seconds blocked. Flag any Python-spawning hook on this hot path as HIGH.
+    # Known-acceptable hooks that have been reviewed and intentionally kept here:
+    _ALLOWED_HOT_PATH_HOOKS: set[str] = {"git_collision_pretooluse.py"}
+
+    def _hook_basename(cmd: str) -> str:
+        for token in reversed(cmd.split()):
+            clean = token.strip("\"'")
+            if clean.endswith(".py"):
+                return Path(clean).name
+        return ""
+
+    bash_pretooluse = [
+        r
+        for r in rows
+        if r.get("event") in ("PreToolUse", "preToolUse")
+        and r.get("matcher", "") in ("Bash", "", "(all)")
+        and "python" in r.get("command", "").lower()
+        and r.get("platform") == "claude_code"
+        and _hook_basename(r.get("command", "")) not in _ALLOWED_HOT_PATH_HOOKS
+    ]
+    if bash_pretooluse:
+        findings.append(
+            {
+                "severity": "HIGH",
+                "title": "PreToolUse/Bash hook on synchronous hot path",
+                "detail": (
+                    f"{len(bash_pretooluse)} PreToolUse hook(s) matched on Bash spawn a Python process "
+                    "(~500ms) on EVERY Bash tool call. Move to a shell pre-check or async pattern; "
+                    "see bead chromatic-harness-v2-mrn7.5 and docs/audit/HOOK_ARCHITECTURE.md."
+                ),
+                "commands": [r["command"] for r in bash_pretooluse],
+            }
+        )
+
     # Only flag if the *same script* appears more than once (genuine duplicate that
     # would run the gate twice). Normalize by .py basename so absolute vs relative
     # spellings (e.g. "python 02_RUNTIME/router/gate.py" vs

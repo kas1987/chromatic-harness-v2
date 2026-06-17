@@ -23,6 +23,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from common_harness import run_safe  # noqa: E402
+from log_retention import prune_dir  # noqa: E402
 from pre_session_common import (  # noqa: E402
     REPO,
     load_profile,
@@ -218,6 +219,28 @@ def _governance_snapshot(repo: Path) -> dict:
             snap["context_trim_risk"] = data.get("risk_level", "unknown")
         except (json.JSONDecodeError, OSError):
             pass
+    branch_audit = repo / "07_LOGS_AND_AUDIT" / "ci" / "branch_governance_latest.json"
+    if branch_audit.is_file():
+        try:
+            payload = json.loads(branch_audit.read_text(encoding="utf-8"))
+            counts = payload.get("counts") or {}
+            snap["branch_governance"] = {
+                "status": payload.get("status", "unknown"),
+                "local_total": counts.get("local_total", 0),
+                "remote_total": counts.get("remote_total", 0),
+                "local_stale": counts.get("local_stale", 0),
+                "remote_stale": counts.get("remote_stale", 0),
+                "violations": len(payload.get("violations") or []),
+            }
+        except (json.JSONDecodeError, OSError):
+            snap["branch_governance"] = {"status": "parse_error"}
+    else:
+        snap["branch_governance"] = {"status": "missing"}
+
+    snap["branch_autonomy"] = {
+        "mode": os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_MODE", "off"),
+        "apply": os.environ.get("CHROMATIC_BRANCH_SELF_HEAL_APPLY", "0") == "1",
+    }
     return snap
 
 
@@ -274,6 +297,10 @@ def main() -> int:
         print(f"Wrote {_rel(latest)}", file=sys.stderr)
         if appended:
             print(f"Appended {_rel(appended)}", file=sys.stderr)
+        try:
+            prune_dir(_output_dir(repo), keep=30, apply=True)
+        except Exception as exc:  # fail-open
+            print(f"[pre_session_manifest] prune_dir error: {exc}", file=sys.stderr)
     elif not args.json:
         print(json.dumps(manifest, indent=2))
 

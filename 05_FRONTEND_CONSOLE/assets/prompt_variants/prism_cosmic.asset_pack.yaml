@@ -1,0 +1,21 @@
+asset_pack_id: prism_cosmic
+display_name: Prism Cosmic Designer
+description: Creative cosmic prism theme for visual design, UI mockups, and asset ideation.
+theme_tokens:
+  background: "#030414"
+  panel: "#101027"
+  text: "#f5f3ff"
+  muted: "#9ca3af"
+layer_colors:
+  cmp: "#c084fc"
+  runtime: "#38bdf8"
+  mcp: "#34d399"
+  magnets: "#fde047"
+  beads: "#22d3ee"
+  risk: "#fb7185"
+icon_style: prism-holographic
+panel_style: cosmic-glass
+background_prompt: "cosmic prism command interface, holographic cards, nebula gradients, glowing layered UI panels"
+component_notes:
+  - Use for Designer mode.
+  - Prioritize asset exploration and frontend mockup panels.

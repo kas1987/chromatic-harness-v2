@@ -61,9 +61,7 @@ class AgentLead:
         synthesized = self._synthesize(mission, report)
         evaluation = self._evaluate(mission, report, synthesized)
         recommendation = self._recommend(evaluation, report)
-        final_report = self._report(
-            mission, report, synthesized, evaluation, recommendation
-        )
+        final_report = self._report(mission, report, synthesized, evaluation, recommendation)
         handoff = self._handoff_prep(mission, report, recommendation, final_report)
         pr_package = self._pr_package(mission, evaluation, recommendation)
         next_steps = self._next_steps(mission, recommendation, report)
@@ -87,9 +85,7 @@ class AgentLead:
             pass
         return output
 
-    def _synthesize(
-        self, mission: dict[str, Any], report: MagnetReport
-    ) -> dict[str, Any]:
+    def _synthesize(self, mission: dict[str, Any], report: MagnetReport) -> dict[str, Any]:
         return {
             "mission_id": mission.get("mission_id"),
             "objective": mission.get("objective", ""),
@@ -106,17 +102,12 @@ class AgentLead:
         report: MagnetReport,
         synthesized: dict[str, Any],
     ) -> dict[str, Any]:
-        required = float(mission.get("confidence_required", 75.0))
+        required = float(mission.get("confidence_score", mission.get("confidence_required", 75)))
         alignment = report.confidence_score >= required
         validation_events = [
-            e
-            for e in report.normalized
-            if e.magnet_name == "validation_magnet"
-            or e.inflection_point == "validation"
+            e for e in report.normalized if e.magnet_name == "validation_magnet" or e.inflection_point == "validation"
         ]
-        tests_ok = not any(
-            "fail" in ev.lower() for e in validation_events for ev in e.evidence
-        )
+        tests_ok = not any("fail" in ev.lower() for e in validation_events for ev in e.evidence)
         return {
             "quality_score": report.score,
             "confidence_score": report.confidence_score,
@@ -127,9 +118,7 @@ class AgentLead:
             "tests_passing_signal": tests_ok,
         }
 
-    def _recommend(
-        self, evaluation: dict[str, Any], report: MagnetReport
-    ) -> dict[str, Any]:
+    def _recommend(self, evaluation: dict[str, Any], report: MagnetReport) -> dict[str, Any]:
         decision = decision_from_score(evaluation["quality_score"])
         if report.recommendation == "halt":
             decision = "halt"
@@ -173,8 +162,7 @@ class AgentLead:
     ) -> dict[str, Any]:
         return {
             "title": f"[Agent Lead] {mission.get('objective', 'Mission')[:80]}",
-            "ready_for_review": recommendation["decision"]
-            in ("proceed", "proceed_reversible_only"),
+            "ready_for_review": recommendation["decision"] in ("proceed", "proceed_reversible_only"),
             "quality_score": evaluation["quality_score"],
             "checklist": [
                 {
@@ -226,9 +214,7 @@ class AgentLead:
             "event_count": len(events),
             "magnets_seen": report.correlated.get("magnets_seen", []),
             "total_risk_delta": report.correlated.get("total_risk_delta", 0.0),
-            "total_confidence_delta": report.correlated.get(
-                "total_confidence_delta", 0.0
-            ),
+            "total_confidence_delta": report.correlated.get("total_confidence_delta", 0.0),
             "gold_artifact_ref": report.gold_artifact,
         }
 
@@ -247,9 +233,7 @@ class AgentLead:
                 "autonomy_level": mission.get("autonomy_level", "L1"),
                 "composite_score": report.score,
             },
-            "next_session_goals": [
-                a for a in self._next_steps(mission, recommendation, report)["actions"]
-            ],
+            "next_session_goals": [a for a in self._next_steps(mission, recommendation, report)["actions"]],
             "audit_log_ref": mission.get("mission_id"),
             "decision": recommendation["decision"],
         }

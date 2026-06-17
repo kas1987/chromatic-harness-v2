@@ -1,0 +1,80 @@
+date: 2026-04-05
+scope: gen-hooks-and-process-flows
+recommendations:
+  - id: rec-p0-001
+    priority: P0
+    title: Mount and initialize delegate router in startup
+    addresses:
+      - gap-001
+    effort: medium
+    expected_payoff: high
+    owner_role: platform
+    acceptance:
+      - POST /api/delegate available in running app
+      - delegation_log receives at least one test row
+      - /health plus delegate smoke test pass in CI
+
+  - id: rec-p0-002
+    priority: P0
+    title: Add startup schema contract checks and fail-fast mode
+    addresses:
+      - gap-002
+      - gap-003
+    effort: medium
+    expected_payoff: very_high
+    owner_role: platform
+    acceptance:
+      - boot check verifies required tables and columns
+      - process fails startup in strict mode when schema mismatched
+      - diagnostics script returns no blocking schema gaps
+
+  - id: rec-p1-001
+    priority: P1
+    title: Normalize token accounting across posttool clients
+    addresses:
+      - gap-004
+    effort: medium
+    expected_payoff: high
+    owner_role: observability
+    acceptance:
+      - tokens_used non-zero for representative tool runs
+      - budget_states and task_outcomes token trends align
+
+  - id: rec-p1-002
+    priority: P1
+    title: Add durable hop retry and dead-letter replay path
+    addresses:
+      - gap-005
+    effort: medium_high
+    expected_payoff: high
+    owner_role: platform
+    acceptance:
+      - failed hop dispatches persisted with retry count
+      - replay command reprocesses dead-letter items
+      - audit output includes delivery success rate
+
+  - id: rec-p2-001
+    priority: P2
+    title: CI gate for observability readiness
+    addresses:
+      - gap-002
+      - gap-003
+      - gap-004
+    effort: low
+    expected_payoff: medium
+    owner_role: qa
+    acceptance:
+      - diagnostics script runs in CI
+      - build fails on blocking observability regressions
+
+  - id: rec-p3-001
+    priority: P3
+    title: Expand weekly architecture audit dashboard
+    addresses:
+      - gap-004
+      - gap-005
+    effort: medium
+    expected_payoff: medium
+    owner_role: architecture
+    acceptance:
+      - weekly report includes route utilization, reconciliation, and delegation success trends

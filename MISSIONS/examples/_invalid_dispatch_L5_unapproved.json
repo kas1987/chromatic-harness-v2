@@ -1,0 +1,11 @@
+{
+  "mission_id": "D-BAD-L5",
+  "objective": "Attempt fully autonomous execution without human approval.",
+  "agent_role": "agent_lead",
+  "autonomy_level": "L5",
+  "confidence_score": 95,
+  "allowed_tools": ["read", "write", "execute"],
+  "stop_conditions": ["any irreversible side effect"],
+  "required_output": ["summary"],
+  "metadata": { "human_approved": false }
+}

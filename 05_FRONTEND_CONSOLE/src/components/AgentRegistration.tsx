@@ -8,47 +8,7 @@ import {
   type AgentProfile,
   type LevelThreshold,
 } from "@/lib/api";
-
-const PANEL: React.CSSProperties = {
-  border: "1px solid #333",
-  borderRadius: 4,
-  padding: 12,
-  marginBottom: 16,
-  background: "#111",
-};
-
-const HEADING: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: "bold",
-  color: "#888",
-  textTransform: "uppercase",
-  letterSpacing: 1,
-  marginBottom: 8,
-  marginTop: 0,
-};
-
-const INPUT: React.CSSProperties = {
-  background: "#1a1a1a",
-  border: "1px solid #333",
-  color: "#e0e0e0",
-  padding: "4px 8px",
-  borderRadius: 3,
-  fontFamily: "monospace",
-  fontSize: 12,
-  width: "100%",
-  boxSizing: "border-box" as const,
-};
-
-const BTN = (color = "#1a4a8a"): React.CSSProperties => ({
-  background: color,
-  border: "none",
-  color: "#fff",
-  padding: "4px 10px",
-  borderRadius: 3,
-  cursor: "pointer",
-  fontFamily: "monospace",
-  fontSize: 12,
-});
+import { useTheme } from "@/lib/theme";
 
 const LEVEL_LABELS: Record<number, string> = {
   0: "Observer",
@@ -59,26 +19,52 @@ const LEVEL_LABELS: Record<number, string> = {
   5: "Sovereign",
 };
 
-const LEVEL_COLOR: Record<number, string> = {
-  0: "#555",
-  1: "#39e",
-  2: "#3ce",
-  3: "#2ae",
-  4: "#2a8",
-  5: "#1a7",
-};
-
 function PromotionTimeline({
   agent,
   thresholds,
   onPromote,
+  theme,
 }: {
   agent: AgentProfile;
   thresholds: Record<string, LevelThreshold>;
   onPromote: (level: number, reason: string) => void;
+  theme: ReturnType<typeof useTheme>["theme"];
 }) {
   const [promoting, setPromoting] = useState(false);
   const [promoteReason, setPromoteReason] = useState("");
+
+  const INPUT: React.CSSProperties = {
+    background: theme.panelBg,
+    border: `1px solid ${theme.panelBorder}`,
+    color: theme.text,
+    padding: "4px 8px",
+    borderRadius: 3,
+    fontFamily: "monospace",
+    fontSize: 12,
+    width: "100%",
+    boxSizing: "border-box" as const,
+  };
+
+  const BTN = (color = theme.accent): React.CSSProperties => ({
+    background: color,
+    border: "none",
+    color: "#fff",
+    padding: "4px 10px",
+    borderRadius: 3,
+    cursor: "pointer",
+    fontFamily: "monospace",
+    fontSize: 12,
+  });
+
+  // Level colors: L0 muted, L1-L3 accent (blues), L4-L5 success (greens)
+  const LEVEL_COLOR: Record<number, string> = {
+    0: theme.muted,
+    1: theme.accent,
+    2: theme.accent,
+    3: theme.accent,
+    4: theme.success,
+    5: theme.success,
+  };
 
   const nextLevel = Math.min(5, agent.current_level + 1);
   const nextThresh = thresholds[String(nextLevel)];
@@ -108,21 +94,21 @@ function PromotionTimeline({
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
-                background: lvl <= agent.current_level ? LEVEL_COLOR[lvl] : "#1a1a1a",
-                border: `2px solid ${lvl === agent.current_level ? LEVEL_COLOR[lvl] : "#333"}`,
+                background: lvl <= agent.current_level ? LEVEL_COLOR[lvl] : theme.panelBg,
+                border: `2px solid ${lvl === agent.current_level ? LEVEL_COLOR[lvl] : theme.panelBorder}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 11,
                 fontWeight: "bold",
-                color: lvl <= agent.current_level ? "#fff" : "#555",
+                color: lvl <= agent.current_level ? "#fff" : theme.muted,
                 zIndex: 1,
                 position: "relative",
               }}
             >
               {lvl}
             </div>
-            <div style={{ fontSize: 9, color: lvl === agent.current_level ? LEVEL_COLOR[lvl] : "#444", marginTop: 3 }}>
+            <div style={{ fontSize: 9, color: lvl === agent.current_level ? LEVEL_COLOR[lvl] : theme.muted, marginTop: 3 }}>
               {LEVEL_LABELS[lvl]}
             </div>
             {/* connector */}
@@ -131,7 +117,7 @@ function PromotionTimeline({
                 style={{
                   position: "absolute",
                   height: 2,
-                  background: lvl < agent.current_level ? LEVEL_COLOR[lvl] : "#222",
+                  background: lvl < agent.current_level ? LEVEL_COLOR[lvl] : theme.panelBorder,
                   width: "calc(100% - 28px)",
                   left: "calc(50% + 14px)",
                   top: 13,
@@ -147,23 +133,23 @@ function PromotionTimeline({
       {agent.current_level < 5 && nextThresh && (
         <div
           style={{
-            background: "#1a1a1a",
-            border: "1px solid #2a2a2a",
+            background: theme.panelBg,
+            border: `1px solid ${theme.panelBorder}`,
             borderRadius: 3,
             padding: "8px 10px",
             fontSize: 11,
             marginBottom: 8,
           }}
         >
-          <div style={{ color: "#666", marginBottom: 4 }}>
+          <div style={{ color: theme.muted, marginBottom: 4 }}>
             Requirements for L{nextLevel} ({LEVEL_LABELS[nextLevel]}):
           </div>
           <div
             style={{
               color:
                 agent.total_executions >= nextThresh.min_executions
-                  ? "#1a7"
-                  : "#e93",
+                  ? theme.success
+                  : theme.warning,
             }}
           >
             Executions: {agent.total_executions} / {nextThresh.min_executions}
@@ -172,8 +158,8 @@ function PromotionTimeline({
             style={{
               color:
                 agent.success_rate >= nextThresh.min_success_rate
-                  ? "#1a7"
-                  : "#e93",
+                  ? theme.success
+                  : theme.warning,
             }}
           >
             Success rate: {(agent.success_rate * 100).toFixed(0)}% /{" "}
@@ -182,7 +168,7 @@ function PromotionTimeline({
           <div
             style={{
               color:
-                agent.risk_score <= nextThresh.max_risk ? "#1a7" : "#e53",
+                agent.risk_score <= nextThresh.max_risk ? theme.success : theme.danger,
             }}
           >
             Risk score: {(agent.risk_score * 100).toFixed(0)}% ≤{" "}
@@ -199,7 +185,7 @@ function PromotionTimeline({
               onClick={() => setPromoting(true)}
               disabled={!canPromote}
               style={{
-                ...BTN(canPromote ? "#1a6a3a" : "#2a2a2a"),
+                ...BTN(canPromote ? theme.success : theme.panelBorder),
                 opacity: canPromote ? 1 : 0.5,
                 cursor: canPromote ? "pointer" : "not-allowed",
               }}
@@ -223,13 +209,13 @@ function PromotionTimeline({
                     setPromoteReason("");
                   }
                 }}
-                style={BTN("#1a6a3a")}
+                style={BTN(theme.success)}
               >
                 Confirm
               </button>
               <button
                 onClick={() => setPromoting(false)}
-                style={BTN("#3a1a1a")}
+                style={BTN(theme.danger)}
               >
                 Cancel
               </button>
@@ -241,11 +227,11 @@ function PromotionTimeline({
       {/* Promotion history */}
       {agent.promotion_history && agent.promotion_history.length > 0 && (
         <div style={{ marginTop: 10 }}>
-          <div style={{ color: "#555", fontSize: 10, marginBottom: 4 }}>
+          <div style={{ color: theme.muted, fontSize: 10, marginBottom: 4 }}>
             HISTORY
           </div>
           {[...agent.promotion_history].reverse().map((p, i) => (
-            <div key={i} style={{ fontSize: 10, color: "#444", marginBottom: 2 }}>
+            <div key={i} style={{ fontSize: 10, color: theme.muted, marginBottom: 2 }}>
               → L{p.level} ·{" "}
               {new Date(p.date).toLocaleDateString()} · {p.reason}
             </div>
@@ -263,6 +249,7 @@ export default function AgentRegistration({
   onAgentRegistered?: (agent: AgentProfile) => void;
   selectedAgent?: AgentProfile | null;
 }) {
+  const { theme } = useTheme();
   const [agentId, setAgentId] = useState("");
   const [description, setDescription] = useState("");
   const [initialLevel, setInitialLevel] = useState(0);
@@ -270,6 +257,47 @@ export default function AgentRegistration({
   const [thresholds, setThresholds] = useState<Record<string, LevelThreshold>>(
     {}
   );
+
+  const PANEL: React.CSSProperties = {
+    border: `1px solid ${theme.panelBorder}`,
+    borderRadius: 4,
+    padding: 12,
+    marginBottom: 16,
+    background: theme.panelBg,
+  };
+
+  const HEADING: React.CSSProperties = {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: theme.muted,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 8,
+    marginTop: 0,
+  };
+
+  const INPUT: React.CSSProperties = {
+    background: theme.panelBg,
+    border: `1px solid ${theme.panelBorder}`,
+    color: theme.text,
+    padding: "4px 8px",
+    borderRadius: 3,
+    fontFamily: "monospace",
+    fontSize: 12,
+    width: "100%",
+    boxSizing: "border-box" as const,
+  };
+
+  const BTN = (color = theme.accent): React.CSSProperties => ({
+    background: color,
+    border: "none",
+    color: "#fff",
+    padding: "4px 10px",
+    borderRadius: 3,
+    cursor: "pointer",
+    fontFamily: "monospace",
+    fontSize: 12,
+  });
 
   useEffect(() => {
     getLevelThresholds()
@@ -344,7 +372,7 @@ export default function AgentRegistration({
           Register Agent
         </button>
         {error && (
-          <span style={{ color: "#e53", fontSize: 11, marginLeft: 8 }}>
+          <span style={{ color: theme.danger, fontSize: 11, marginLeft: 8 }}>
             {error}
           </span>
         )}
@@ -355,19 +383,20 @@ export default function AgentRegistration({
         <div>
           <div
             style={{
-              borderTop: "1px solid #222",
+              borderTop: `1px solid ${theme.panelBorder}`,
               paddingTop: 10,
               marginTop: 4,
             }}
           >
-            <div style={{ color: "#666", fontSize: 11, marginBottom: 6 }}>
+            <div style={{ color: theme.muted, fontSize: 11, marginBottom: 6 }}>
               Promotion timeline —{" "}
-              <span style={{ color: "#39e" }}>{selectedAgent.agent_id}</span>
+              <span style={{ color: theme.accent }}>{selectedAgent.agent_id}</span>
             </div>
             <PromotionTimeline
               agent={selectedAgent}
               thresholds={thresholds}
               onPromote={handlePromote}
+              theme={theme}
             />
           </div>
         </div>

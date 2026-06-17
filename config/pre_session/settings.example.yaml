@@ -8,5 +8,8 @@
 # Cursor MCP tool descriptors (from Cursor's project mcps folder)
 mcp_descriptors_path: "C:/Users/kas41/.cursor/projects/c-Users-kas41-chromatic-harness-v2/mcps"
 
+# Optional: default tool profile for inventory rendering (cursor | vscode)
+tool_profile: "vscode"
+
 # Optional: path to Cursor user skills (informational only)
 cursor_skills_path: "C:/Users/kas41/.cursor/skills-cursor"

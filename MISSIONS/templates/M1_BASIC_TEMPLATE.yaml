@@ -1,0 +1,33 @@
+mission_id: M1-000
+level: M1
+status: draft
+title: ""
+objective: ""
+scope:
+  - ""
+success_criteria:
+  - ""
+acceptance_criteria:
+  - ""
+plan:
+  - ""
+allowed_files: []
+forbidden_files: []
+allowed_tools: []
+tool_budget:
+  max_total: 3
+  max_search: 0
+  max_read: 1
+  max_write: 1
+  max_execute: 0
+confidence_score: 75
+risk_level: low
+validation:
+  - self_review
+rollback: "Not required unless code/config changes."
+stop_conditions:
+  - "Scope expands beyond one small change."
+required_output:
+  - summary
+  - files_changed
+  - validation_result

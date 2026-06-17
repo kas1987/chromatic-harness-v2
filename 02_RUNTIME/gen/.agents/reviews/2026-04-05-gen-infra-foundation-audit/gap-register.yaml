@@ -1,0 +1,74 @@
+date: 2026-04-05
+scope: gen-hooks-and-process-flows
+gaps:
+  - id: gap-001
+    title: Delegate route exists but is not mounted in app runtime
+    severity: severe
+    confidence: observed
+    axis:
+      reality_vs_documentation: documented_not_running
+      reality_vs_goal: diverges
+      reality_vs_best_practice: diverges
+    evidence:
+      - src/routes/delegate.ts defines POST /api/delegate
+      - src/index.ts router registration has no delegate router mount
+    impact:
+      - whole-task offload cannot be exercised through active HTTP surface
+      - delegation telemetry remains zero by design
+
+  - id: gap-002
+    title: routing_decisions table missing in active database
+    severity: blocking
+    confidence: observed
+    axis:
+      reality_vs_documentation: documented_not_running
+      reality_vs_goal: diverges
+      reality_vs_best_practice: diverges
+    evidence:
+      - scripts/diagnose_gen_observability.py row count output reports routing_decisions as None
+      - src/routing/routing-decision-log.ts expects automatic table creation and append
+    impact:
+      - no durable record for suggested vs actual llm reconciliation
+      - no route-level tool frequency analytics
+
+  - id: gap-003
+    title: task_outcomes schema drift in active runtime
+    severity: severe
+    confidence: observed
+    axis:
+      reality_vs_documentation: documented_not_running
+      reality_vs_goal: diverges
+      reality_vs_best_practice: diverges
+    evidence:
+      - diagnostics reports missing columns active_llm, suggested_llm, prompt_intent, prompt_scope
+      - learning-store writes and reads these columns
+    impact:
+      - learning and routing attribution analytics are incomplete
+
+  - id: gap-004
+    title: Token and handoff economics are under-captured
+    severity: material
+    confidence: strong_inference
+    axis:
+      reality_vs_documentation: running_but_underdocumented
+      reality_vs_goal: diverges
+      reality_vs_best_practice: diverges
+    evidence:
+      - diagnostics budget_state_summary shows external_calls but tokens and handoffs at zero
+      - posttool token increment depends on payload input tokensUsed
+    impact:
+      - budget decisions are weakly grounded in actual usage cost
+
+  - id: gap-005
+    title: Hop dispatch durability is best-effort only
+    severity: material
+    confidence: observed
+    axis:
+      reality_vs_documentation: running_as_documented
+      reality_vs_goal: partial_alignment
+      reality_vs_best_practice: diverges
+    evidence:
+      - hop middleware dispatches async and continues on errors
+      - no persistent outbox or retry ledger in middleware path
+    impact:
+      - transient downstream failures can silently reduce delivery guarantees

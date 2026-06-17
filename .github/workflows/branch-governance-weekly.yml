@@ -1,0 +1,72 @@
+name: Branch Governance Weekly
+
+on:
+  schedule:
+    - cron: "15 13 * * 1"
+  workflow_dispatch:
+    inputs:
+      autonomy_mode:
+        description: "Autonomy mode for branch remediation"
+        type: choice
+        required: true
+        default: local
+        options:
+          - local
+          - subagent
+          - cloud
+      autonomy_apply:
+        description: "Allow local mutation actions"
+        type: boolean
+        required: true
+        default: false
+      include_ci_weekly:
+        description: "For cloud mode, also dispatch ci-governance-weekly"
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  branch-governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Branch governance audit (hard caps)
+        run: python scripts/branch_governance_audit.py --write --enforce-hard-cap
+
+      - name: Branch governance enforce (dry-run)
+        run: python scripts/branch_governance_enforce.py --write
+
+      - name: Branch governance autonomy runner
+        env:
+          AUTONOMY_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.autonomy_mode || 'local' }}
+          AUTONOMY_APPLY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.autonomy_apply || 'false' }}
+          INCLUDE_CI_WEEKLY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.include_ci_weekly || 'false' }}
+        run: |
+          ARGS="--mode ${AUTONOMY_MODE} --write"
+          if [ "${AUTONOMY_APPLY}" = "true" ]; then
+            ARGS="$ARGS --apply"
+          fi
+          if [ "${INCLUDE_CI_WEEKLY}" = "true" ]; then
+            ARGS="$ARGS --include-ci-weekly"
+          fi
+          python scripts/branch_governance_autonomy.py $ARGS
+
+      - name: Upload branch governance artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: branch-governance-weekly
+          path: |
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.md
+            07_LOGS_AND_AUDIT/ci/branch_governance_enforce_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_autonomy_latest.json
+          if-no-files-found: error

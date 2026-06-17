@@ -1,0 +1,106 @@
+name: CI Governance Weekly
+
+on:
+  schedule:
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+    inputs:
+      swot_apply:
+        description: "Allow SWOT loop to create/close beads"
+        type: boolean
+        required: true
+        default: false
+      swot_drain:
+        description: "Run workflow self-heal drain during SWOT loop"
+        type: boolean
+        required: true
+        default: true
+      swot_close_generated:
+        description: "Close generated SWOT beads after strict audit passes"
+        type: boolean
+        required: true
+        default: false
+      swot_branch_mode:
+        description: "Branch autonomy mode while draining"
+        type: choice
+        required: true
+        default: local
+        options:
+          - off
+          - local
+          - subagent
+          - cloud
+
+jobs:
+  governance-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: SWOT autonomy loop
+        env:
+          SWOT_APPLY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_apply || 'false' }}
+          SWOT_DRAIN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_drain || 'true' }}
+          SWOT_CLOSE_GENERATED: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_close_generated || 'false' }}
+          SWOT_BRANCH_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.swot_branch_mode || 'local' }}
+        run: |
+          ARGS="--write --branch-mode ${SWOT_BRANCH_MODE}"
+          ARGS="$ARGS --audit-strict"
+          if [ "${SWOT_DRAIN}" = "true" ]; then
+            ARGS="$ARGS --drain"
+          fi
+          if [ "${SWOT_APPLY}" = "true" ]; then
+            ARGS="$ARGS --apply"
+          fi
+          if [ "${SWOT_CLOSE_GENERATED}" = "true" ]; then
+            ARGS="$ARGS --close-generated"
+          fi
+          python scripts/swot_autonomy_loop.py $ARGS
+
+      - name: Validate CI policy matrix
+        run: python scripts/validate_ci_policy_matrix.py
+
+      - name: Generate CI runtime budget report
+        env:
+          GH_TOKEN: ${{ github.token }}  # pragma: allowlist secret
+        run: python scripts/ci_runtime_budget_report.py
+
+      - name: Generate gate promotion candidates
+        run: python scripts/ci_gate_promotion_candidates.py
+
+      - name: Branch governance audit (hard caps)
+        run: python scripts/branch_governance_audit.py --write --enforce-hard-cap
+
+      - name: Branch governance enforce (dry-run)
+        run: python scripts/branch_governance_enforce.py --write
+
+      - name: Branch governance autonomy (local dry-run)
+        run: python scripts/branch_governance_autonomy.py --mode local --write
+
+      - name: Build weekly CI governance summary
+        run: python scripts/ci_governance_weekly_summary.py
+
+      - name: Upload CI governance artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-governance-weekly
+          path: |
+            07_LOGS_AND_AUDIT/ci/policy_matrix_latest.json
+            07_LOGS_AND_AUDIT/ci/runtime_budget_latest.json
+            07_LOGS_AND_AUDIT/ci/gate_promotion_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.md
+            07_LOGS_AND_AUDIT/ci/branch_governance_enforce_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_autonomy_latest.json
+            07_LOGS_AND_AUDIT/ci/swot_autonomy_latest.json
+            07_LOGS_AND_AUDIT/ci/weekly_summary_latest.json
+            07_LOGS_AND_AUDIT/ci/weekly_summary_latest.md
+          if-no-files-found: error

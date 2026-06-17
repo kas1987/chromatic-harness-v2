@@ -1,0 +1,55 @@
+mission_id: M4-000
+level: M4
+status: draft
+title: ""
+objective: ""
+background: ""
+scope: []
+out_of_scope: []
+success_criteria: []
+acceptance_criteria: []
+constraints: []
+dependencies: []
+stakeholder_map: []
+threat_model: []
+communication_plan: []
+risks:
+  - risk: ""
+    impact: critical
+    likelihood: ""
+    mitigation: ""
+    owner: ""
+full_impact_assessment: ""
+comprehensive_plan: []
+allowed_files: []
+forbidden_files: []
+allowed_tools: []
+tool_budget:
+  max_total: 15
+  max_search: 3
+  max_read: 8
+  max_write: 1
+  max_execute: 0
+confidence_score: 90
+risk_level: critical
+test_strategy:
+  exhaustive: []
+rollback_plan:
+  required: true
+  steps: []
+  proof: ""
+formal_approval:
+  required: true
+  approvers: []
+  signoff_record: ""
+stop_conditions:
+  - "Any approval ambiguity."
+  - "Any irreversible side effect not covered by rollback."
+  - "Any security or production uncertainty."
+required_output:
+  - formal_pdr
+  - threat_model
+  - stakeholder_map
+  - rollback_evidence
+  - validation_evidence
+  - signoff_record

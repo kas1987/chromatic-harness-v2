@@ -1,0 +1,11 @@
+{
+  "mission_id": "D-BAD-CEIL",
+  "objective": "Auditor mode requesting autonomy above its ceiling.",
+  "agent_role": "auditor",
+  "autonomy_level": "L4",
+  "confidence_score": 70,
+  "allowed_tools": ["read"],
+  "stop_conditions": ["any write"],
+  "required_output": ["findings"],
+  "metadata": { "mode": "auditor" }
+}
