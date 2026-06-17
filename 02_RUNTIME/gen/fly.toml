@@ -6,6 +6,7 @@ dockerfile = "Dockerfile"
 
 [env]
 NODE_ENV = "production"
+GEN_PORT = "3000"
 
 [[services]]
 internal_port = 3000
@@ -20,11 +21,11 @@ path = "/health"
 timeout = "5s"
 type = "http"
 
-[services.ports]
+[[services.ports]]
 port = 80
 handlers = ["http"]
 force_https = true
 
-[services.ports]
+[[services.ports]]
 port = 443
 handlers = ["http"]

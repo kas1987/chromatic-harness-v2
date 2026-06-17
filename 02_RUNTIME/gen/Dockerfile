@@ -11,6 +11,7 @@ RUN apk add --no-cache python3 make g++ && npm install
 # Copy source code
 COPY src src
 COPY tsconfig.json ./
+COPY hop-routes.json ./
 
 # Build TypeScript
 RUN npm run build
