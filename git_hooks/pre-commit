@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+# Format staged Python files here (deferred from the per-edit PostToolUse hook so
+# in-flight edits stay byte-stable). Re-stage anything ruff rewrites so the commit
+# captures the formatted result.
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
+if [ -n "$STAGED_PY" ] && command -v ruff &>/dev/null; then
+  echo "$STAGED_PY" | xargs ruff format >/dev/null 2>&1 || true
+  echo "$STAGED_PY" | xargs git add
+fi
+
 python scripts/validate_event_schema.py --log 00_META/observability/ERROR_LOG.jsonl
-python scripts/detect_file_collisions.py --active-writers .chromatic/active_writers.json
+python scripts/detect_file_collisions.py --active-writers .chromatic/active_writers.json --quiet
 # Secret scan: only staged changes, so pre-existing benign matches elsewhere
 # in the tree do not block unrelated commits. Add '# pragma: allowlist secret'
 # to a line to suppress a confirmed false positive.

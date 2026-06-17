@@ -422,10 +422,10 @@ async def synthesize_mission(
         objective=mission["objective"],
         agent_role=mission.get("agent_role", "agent_lead"),
         autonomy_level=mission.get("autonomy_level", "L1"),
-        confidence_required=mission.get("confidence_required", 75.0),
+        confidence_required=float(mission.get("confidence_required", mission.get("confidence_score", 75))),
         allowed_tools=mission.get("allowed_tools", []),
         stop_conditions=mission.get("stop_conditions", []),
-        required_outputs=mission.get("required_outputs", []),
+        required_outputs=mission.get("required_outputs", mission.get("required_output", [])),
     )
     output = orch.synthesize_mission(packet, events)
 
@@ -626,7 +626,9 @@ async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict:
             metadata=getattr(mission, "metadata", {}),
         ),
         constraints=RouteConstraints(
-            privacy_class=PrivacyClass(getattr(mission, "privacy_class", "P1")) if isinstance(getattr(mission, "privacy_class", None), str) else getattr(mission, "privacy_class", PrivacyClass.P1),
+            privacy_class=PrivacyClass(getattr(mission, "privacy_class", "P1"))
+            if isinstance(getattr(mission, "privacy_class", None), str)
+            else getattr(mission, "privacy_class", PrivacyClass.P1),
             max_cost_usd=getattr(mission, "max_cost_usd", 0.25),
         ),
     )

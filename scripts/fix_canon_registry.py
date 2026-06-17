@@ -73,8 +73,7 @@ def deduplicate(blocks: list[str]) -> list[str]:
             seen_bases[slug] = len(kept)
             kept.append(block)
 
-    print(f"  Kept {len(kept)} entries, removed {skipped} duplicate-version entries",
-          file=sys.stderr)
+    print(f"  Kept {len(kept)} entries, removed {skipped} duplicate-version entries", file=sys.stderr)
     return kept
 
 

@@ -506,8 +506,7 @@ def audit(
                     "code": "branch_governance_gone_upstream",
                     "file": "07_LOGS_AND_AUDIT/ci/branch_governance_latest.json",
                     "message": (
-                        "local branches track gone upstream refs: "
-                        f"{branch_governance_summary['local_gone_upstream']}"
+                        f"local branches track gone upstream refs: {branch_governance_summary['local_gone_upstream']}"
                     ),
                 }
             )

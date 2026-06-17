@@ -4,7 +4,7 @@
 **Track:** ci-cd-sprint-remediation  
 **Date:** 2026-06-16
 
-Coordinate and sequence all CI/CD remediation work identified in [SWOT_CI_CD_2026-06-16.md](SWOT_CI_CD_2026-06-16.md).
+Coordinate and sequence all CI/CD remediation work identified in [08_PDRS/SWOT_CI_CD_2026-06-16.md](08_PDRS/SWOT_CI_CD_2026-06-16.md).
 
 ---
 

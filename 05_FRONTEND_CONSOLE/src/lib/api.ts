@@ -9,14 +9,15 @@ export interface MissionPacket {
   required_gates?: string[];
   stop_conditions?: string[];
   autonomy_level?: 0 | 1 | 2 | 3 | 4 | 5;
-  confidence_required?: number;
+  confidence_score?: number;
+  mode?: string;
 }
 
 export interface Mission {
   mission_id: string;
   objective: string;
   status: "pending" | "running" | "completed" | "failed";
-  confidence_required: number;
+  confidence_score: number;
   autonomy_level: number;
   magnets: string[];
   stop_conditions: string[];
@@ -100,10 +101,13 @@ export async function getMission(id: string): Promise<Mission> {
 }
 
 export async function createMission(packet: MissionPacket): Promise<Mission> {
+  // FastAPI CreateMissionRequest requires top-level objective/agent_role fields.
   return apiCall("POST", "/missions", {
-    packet,
-    scope: packet.scope || ["src/**/*"],
-    required_gates: packet.required_gates || ["intent", "scope"],
+    objective: packet.objective,
+    agent_role: "agent_lead",
+    autonomy_level: packet.autonomy_level !== undefined ? `L${packet.autonomy_level}` : "L1",
+    confidence_score: packet.confidence_score ?? 75.0,
+    stop_conditions: packet.stop_conditions ?? [],
   });
 }
 

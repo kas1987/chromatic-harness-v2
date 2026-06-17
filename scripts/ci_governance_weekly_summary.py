@@ -39,36 +39,39 @@ def _md(payload: dict[str, Any]) -> str:
     recs = promotion.get("recommendations") or []
     ready = [r for r in recs if isinstance(r, dict) and r.get("ready_for_promotion")]
 
-    return "\n".join(
-        [
-            "# Weekly CI Governance Summary",
-            "",
-            f"Generated: {payload.get('generated_at')}",
-            "",
-            "## Policy matrix",
-            "",
-            f"- errors: {len(policy_errors)}",
-            f"- status: {'ok' if not policy_errors else 'needs_action'}",
-            "",
-            "## Runtime budgets",
-            "",
-            f"- sample_count: {runtime.get('sample_count', 0)}",
-            f"- over_budget: {over_budget}",
-            "",
-            "## Advisory promotion readiness",
-            "",
-            f"- advisory checks evaluated: {len(recs)}",
-            f"- ready_for_candidate_required: {len(ready)}",
-            "",
-            "## Branch governance",
-            "",
-            f"- local_total: {branch.get('local_total', 0)}",
-            f"- remote_total: {branch.get('remote_total', 0)}",
-            f"- local_stale: {branch.get('local_stale', 0)}",
-            f"- remote_stale: {branch.get('remote_stale', 0)}",
-            f"- violations: {branch.get('violations', 0)}",
-        ]
-    ) + "\n"
+    return (
+        "\n".join(
+            [
+                "# Weekly CI Governance Summary",
+                "",
+                f"Generated: {payload.get('generated_at')}",
+                "",
+                "## Policy matrix",
+                "",
+                f"- errors: {len(policy_errors)}",
+                f"- status: {'ok' if not policy_errors else 'needs_action'}",
+                "",
+                "## Runtime budgets",
+                "",
+                f"- sample_count: {runtime.get('sample_count', 0)}",
+                f"- over_budget: {over_budget}",
+                "",
+                "## Advisory promotion readiness",
+                "",
+                f"- advisory checks evaluated: {len(recs)}",
+                f"- ready_for_candidate_required: {len(ready)}",
+                "",
+                "## Branch governance",
+                "",
+                f"- local_total: {branch.get('local_total', 0)}",
+                f"- remote_total: {branch.get('remote_total', 0)}",
+                f"- local_stale: {branch.get('local_stale', 0)}",
+                f"- remote_stale: {branch.get('remote_stale', 0)}",
+                f"- violations: {branch.get('violations', 0)}",
+            ]
+        )
+        + "\n"
+    )
 
 
 def main() -> int:

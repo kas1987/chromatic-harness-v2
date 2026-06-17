@@ -21,6 +21,5 @@ Return:
 3. Evidence quality
 4. Findings
 5. Scorecard
-6. Risk register
-7. Remediation queue
-8. Best next action
+6. Remediation queue
+7. Best next action

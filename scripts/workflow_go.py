@@ -100,7 +100,7 @@ def _mission_packet_for_execute(bead: dict[str, str], record: object) -> dict:
         "mission_id": mission.mission_id,
         "objective": mission.objective,
         "agent_role": mission.agent_role,
-        "confidence_required": mission.confidence_required,
+        "confidence_score": mission.confidence_score,
         "metadata": mission.metadata,
     }
 

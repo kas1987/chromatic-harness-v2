@@ -1,0 +1,5 @@
+{"title":"Backfill routing_decisions creation in live gen.db","type":"tech-debt","severity":"high","why":"Primary table for tool/provider frequency and routing reconciliation is absent in the live database."}
+{"title":"Migrate task_outcomes with provider and intent columns","type":"tech-debt","severity":"high","why":"Without active_llm, suggested_llm, prompt_intent, and prompt_scope, per-tool/provider analysis is incomplete."}
+{"title":"Propagate real token counts on posttool events","type":"process-improvement","severity":"high","why":"budget_states and task_outcomes currently under-report token usage, making cost analysis unreliable."}
+{"title":"Exercise /api/delegate and Hop remote_mcp in real workflows","type":"process-improvement","severity":"medium","why":"Holistic offload surfaces exist but have no recorded runtime usage in delegation_log."}
+{"title":"Expose operator dashboard or endpoint over routing and delegation tables","type":"tech-debt","severity":"medium","why":"Once schema/data is live, the next step is a stable operator-facing usage and cost view."}

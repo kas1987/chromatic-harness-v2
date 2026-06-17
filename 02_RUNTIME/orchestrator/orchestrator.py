@@ -35,6 +35,11 @@ class MissionPacket:
     required_outputs: list[str]
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def confidence_score(self) -> float:
+        """Alias for confidence_required for backwards-compatibility."""
+        return self.confidence_required
+
 
 class Orchestrator:
     def create_mission(self, intent: str) -> MissionPacket:
@@ -57,7 +62,10 @@ class Orchestrator:
         """Build a mission packet from a workflow task-graph node or CLI task dict."""
         title = task.get("title") or task.get("objective", "")
         allowed_files = task.get("allowed_files") or []
-        confidence_required = float(task.get("confidence_required", task.get("confidence_score", 75)))
+        # Source task dict is a workflow task-graph node, which uses the
+        # workflow-domain key `confidence_required`; accept it (and a canonical
+        # `confidence_score`) and project onto the CMP packet's confidence_score.
+        confidence_score = int(task.get("confidence_required", task.get("confidence_score", 75)))
         stop_conditions = list(
             task.get(
                 "stop_conditions",
@@ -78,7 +86,7 @@ class Orchestrator:
             objective=title,
             agent_role=role,
             autonomy_level="L2" if tool_budget > 20 else "L1",
-            confidence_required=confidence_required,
+            confidence_required=confidence_score,
             allowed_tools=allowed_tools,
             stop_conditions=stop_conditions,
             required_outputs=["task_result", "verifier_report"],
@@ -174,6 +182,7 @@ class Orchestrator:
         global ChromaticRouter
         if ChromaticRouter is None:
             from router.router import ChromaticRouter as _CR
+
             ChromaticRouter = _CR
         from router.contracts import RouteRequest, RouteInput, RouteConstraints, TaskType, PrivacyClass
 
@@ -229,7 +238,7 @@ class Orchestrator:
         from router.contracts import ConfidenceBand, RouteConfidence
         from router.observability import ObservabilityLogger
 
-        band = ConfidenceGate.band_from_score(mission.confidence_required)
+        band = ConfidenceGate.band_from_score(mission.confidence_score)
         logger = ObservabilityLogger()
 
         # Build minimal stubs so _log_agent_run can read req.task_id and
@@ -258,8 +267,8 @@ class Orchestrator:
                 self.confidence_score = s
                 self.output = out
 
-        fake_req = _FakeReq(mission.mission_id, _FakeConf(band, mission.confidence_required))
-        fake_resp = _FakeResp(model, mission.confidence_required, _FakeOutput(result))
+        fake_req = _FakeReq(mission.mission_id, _FakeConf(band, mission.confidence_score))
+        fake_resp = _FakeResp(model, mission.confidence_score, _FakeOutput(result))
         logger._log_agent_run(
             fake_req,  # type: ignore[arg-type]
             fake_resp,  # type: ignore[arg-type]

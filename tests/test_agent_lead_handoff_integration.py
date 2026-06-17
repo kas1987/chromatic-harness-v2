@@ -56,7 +56,7 @@ def sample_mission():
     return {
         "mission_id": f"CHR-HANDOFF-{uuid.uuid4().hex[:8]}",
         "objective": "Implement user authentication module with OAuth",
-        "confidence_required": 85.0,
+        "confidence_score": 85.0,
         "autonomy_level": "L3",
         "stage": "synthesis",
     }

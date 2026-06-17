@@ -166,3 +166,11 @@ class TestMissionPacketAutonomyCeiling:
     def test_mode_ceiling_is_not_l5(self, mode, ceiling):
         # Ceilings per PDR_*_COMMAND_PROMPT.md; L5 requires human approval.
         assert ceiling != "L5", f"mode {mode} must not auto-reach L5"
+
+    def test_schema_has_human_approved_gate(self):
+        schema = json.loads(MISSION_SCHEMA_PATH.read_text(encoding="utf-8"))
+        metadata_props = schema.get("properties", {}).get("metadata", {}).get("properties", {})
+        assert "human_approved" in metadata_props, (
+            "mission_packet.schema.json must define metadata.human_approved "
+            "to enforce the L5 gate (see validate_mission_packet.py)"
+        )
