@@ -52,16 +52,17 @@ export function useDragResize(id: string, defaultRect: CardRect, canvasW?: numbe
     setRect(r => ({ ...r, x: Math.max(0, drag.current!.startX + dx), y: Math.max(0, drag.current!.startY + dy) }));
   }, []);
 
-  const onDragUp = useCallback((_e: React.PointerEvent) => {
+  const onDragUp = useCallback((e: React.PointerEvent) => {
     if (!drag.current) return;
+    const hDelta = Math.abs(e.clientX - drag.current.startMX);
     drag.current = null;
     setDragging(false);
     setRect(r => {
       let snapped: CardRect = { ...r, x: snap(r.x), y: snap(r.y) };
       let dockSide: "left" | "right" | null = null;
-      if (snapped.x === 0) {
+      if (hDelta >= SNAP && snapped.x === 0) {
         dockSide = "left";
-      } else if (canvasWRef.current > 0 && snapped.x + snapped.w >= canvasWRef.current - SNAP) {
+      } else if (hDelta >= SNAP && canvasWRef.current > 0 && snapped.x + snapped.w >= canvasWRef.current - SNAP) {
         snapped = { ...snapped, x: Math.max(0, canvasWRef.current - snapped.w) };
         dockSide = "right";
       }

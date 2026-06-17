@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import GridCard, { type CardStatus } from "@/components/GridCard";
 
 type RunStatus = "idle" | "running" | "ok" | "error";
@@ -384,16 +384,19 @@ function GenerateVisualsContent({ onStatus }: { onStatus: (s: CardStatus) => voi
   const [runStatus, setRunStatus] = useState<RunStatus>("idle");
   const [data, setData] = useState<GenerateData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const onStatusRef = useRef(onStatus);
+  useEffect(() => { onStatusRef.current = onStatus; });
 
-  // Load GET state on mount
+  // Load GET state once on mount — do NOT include onStatus in deps (it changes every render)
   useEffect(() => {
     fetch("/api/commands/generate-visuals")
       .then(r => r.ok ? r.json() : null)
       .then((d: GenerateData | null) => {
-        if (d) { setData(d); onStatus("idle"); }
+        if (d) { setData(d); onStatusRef.current("idle"); }
       })
       .catch(() => { /* ignore */ });
-  }, [onStatus]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const run = useCallback(async () => {
     setRunStatus("running");
@@ -517,6 +520,20 @@ export default function CommandCenter() {
   const [statuses, setStatuses] = useState<Record<string, CardStatus>>({
     designSync: "idle", auditVisual: "idle", generateVisuals: "idle",
   });
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [canvasW, setCanvasW] = useState(1000);
+
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width;
+      if (w && w > 0) setCanvasW(w);
+    });
+    ro.observe(el);
+    setCanvasW(el.getBoundingClientRect().width || 1000);
+    return () => ro.disconnect();
+  }, []);
 
   const setStatus = (key: string) => (s: CardStatus) =>
     setStatuses(prev => ({ ...prev, [key]: s }));
@@ -576,8 +593,9 @@ export default function CommandCenter() {
 
       {/* Grid canvas */}
       <div
+        ref={canvasRef}
         className="cg-canvas"
-        style={{ minHeight: 560, width: "100%" }}
+        style={{ minHeight: 560, width: "100%", position: "relative" }}
       >
         {visible.designSync && (
           <GridCard
@@ -587,6 +605,7 @@ export default function CommandCenter() {
             status={statuses.designSync}
             defaultRect={DEFAULT_RECTS.designSync}
             zIndex={12}
+            canvasW={canvasW}
           >
             <DesignSyncContent onStatus={setStatus("designSync")} />
           </GridCard>
@@ -599,6 +618,7 @@ export default function CommandCenter() {
             status={statuses.auditVisual}
             defaultRect={DEFAULT_RECTS.auditVisual}
             zIndex={11}
+            canvasW={canvasW}
           >
             <AuditVisualContent onStatus={setStatus("auditVisual")} />
           </GridCard>
@@ -611,6 +631,7 @@ export default function CommandCenter() {
             status={statuses.generateVisuals}
             defaultRect={DEFAULT_RECTS.generateVisuals}
             zIndex={10}
+            canvasW={canvasW}
           >
             <GenerateVisualsContent onStatus={setStatus("generateVisuals")} />
           </GridCard>
