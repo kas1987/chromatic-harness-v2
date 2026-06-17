@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           submodules: recursive
-          token: ${{ steps.app-token.outputs.token || github.token }}  # pragma: allowlist secret
+          token: ${{ steps.app-token.outputs.token || github.token }} # pragma: allowlist secret
 
       - uses: actions/setup-python@v6
         with:
@@ -89,9 +89,12 @@ jobs:
           python -m pip install --quiet pip-audit
           python scripts/security_scan.py
 
+      - name: Governance gate — large-file / ignored-regression (blocking)
+        run: python scripts/large_file_gate.py --all
+
       - name: Governance gates — advisory reports (non-blocking)
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # pragma: allowlist secret
+          GH_TOKEN: ${{ steps.app-token.outputs.token }} # pragma: allowlist secret
         continue-on-error: true
         run: |
           python scripts/pr_size_gate.py --base origin/${{ github.base_ref || 'session/chromatic-harness-v2-initial' }} || true
@@ -99,13 +102,41 @@ jobs:
           python scripts/drift_gate.py || true
           python scripts/ai_review_gate.py --base origin/${{ github.base_ref || 'session/chromatic-harness-v2-initial' }} || true
           python scripts/release_readiness.py || true
+          # PDR<->bead reconciliation: surfaces PDRs whose declared status has drifted
+          # from their live bd bead state. Advisory until historical PDRs are triaged;
+          # promote to blocking (drop the `|| true`) once warnings reach zero.
+          bash 08_PDRS/scripts/make_pdr_index.sh --check || true
+
+      - name: CI check policy matrix validation
+        run: python scripts/validate_ci_policy_matrix.py
+
+      - name: CI runtime budget report
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }} # pragma: allowlist secret
+        run: python scripts/ci_runtime_budget_report.py
+
+      - name: CI gate promotion candidates
+        run: python scripts/ci_gate_promotion_candidates.py
+
+      - name: Branch governance audit (hard caps)
+        run: python scripts/branch_governance_audit.py --write --enforce-hard-cap
+
+      - name: Branch governance enforce (dry-run)
+        run: python scripts/branch_governance_enforce.py --write
 
       - name: Upload governance artifacts
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: governance-reports
-          path: 07_LOGS_AND_AUDIT/{security,pr_risk,arch,drift,ai_review,release}/latest.json
+          path: |
+            07_LOGS_AND_AUDIT/{security,pr_risk,arch,drift,ai_review,release}/latest.json
+            07_LOGS_AND_AUDIT/ci/policy_matrix_latest.json
+            07_LOGS_AND_AUDIT/ci/runtime_budget_latest.json
+            07_LOGS_AND_AUDIT/ci/gate_promotion_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.json
+            07_LOGS_AND_AUDIT/ci/branch_governance_latest.md
+            07_LOGS_AND_AUDIT/ci/branch_governance_enforce_latest.json
           if-no-files-found: ignore
 
       - name: Hook audit (no HIGH findings)
