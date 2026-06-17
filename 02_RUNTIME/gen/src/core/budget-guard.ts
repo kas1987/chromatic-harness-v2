@@ -64,9 +64,11 @@ export class BudgetGuard {
       }
     }
 
-    // Check for protected paths
+    // Check for protected paths — normalize separators and case to block Windows slash variants
+    const normalizedCommand = command.replace(/\\/g, "/").toLowerCase();
     for (const path of this.protectedPaths) {
-      if (command.includes(path)) {
+      const normalizedPath = path.replace(/\\/g, "/").toLowerCase();
+      if (normalizedCommand.includes(normalizedPath)) {
         const reason = `Protected path blocked: ${path}`;
         auditLog.write({ kind: "budget_block", decision: "block", reason, toolName: "Bash", meta: { command: command.slice(0, 200) } });
         return { continue: false, stopReason: reason };
@@ -77,9 +79,11 @@ export class BudgetGuard {
   }
 
   evaluateFileWrite(filePath: string, ctx: TaskContext): BudgetDecision {
-    // Block writes to protected system paths
+    // Block writes to protected system paths — normalize for Windows slash variants
+    const normalizedFilePath = filePath.replace(/\\/g, "/").toLowerCase();
     for (const path of this.protectedPaths) {
-      if (filePath.includes(path)) {
+      const normalizedPath = path.replace(/\\/g, "/").toLowerCase();
+      if (normalizedFilePath.includes(normalizedPath)) {
         return {
           continue: false,
           stopReason: `Protected path blocked: ${path}`,

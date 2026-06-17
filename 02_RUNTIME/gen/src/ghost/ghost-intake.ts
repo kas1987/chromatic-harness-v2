@@ -334,11 +334,13 @@ export class GhostIntake {
     const intent = normalizeIntent(envelope);
     this.cache.set(cacheKey, intent);
 
-    // Prune cache if too large (keep last 1000 intents per session)
+    // Prune cache if too large — use iterator to avoid allocating a 10k-entry temp array
     if (this.cache.size > 10000) {
-      const entriesToDelete = Array.from(this.cache.keys()).slice(0, 2000);
-      for (const key of entriesToDelete) {
-        this.cache.delete(key);
+      const iterator = this.cache.keys();
+      for (let i = 0; i < 2000; i++) {
+        const next = iterator.next();
+        if (next.done) break;
+        this.cache.delete(next.value);
       }
     }
 

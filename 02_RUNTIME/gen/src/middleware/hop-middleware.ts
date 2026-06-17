@@ -27,11 +27,26 @@ export function initializeHopBroadcaster(broadcaster: ChannelBroadcaster): void 
 let routingRules: HopRoute[] = [];
 let routesLastModified = 0;
 
+// Pre-compiled regex cache keyed by pattern string — avoids recompiling on every request
+const compiledPatterns = new Map<string, RegExp>();
+
 function loadRoutes(): HopRoute[] {
   try {
     const raw = fs.readFileSync(ROUTES_PATH, "utf-8");
     const parsed = JSON.parse(raw) as { routing_rules: HopRoute[] };
-    return (parsed.routing_rules ?? []).sort((a, b) => a.priority - b.priority);
+    const rules = (parsed.routing_rules ?? []).sort((a, b) => a.priority - b.priority);
+    // Pre-compile all payload_pattern regexps at load time
+    compiledPatterns.clear();
+    for (const rule of rules) {
+      if (rule.payload_pattern) {
+        try {
+          compiledPatterns.set(rule.payload_pattern, new RegExp(rule.payload_pattern));
+        } catch {
+          console.warn(`[hop] invalid regex in rule ${rule.rule_id}: ${rule.payload_pattern}`);
+        }
+      }
+    }
+    return rules;
   } catch {
     return []; // Missing or malformed routes → empty table (all pass-through)
   }
@@ -64,16 +79,10 @@ function resolveRoute(envelope: HopEnvelope): HopRoute | null {
     // intent_tag filter (if specified)
     if (rule.intent_tag && rule.intent_tag !== envelope.intent_tag) continue;
 
-    // payload_pattern filter (if specified) — guard against invalid regex
+    // payload_pattern filter — use pre-compiled regexp from cache (compiled at route load time)
     if (rule.payload_pattern) {
-      try {
-        const re = new RegExp(rule.payload_pattern);
-        if (!re.test(envelope.payload)) continue;
-      } catch {
-        // Invalid regex in rule — skip rule, log and continue
-        console.warn(`[hop] invalid regex in rule ${rule.rule_id}: ${rule.payload_pattern}`);
-        continue;
-      }
+      const re = compiledPatterns.get(rule.payload_pattern);
+      if (!re || !re.test(envelope.payload)) continue;
     }
 
     return rule; // First match wins

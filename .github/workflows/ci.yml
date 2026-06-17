@@ -118,6 +118,7 @@ jobs:
           python scripts/validate_mission_packet.py MISSIONS/templates/M4_ATOMIC_TEMPLATE.yaml
           python scripts/validate_mission_packet.py MISSIONS/examples/dispatch_valid_L2_operator.json
           python scripts/validate_mission_packet.py MISSIONS/examples/lifecycle_M2_plus_L1.yaml
+          python scripts/validate_mission_packet.py MISSIONS/examples/M3_example_review_daemon_recovery.yaml
           python -m pytest tests/test_mission_packet_validator.py -q
 
       - name: Intake close-loop validation (dry-run)
