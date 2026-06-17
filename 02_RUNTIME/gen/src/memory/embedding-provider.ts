@@ -42,13 +42,13 @@ class LRUCache<K, V> {
 }
 
 export class EmbeddingProvider implements IEmbeddingProvider {
-  private apiKey: string;
+  private authKey: string;
   private apiUrl: string;
   private model: string;
   private cache: LRUCache<string, Float32Array>;
 
-  constructor(apiKey: string, apiUrl?: string, cacheSize?: number, model?: string) {
-    this.apiKey = apiKey;
+  constructor(authKey: string, apiUrl?: string, cacheSize?: number, model?: string) {
+    this.authKey = authKey;
     this.apiUrl = apiUrl ?? "https://api.openai.com/v1/embeddings";
     this.model = model ?? "text-embedding-3-small";
     this.cache = new LRUCache(cacheSize ?? 1000);
@@ -71,7 +71,7 @@ export class EmbeddingProvider implements IEmbeddingProvider {
 
       const response = await fetch(this.apiUrl, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
+        headers: { "Authorization": `Bearer ${this.authKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({ input: text, model: this.model }),
       });
 

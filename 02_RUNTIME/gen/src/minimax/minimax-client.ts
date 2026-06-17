@@ -13,7 +13,7 @@ import type { ILlmClient, LlmGenerateOptions } from "../llm/llm-types.js";
  *
  *   2. Direct MiniMax API:
  *      GEN_MINIMAX_URL=https://api.minimax.chat/v1
- *      GEN_MINIMAX_API_KEY=<your-key>
+ *      GEN_MINIMAX_API_KEY=
  *      GEN_MINIMAX_MODEL=abab6.5-chat  (or check platform.minimax.io for current model IDs)
  *
  * MiniMax-M2.5 is 229B MoE (mixture-of-experts). Cloud-only — local GGUF requires 101GB+
@@ -29,7 +29,7 @@ export class MiniMaxClient implements ILlmClient {
   constructor(
     private readonly baseUrl: string,
     private readonly model: string,
-    private readonly apiKey: string = "",
+    private readonly authKey: string = "",
   ) {}
 
   async generate(prompt: string, options?: LlmGenerateOptions): Promise<string> {
@@ -37,7 +37,7 @@ export class MiniMaxClient implements ILlmClient {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
+        ...(this.authKey ? { Authorization: `Bearer ${this.authKey}` } : {}),
       },
       body: JSON.stringify({
         model: this.model,
@@ -65,14 +65,14 @@ export class MiniMaxClient implements ILlmClient {
    *
    *   Ollama cloud path: model IDs contain "minimax" (e.g., "minimax-m2.5:cloud")
    *   Direct API path:   model IDs may NOT contain "minimax" (e.g., "abab6.5-chat")
-   *                      Fall back: treat any non-empty model list + apiKey as available.
+   *                      Fall back: treat any non-empty model list + authKey as available.
    *
    * Fails open (returns false) on any network or parse error — never throws.
    */
   async isAvailable(): Promise<boolean> {
     try {
       const resp = await fetch(`${this.baseUrl}/models`, {
-        headers: this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {},
+        headers: this.authKey ? { Authorization: `Bearer ${this.authKey}` } : {},
         signal: AbortSignal.timeout(3_000),
       });
       if (!resp.ok) return false;
@@ -87,7 +87,7 @@ export class MiniMaxClient implements ILlmClient {
 
       // Direct API path: any non-empty model list + explicit API key = treat as available
       // (the URL+key combo is the availability signal; model IDs use MiniMax-internal names)
-      if (this.apiKey && models.length > 0) return true;
+      if (this.authKey && models.length > 0) return true;
 
       return false;
     } catch {

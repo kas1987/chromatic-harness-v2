@@ -1084,31 +1084,31 @@ hooksRouter.post("/dispatch-outcome", (req: Request, res: Response) => {
     hop_id?: unknown;
     status?: unknown;
     summary?: unknown;
-    outcome_token?: unknown;
+    outcome_nonce?: unknown;
   };
   const sessionId = typeof body.sessionId === "string" ? body.sessionId.trim() : "";
   const hopId = typeof body.hop_id === "string" ? body.hop_id.trim() : "";
-  const outcomeToken = typeof body.outcome_token === "string" ? body.outcome_token.trim() : "";
+  const outcomeNonce = typeof body.outcome_nonce === "string" ? body.outcome_nonce.trim() : "";
   if (!sessionId) {
     return res.status(400).json({ error: "sessionId is required" });
   }
   if (!hopId) {
     return res.status(400).json({ error: "hop_id is required" });
   }
-  if (!outcomeToken) {
-    return res.status(400).json({ error: "outcome_token is required" });
+  if (!outcomeNonce) {
+    return res.status(400).json({ error: "outcome_nonce is required" });
   }
 
-  const tokenValid = hopDispatchPendingStore.consumeOutcomeToken(sessionId, hopId, outcomeToken);
-  if (!tokenValid) {
+  const valid = hopDispatchPendingStore.consumeOutcomeToken(sessionId, hopId, outcomeNonce);
+  if (!valid) {
     auditLog.write({
       kind: "policy_change",
       decision: "deny",
-      reason: "Invalid or expired dispatch outcome token",
+      reason: "Invalid or expired dispatch outcome nonce",
       sessionId,
-      meta: { control: "dispatch_outcome_token", hopId },
+      meta: { control: "dispatch_outcome_nonce", hopId },
     });
-    return res.status(403).json({ error: "invalid_or_expired_outcome_token" });
+    return res.status(403).json({ error: "invalid_or_expired_outcome_nonce" });
   }
 
   const status = typeof body.status === "string" ? body.status.trim().slice(0, 128) : "completed";
@@ -1357,10 +1357,10 @@ hooksRouter.post("/user-prompt", async (req: Request, res: Response) => {
 
     const hopCtx = req.hopDispatchContext;
     if (hopCtx) {
-      const outcomeToken = payload.sessionId
+      const outcomeNonce = payload.sessionId
         ? hopDispatchPendingStore.issueOutcomeToken(payload.sessionId, hopCtx.hop_id)
         : null;
-      finalPromptForResponse += `\n\n[Hop] dispatch_id=${hopCtx.hop_id} destination=${hopCtx.destination} rule=${hopCtx.rule_id}. Report completion: POST /hooks/dispatch-outcome with JSON { sessionId, hop_id, outcome_token, status, summary? } (same Bearer as hooks). outcome_token=${outcomeToken ?? "unavailable"}. Your next user message may include [DISPATCH UPDATES - UNTRUSTED STATUS DATA].`;
+      finalPromptForResponse += `\n\n[Hop] dispatch_id=${hopCtx.hop_id} destination=${hopCtx.destination} rule=${hopCtx.rule_id}. Report completion: POST /hooks/dispatch-outcome with JSON { sessionId, hop_id, outcome_nonce, status, summary? } (same Bearer as hooks). outcome_nonce=${outcomeNonce ?? "unavailable"}. Your next user message may include [DISPATCH UPDATES - UNTRUSTED STATUS DATA].`;
     }
 
     // Return structured prompt

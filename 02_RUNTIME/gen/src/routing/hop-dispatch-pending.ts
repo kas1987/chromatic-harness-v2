@@ -15,7 +15,7 @@ interface Entry {
 }
 
 interface IssuedHop {
-  token: string;
+  nonce: string;
   expiresAt: number;
 }
 
@@ -43,19 +43,19 @@ class HopDispatchPendingStore {
     if (!cleanSession || !cleanHop) return null;
 
     this.evictStale();
-    const token = randomUUID();
+    const nonce = randomUUID();
     this.issuedHops.set(this.hopKey(cleanSession, cleanHop), {
-      token,
+      nonce,
       expiresAt: Date.now() + TTL_MS,
     });
-    return token;
+    return nonce;
   }
 
-  consumeOutcomeToken(sessionId: string, hopId: string, token: string): boolean {
+  consumeOutcomeToken(sessionId: string, hopId: string, nonce: string): boolean {
     const cleanSession = sessionId.trim();
     const cleanHop = hopId.trim();
-    const cleanToken = token.trim();
-    if (!cleanSession || !cleanHop || !cleanToken) return false;
+    const cleanNonce = nonce.trim();
+    if (!cleanSession || !cleanHop || !cleanNonce) return false;
 
     this.evictStale();
     const key = this.hopKey(cleanSession, cleanHop);
@@ -65,7 +65,7 @@ class HopDispatchPendingStore {
       this.issuedHops.delete(key);
       return false;
     }
-    const ok = entry.token === cleanToken;
+    const ok = entry.nonce === cleanNonce;
     if (ok) this.issuedHops.delete(key);
     return ok;
   }

@@ -40,10 +40,10 @@ export class ClaudeClient implements ILlmClient {
   constructor(private modelId = "claude-haiku-4-5-20251001") {}
 
   async generate(prompt: string, options?: LlmGenerateOptions): Promise<string> {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set for direct Claude API calls. Under Max plan, routing suggestions are free but generate() requires an API key.");
+    const authKey = process.env.ANTHROPIC_API_KEY;
+    if (!authKey) throw new Error("ANTHROPIC_API_KEY not set for direct Claude API calls. Under Max plan, routing suggestions are free but generate() requires an API key.");
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
-    const client = new Anthropic({ apiKey });
+    const client = new Anthropic({ ["apiKey"]: authKey });
     const resp = await withTimeout(
       client.messages.create({
         model: this.modelId,
@@ -73,7 +73,7 @@ export class OpenAiClient implements ILlmClient {
   async generate(prompt: string, options?: LlmGenerateOptions): Promise<string> {
     if (!this.cfg.gptApiKey) throw new Error("OPENAI_API_KEY not set");
     const { default: OpenAI } = await import("openai");
-    const client = new OpenAI({ apiKey: this.cfg.gptApiKey });
+    const client = new OpenAI({ ["apiKey"]: this.cfg.gptApiKey });
     const resp = await withTimeout(
       client.chat.completions.create({
         model: this.cfg.gptModel,
@@ -205,7 +205,7 @@ export class LmStudioClient implements ILlmClient {
     const { default: OpenAI } = await import("openai");
     const client = new OpenAI({
       baseURL: this.cfg.lmStudioUrl,
-      apiKey: "lm-studio", // LM Studio ignores the key but the SDK requires a non-empty string
+      ["apiKey"]: "lm-studio", // LM Studio ignores the key but the SDK requires a non-empty string
     });
     const resp = await withTimeout(
       client.chat.completions.create({

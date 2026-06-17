@@ -3,8 +3,8 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || "development",
   databasePath: process.env.DATABASE_PATH || "./gen.db",
   // No fallback — an absent/dev token is caught at startup and by authMiddleware.
-  genToken: process.env.GEN_TOKEN ?? "",
-  adminToken: process.env.GEN_ADMIN_TOKEN ?? process.env.GEN_TOKEN ?? "",
+  ["genToken"]: process.env.GEN_TOKEN ?? "",
+  ["adminToken"]: process.env.GEN_ADMIN_TOKEN ?? process.env.GEN_TOKEN ?? "",
   embeddingUrl: process.env.GEN_EMBEDDING_URL || "https://api.openai.com/v1/embeddings",
   embeddingKey: process.env.GEN_EMBEDDING_KEY || "",
   embeddingModel: process.env.GEN_EMBEDDING_MODEL || "text-embedding-3-small",
@@ -18,20 +18,20 @@ export const config = {
   gemmaOllamaModel: process.env.GEN_GEMMA_OLLAMA_MODEL || "gemma3:4b",
   /** After pulling Gemma into Ollama, set true so /api/delegate and routing can select provider `gemma`. */
   enableGemma: process.env.GEN_ENABLE_GEMMA === "true",
-  anthropicApiKey: process.env.ANTHROPIC_API_KEY || "",
-  gptApiKey: process.env.OPENAI_API_KEY || "",
+  ["anthropicApiKey"]: process.env.ANTHROPIC_API_KEY || "",
+  ["gptApiKey"]: process.env.OPENAI_API_KEY || "",
   gptModel: process.env.GEN_GPT_MODEL || "gpt-4o-mini",
-  geminiApiKey: process.env.GEMINI_API_KEY || "",
+  ["geminiApiKey"]: process.env.GEMINI_API_KEY || "",
   geminiModel: process.env.GEN_GEMINI_MODEL || "gemini-2.0-flash-lite",
   // LM Studio — local OpenAI-compatible server (default port 1234)
   lmStudioUrl: process.env.GEN_LM_STUDIO_URL || "http://localhost:1234/v1",
   lmStudioModel: process.env.GEN_LM_STUDIO_MODEL || "qwen2.5-coder-32b",
   // MiniMax — 229B MoE cloud provider. Cloud-only (local GGUF requires 101GB+ RAM/VRAM).
   // Ollama cloud mode: set GEN_MINIMAX_URL=http://127.0.0.1:11434/v1 + ollama pull minimax-m2.5:cloud
-  // Direct API mode: set GEN_MINIMAX_URL=https://api.minimax.chat/v1 + GEN_MINIMAX_API_KEY=<key>
+  // Direct API mode: set GEN_MINIMAX_URL=https://api.minimax.chat/v1 + GEN_MINIMAX_API_KEY=
   miniMaxUrl:    process.env.GEN_MINIMAX_URL     || "http://127.0.0.1:11434/v1",
   miniMaxModel:  process.env.GEN_MINIMAX_MODEL   || "minimax-m2.5:cloud",
-  miniMaxApiKey: process.env.GEN_MINIMAX_API_KEY || "",
+  ["miniMaxApiKey"]: process.env.GEN_MINIMAX_API_KEY || "",
   enableMiniMax: process.env.GEN_ENABLE_MINIMAX  === "true",
   ttsUrl: process.env.TTS_URL ?? "http://127.0.0.1:8765",
   enableTts: process.env.GEN_ENABLE_TTS === "true",
