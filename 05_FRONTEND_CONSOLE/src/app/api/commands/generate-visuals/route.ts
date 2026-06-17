@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-const REPO_ROOT = path.join(process.cwd(), '..');
+const REPO_ROOT = process.env.REPO_ROOT || path.join(process.cwd(), '..');
 const PYTHON = process.env.PYTHON_BIN || 'python';
 
 function exec(cmd: string): { ok: boolean; stdout: string; stderr: string } {

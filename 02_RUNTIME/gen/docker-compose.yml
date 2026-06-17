@@ -29,7 +29,7 @@ services:
     environment:
       GEN_PORT: "43123"
       DATABASE_PATH: /app/data/gen.db
-      GEN_TOKEN: ${GEN_TOKEN:?GEN_TOKEN must be set — generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"} # pragma: allowlist secret
+      GEN_TOKEN: "${GEN_TOKEN:?GEN_TOKEN must be set (generate a secure token with openssl rand -hex 32)}" # pragma: allowlist secret
       # Ollama embeddings — set GEN_EMBEDDING_MODEL to any model you've pulled.
       # Default: nomic-embed-text (run `docker exec gen-ollama ollama pull nomic-embed-text` once)
       GEN_EMBEDDING_URL: http://ollama:11434/v1/embeddings
