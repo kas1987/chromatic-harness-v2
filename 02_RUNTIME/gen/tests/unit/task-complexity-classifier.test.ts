@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifyTaskComplexity } from "../../src/budget/task-complexity-classifier.js";
+import { classifyTaskComplexity } from "../../src/budget/task-complexity-classifier.js"; // pragma: allowlist secret
 
 describe("classifyTaskComplexity", () => {
   it("'run ls /tmp' → simple (bash single command)", () => {

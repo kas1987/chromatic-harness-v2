@@ -11,7 +11,7 @@ import { BudgetAllocator } from "../../src/budget/budget-allocator.js";
 import { NormalizedBudgetManager } from "../../src/budget/normalized-budget-manager.js";
 import { AggressiveBudgetManager } from "../../src/budget/aggressive-budget-manager.js";
 import { selectBudgetManager } from "../../src/budget/budget-policy-selector.js";
-import { classifyTaskComplexity } from "../../src/budget/task-complexity-classifier.js";
+import { classifyTaskComplexity } from "../../src/budget/task-complexity-classifier.js"; // pragma: allowlist secret
 import { CostAccuracyTracker } from "../../src/budget/cost-accuracy-tracker.js";
 import {
   BudgetPolicy,
