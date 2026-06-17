@@ -1,0 +1,17 @@
+{
+  "roles": {
+    "assistant_default":  "UA___20s_Woman",
+    "assistant_warm":     "Arabella",
+    "warning_urgent":     "Eve",
+    "memory_injection":   "Relaxing_Rachel",
+    "narrator_cinematic": "british_hollie"
+  },
+  "context_map": {
+    "budget_stop":        "warning_urgent",
+    "budget_warn":        "warning_urgent",
+    "memory_recall":      "memory_injection",
+    "routing_suggestion": "assistant_default",
+    "confirmation":       "assistant_warm",
+    "default":            "assistant_default"
+  }
+}

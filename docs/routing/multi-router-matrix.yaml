@@ -1,8 +1,8 @@
-# Multi-router matrix — Chromatic Harness v2 (federated copy)
-# Canonical: C:/Users/kas41/chromatic-harness-v2/docs/governance/multi-router-matrix.yaml
-# Federate:  bash C:/Users/kas41/chromatic-harness-v2/scripts/federate-governance.sh
+# Multi-router matrix — CANONICAL (Chromatic Wiki)
+# Canonical: C:/Users/kas41/chromatic-wiki/03_GOVERNANCE/multi-router-matrix.yaml
+# Federate:  bash C:/Users/kas41/chromatic-wiki/scripts/federate-governance.sh
 #
-# This is a FEDERATED COPY. Edit the canonical and re-federate — never edit here directly.
+# This is the SINGLE SOURCE OF TRUTH. Edit here and re-federate; generated copies must not be edited.
 
 policy_version: "2026-06-02"
 
@@ -80,20 +80,20 @@ claude_agent_tiers:
     name: nano
     provider: ollama
     model: llama3.2:3b
-    when: "tables, frontmatter, json-to-table, zero-judgment formatting"
+    when: "tables, frontmatter, json-to-table, zero-judgment formatting — NON-code only"
     fallback_if_ollama_down: "vllm-up → stay tier 0 with vllm provider; vllm-down → promote to tier 1 (featherless/openrouter)"
   "1":
     name: micro
     provider: featherless
     model: NousResearch/Hermes-3-Llama-3.1-8B
     fallback: openrouter
-    when: "scaffold, boilerplate, seed templates, slash-command markdown"
+    when: "template/scaffold fill (no logic), seed files, slash-command markdown — NON-code"
   "2":
     name: small
     provider: featherless
     model: Qwen/Qwen2.5-14B-Instruct
     fallback: openrouter
-    when: "smoke test, spec compliance review, single-file PR review"
+    when: "smoke test, non-code spec/format validation — NO code review or code edits (see code_floor)"
   "3":
     name: medium
     provider: gemini
@@ -103,12 +103,13 @@ claude_agent_tiers:
     name: large
     provider: claude
     model: claude-sonnet-4-6
-    when: "brainstorm, design tradeoffs, pre-mortem, architecture options — orchestrator stays here"
+    when: "brainstorm, design tradeoffs, pre-mortem, architecture options — orchestrator stays here; also the floor for ALL code-touching work"
 
 claude_agent_overrides:
-  haiku: "cap tier at 1 for subagent dispatch"
+  haiku: "cap tier at 1 for subagent dispatch — NON-code only"
   opus: "force tier 4 (native)"
   router_block_pure_llm: "ROUTER_BLOCK_ENABLED=true denies tier<4 general-purpose Agent with no tool-use keywords"
+  code_floor: "code-touching tasks (edit, review, refactor, non-trivial scaffold) floor at tier 4 (Claude sonnet); tiers 0-2 open models are for NON-code transforms only (format, extract, classify, template-fill). Added 2026-06-05 — open models miss correctness bugs."
 
 # --- Gen /api/delegate: taskIntent probe chains (local → cloud) ---
 gen_task_intents:
@@ -122,6 +123,12 @@ gen_task_intents:
   review-summary: [gemma3:4b, qwen3:4b, claude]
   longform-final-user-answer: [qwen3:8b, deepseek-r1:8b, claude]
   vision-triage: [qwen3-vl:8b, llava:7b, claude, gpt]
+  # Front-end design lane (2026-06-05): design JUDGMENT is C4 knowledge-bound — Claude
+  # floor, no local probe (the Sonnet/Opus crossover fails for novel look-and-feel).
+  # Visual triage = screenshot/render comparison → vision models. Implementation of an
+  # APPROVED design is known-pattern code → routes via code-small-edit / tier 4 (code_floor).
+  frontend-design: [claude]
+  frontend-visual-triage: [qwen3-vl:8b, llava:7b, claude, gpt]
 
 # --- IDE / runtime alignment ---
 ide_runtimes:
@@ -164,7 +171,8 @@ rudalo_providers:
   - openai
   - ollama
   - echo
-  default_local: "OLLAMA_BASE_URL=http://127.0.0.1:11434"
+# Fixed 2026-06-05: was an invalid list+key mix under rudalo_providers (broke YAML parse).
+rudalo_default_local: "OLLAMA_BASE_URL=http://127.0.0.1:11434"
 
 # --- Effort level × model routing (2026-06-02) ---
 # Reference doc: C:\.00_True_AI\model-effort-routing.md  |  CSV: model-effort-routing.csv
@@ -182,13 +190,13 @@ effort_level_routing:
 
   sonnet:
     low:   {c_level: "C2",    t_level: "T3", est_cost: "$0.02-0.05",  use_for: "quick edits, fast drafts, boilerplate"}
-    medium:{c_level: "C2-C3", t_level: "T3", est_cost: "$0.05-0.15",  use_for: "standard coding, PR review, test gen, known-pattern debug"}
+    medium: {c_level: "C2-C3", t_level: "T3", est_cost: "$0.05-0.15",  use_for: "standard coding, PR review, test gen, known-pattern debug"}
     high:  {c_level: "C3-C4", t_level: "T3", est_cost: "$0.15-0.40",  use_for: "deep reasoning, multi-file debug, architecture review"}
     max:   {c_level: "C4",    t_level: "T3-T4", est_cost: "$0.30-0.80", use_for: "exhaustive analysis, pre-mortem; prefer Opus low at crossover"}
 
   opus:
     low:   {c_level: "C4", t_level: "T4", est_cost: "$0.10-0.25",  use_for: "creative synthesis, knowledge-heavy judgment — CHEAPEST at C4 crossover"}
-    medium:{c_level: "C4", t_level: "T4", est_cost: "$0.20-0.60",  use_for: "high-trust decisions, novel architecture"}
+    medium: {c_level: "C4", t_level: "T4", est_cost: "$0.20-0.60",  use_for: "high-trust decisions, novel architecture"}
     high:  {c_level: "C4", t_level: "T4", est_cost: "$0.50-1.50",  use_for: "security audits, complex pre-mortems"}
     max:   {c_level: "C4", t_level: "T4", est_cost: "$1.00-3.00",  use_for: "mission-critical one-shots — gate required"}
 

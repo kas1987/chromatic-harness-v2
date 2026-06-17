@@ -226,20 +226,20 @@ async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = D
     packet.mission_id = f"CHR-{str(uuid.uuid4())[:8].upper()}"
     packet.agent_role = req.agent_role
     packet.autonomy_level = req.autonomy_level
-    packet.confidence_required = req.confidence_required
+    packet.confidence_score = req.confidence_score
     packet.allowed_tools = req.allowed_tools or packet.allowed_tools
     packet.stop_conditions = req.stop_conditions or packet.stop_conditions
-    packet.required_outputs = req.required_outputs or packet.required_outputs
+    packet.required_output = req.required_output or packet.required_output
     dispatch = orch.dispatch(packet)
     data = {
         "mission_id": packet.mission_id,
         "objective": packet.objective,
         "agent_role": packet.agent_role,
         "autonomy_level": packet.autonomy_level,
-        "confidence_required": packet.confidence_required,
+        "confidence_score": packet.confidence_score,
         "allowed_tools": packet.allowed_tools,
         "stop_conditions": packet.stop_conditions,
-        "required_outputs": packet.required_outputs,
+        "required_output": packet.required_output,
         "status": dispatch["status"],
         "magnets": dispatch["magnets"],
     }
@@ -422,10 +422,10 @@ async def synthesize_mission(
         objective=mission["objective"],
         agent_role=mission.get("agent_role", "agent_lead"),
         autonomy_level=mission.get("autonomy_level", "L1"),
-        confidence_required=mission.get("confidence_required", 75.0),
+        confidence_score=int(mission.get("confidence_score", mission.get("confidence_required", 75))),
         allowed_tools=mission.get("allowed_tools", []),
         stop_conditions=mission.get("stop_conditions", []),
-        required_outputs=mission.get("required_outputs", []),
+        required_output=mission.get("required_output", mission.get("required_outputs", [])),
     )
     output = orch.synthesize_mission(packet, events)
 

@@ -33,14 +33,14 @@ jobs:
   review-intake-suite:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
       - name: Install deps
-        run: pip install pytest jsonschema
+        run: pip install pytest jsonschema pytest-cov
 
       - name: Run review-intake test suite (all acceptance criteria)
         run: python -m pytest tests/test_review_intake.py tests/test_review_intake_acceptance.py tests/test_review_intake_central_collector.py -q

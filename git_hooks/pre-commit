@@ -16,3 +16,7 @@ python scripts/detect_file_collisions.py --active-writers .chromatic/active_writ
 # in the tree do not block unrelated commits. Add '# pragma: allowlist secret'
 # to a line to suppress a confirmed false positive.
 python scripts/scan_for_secrets.py --staged
+# Large-file / re-added-ignored guard: blocks oversized blobs (>45MB) and files
+# that match .gitignore from sneaking back into the index. Allow genuine large
+# assets via .large-file-allowlist.
+python scripts/large_file_gate.py --staged

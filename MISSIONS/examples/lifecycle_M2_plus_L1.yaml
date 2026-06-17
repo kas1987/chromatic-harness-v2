@@ -1,0 +1,36 @@
+# Full-lifecycle packet: one file carrying BOTH the plan profile (level M2)
+# and the dispatch profile (autonomy_level L1). Proves the single entry point.
+mission_id: "FULL-001"
+level: M2
+status: approved
+title: "Add intake redaction rule"
+objective: "Add a redaction rule so secrets never land in the intake log."
+background: "Logs may contain secrets; we need a redaction step at intake."
+scope: ["Add redaction rule to intake writer"]
+out_of_scope: ["External vendor integration"]
+success_criteria: ["No secret patterns appear in intake_queue.jsonl"]
+acceptance_criteria: ["Redaction unit test passes on known secret patterns"]
+dependencies: ["07_LOGS_AND_AUDIT/intake_queue.jsonl"]
+risks:
+  - risk: "Over-redaction drops useful context"
+    mitigation: "Scope patterns narrowly; test fixtures"
+plan: ["Add rule", "Add test", "Verify"]
+test_strategy: ["targeted_test"]
+rollback: "Revert the redaction commit."
+reviewers:
+  required_count: 1
+approval_required: true
+# dispatch profile:
+agent_role: "agent_lead"
+autonomy_level: "L1"
+confidence_score: 82
+risk_level: medium
+allowed_tools: ["read", "write"]
+allowed_files: ["02_RUNTIME/intake/queue.py", "tests/test_intake_redaction.py"]
+forbidden_files: [".env", "secrets/*"]
+tool_budget:
+  max_total: 6
+  max_write: 2
+stop_conditions: ["Need to inspect secrets directly"]
+required_output: ["summary", "files_changed", "tests_run"]
+metadata: { mode: "operator" }

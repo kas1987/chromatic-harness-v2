@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3030";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 const PYTHON_API_BASE =
   process.env.NEXT_PUBLIC_PYTHON_API_URL || "http://localhost:8787";
 
@@ -9,14 +9,15 @@ export interface MissionPacket {
   required_gates?: string[];
   stop_conditions?: string[];
   autonomy_level?: 0 | 1 | 2 | 3 | 4 | 5;
-  confidence_required?: number;
+  confidence_score?: number;
+  mode?: string;
 }
 
 export interface Mission {
   mission_id: string;
   objective: string;
   status: "pending" | "running" | "completed" | "failed";
-  confidence_required: number;
+  confidence_score: number;
   autonomy_level: number;
   magnets: string[];
   stop_conditions: string[];
@@ -82,11 +83,13 @@ async function apiCall<T>(
 
   const res = await fetch(url, opts);
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || "API error");
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || err.error || `API error ${res.status}`);
   }
-  const data = await res.json();
-  return data.data;
+  // The FastAPI backend (:8787) returns bare payloads (no {status,data} envelope),
+  // so return the parsed body as-is. Endpoints that nest under "data" (e.g.
+  // level-thresholds) unwrap at their own callsite.
+  return (await res.json()) as T;
 }
 
 export async function getMissions(): Promise<Mission[]> {
@@ -98,15 +101,24 @@ export async function getMission(id: string): Promise<Mission> {
 }
 
 export async function createMission(packet: MissionPacket): Promise<Mission> {
+  // FastAPI CreateMissionRequest requires top-level objective/agent_role fields.
   return apiCall("POST", "/missions", {
-    packet,
-    scope: packet.scope || ["src/**/*"],
-    required_gates: packet.required_gates || ["intent", "scope"],
+    objective: packet.objective,
+    agent_role: "agent_lead",
+    autonomy_level: packet.autonomy_level !== undefined ? `L${packet.autonomy_level}` : "L1",
+    confidence_score: packet.confidence_score ?? 75.0,
+    stop_conditions: packet.stop_conditions ?? [],
   });
 }
 
 export async function getMissionGates(id: string): Promise<GateResult[]> {
-  return apiCall("GET", `/missions/${id}/gates`);
+  // No backend /gates endpoint exists yet; treat its absence as "no gates"
+  // rather than throwing, so callers (getMissionEvents) degrade gracefully.
+  try {
+    return await apiCall<GateResult[]>("GET", `/missions/${id}/gates`);
+  } catch {
+    return [];
+  }
 }
 
 export async function getMissionMagnets(
@@ -211,7 +223,15 @@ export async function promoteAgent(
 export async function getLevelThresholds(): Promise<
   Record<string, LevelThreshold>
 > {
-  return apiCall("GET", "/agents/meta/level-thresholds");
+  // This endpoint nests its payload under {"data": ...}; unwrap defensively
+  // now that apiCall no longer strips an envelope.
+  const res = await apiCall<
+    { data?: Record<string, LevelThreshold> } | Record<string, LevelThreshold>
+  >("GET", "/agents/meta/level-thresholds");
+  return (
+    (res as { data?: Record<string, LevelThreshold> }).data ??
+    (res as Record<string, LevelThreshold>)
+  );
 }
 
 export interface TrendPoint {

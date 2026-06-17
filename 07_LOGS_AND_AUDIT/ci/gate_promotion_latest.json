@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-06-16T16:15:27.734129+00:00",
+  "matrix_path": "config/ci/check_policy_matrix.yaml",
+  "policy_report_path": "07_LOGS_AND_AUDIT/ci/policy_matrix_latest.json",
+  "runtime_report_path": "07_LOGS_AND_AUDIT/ci/runtime_budget_latest.json",
+  "recommendations": [
+    {
+      "name": "Governance gates \u2014 advisory reports (non-blocking)",
+      "current_enforcement": "advisory",
+      "recommended_enforcement": "advisory",
+      "ready_for_promotion": false,
+      "reasons": [
+        "continue_on_error_enabled"
+      ]
+    }
+  ]
+}

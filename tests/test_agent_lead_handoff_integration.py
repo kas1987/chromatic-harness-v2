@@ -46,10 +46,8 @@ def event_hub(tmp_path):
 
 
 @pytest.fixture(scope="module")
-def intake_queue(repo_root):
-    from intake.queue import default_queue_path
-
-    return default_queue_path(repo_root)
+def intake_queue(tmp_path_factory):
+    return tmp_path_factory.mktemp("intake") / "intake_queue.jsonl"
 
 
 @pytest.fixture
@@ -58,7 +56,7 @@ def sample_mission():
     return {
         "mission_id": f"CHR-HANDOFF-{uuid.uuid4().hex[:8]}",
         "objective": "Implement user authentication module with OAuth",
-        "confidence_required": 85.0,
+        "confidence_score": 85.0,
         "autonomy_level": "L3",
         "stage": "synthesis",
     }

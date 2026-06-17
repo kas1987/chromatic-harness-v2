@@ -1,0 +1,116 @@
+{
+  "coder": {
+    "description": "Writes implementation code. Prefers Claude Sonnet for correctness and context window.",
+    "preferredProvider": "claude",
+    "priority": "normal",
+    "task": {
+      "intent": "code_generation",
+      "scope": "medium",
+      "requiresCode": true,
+      "budgetConstraint": "medium",
+      "claudeModelTier": "sonnet"
+    },
+    "systemPromptPrefix": "You are an expert software engineer. Write clean, correct, production-ready code. Be concise — no explanations unless asked."
+  },
+  "reviewer": {
+    "description": "Reviews code for correctness, bugs, and style. Uses Claude Haiku (fast, cheap, adequate for review).",
+    "preferredProvider": "claude",
+    "priority": "normal",
+    "task": {
+      "intent": "review",
+      "scope": "simple",
+      "requiresCode": true,
+      "budgetConstraint": "low",
+      "claudeModelTier": "haiku"
+    },
+    "systemPromptPrefix": "You are a thorough code reviewer. Identify bugs, anti-patterns, and improvement opportunities. Be direct and specific — cite line numbers when possible."
+  },
+  "architect": {
+    "description": "System design, planning, and technical decision-making. Claude Sonnet for reasoning depth.",
+    "preferredProvider": "claude",
+    "priority": "high",
+    "task": {
+      "intent": "planning",
+      "scope": "complex",
+      "requiresCode": false,
+      "budgetConstraint": "medium",
+      "claudeModelTier": "sonnet"
+    },
+    "systemPromptPrefix": "You are a senior software architect. Think through tradeoffs carefully. Produce clear, structured designs with explicit rationale for decisions."
+  },
+  "tester": {
+    "description": "Writes unit/integration tests. Routes to Ollama (local, zero cost) for straightforward test generation.",
+    "preferredProvider": "ollama",
+    "priority": "low",
+    "task": {
+      "intent": "code_generation",
+      "scope": "simple",
+      "requiresCode": true,
+      "requiresLocal": true,
+      "budgetConstraint": "low"
+    },
+    "systemPromptPrefix": "You are a test engineer. Write comprehensive, focused tests. Cover happy paths, edge cases, and error paths. Use the project's existing test framework and conventions."
+  },
+  "analyst": {
+    "description": "Data analysis, research, and summarisation. Gemini for long-context documents (1M token window).",
+    "preferredProvider": "gemini",
+    "priority": "low",
+    "task": {
+      "intent": "analysis",
+      "scope": "medium",
+      "requiresCode": false,
+      "budgetConstraint": "low"
+    },
+    "systemPromptPrefix": "You are a rigorous analyst. Summarise accurately, surface key insights, and flag uncertainties. Do not fabricate facts — say 'unclear' if evidence is insufficient."
+  },
+  "debugger": {
+    "description": "Root-cause analysis and debugging. Claude Sonnet for deep reasoning over error traces.",
+    "preferredProvider": "claude",
+    "priority": "high",
+    "task": {
+      "intent": "debugging",
+      "scope": "medium",
+      "requiresCode": true,
+      "budgetConstraint": "medium",
+      "claudeModelTier": "sonnet"
+    },
+    "systemPromptPrefix": "You are an expert debugger. Identify root causes, not just symptoms. Propose a minimal targeted fix. Explain why the bug occurred so it can be prevented."
+  },
+  "documenter": {
+    "description": "Writes docs, comments, and READMEs. Claude Haiku (low cost, adequate quality for prose).",
+    "preferredProvider": "claude",
+    "priority": "low",
+    "task": {
+      "intent": "documentation",
+      "scope": "simple",
+      "requiresCode": false,
+      "budgetConstraint": "low",
+      "claudeModelTier": "haiku"
+    },
+    "systemPromptPrefix": "You are a technical writer. Write clear, accurate, developer-friendly documentation. Prefer examples over abstract descriptions."
+  },
+  "local": {
+    "description": "General-purpose local inference via LM Studio. Zero API cost, good for sensitive or offline tasks.",
+    "preferredProvider": "lm-studio",
+    "priority": "normal",
+    "task": {
+      "intent": "other",
+      "scope": "medium",
+      "requiresLocal": true,
+      "budgetConstraint": "low"
+    },
+    "systemPromptPrefix": ""
+  },
+  "fast": {
+    "description": "Quick one-off tasks. Claude Haiku — lowest latency Claude tier.",
+    "preferredProvider": "claude",
+    "priority": "high",
+    "task": {
+      "intent": "other",
+      "scope": "simple",
+      "budgetConstraint": "low",
+      "claudeModelTier": "haiku"
+    },
+    "systemPromptPrefix": ""
+  }
+}

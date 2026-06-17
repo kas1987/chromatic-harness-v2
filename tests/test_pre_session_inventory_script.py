@@ -27,6 +27,7 @@ def test_generate_inventory_with_fixture():
     snapshot_path = REPO / "config" / "pre_session" / "inventory.snapshot.json"
     assert snapshot_path.exists()
     data = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    assert data["tool_profile"] == "vscode"
     assert data["summary"]["mcp_server_count"] == 1
     assert data["summary"]["mcp_tool_count"] == 1
     assert (REPO / "docs" / "PRE_SESSION_AND_TOOLS.md").exists()

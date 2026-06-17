@@ -112,7 +112,7 @@ When two skills appear to do the same thing:
 ```markdown
 # <retired-name> — Deprecated
 
-This skill has been merged into [<survivor>](<path>).
+This skill has been merged into `<survivor>`.
 Use `/<survivor>` instead.
 ```
 

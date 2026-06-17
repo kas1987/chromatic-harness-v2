@@ -169,19 +169,19 @@ class TestMissionPacket:
             objective="refactor auth module",
             agent_role="worker",
             autonomy_level="L1",
-            confidence_required=80.0,
+            confidence_score=80.0,
             allowed_tools=["filesystem.read"],
             stop_conditions=["scope_unclear"],
-            required_outputs=["task_result"],
+            required_output=["task_result"],
         )
         assert mp.mission_id == "CHR-MISSION-ABCD1234"
         assert mp.objective == "refactor auth module"
         assert mp.agent_role == "worker"
         assert mp.autonomy_level == "L1"
-        assert mp.confidence_required == 80.0
+        assert mp.confidence_score == 80.0
         assert mp.allowed_tools == ["filesystem.read"]
         assert mp.stop_conditions == ["scope_unclear"]
-        assert mp.required_outputs == ["task_result"]
+        assert mp.required_output == ["task_result"]
 
     def test_metadata_defaults_empty_dict(self):
         mp = self.MissionPacket(
@@ -189,10 +189,10 @@ class TestMissionPacket:
             objective="x",
             agent_role="r",
             autonomy_level="L1",
-            confidence_required=75.0,
+            confidence_score=75.0,
             allowed_tools=[],
             stop_conditions=[],
-            required_outputs=[],
+            required_output=[],
         )
         assert mp.metadata == {}
 
@@ -202,10 +202,10 @@ class TestMissionPacket:
             objective="x",
             agent_role="r",
             autonomy_level="L1",
-            confidence_required=75.0,
+            confidence_score=75.0,
             allowed_tools=[],
             stop_conditions=[],
-            required_outputs=[],
+            required_output=[],
             metadata={"bead_id": "bd-001"},
         )
         assert mp.metadata["bead_id"] == "bd-001"
@@ -249,7 +249,7 @@ class TestOrchestratorCreateMission:
 
     def test_confidence_required_75(self):
         mp = self.orch.create_mission("anything")
-        assert mp.confidence_required == 75
+        assert mp.confidence_score == 75
 
     def test_allowed_tools_contains_filesystem_read(self):
         mp = self.orch.create_mission("anything")
@@ -259,13 +259,13 @@ class TestOrchestratorCreateMission:
         mp = self.orch.create_mission("anything")
         assert len(mp.stop_conditions) > 0
 
-    def test_required_outputs_contains_agent_lead_report(self):
+    def test_required_output_contains_agent_lead_report(self):
         mp = self.orch.create_mission("anything")
-        assert "agent_lead_report" in mp.required_outputs
+        assert "agent_lead_report" in mp.required_output
 
-    def test_required_outputs_contains_next_bead(self):
+    def test_required_output_contains_next_bead(self):
         mp = self.orch.create_mission("anything")
-        assert "next_bead" in mp.required_outputs
+        assert "next_bead" in mp.required_output
 
 
 # ---------------------------------------------------------------------------
@@ -299,17 +299,17 @@ class TestOrchestratorCreateMissionFromTask:
 
     def test_confidence_required_from_task(self):
         mp = self.orch.create_mission_from_task(self._task(confidence_required=85.0))
-        assert mp.confidence_required == 85.0
+        assert mp.confidence_score == 85.0
 
     def test_confidence_score_fallback_key(self):
         task = {"title": "t", "confidence_score": 70.0}
         mp = self.orch.create_mission_from_task(task)
-        assert mp.confidence_required == 70.0
+        assert mp.confidence_score == 70.0
 
     def test_confidence_defaults_to_75(self):
         task = {"title": "t"}
         mp = self.orch.create_mission_from_task(task)
-        assert mp.confidence_required == 75.0
+        assert mp.confidence_score == 75.0
 
     def test_role_from_task(self):
         mp = self.orch.create_mission_from_task(self._task(role="reviewer"))
@@ -340,10 +340,10 @@ class TestOrchestratorCreateMissionFromTask:
         mp = self.orch.create_mission_from_task(self._task(allowed_files=[]))
         assert "filesystem.write" not in mp.allowed_tools
 
-    def test_required_outputs(self):
+    def test_required_output(self):
         mp = self.orch.create_mission_from_task(self._task())
-        assert "task_result" in mp.required_outputs
-        assert "verifier_report" in mp.required_outputs
+        assert "task_result" in mp.required_output
+        assert "verifier_report" in mp.required_output
 
     def test_metadata_task_id(self):
         mp = self.orch.create_mission_from_task(self._task(task_id="TASK-001"))
@@ -390,10 +390,10 @@ class TestOrchestratorAttachMagnets:
             objective="x",
             agent_role="r",
             autonomy_level="L1",
-            confidence_required=75.0,
+            confidence_score=75.0,
             allowed_tools=[],
             stop_conditions=[],
-            required_outputs=[],
+            required_output=[],
         )
         result = self.orch.attach_magnets(mp)
         assert isinstance(result, list)
@@ -406,10 +406,10 @@ class TestOrchestratorAttachMagnets:
             objective="x",
             agent_role="r",
             autonomy_level="L1",
-            confidence_required=75.0,
+            confidence_score=75.0,
             allowed_tools=[],
             stop_conditions=[],
-            required_outputs=[],
+            required_output=[],
         )
         result = self.orch.attach_magnets(mp)
         # Stub returns ["scope_magnet", "security_magnet"]
@@ -434,10 +434,10 @@ class TestOrchestratorDispatch:
             objective="test objective",
             agent_role="worker",
             autonomy_level="L1",
-            confidence_required=75.0,
+            confidence_score=75.0,
             allowed_tools=["filesystem.read"],
             stop_conditions=["scope_unclear"],
-            required_outputs=["task_result"],
+            required_output=["task_result"],
         )
         defaults.update(kw)
         return MissionPacket(**defaults)
@@ -478,10 +478,10 @@ class TestOrchestratorGuardAndInject:
             objective="review PR",
             agent_role="worker",
             autonomy_level="L1",
-            confidence_required=75.0,
+            confidence_score=75.0,
             allowed_tools=[],
             stop_conditions=[],
-            required_outputs=[],
+            required_output=[],
         )
 
     @pytest.mark.asyncio
@@ -545,10 +545,10 @@ class TestOrchestratorVerifyScopeAfterWork:
             objective="write tests",
             agent_role="worker",
             autonomy_level="L1",
-            confidence_required=75.0,
+            confidence_score=75.0,
             allowed_tools=[],
             stop_conditions=[],
-            required_outputs=[],
+            required_output=[],
         )
 
     @pytest.mark.asyncio
@@ -612,10 +612,10 @@ class TestOrchestratorCompleteMission:
             objective="done task",
             agent_role="worker",
             autonomy_level="L1",
-            confidence_required=80.0,
+            confidence_score=80.0,
             allowed_tools=[],
             stop_conditions=[],
-            required_outputs=[],
+            required_output=[],
         )
 
     def test_complete_mission_does_not_raise(self):

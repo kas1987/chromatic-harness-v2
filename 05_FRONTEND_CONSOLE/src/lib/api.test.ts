@@ -72,8 +72,8 @@ describe('apiCall — shared fetch wrapper', () => {
   });
 
   it('sends JSON body for POST requests', async () => {
-    mockFetchOk({ mission_id: 'new-001', status: 'pending', objective: 'test', confidence_required: 0.8, autonomy_level: 1, magnets: [], stop_conditions: [], created_at: '' });
-    await createMission({ objective: 'test', autonomy_level: 1, confidence_required: 0.8 });
+    mockFetchOk({ mission_id: 'new-001', status: 'pending', objective: 'test', confidence_score: 0.8, autonomy_level: 1, magnets: [], stop_conditions: [], created_at: '' });
+    await createMission({ objective: 'test', autonomy_level: 1, confidence_score: 0.8 });
 
     const callArgs = (global.fetch as jest.Mock).mock.calls[0];
     const options = callArgs[1] as RequestInit;
@@ -89,7 +89,7 @@ describe('apiCall — shared fetch wrapper', () => {
 
 describe('getMission', () => {
   it('returns the mission object on success', async () => {
-    const mission = { mission_id: 'm1', status: 'running', objective: 'do something', confidence_required: 0.9, autonomy_level: 2, magnets: [], stop_conditions: [], created_at: '2024-01-01' };
+    const mission = { mission_id: 'm1', status: 'running', objective: 'do something', confidence_score: 0.9, autonomy_level: 2, magnets: [], stop_conditions: [], created_at: '2024-01-01' };
     mockFetchOk(mission);
     const result = await getMission('m1');
     expect(result.mission_id).toBe('m1');

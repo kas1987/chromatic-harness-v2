@@ -1,0 +1,13 @@
+asset_pack_id: prism_cosmic
+name: Prism Cosmic Control
+style: cosmic prism nebula control room
+colors:
+  prism: '#c084fc'
+  quasar: '#0ea5e9'
+  plasma: '#ec4899'
+  deep_space: '#020617'
+components:
+  panels: cosmic_glass
+  gauges: prism_ring
+  graphs: constellation_pipeline
+  cards: floating_hologram_cards

@@ -52,20 +52,20 @@ class TestCreateMissionRequest:
         req = CreateMissionRequest(objective="do something")
         assert req.agent_role == "agent_lead"
         assert req.autonomy_level == "L1"
-        assert req.confidence_required == 75.0
+        assert req.confidence_score == 75.0
         assert req.allowed_tools == []
         assert req.stop_conditions == []
-        assert req.required_outputs == []
+        assert req.required_output == []
 
     def test_custom_values(self) -> None:
         req = CreateMissionRequest(
             objective="x",
             agent_role="specialist",
             autonomy_level="L4",
-            confidence_required=95.0,
+            confidence_score=95.0,
             allowed_tools=["bash"],
             stop_conditions=["done"],
-            required_outputs=["report"],
+            required_output=["report"],
         )
         assert req.agent_role == "specialist"
         assert req.allowed_tools == ["bash"]
@@ -88,10 +88,10 @@ class TestMissionResponse:
             "objective": "test",
             "agent_role": "agent_lead",
             "autonomy_level": "L1",
-            "confidence_required": 75.0,
+            "confidence_score": 75.0,
             "allowed_tools": [],
             "stop_conditions": [],
-            "required_outputs": [],
+            "required_output": [],
             "status": "dispatched",
             "magnets": ["m1"],
         }

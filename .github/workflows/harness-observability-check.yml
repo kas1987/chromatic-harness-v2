@@ -21,7 +21,7 @@ jobs:
   validate-harness-observability:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v6
         with:
@@ -36,10 +36,15 @@ jobs:
           python scripts/validate_event_schema.py \
             --log 00_META/observability/ERROR_LOG.jsonl
 
+      - name: Install dependency scanner
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pip-audit
+
       - name: Run secret scan
-        # security_scan.py is the tuned gate scanner (matches the pre-push hook);
-        # --no-deps keeps it fast and offline. It writes the security artifact.
-        run: python scripts/security_scan.py --no-deps
+        # security_scan.py writes 07_LOGS_AND_AUDIT/security/latest.json.
+        # Run full mode (with dependencies) to avoid skipped dependency status.
+        run: python scripts/security_scan.py
 
       - name: Run collision detector against active writers
         run: |
@@ -48,7 +53,7 @@ jobs:
 
       - name: Upload observability health artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: observability-health
           path: |

@@ -71,3 +71,40 @@ commands:
     logs_to: null
     allowed: true
     forbidden_logic: [decision_override]
+  # ── Command Center prompt modes (advisory pre-context only; subordinate to CMP) ──
+  - name: /mode:operator
+    purpose: >
+      Switch the Command Center pre-context to Operator mode (execution framing).
+      Shapes mission-packet metadata and UI only; grants no additional gate authority.
+    authority_source: read_only_artifacts
+    script: null
+    fallback_script: null
+    mutation: none
+    required_gates: [confidence, lease]
+    logs_to: 07_LOGS_AND_AUDIT/decisions/decision_log.jsonl
+    allowed: true
+    forbidden_logic: [approval_decision, release_override, state_mutation, decision_override, unapproved_override, skip_verifier, skip_collision, direct_file_mutation]
+  - name: /mode:auditor
+    purpose: >
+      Switch the Command Center pre-context to Auditor mode (read-only inspection).
+      Lowers the autonomy floor to L0-L2; cannot raise it or mutate state.
+    authority_source: read_only_artifacts
+    script: null
+    fallback_script: null
+    mutation: none
+    required_gates: []
+    logs_to: null
+    allowed: true
+    forbidden_logic: [approval_decision, release_override, state_mutation, decision_override, unapproved_override, direct_file_mutation, queue_claim, hidden_claim]
+  - name: /mode:designer
+    purpose: >
+      Switch the Command Center pre-context to Designer mode (asset/theme composition).
+      Frontend scope only; cannot touch runtime, governance, or schemas.
+    authority_source: read_only_artifacts
+    script: null
+    fallback_script: null
+    mutation: none
+    required_gates: [confidence]
+    logs_to: null
+    allowed: true
+    forbidden_logic: [approval_decision, release_override, state_mutation, decision_override, unapproved_override, direct_ship, hidden_agent_dispatch]
