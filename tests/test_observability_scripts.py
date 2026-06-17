@@ -1,8 +1,8 @@
 """Unit tests for the 5 observability CLI scripts (Phase 2b).
 
 Covers:
-  - redact_secrets.redact_text
-  - log_harness_event: build_event, append_event, now_iso, make_event_id, split_csv
+  - redact_secrets.redact
+  - log_harness_event: via subprocess (CLI only; helpers live in common_harness)
   - summarize_error_patterns.load_events (+ main via subprocess)
   - detect_file_collisions.main (via subprocess)
   - validate_event_log.validate_line (+ main via subprocess)
@@ -10,7 +10,6 @@ Covers:
 
 from __future__ import annotations
 
-import argparse
 import json
 import subprocess
 import sys
@@ -21,13 +20,11 @@ import pytest
 _REPO = Path(__file__).resolve().parents[1]
 _SCRIPTS = _REPO / "scripts"
 
-# scripts/ must be importable so the modules (and the cross-import
-# `from redact_secrets import redact_text` inside log_harness_event) resolve.
+# scripts/ must be importable so the modules resolve.
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-import detect_file_collisions  # noqa: E402,F401  (imported for path coverage / subprocess uses file)
-import log_harness_event  # noqa: E402
+import detect_file_collisions  # noqa: E402,F401  (imported for path coverage)
 import redact_secrets  # noqa: E402
 import summarize_error_patterns  # noqa: E402
 import validate_event_log  # noqa: E402
@@ -40,204 +37,84 @@ def _run(script_name: str, *cli_args: str) -> subprocess.CompletedProcess:
         [PY, str(_SCRIPTS / script_name), *cli_args],
         capture_output=True,
         text=True,
+        cwd=str(_REPO),
     )
 
 
 # --------------------------------------------------------------------------
-# redact_secrets.redact_text
+# redact_secrets.redact
 # --------------------------------------------------------------------------
 
 
 class TestRedactText:
     def test_returns_tuple(self):
-        out, flag = redact_secrets.redact_text("hello world")
+        out, flag = redact_secrets.redact("hello world")
         assert out == "hello world"
         assert flag is False
 
-    def test_none_input_safe(self):
-        out, flag = redact_secrets.redact_text(None)  # type: ignore[arg-type]
-        assert out == ""
-        assert flag is False
+    def test_none_input_raises(self):
+        with pytest.raises(TypeError):
+            redact_secrets.redact(None)  # type: ignore[arg-type]
 
     def test_empty_string(self):
-        assert redact_secrets.redact_text("") == ("", False)
+        assert redact_secrets.redact("") == ("", False)
 
     def test_openai_key(self):
-        out, flag = redact_secrets.redact_text("key is sk-abcdefghij1234567890ABCD")
+        out, flag = redact_secrets.redact("key is sk-abcdefghij1234567890ABCD")  # pragma: allowlist secret
         assert flag is True
-        assert "[REDACTED_SECRET]" in out
+        assert "sk-[REDACTED]" in out
         assert "sk-abcdefghij" not in out
 
     def test_github_classic_pat(self):
-        out, flag = redact_secrets.redact_text("ghp_abcdefghij1234567890ABCDEF")
+        out, flag = redact_secrets.redact("ghp_abcdefghij1234567890ABCDEF")  # pragma: allowlist secret
         assert flag is True
-        assert "ghp_" not in out
+        assert "ghp_[REDACTED]" in out
+        assert "ghp_abcdefghij" not in out
 
     def test_github_fine_grained_pat(self):
-        out, flag = redact_secrets.redact_text("github_pat_abcdefghij1234567890ABCDEF")
+        out, flag = redact_secrets.redact("github_pat_abcdefghij1234567890ABCDEF")  # pragma: allowlist secret
         assert flag is True
-        assert "[REDACTED_SECRET]" in out
+        assert "github_pat_[REDACTED]" in out
 
     def test_keyvalue_assignment(self):
-        out, flag = redact_secrets.redact_text('api_key="supersecretvalue"')  # pragma: allowlist secret
+        out, flag = redact_secrets.redact('api_key="supersecretvalue"')  # pragma: allowlist secret
         assert flag is True
         assert "supersecretvalue" not in out
 
     def test_password_assignment_case_insensitive(self):
-        out, flag = redact_secrets.redact_text("PASSWORD: hunter2longenough")
+        out, flag = redact_secrets.redact("PASSWORD: hunter2longenough")  # pragma: allowlist secret
         assert flag is True
 
     def test_private_key_block(self):
         text = "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA\n-----END RSA PRIVATE KEY-----"  # pragma: allowlist secret
-        out, flag = redact_secrets.redact_text(text)
+        out, flag = redact_secrets.redact(text)
         assert flag is True
-        assert "[REDACTED_SECRET]" in out
+        assert "[REDACTED_PRIVATE_KEY]" in out
         assert "MIIEpAIBAAKCAQEA" not in out
 
     def test_multiple_secrets_one_flag(self):
-        out, flag = redact_secrets.redact_text("sk-abcdefghij1234567890ABCD and ghp_abcdefghij1234567890ABCDEF")
+        multi = "sk-abcdefghij1234567890ABCD and ghp_abcdefghij1234567890ABCDEF"  # pragma: allowlist secret
+        out, flag = redact_secrets.redact(multi)
         assert flag is True
-        assert out.count("[REDACTED_SECRET]") >= 2
+        assert "sk-[REDACTED]" in out
+        assert "ghp_[REDACTED]" in out
 
     def test_cli_passthrough(self):
         proc = subprocess.run(
             [PY, str(_SCRIPTS / "redact_secrets.py")],
-            input="token=abcdefghijklmnop12345",
+            input="token=abcdefghijklmnop12345",  # pragma: allowlist secret
             capture_output=True,
             text=True,
+            cwd=str(_REPO),
         )
         assert proc.returncode == 0
         assert "abcdefghijklmnop12345" not in proc.stdout
-        assert "[REDACTED_SECRET]" in proc.stdout
+        assert "[REDACTED]" in proc.stdout
 
 
 # --------------------------------------------------------------------------
-# log_harness_event helpers
+# log_harness_event — CLI only (helpers are in common_harness)
 # --------------------------------------------------------------------------
-
-
-class TestNowIso:
-    def test_format(self):
-        value = log_harness_event.now_iso()
-        # round-trips as ISO 8601 with offset, second precision
-        parsed = __import__("datetime").datetime.fromisoformat(value)
-        assert parsed.tzinfo is not None
-
-
-class TestMakeEventId:
-    def test_prefix_and_uniqueness(self):
-        a = log_harness_event.make_event_id()
-        b = log_harness_event.make_event_id()
-        assert a.startswith("evt_")
-        assert a != b
-        assert len(a.split("_")[-1]) == 8
-
-
-class TestSplitCsv:
-    def test_none(self):
-        assert log_harness_event.split_csv(None) == []
-
-    def test_empty(self):
-        assert log_harness_event.split_csv("") == []
-
-    def test_basic(self):
-        assert log_harness_event.split_csv("a,b,c") == ["a", "b", "c"]
-
-    def test_strips_and_drops_blank(self):
-        assert log_harness_event.split_csv(" a , , b ,") == ["a", "b"]
-
-
-def _ns(**overrides) -> argparse.Namespace:
-    base = dict(
-        event_id=None,
-        timestamp=None,
-        repo="myrepo",
-        workspace=None,
-        source="terminal",
-        ide=None,
-        agent=None,
-        model=None,
-        session_id="sess-1",
-        event_type="error",
-        severity="high",
-        category="tool_failure",
-        message="something broke",
-        command=None,
-        files_touched=None,
-        error_signature=None,
-        raw_excerpt=None,
-        redacted=False,
-        suspected_cause=None,
-        action_taken=None,
-        status="open",
-        linked_fix=None,
-        linked_learning=None,
-        next_action=None,
-    )
-    base.update(overrides)
-    return argparse.Namespace(**base)
-
-
-class TestBuildEvent:
-    def test_minimal_event_shape(self):
-        event = log_harness_event.build_event(_ns())
-        assert event["repo"] == "myrepo"
-        assert event["event_type"] == "error"
-        assert event["source"]["surface"] == "terminal"
-        assert event["source"]["session_id"] == "sess-1"
-        assert event["files_touched"] == []
-        assert event["redacted"] is False
-        assert event["metadata"] == {}
-
-    def test_files_touched_split(self):
-        event = log_harness_event.build_event(_ns(files_touched="a.py, b.py"))
-        assert event["files_touched"] == ["a.py", "b.py"]
-
-    def test_generates_id_and_timestamp(self):
-        event = log_harness_event.build_event(_ns())
-        assert event["event_id"].startswith("evt_")
-        assert event["timestamp"]
-
-    def test_honors_explicit_id_and_timestamp(self):
-        event = log_harness_event.build_event(_ns(event_id="evt_fixed", timestamp="2026-01-01T00:00:00+00:00"))
-        assert event["event_id"] == "evt_fixed"
-        assert event["timestamp"] == "2026-01-01T00:00:00+00:00"
-
-    def test_redaction_sets_flag(self):
-        event = log_harness_event.build_event(_ns(message="leaked ghp_abcdefghij1234567890ABCDEF"))
-        assert event["redacted"] is True
-        assert "ghp_" not in event["message"]
-
-    def test_explicit_redacted_flag_preserved(self):
-        event = log_harness_event.build_event(_ns(redacted=True))
-        assert event["redacted"] is True
-
-    @pytest.mark.parametrize(
-        "field,bad",
-        [
-            ("event_type", "bogus"),
-            ("severity", "bogus"),
-            ("category", "bogus"),
-            ("status", "bogus"),
-        ],
-    )
-    def test_invalid_enum_raises(self, field, bad):
-        with pytest.raises(SystemExit):
-            log_harness_event.build_event(_ns(**{field: bad}))
-
-
-class TestAppendEvent:
-    def test_writes_jsonl_and_creates_parent(self, tmp_path):
-        log_path = tmp_path / "nested" / "ERROR_LOG.jsonl"
-        event = log_harness_event.build_event(_ns(event_id="evt_x"))
-        log_harness_event.append_event(event, log_path)
-        log_harness_event.append_event(event, log_path)
-        lines = log_path.read_text(encoding="utf-8").strip().splitlines()
-        assert len(lines) == 2
-        loaded = json.loads(lines[0])
-        assert loaded["event_id"] == "evt_x"
-        # sort_keys=True is used on write
-        assert list(loaded.keys()) == sorted(loaded.keys())
 
 
 class TestLogHarnessEventCli:
@@ -245,9 +122,9 @@ class TestLogHarnessEventCli:
         log_path = tmp_path / "ERROR_LOG.jsonl"
         proc = _run(
             "log_harness_event.py",
-            "--log",
+            "--log-path",
             str(log_path),
-            "--source",
+            "--surface",
             "terminal",
             "--event-type",
             "error",
@@ -255,21 +132,21 @@ class TestLogHarnessEventCli:
             "high",
             "--category",
             "tool_failure",
-            "--message",
-            "boom",
+            "--repo",
+            "testrepo",
         )
         assert proc.returncode == 0, proc.stderr
-        out = json.loads(proc.stdout)
-        assert out["logged"] is True
+        # stdout is the event_id
+        assert proc.stdout.strip().startswith("evt_")
         record = json.loads(log_path.read_text(encoding="utf-8").strip())
-        assert record["message"] == "boom"
+        assert record["repo"] == "testrepo"
 
-    def test_invalid_choice_rejected(self, tmp_path):
+    def test_invalid_event_type_rejected(self, tmp_path):
         proc = _run(
             "log_harness_event.py",
-            "--log",
+            "--log-path",
             str(tmp_path / "x.jsonl"),
-            "--source",
+            "--surface",
             "terminal",
             "--event-type",
             "nope",
@@ -277,8 +154,8 @@ class TestLogHarnessEventCli:
             "high",
             "--category",
             "tool_failure",
-            "--message",
-            "boom",
+            "--repo",
+            "testrepo",
         )
         assert proc.returncode != 0
 
@@ -318,10 +195,11 @@ class TestLoadEvents:
 
 
 class TestDetectFileCollisions:
-    def test_missing_file_errors(self, tmp_path):
+    def test_missing_file_returns_success(self, tmp_path):
+        # Missing file → read_json returns default {} → no collisions → exit 0
         proc = _run("detect_file_collisions.py", "--active-writers", str(tmp_path / "nope.json"))
-        assert proc.returncode != 0
-        assert "not found" in proc.stderr or "not found" in proc.stdout
+        assert proc.returncode == 0
+        assert "No active writer collisions detected." in proc.stdout
 
     def test_no_collision(self, tmp_path):
         path = tmp_path / "active_writers.json"
@@ -329,8 +207,8 @@ class TestDetectFileCollisions:
             json.dumps(
                 {
                     "writers": [
-                        {"writer": "a", "files_claimed": ["x.py"]},
-                        {"writer": "b", "files_claimed": ["y.py"]},
+                        {"session": "s1", "files": ["x.py"]},
+                        {"session": "s1", "files": ["y.py"]},
                     ]
                 }
             ),
@@ -338,27 +216,21 @@ class TestDetectFileCollisions:
         )
         proc = _run("detect_file_collisions.py", "--active-writers", str(path))
         assert proc.returncode == 0
-        assert "No collisions detected." in proc.stdout
+        assert "No active writer collisions detected." in proc.stdout
 
-    def test_collision_detected_exit_2(self, tmp_path):
+    def test_collision_detected_exit_1(self, tmp_path):
         path = tmp_path / "active_writers.json"
         path.write_text(
             json.dumps(
                 {
                     "writers": [
                         {
-                            "writer": "a",
-                            "surface": "claude",
-                            "session_id": "s1",
-                            "task": "t1",
-                            "files_claimed": ["shared.py"],
+                            "session": "s1",
+                            "files": ["shared.py"],
                         },
                         {
-                            "writer": "b",
-                            "surface": "codex",
-                            "session_id": "s2",
-                            "task": "t2",
-                            "files_claimed": ["shared.py"],
+                            "session": "s2",
+                            "files": ["shared.py"],
                         },
                     ]
                 }
@@ -366,14 +238,13 @@ class TestDetectFileCollisions:
             encoding="utf-8",
         )
         proc = _run("detect_file_collisions.py", "--active-writers", str(path))
-        assert proc.returncode == 2
-        assert "Collisions detected:" in proc.stdout
-        assert "shared.py" in proc.stdout
-        assert "writer=a" in proc.stdout
+        assert proc.returncode == 1
+        assert "COLLISIONS DETECTED" in proc.stderr
+        assert "shared.py" in proc.stderr
 
 
 # --------------------------------------------------------------------------
-# validate_event_log.validate_line
+# validate_event_log.validate_line (+ CLI)
 # --------------------------------------------------------------------------
 
 
@@ -424,8 +295,8 @@ class TestValidateLine:
 class TestValidateEventLogCli:
     def test_missing_log_errors(self, tmp_path):
         proc = _run("validate_event_log.py", "--log", str(tmp_path / "nope.jsonl"))
-        assert proc.returncode != 0
-        assert "not found" in proc.stderr or "not found" in proc.stdout
+        assert proc.returncode == 2
+        assert "not found" in proc.stderr.lower()
 
     def test_valid_log_passes(self, tmp_path):
         path = tmp_path / "log.jsonl"

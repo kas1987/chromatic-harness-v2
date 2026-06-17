@@ -25,6 +25,7 @@ def _run(script_name: str, *cli_args: str) -> subprocess.CompletedProcess:
         [PY, str(_SCRIPTS / script_name), *cli_args],
         capture_output=True,
         text=True,
+        cwd=str(_REPO),
     )
 
 
@@ -32,6 +33,7 @@ def _valid_event() -> dict:
     return {
         "event_id": "evt_e2e",
         "timestamp": "2026-01-01T00:00:00+00:00",
+        "repo": "testrepo",
         "event_type": "error",
         "severity": "high",
         "category": "tool_failure",
@@ -72,14 +74,20 @@ def test_validate_event_log_malformed_line_fails(tmp_path):
     assert "Validation failed" in proc.stdout
 
 
+def test_validate_event_log_missing_file_exits_2(tmp_path):
+    proc = _run("validate_event_log.py", "--log", str(tmp_path / "nope.jsonl"))
+    assert proc.returncode == 2
+    assert "not found" in proc.stderr.lower()
+
+
 def test_detect_file_collisions_clean(tmp_path):
     writers = tmp_path / "active_writers.json"
     writers.write_text(
         json.dumps(
             {
                 "writers": [
-                    {"writer": "a", "files_claimed": ["x.py"]},
-                    {"writer": "b", "files_claimed": ["y.py"]},
+                    {"session": "s1", "files": ["x.py"]},
+                    {"session": "s1", "files": ["y.py"]},
                 ]
             }
         ),
@@ -87,7 +95,7 @@ def test_detect_file_collisions_clean(tmp_path):
     )
     proc = _run("detect_file_collisions.py", "--active-writers", str(writers))
     assert proc.returncode == 0
-    assert "No collisions detected." in proc.stdout
+    assert "No active writer collisions detected." in proc.stdout
 
 
 def test_detect_file_collisions_flags_overlap(tmp_path):
@@ -96,14 +104,14 @@ def test_detect_file_collisions_flags_overlap(tmp_path):
         json.dumps(
             {
                 "writers": [
-                    {"writer": "a", "files_claimed": ["shared.py"]},
-                    {"writer": "b", "files_claimed": ["shared.py"]},
+                    {"session": "s1", "files": ["shared.py"]},
+                    {"session": "s2", "files": ["shared.py"]},
                 ]
             }
         ),
         encoding="utf-8",
     )
     proc = _run("detect_file_collisions.py", "--active-writers", str(writers))
-    assert proc.returncode == 2
-    assert "Collisions detected:" in proc.stdout
-    assert "shared.py" in proc.stdout
+    assert proc.returncode == 1
+    assert "COLLISIONS DETECTED" in proc.stderr
+    assert "shared.py" in proc.stderr
