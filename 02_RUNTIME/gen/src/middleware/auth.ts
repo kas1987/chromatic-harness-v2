@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 
-const DEV_TOKENS = new Set(["test-token-dev-only", "dev-token", ""]);
+const DEV_TOKENS = new Set(["test-token-dev-only", "dev-token", ""]); // pragma: allowlist secret
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
-  const expectedToken = process.env.GEN_TOKEN;
+  const expectedToken = process.env.GEN_TOKEN; // pragma: allowlist secret
 
   // Hard fail — never allow requests when the token is absent or a known dev placeholder.
   // The Gen hook pipeline is the only safety net when bypassPermissions=true.
@@ -19,7 +19,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     return;
   }
 
-  const token = req.headers.authorization?.replace("Bearer ", "");
+  const token = req.headers.authorization?.replace("Bearer ", ""); // pragma: allowlist secret
   if (!token || token !== expectedToken) {
     res.status(401).json({ error: "Unauthorized" });
     return;

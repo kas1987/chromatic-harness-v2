@@ -6,11 +6,11 @@
  * This check runs before any route is registered.
  */
 
-const DEV_TOKENS = new Set(["test-token-dev-only", "dev-token", ""]);
+const DEV_TOKENS = new Set(["test-token-dev-only", "dev-token", ""]); // pragma: allowlist secret
 
 export function validateStartup(): void {
   const nodeEnv = process.env.NODE_ENV ?? "development";
-  const genToken = process.env.GEN_TOKEN;
+  const genToken = process.env.GEN_TOKEN; // pragma: allowlist secret
 
   if (!genToken) {
     console.error("FATAL: GEN_TOKEN env var is not set.");
@@ -20,8 +20,8 @@ export function validateStartup(): void {
   }
 
   if (DEV_TOKENS.has(genToken)) {
-    console.error(`FATAL: GEN_TOKEN is set to a known dev placeholder ("${genToken}").`);
-    console.error("Generate a secure random token: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
+    console.error(`FATAL: GEN_TOKEN is set to a known dev placeholder ("${genToken}").`); // pragma: allowlist secret
+    console.error("Generate a secure random token: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""); // pragma: allowlist secret
     process.exit(1);
   }
 
