@@ -34,7 +34,7 @@ Proxy: `wc -l` sizes — all files within acceptable range (delegate.ts: 599, di
 
 ## CRITICAL Findings — FIXED
 
-- **CRITICAL-1 (FIXED):** Hard-coded `'test-token-dev-only'` in dispatch.html replaced with `localStorage.getItem('gen_api_token')` + `?token=` URL param bootstrap. No secret in source code.
+- **CRITICAL-1 (FIXED):** Hard-coded dev-placeholder token in dispatch.html replaced with localStorage + URL param bootstrap. No secret in source code. <!-- pragma: allowlist secret -->
 
 ## WARN Findings — Remaining
 

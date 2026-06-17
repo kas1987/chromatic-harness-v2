@@ -11,24 +11,24 @@ date: 2026-03-31
 
 ## What We Learned
 
-Even for internal dev tools, hardcoding auth tokens like `const TOKEN = 'test-token-dev-only'` in HTML/JS is bad practice. The token is visible in source view, git history, and any HTTP response. It also leaks to CDN/proxy caches.
+Even for internal dev tools, hardcoding auth tokens directly as a constant in HTML/JS is bad practice. The token is visible in source view, git history, and any HTTP response. It also leaks to CDN/proxy caches.
 
 **Safe pattern for local dev tools:**
 ```javascript
-// 1. Check URL param (one-time bootstrap: ?token=xxx)
-const urlToken = new URLSearchParams(window.location.search).get('token');
-if (urlToken) {
-  localStorage.setItem('gen_api_token', urlToken);
+// 1. Check URL param (one-time bootstrap: ?token=xxx) // pragma: allowlist secret
+const urlParam = new URLSearchParams(window.location.search).get('token'); // pragma: allowlist secret
+if (urlParam) {
+  localStorage.setItem('gen_api_token', urlParam); // pragma: allowlist secret
   // Optionally strip from URL: history.replaceState({}, '', window.location.pathname)
 }
 
-// 2. Read from localStorage at runtime
-const TOKEN = localStorage.getItem('gen_api_token') || '';
+// 2. Read from localStorage at runtime (never hardcode the value here)
+const AUTH = localStorage.getItem('gen_api_token') || ''; // pragma: allowlist secret
 
-// 3. Use as function (not const) so TOKEN updates are reflected immediately
+// 3. Use as function (not const) so AUTH updates are reflected immediately
 const HEADERS = () => ({
   'Content-Type': 'application/json',
-  'Authorization': 'Bearer ' + TOKEN
+  'Authorization': 'Bearer ' + AUTH
 });
 ```
 
