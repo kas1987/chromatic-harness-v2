@@ -27,6 +27,38 @@ def is_test(row):
     return cc.get("agent") == "test" or model.startswith("mock") or row.get("source") == "test"
 
 
+def _classify_ledger_row(row: dict) -> dict:
+    """Fill c_level/t_level inside cost_center from model name when absent.
+
+    Returns the (possibly mutated) row. Existing non-null levels are preserved.
+    """
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _scripts = str(_Path(__file__).resolve().parent)
+    if _scripts not in _sys.path:
+        _sys.path.insert(0, _scripts)
+    from token_level_inference import infer_levels  # type: ignore[import]
+
+    cc = row.get("cost_center")
+    if not isinstance(cc, dict):
+        return row
+    model = str(cc.get("model") or "")
+    if not model:
+        return row
+    c_level = cc.get("c_level")
+    t_level = cc.get("t_level")
+    if c_level is not None and t_level is not None:
+        return row
+    inferred_c, inferred_t, _ = infer_levels(model)
+    if c_level is None:
+        cc["c_level"] = inferred_c
+    if t_level is None:
+        cc["t_level"] = inferred_t
+    row["confidence"] = "inferred"
+    return row
+
+
 def main():
     rows = []
     for line in LEDGER.read_text(encoding="utf-8").splitlines():

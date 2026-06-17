@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-const REPO_ROOT = path.join(process.cwd(), '..');
+const REPO_ROOT = process.env.REPO_ROOT || path.join(process.cwd(), '..');
 const PYTHON = process.env.PYTHON_BIN || 'python';
 
 function readJson(p: string): Record<string, unknown> | null {
@@ -66,14 +66,18 @@ export async function GET() {
   const budgetGate = budgetCurrent > budgetCap ? 'RED' : budgetCurrent > budgetCap * 0.8 ? 'AMBER' : 'GREEN';
 
   const ciConclusion = (ci as Record<string, unknown> | null)?.conclusion as string | undefined;
-  const ciOk = !ciConclusion || ciConclusion === 'success';
+  // branch_governance_latest.json uses `violations` not `conclusion`; treat any violation as CI failure
+  const ciViolations = Array.isArray((ci as Record<string, unknown> | null)?.violations)
+    ? ((ci as Record<string, unknown>).violations as unknown[]).length
+    : 0;
+  const ciOk = ciViolations === 0 && (!ciConclusion || ciConclusion === 'success');
   const securityFindings = typeof (security as Record<string, unknown> | null)?.high_severity_total === 'number'
     ? ((security as Record<string, unknown>).high_severity_total as number)
     : 0;
 
   const p0: string[] = [];
   if (hookHighCount >= 1) p0.push(`hook_high=${hookHighCount}`);
-  if (!ciOk) p0.push(`ci=${ciConclusion}`);
+  if (!ciOk) p0.push(ciViolations > 0 ? `ci=violations(${ciViolations})` : `ci=${ciConclusion}`);
   if (overallStatus === 'red' && readinessScore < 20) p0.push(`health_red score=${readinessScore}`);
   if (budgetGate === 'RED') p0.push(`budget_over $${budgetCurrent.toFixed(2)}/$${budgetCap}`);
   if (securityFindings > 0) p0.push(`security_findings=${securityFindings}`);
@@ -102,7 +106,7 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     health: { status: overallStatus, score: readinessScore, fails, warns },
     budget: { current: budgetCurrent, cap: budgetCap, gate: budgetGate },
-    ci: { conclusion: ciConclusion ?? 'unknown', ok: ciOk },
+    ci: { conclusion: ciConclusion ?? 'unknown', violations: ciViolations, ok: ciOk },
     hooks: { high_count: hookHighCount, total_count: hookCount },
     security: { findings: securityFindings },
     beads_ready: beadsReady,

@@ -13,7 +13,7 @@ from pathlib import Path
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 HOME = Path(os.path.expanduser("~"))
-HARNESS = HOME / "chromatic-harness-v2"
+HARNESS = Path(os.environ.get("REPO_ROOT") or Path(__file__).resolve().parents[1])
 CALIB_DIR = HARNESS / "07_LOGS_AND_AUDIT" / "usage_calibration"
 EDGE_USAGE_DIR = HOME / ".claude" / "usage"
 
@@ -28,8 +28,8 @@ ROLLUP = CALIB_DIR / "rollup.json"
 
 # Weekly rate-limit window anchor (observed): Tuesday 1pm in US Eastern.
 WEEK_ANCHOR_TZ = "America/New_York"
-WEEK_ANCHOR_WEEKDAY = 1   # Monday=0 .. Tuesday=1
-WEEK_ANCHOR_HOUR = 13     # 1pm local
+WEEK_ANCHOR_WEEKDAY = 1  # Monday=0 .. Tuesday=1
+WEEK_ANCHOR_HOUR = 13  # 1pm local
 
 EDGE_SNAPSHOTS = EDGE_USAGE_DIR / "snapshots.jsonl"
 EDGE_CALIBRATED_CAPS = EDGE_USAGE_DIR / "calibrated_caps.json"  # feedback copy for statusline
@@ -97,8 +97,10 @@ def _now_iso():
 def _ny(ts):
     """Epoch seconds -> aware datetime in the week-anchor timezone (DST-correct)."""
     from datetime import datetime, timezone
+
     try:
         from zoneinfo import ZoneInfo
+
         tz = ZoneInfo(WEEK_ANCHOR_TZ)
     except Exception:  # zoneinfo/tzdata unavailable -> fall back to UTC
         tz = timezone.utc
@@ -119,12 +121,13 @@ def week_start_key(ts):
     """Key for the weekly window containing ts: the most recent Tuesday 1pm ET
     at or before ts, as an ISO timestamp. Weeks run Tue-1pm -> next Tue-1pm."""
     from datetime import timedelta
+
     dt = _ny(ts)
     anchor = dt.replace(hour=WEEK_ANCHOR_HOUR, minute=0, second=0, microsecond=0)
     # Days since the anchor weekday (Tuesday), wrapping the week.
     back = (dt.weekday() - WEEK_ANCHOR_WEEKDAY) % 7
     anchor = anchor - timedelta(days=back)
-    if anchor > dt:                # before this week's Tue-1pm -> previous week
+    if anchor > dt:  # before this week's Tue-1pm -> previous week
         anchor = anchor - timedelta(days=7)
     return anchor.isoformat()
 

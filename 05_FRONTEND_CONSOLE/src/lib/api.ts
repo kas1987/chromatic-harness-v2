@@ -101,11 +101,13 @@ export async function getMission(id: string): Promise<Mission> {
 }
 
 export async function createMission(packet: MissionPacket): Promise<Mission> {
+  // FastAPI CreateMissionRequest requires top-level objective/agent_role fields.
   return apiCall("POST", "/missions", {
-    packet,
-    scope: packet.scope || ["src/**/*"],
-    required_gates: packet.required_gates || ["intent", "scope"],
-    mode: packet.mode,
+    objective: packet.objective,
+    agent_role: "agent_lead",
+    autonomy_level: packet.autonomy_level !== undefined ? `L${packet.autonomy_level}` : "L1",
+    confidence_required: packet.confidence_required ?? 75.0,
+    stop_conditions: packet.stop_conditions ?? [],
   });
 }
 
