@@ -47,6 +47,7 @@ def _base_dispatch(**over):
         "MISSIONS/examples/M2_example_agent_log_ingestion.yaml",
         "MISSIONS/examples/dispatch_valid_L2_operator.json",
         "MISSIONS/examples/lifecycle_M2_plus_L1.yaml",
+        "MISSIONS/examples/M3_example_review_daemon_recovery.yaml",
     ],
 )
 def test_shipped_packets_pass(rel):

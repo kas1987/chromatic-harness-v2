@@ -1,0 +1,169 @@
+mission_id: M3-MR005-review-daemon-recovery
+level: M3
+status: draft
+bead_ref: mc-a7b
+title: "Add retry/recovery path for failed review-daemon queue items"
+objective: >
+  Implement retry logic and failure surfacing in the review-daemon pipeline so
+  that a failed queue item is re-queued automatically (max 2 retries) and
+  escalated via notification hook on third failure — eliminating the current
+  silent-fail path that allows unreviewed code to ship.
+
+background: >
+  Council audit 2026-05-27 flagged [MR-005]: review_run.ts sets a queue item
+  status to 'failed' and continues without any retry or alerting mechanism.
+  1 item was observed unrecovered in the queue at audit time.  Because
+  CLAUDE.md treats the review-daemon pipeline as the authoritative governance
+  gate, a silently-failed item means code can pass review_ship without ever
+  being evaluated.  The fix requires coordinated changes to review_run,
+  review_status, and the Stop notification hook.
+
+scope:
+  - Add retry logic to review_run.ts (re-queue items aged > N min, max 2 attempts)
+  - Alert via Notification hook on third failure
+  - Surface FAILED items prominently in review_status output
+  - Register the retry-alert hook in .claude/settings.json Stop array
+
+out_of_scope:
+  - Changing the underlying review evaluation logic
+  - Switching queue backends (SQLite stays)
+  - Adding new review dimensions or scoring criteria
+
+success_criteria:
+  - A deliberately-failed review item is auto-retried within 5 min
+  - After 3 failures the Stop hook fires and a notification is emitted
+  - review_status JSON and CLI output show FAILED items with age + retry count
+  - All existing review-daemon e2e tests continue passing
+
+acceptance_criteria:
+  - "bats/e2e test: inject a failing item, assert it is retried twice then escalated"
+  - "review_status for that item shows status=escalated with retry_count=3"
+  - "Notification hook integration test: asserts ntfy.sh call or equivalent is made"
+  - "run-all-e2e.py SUITES list includes new bats suite"
+
+constraints:
+  - Must not change the externally observable review_run API surface
+  - Retry delay must be configurable via REVIEW_RETRY_DELAY_MIN env var (default 5)
+  - Max retries must be configurable via REVIEW_MAX_RETRIES env var (default 2)
+
+dependencies:
+  - mc-6a5 (Harness E2E hardening epic — parent audit context)
+  - review-daemon queue schema (06_DATA/review_queue.sqlite or equivalent)
+  - Stop hook notification path (ntfy.sh / PushNotification)
+  - run-all-e2e.py SUITES list
+
+integration_points:
+  - review_run.ts → sets status; must now also write retry_count + last_attempt_at
+  - review_ship.ts → must block items with status=escalated same as failed
+  - review_status (tool) → must surface FAILED and ESCALATED with retry metadata
+  - Stop hook in settings.json → must invoke notification on escalation event
+  - .beads/review_queue schema → add retry_count, last_attempt_at, escalated_at cols
+
+risks:
+  - risk: "Retry storm if failure is systematic (e.g. broken LLM connection)"
+    impact: high
+    likelihood: low
+    mitigation: >
+      Cap total retry throughput at 1 item/min via token-bucket; circuit-break
+      if >5 escalations fire within 10 min (log + stop retrying that batch).
+  - risk: "Notification hook fires in tight loop if escalation status not persisted"
+    impact: medium
+    likelihood: medium
+    mitigation: >
+      Escalation write must be atomic (SQLite transaction); hook reads status
+      before firing and skips if already escalated.
+  - risk: "Schema migration breaks existing queue rows mid-session"
+    impact: high
+    likelihood: low
+    mitigation: >
+      Add columns with DEFAULT NULL; existing code paths ignore null retry fields
+      until explicitly set; rollback script drops added columns.
+
+resource_impact: "~4h implementation + 2h testing; no new dependencies"
+
+detailed_plan:
+  - "1. Schema migration: add retry_count INT DEFAULT 0, last_attempt_at TEXT, escalated_at TEXT to queue table"
+  - "2. review_run.ts: on caught failure, read retry_count; if < MAX_RETRIES increment and re-queue with delay; else set status=escalated + write escalated_at"
+  - "3. review_run.ts: emit escalation event to Stop hook payload when transitioning to escalated"
+  - "4. review_status tool: filter/highlight FAILED and ESCALATED rows; include retry_count + age in JSON output"
+  - "5. review_ship.ts: add ESCALATED to blocked-status list alongside FAILED"
+  - "6. settings.json: register notify-on-escalation.sh in Stop hook array (after usage-tracker.sh)"
+  - "7. notify-on-escalation.sh: read escalation event from hook payload, call ntfy.sh with item id + title"
+  - "8. bats test: test_review_daemon_retry.bats — inject fail, assert two retries then escalated status"
+  - "9. run-all-e2e.py: add suite entry for test_review_daemon_retry.bats"
+
+allowed_files:
+  - "02_RUNTIME/review-daemon/review_run.ts"
+  - "02_RUNTIME/review-daemon/review_ship.ts"
+  - "02_RUNTIME/review-daemon/review_status.ts"
+  - "06_DATA/review_queue*.sqlite"
+  - "06_DATA/migrations/*.sql"
+  - ".claude/settings.json"
+  - ".claude/hooks/notify-on-escalation.sh"
+  - "tests/review-daemon/test_review_daemon_retry.bats"
+  - "tests/run-all-e2e.py"
+
+forbidden_files:
+  - "02_RUNTIME/review-daemon/review_enqueue.ts"
+  - "02_RUNTIME/review-daemon/review_worker.ts"
+  - "01_PROTOCOLS/**"
+  - "00_SOURCE_OF_TRUTH/**"
+
+allowed_tools:
+  - Read
+  - Edit
+  - Write
+  - Bash
+  - Grep
+  - Glob
+
+tool_budget:
+  max_total: 40
+  max_search: 8
+  max_read: 12
+  max_write: 8
+  max_execute: 6
+
+confidence_score: 82
+risk_level: high
+
+test_strategy:
+  unit:
+    - "Mock queue DB; assert retry_count incremented on failure"
+    - "Assert status=escalated after MAX_RETRIES failures"
+  integration:
+    - "bats: test_review_daemon_retry.bats — full pipeline with injected failure"
+    - "Notification hook: assert ntfy payload emitted on escalation"
+  regression:
+    - "All existing review-daemon e2e tests must pass unchanged"
+    - "run-all-e2e.py full suite green"
+
+rollback_plan:
+  - "Run 06_DATA/migrations/rollback_retry_cols.sql to drop added columns"
+  - "Revert review_run.ts, review_ship.ts, review_status.ts via git revert"
+  - "Remove notify-on-escalation.sh entry from settings.json Stop array"
+  - "Queue items already in escalated status must be manually re-queued via review_retry CLI"
+
+impact_assessment: >
+  Medium blast radius: 3 TypeScript files + 1 shell hook + 1 SQL migration +
+  2 test files.  No API contract changes.  Risk to shipping gate is additive
+  (new block state), not removal of existing checks.  A rollback takes < 5 min.
+  Positive governance impact: closes MR-005 audit finding and prevents the
+  silent-fail class of governance bypass.
+
+reviewers:
+  required_count: 2
+approval_required: true
+
+stop_conditions:
+  - "Any existing review-daemon e2e test fails"
+  - "review_ship allows an escalated item through"
+  - "Notification hook enters an infinite-fire loop"
+  - "Schema migration causes data loss in existing queue rows"
+
+required_output:
+  - implementation_summary
+  - diff_summary
+  - validation_evidence
+  - risk_update
+  - next_task
