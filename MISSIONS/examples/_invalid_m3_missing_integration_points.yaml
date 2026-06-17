@@ -1,0 +1,34 @@
+# Negative fixture: a structurally INVALID M3 packet.
+# It omits `integration_points` (an M3-required field) and has an out-of-range
+# confidence_score. Both the validator and the JSON schema must REJECT this.
+mission_id: M3-BAD-001
+level: M3
+status: draft
+title: "Intentionally invalid M3 packet"
+objective: "Prove the validator rejects packets missing per-level required fields."
+background: "Negative test fixture."
+scope: ["nothing"]
+out_of_scope: ["everything"]
+success_criteria: ["n/a"]
+acceptance_criteria: ["n/a"]
+dependencies: []
+# integration_points: MISSING ON PURPOSE
+risks:
+  - risk: ""
+    mitigation: ""
+detailed_plan: []
+allowed_files: []
+forbidden_files: []
+tool_budget:
+  max_total: 10
+confidence_score: 130   # out of range on purpose
+risk_level: high
+test_strategy:
+  unit: []
+rollback_plan: []
+impact_assessment: ""
+reviewers:
+  required_count: 2
+approval_required: true
+stop_conditions: []
+required_output: ["implementation_summary"]

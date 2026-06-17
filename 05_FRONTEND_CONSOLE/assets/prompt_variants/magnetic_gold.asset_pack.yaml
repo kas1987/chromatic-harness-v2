@@ -1,0 +1,21 @@
+asset_pack_id: magnetic_gold
+display_name: Magnetic Gold Observability
+description: Magnet-forward theme emphasizing observability, inflection points, and event capture.
+theme_tokens:
+  background: "#080604"
+  panel: "#17120a"
+  text: "#fff7db"
+  muted: "#b59f63"
+layer_colors:
+  cmp: "#a78bfa"
+  runtime: "#60a5fa"
+  mcp: "#4ade80"
+  magnets: "#f59e0b"
+  beads: "#2dd4bf"
+  risk: "#f97316"
+icon_style: magnetic-line
+panel_style: amber-glass
+background_prompt: "dark observability dashboard with gold magnetic field lines, glowing event streams, high-tech audit interface"
+component_notes:
+  - Use for Auditor mode or Magnet Console.
+  - Make event streams and evidence bundles visually prominent.

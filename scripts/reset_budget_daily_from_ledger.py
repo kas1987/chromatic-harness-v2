@@ -67,6 +67,39 @@ def _classify_ledger_row(row: dict) -> dict:
         return row
 
 
+def _classify_ledger_row(row: dict) -> dict:
+    """Fill c_level/t_level in cost_center using token_level_inference if missing.
+
+    Returns a (possibly mutated) copy of the row with levels filled in.
+    """
+    row = dict(row)
+    cc = row.get("cost_center")
+    if not isinstance(cc, dict):
+        return row
+    model = str(cc.get("model") or "")
+    if not model:
+        return row
+    c_level = cc.get("c_level")
+    t_level = cc.get("t_level")
+    if c_level is None or t_level is None:
+        try:
+            import importlib
+
+            tli = importlib.import_module("token_level_inference")
+            inferred_c, inferred_t, confidence = tli.infer_levels(model)
+            cc = dict(cc)
+            if c_level is None:
+                cc["c_level"] = inferred_c
+            if t_level is None:
+                cc["t_level"] = inferred_t
+            row["cost_center"] = cc
+            if row.get("confidence") in (None, "unknown", ""):
+                row["confidence"] = confidence
+        except Exception:
+            pass
+    return row
+
+
 def is_test(row):
     cc = row.get("cost_center") or {}
     model = str(cc.get("model") or "")

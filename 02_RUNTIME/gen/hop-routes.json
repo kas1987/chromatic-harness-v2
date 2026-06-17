@@ -1,0 +1,61 @@
+{
+  "_comment": "Hop routing table — priority-ordered, first match wins. Modeled on Fusion-CUI conflict resolution: rule_id, priority, match conditions, destination, confidence_floor, dispatch_mode.",
+  "_remote_mcp": "Rules with destination_type remote_mcp POST to GEN_HOP_REMOTE_MCP_URL/<destination> (or mcp_forward_path). If env is unset, forward is skipped (logged).",
+  "_schema": {
+    "rule_id": "unique ID for audit log",
+    "priority": "lower = higher priority (1 = first checked)",
+    "source_skill": "match originating skill name (optional)",
+    "intent_tag": "match IntentClass from gen/ normalizer (optional)",
+    "payload_pattern": "regex match against prompt text (optional)",
+    "destination": "target skill name (local) or MCP tool name (remote_mcp)",
+    "destination_type": "local or remote_mcp",
+    "confidence_floor": "min confidence to apply rule (0.0-1.0)",
+    "dispatch_mode": "async (fire-and-forget) or sync (wait for result)",
+    "prompt_rewrite_template": "optional template: 'Execute via {{destination}}: {{payload}}'"
+  },
+  "routing_rules": [
+    {
+      "rule_id": "hop-comfyui-workflow",
+      "priority": 10,
+      "source_skill": "nsfw",
+      "intent_tag": "dispatch",
+      "destination": "comfyui-workflow-steward",
+      "destination_type": "local",
+      "confidence_floor": 0.7,
+      "dispatch_mode": "async",
+      "metadata_tags": ["generation", "comfyui"]
+    },
+    {
+      "rule_id": "hop-knowledge-dispatch",
+      "priority": 20,
+      "intent_tag": "dispatch",
+      "payload_pattern": "(?i)(lookup|search|find|knowledge)",
+      "destination": "nate-knowledge",
+      "destination_type": "local",
+      "confidence_floor": 0.6,
+      "dispatch_mode": "sync",
+      "metadata_tags": ["knowledge", "rag"]
+    },
+    {
+      "rule_id": "hop-trigger-schedule",
+      "priority": 30,
+      "intent_tag": "trigger",
+      "destination": "schedule",
+      "destination_type": "local",
+      "confidence_floor": 0.65,
+      "dispatch_mode": "async",
+      "metadata_tags": ["scheduling"]
+    },
+    {
+      "rule_id": "hop-dispatch-catchall",
+      "priority": 999,
+      "intent_tag": "dispatch",
+      "destination": "inbox",
+      "destination_type": "local",
+      "confidence_floor": 0.0,
+      "dispatch_mode": "async",
+      "metadata_tags": ["catchall"],
+      "_comment": "Fallback for unrouted dispatch intent — routes to inbox for review"
+    }
+  ]
+}

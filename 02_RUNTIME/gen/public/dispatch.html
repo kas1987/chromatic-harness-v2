@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gen Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg0: #0d0d0d;
+    --bg1: #141414;
+    --bg2: #1a1a1a;
+    --bg3: #222222;
+    --bg4: #2a2a2a;
+    --border: #2e2e2e;
+    --border-hi: #3d3d3d;
+    --amber: #e8950a;
+    --amber-dim: #7a4f06;
+    --amber-glow: rgba(232,149,10,0.15);
+    --brass: #c8922a;
+    --text: #c8c0b0;
+    --text-dim: #706860;
+    --text-hi: #ede5d5;
+    --red: #cc3333;
+    --green: #3a9c3a;
+    --green-bright: #4ec94e;
+    --yellow: #c8a020;
+    --claude: #cc7860;
+    --gemini: #4a86e8;
+    --lmstudio: #9b72e0;
+    --ollama: #e8950a;
+    --gpt: #3eb87a;
+    --gen: #c8922a;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-cond: 'Barlow Condensed', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg0); color: var(--text); font-family: var(--font-mono); font-size: 13px; }
+
+  /* ─── Layout ─────────────────────────────────────────────── */
+  #shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  #topbar { background: var(--bg1); border-bottom: 1px solid var(--border); padding: 0 16px; height: 44px; display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+  #logo { font-family: var(--font-cond); font-weight: 700; font-size: 17px; color: var(--amber); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  #annunciator { display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden; }
+  #clock { font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; white-space: nowrap; }
+  #tabbar { background: var(--bg1); border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; gap: 4px; flex-shrink: 0; }
+  .tab { font-family: var(--font-cond); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 18px; cursor: pointer; color: var(--text-dim); border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; background: none; border-top: none; border-left: none; border-right: none; }
+  .tab:hover { color: var(--text); }
+  .tab:focus-visible { outline: 2px solid var(--amber-dim); outline-offset: -2px; }
+  .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+  #panels { flex: 1; overflow: hidden; position: relative; }
+  .panel { display: none; height: 100%; overflow-y: auto; padding: 16px; }
+  .panel.active { display: flex; flex-direction: column; gap: 12px; }
+  #statusbar { background: var(--bg1); border-top: 1px solid var(--border); height: 26px; display: flex; align-items: center; padding: 0 16px; gap: 16px; font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+
+  /* ─── LED + provider chips ───────────────────────────────── */
+  .ann-chip { display: flex; align-items: center; gap: 6px; font-family: var(--font-cond); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+  .ann-chip .led { width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 0 transparent; transition: background .3s, box-shadow .3s; }
+  .ann-chip .led.on { background: var(--green); box-shadow: 0 0 6px 1px var(--green); }
+  .ann-chip .led.warn { background: var(--yellow); box-shadow: 0 0 6px 1px var(--yellow); }
+  .ann-chip .lbl { color: var(--text-dim); }
+  .ann-chip .cnt { color: var(--text); font-size: 11px; }
+  .sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+  #queue-meter { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+  #queue-bar-wrap { width: 60px; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  #queue-bar { height: 100%; width: 0; background: var(--amber); transition: width .4s; border-radius: 3px; }
+
+  /* ─── Section headings ───────────────────────────────────── */
+  .section-head { font-family: var(--font-cond); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 10px; }
+
+  /* ─── DISPATCH panel ─────────────────────────────────────── */
+  #dispatch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; min-height: 0; }
+  @media (max-width: 900px) { #dispatch-grid { grid-template-columns: 1fr; } }
+  .pane { background: var(--bg1); border: 1px solid var(--border); border-radius: 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: hidden; }
+  .pane-title { font-family: var(--font-cond); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--brass); }
+  .field-row { display: flex; flex-direction: column; gap: 4px; }
+  .field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+  select, input[type=text], input[type=number], textarea {
+    background: var(--bg3); color: var(--text-hi); border: 1px solid var(--border); border-radius: 3px;
+    font-family: var(--font-mono); font-size: 12px; padding: 6px 8px; width: 100%; outline: none;
+    transition: border-color .15s;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--amber-dim); }
+  select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--amber-dim); outline-offset: 1px; }
+  button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  textarea { resize: vertical; min-height: 90px; }
+  .row2 { display: flex; gap: 8px; }
+  .row2 > * { flex: 1; }
+  button { font-family: var(--font-mono); font-size: 12px; cursor: pointer; border: 1px solid; border-radius: 3px; padding: 7px 14px; transition: background .15s, color .15s, border-color .15s; }
+  .btn-primary { background: var(--amber-glow); color: var(--amber); border-color: var(--amber-dim); }
+  .btn-primary:hover { background: rgba(232,149,10,0.25); border-color: var(--amber); }
+  .btn-secondary { background: transparent; color: var(--text-dim); border-color: var(--border); }
+  .btn-secondary:hover { color: var(--text); border-color: var(--border-hi); }
+  .shortcut-hint { font-size: 10px; color: var(--text-dim); align-self: center; }
+  #response-body { flex: 1; overflow-y: auto; font-size: 12px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; color: var(--text-hi); min-height: 80px; }
+  .meta-bar { display: flex; gap: 16px; font-size: 10px; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 8px; flex-wrap: wrap; }
+  .meta-kv { display: flex; gap: 4px; }
+  .meta-k { color: var(--text-dim); }
+  .meta-v { color: var(--text); }
+  .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--border-hi); border-top-color: var(--amber); border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── SERVICES panel ─────────────────────────────────────── */
+  #services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .svc-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; }
+  .svc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .svc-led { width: 10px; height: 10px; border-radius: 50%; background: var(--red); transition: background .3s, box-shadow .3s; flex-shrink: 0; }
+  .svc-led.on { background: var(--green-bright); box-shadow: 0 0 8px 2px rgba(78,201,78,0.5); }
+  .svc-led.warn { background: var(--yellow); box-shadow: 0 0 8px 2px rgba(200,160,32,0.5); }
+  .svc-name { font-family: var(--font-cond); font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .svc-port { font-size: 10px; color: var(--text-dim); }
+  .svc-latency { font-size: 10px; color: var(--text-dim); margin-left: auto; }
+  .svc-detail { font-size: 11px; color: var(--text-dim); display: flex; flex-direction: column; gap: 3px; }
+  .svc-kv { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--border); padding-top: 4px; margin-top: 4px; }
+  .svc-k { color: var(--text-dim); }
+  .svc-v { color: var(--text); text-align: right; word-break: break-all; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .model-tag { display: inline-block; background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: 1px 5px; font-size: 10px; color: var(--text); margin: 1px; }
+  #model-details-section { margin-top: 12px; }
+  #model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-top: 10px; }
+  .model-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; }
+  .model-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .model-name { font-family: var(--font-cond); font-weight: 600; font-size: 13px; color: var(--text-hi); }
+  .model-badge { font-size: 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: 1px 5px; color: var(--text-dim); }
+  .model-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); padding: 2px 0; }
+  .model-row span:last-child { color: var(--text); }
+
+  /* ─── SYSTEM panel ───────────────────────────────────────── */
+  #system-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .sys-card { background: var(--bg1); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; }
+  .sys-title { font-family: var(--font-cond); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--brass); margin-bottom: 10px; }
+  .sys-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-dim); padding: 3px 0; border-top: 1px solid var(--border); }
+  .sys-row:first-of-type { border-top: none; }
+  .sys-row span:last-child { color: var(--text); text-align: right; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gauge-wrap { margin: 8px 0 4px; }
+  .gauge-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); margin-bottom: 4px; }
+  .gauge-track { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .gauge-fill { height: 100%; border-radius: 4px; transition: width .5s; }
+  .gauge-fill.ok { background: var(--green); }
+  .gauge-fill.warn { background: var(--yellow); }
+  .gauge-fill.crit { background: var(--red); }
+
+  /* ─── MAINTENANCE panel ──────────────────────────────────── */
+  #maintenance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  #maintenance-records { display: flex; flex-direction: column; gap: 8px; }
+  #maintenance-intel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 900px) { #maintenance-intel { grid-template-columns: 1fr; } }
+  .maint-list { display: flex; flex-direction: column; gap: 6px; font-size: 11px; color: var(--text); }
+  .maint-list-row { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--border); padding-top: 4px; }
+  .maint-list-row:first-child { border-top: none; padding-top: 0; }
+  #maintenance-daily-summary { white-space: pre-wrap; background: var(--bg1); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; font-size: 11px; line-height: 1.5; color: var(--text); }
+  .maint-record { background: var(--bg1); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; }
+  .maint-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .maint-title { font-family: var(--font-cond); font-weight: 700; font-size: 13px; color: var(--text-hi); letter-spacing: 0.03em; }
+  .maint-pill { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border: 1px solid var(--border); border-radius: 999px; padding: 1px 7px; }
+  .maint-meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 10px; color: var(--text-dim); }
+  .maint-summary { font-size: 11px; color: var(--text); line-height: 1.45; margin-top: 6px; }
+  .maint-actions { display: flex; gap: 8px; align-items: center; }
+  #maintenance-state { font-size: 11px; color: var(--text-dim); }
+  .runtime-controls { display: flex; flex-direction: column; gap: 8px; font-size: 11px; }
+  .runtime-control-row { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
+  .runtime-control-row:first-child { border-top: none; padding-top: 0; }
+  .runtime-control-row label { flex: 1; color: var(--text); }
+  .runtime-control-row input[type=checkbox] { accent-color: var(--amber); }
+
+  /* ─── History drawer ─────────────────────────────────────── */
+  #history-wrap { background: var(--bg1); border: 1px solid var(--border); border-radius: 4px; padding: 10px 14px; }
+  #history-list { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
+  .hist-item { display: flex; gap: 8px; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 2px; }
+  .hist-item:hover { background: var(--bg3); }
+  .hist-ts { color: var(--text-dim); flex-shrink: 0; }
+  .hist-prov { flex-shrink: 0; width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hist-preview { color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .hist-ok { color: var(--green); }
+  .hist-err { color: var(--red); }
+
+  /* ─── Scrollbar ──────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg1); }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-hi); }
+</style>
+</head>
+<body>
+<div id="shell">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div id="logo">GEN / CMD</div>
+    <div id="annunciator"></div>
+    <div id="queue-meter">
+      <span id="queue-label" style="font-size:11px;color:var(--text-dim)">Q 0</span>
+      <div id="queue-bar-wrap"><div id="queue-bar"></div></div>
+    </div>
+    <div class="sep"></div>
+    <div id="clock"></div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div id="tabbar" role="tablist">
+    <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-dispatch" data-tab="dispatch">Dispatch</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-services" data-tab="services">Services</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-system" data-tab="system">System</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-maintenance" data-tab="maintenance">Maintenance</button>
+  </div>
+
+  <!-- PANELS -->
+  <div id="panels">
+
+    <!-- DISPATCH -->
+    <div class="panel active" id="panel-dispatch">
+      <div id="dispatch-grid">
+        <!-- Compose -->
+        <div class="pane">
+          <div class="pane-title">Compose</div>
+          <div class="field-row">
+            <label class="field-label" for="role">Role</label>
+            <select id="role">
+              <option value="">none (manual routing)</option>
+            </select>
+          </div>
+          <div id="role-desc" style="font-size:10px;color:var(--text-dim);min-height:14px;"></div>
+          <div class="field-row">
+            <label class="field-label" for="prompt">Prompt</label>
+            <textarea id="prompt" rows="5" placeholder="Enter prompt…"></textarea>
+          </div>
+          <div class="row2">
+            <div class="field-row">
+              <label class="field-label" for="provider">Provider override</label>
+              <select id="provider">
+                <option value="">role / auto</option>
+                <option value="claude">Claude</option>
+                <option value="gemini">Gemini</option>
+                <option value="gpt">GPT</option>
+                <option value="ollama">Ollama</option>
+                <option value="lm-studio">LM Studio</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <label class="field-label" for="priority">Priority override</label>
+              <select id="priority">
+                <option value="">role / normal</option>
+                <option value="normal">normal</option>
+                <option value="high">high</option>
+                <option value="low">low</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="system-prompt">System Prompt (optional)</label>
+            <textarea id="system-prompt" rows="2" placeholder="You are…"></textarea>
+          </div>
+          <div class="row2">
+            <div class="field-row">
+              <label class="field-label" for="max-tokens">Max Tokens</label>
+              <input type="number" id="max-tokens" value="2048" min="1" max="32000">
+            </div>
+            <div class="field-row">
+              <label class="field-label" for="timeout-ms">Timeout (ms)</label>
+              <input type="number" id="timeout-ms" value="60000" min="1000">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-primary" id="btn-dispatch">Dispatch</button>
+            <button class="btn-secondary" id="btn-clear">Clear</button>
+            <span class="shortcut-hint">Ctrl+Enter</span>
+          </div>
+          <div id="history-wrap">
+            <div class="section-head">History</div>
+            <div id="history-list"></div>
+          </div>
+        </div>
+        <!-- Response -->
+        <div class="pane">
+          <div class="pane-title">Response</div>
+          <div id="response-status" style="font-size:11px;color:var(--text-dim);min-height:16px;"></div>
+          <div id="response-body" style="flex:1;overflow-y:auto;"></div>
+          <div class="meta-bar" id="meta-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="panel" id="panel-services">
+      <div class="section-head">Service Health</div>
+      <div id="services-grid"></div>
+      <div id="model-details-section">
+        <div class="section-head">Loaded Models</div>
+        <div id="model-grid"></div>
+      </div>
+    </div>
+
+    <!-- SYSTEM -->
+    <div class="panel" id="panel-system">
+      <div class="section-head">System Metrics</div>
+      <div id="system-grid"></div>
+    </div>
+
+    <!-- MAINTENANCE -->
+    <div class="panel" id="panel-maintenance">
+      <div class="section-head">Maintenance Analytics</div>
+      <div class="maint-actions">
+        <button class="btn-secondary" id="btn-maintenance-refresh" type="button">Refresh</button>
+        <button class="btn-secondary" id="btn-maintenance-recompute" type="button">Recompute</button>
+        <button class="btn-secondary" id="btn-maintenance-daily" type="button">Daily Director Review</button>
+        <button class="btn-secondary" id="btn-maintenance-export" type="button">Export Daily Digest</button>
+        <button class="btn-secondary" id="btn-maintenance-export-weekly" type="button">Export Weekly Rollup</button>
+        <span id="maintenance-state"></span>
+      </div>
+      <div id="maintenance-grid"></div>
+      <div class="section-head">Intelligence</div>
+      <div id="maintenance-intel"></div>
+      <div class="section-head">Latest Daily Director Summary</div>
+      <div id="maintenance-daily-summary"></div>
+      <div class="section-head">Independent Evaluation Snapshot</div>
+      <div id="maintenance-independent"></div>
+      <div class="section-head">Weekly Independent Rollup</div>
+      <div id="maintenance-weekly"></div>
+      <div class="section-head">Runtime Controls</div>
+      <div id="maintenance-runtime-controls"></div>
+      <div class="section-head">Offline Audit</div>
+      <div id="maintenance-offline-audit"></div>
+      <div class="section-head">Meta-Brain Summary</div>
+      <div id="maintenance-meta-brain"></div>
+      <div class="section-head">Architecture Records</div>
+      <div id="maintenance-records"></div>
+    </div>
+
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="statusbar">
+    <span id="sb-gen">GEN offline</span>
+    <span id="sb-last"></span>
+  </div>
+</div>
+
+<script>
+// ─── Config ──────────────────────────────────────────────────────────────────
+const BASE = window.location.origin !== 'null' ? window.location.origin : 'http://localhost:43123';
+// Auth credential stored in localStorage — never hardcoded. Set via status-bar click or URL param ?token=
+let AUTH_CRED = localStorage.getItem('gen_api_token') || '';
+const _urlParam = new URLSearchParams(window.location.search).get('token');
+if (_urlParam) { AUTH_CRED = _urlParam; localStorage.setItem('gen_api_token', _urlParam); }
+const BEARER_PFX = 'Bearer ';
+const HEADERS = () => ({ 'Content-Type': 'application/json', 'Authorization': BEARER_PFX + AUTH_CRED });
+const MAX_HISTORY = 30;
+
+// Provider colors
+const PROV_COLOR = {
+  claude:      '#cc7860',
+  gemini:      '#4a86e8',
+  'lm-studio': '#9b72e0',
+  ollama:      '#e8950a',
+  gpt:         '#3eb87a',
+  gen:         '#c8922a',
+};
+
+// Service definitions
+const SERVICES = [
+  { id: 'gen',        label: 'Gen',       port: 43123, path: '/health' },
+  { id: 'comfyui',   label: 'ComfyUI',   port: 8188,  path: null },
+  { id: 'ollama',    label: 'Ollama',    port: 11434, path: null },
+  { id: 'lmstudio',  label: 'LM Studio', port: 1234,  path: null },
+  { id: 'tts',       label: 'TTS',       port: 8765,  path: null },
+  { id: 'vite',      label: 'Vite',      port: 5173,  path: null },
+  { id: 'postgres',  label: 'Postgres',  port: 5432,  path: null },
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let history = [];
+let queueStats = { pending: 0, inFlight: 0, totalAccepted: 0 };
+let genOnline = false;
+
+// ─── DOM helpers ─────────────────────────────────────────────────────────────
+function el(tag, cls) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  return e;
+}
+function setText(e, t) { e.textContent = t; return e; }
+function append(parent, ...children) { children.forEach(c => parent.appendChild(c)); return parent; }
+
+// ─── Clock ────────────────────────────────────────────────────────────────────
+function tickClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-US', { hour12: false }) +
+    ' · ' + now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+    const panel = document.getElementById('panel-' + tab.dataset.tab);
+    if (panel) panel.classList.add('active');
+    if (tab.dataset.tab === 'services') refreshServices();
+    if (tab.dataset.tab === 'system') refreshSystem();
+    if (tab.dataset.tab === 'maintenance') refreshMaintenance();
+  });
+});
+
+// ─── Annunciator bar ─────────────────────────────────────────────────────────
+const ann = document.getElementById('annunciator');
+const ANN_PROVIDERS = ['gen', 'claude', 'gemini', 'gpt', 'ollama', 'lm-studio'];
+const annLeds = {};
+ANN_PROVIDERS.forEach(id => {
+  const chip = el('div', 'ann-chip');
+  const led = el('div', 'led');
+  const lbl = el('span', 'lbl');
+  lbl.textContent = id.toUpperCase();
+  lbl.style.color = PROV_COLOR[id] || 'var(--text-dim)';
+  append(chip, led, lbl);
+  ann.appendChild(chip);
+  annLeds[id] = led;
+  if (id !== ANN_PROVIDERS[ANN_PROVIDERS.length - 1]) {
+    const s = el('div', 'sep');
+    ann.appendChild(s);
+  }
+});
+
+function setLed(id, state) {
+  const led = annLeds[id];
+  if (!led) return;
+  led.className = 'led' + (state === 'on' ? ' on' : state === 'warn' ? ' warn' : '');
+}
+
+// ─── Queue meter ─────────────────────────────────────────────────────────────
+function updateQueueMeter(stats) {
+  const total = (stats.pending || 0) + (stats.inFlight || 0);
+  const max = 50;
+  const pct = Math.min(100, (total / max) * 100);
+  const bar = document.getElementById('queue-bar');
+  bar.style.width = pct + '%';
+  bar.className = 'gauge-fill' + (pct > 80 ? ' crit' : pct > 50 ? ' warn' : ' ok');
+  document.getElementById('queue-label').textContent =
+    'Q ' + total + ' (' + (stats.inFlight || 0) + ' fly)';
+}
+
+// ─── Gen health poll ──────────────────────────────────────────────────────────
+async function pollGen() {
+  try {
+    const r = await fetch(BASE + '/health', { signal: AbortSignal.timeout(2000) });
+    genOnline = r.ok;
+  } catch { genOnline = false; }
+  setLed('gen', genOnline ? 'on' : '');
+  const sb = document.getElementById('sb-gen');
+  sb.textContent = genOnline ? 'GEN :43123 online' : 'GEN offline';
+  sb.style.color = genOnline ? 'var(--green)' : 'var(--red)';
+
+  if (genOnline) {
+    try {
+      const r2 = await fetch(BASE + '/api/delegate/queue', { headers: HEADERS(), signal: AbortSignal.timeout(2000) });
+      if (r2.ok) {
+        queueStats = await r2.json();
+        updateQueueMeter(queueStats);
+      }
+    } catch {}
+  }
+}
+setInterval(pollGen, 5000);
+pollGen();
+
+// ─── DISPATCH ────────────────────────────────────────────────────────────────
+const promptEl = document.getElementById('prompt');
+const provEl   = document.getElementById('provider');
+const prioEl   = document.getElementById('priority');
+const sysEl    = document.getElementById('system-prompt');
+const tokEl    = document.getElementById('max-tokens');
+const toEl     = document.getElementById('timeout-ms');
+const respBody = document.getElementById('response-body');
+const respStat = document.getElementById('response-status');
+const metaBar  = document.getElementById('meta-bar');
+
+function setRespStatus(msg, color) {
+  respStat.textContent = '';
+  if (!msg) return;
+  const s = el('span');
+  s.textContent = msg;
+  s.style.color = color || 'var(--text-dim)';
+  respStat.appendChild(s);
+}
+
+function buildMetaBar(data) {
+  metaBar.textContent = '';
+  const kvs = [];
+  if (data.provider) kvs.push(['provider', data.provider]);
+  if (data.model)    kvs.push(['model', data.model]);
+  if (data.latencyMs != null) kvs.push(['latency', data.latencyMs + 'ms']);
+  if (data.tokens != null) kvs.push(['tokens', String(data.tokens)]);
+  if (data.cached != null) kvs.push(['cached', data.cached ? 'yes' : 'no']);
+  if (data.queueWait != null) kvs.push(['queue-wait', data.queueWait + 'ms']);
+  kvs.forEach(([k, v]) => {
+    const kv = el('div', 'meta-kv');
+    const kEl = el('span', 'meta-k');
+    kEl.textContent = k + ':';
+    const vEl = el('span', 'meta-v');
+    vEl.style.color = k === 'provider' ? (PROV_COLOR[v] || 'var(--text)') : 'var(--text)';
+    vEl.textContent = v;
+    append(kv, kEl, vEl);
+    metaBar.appendChild(kv);
+  });
+}
+
+function addHistory(entry) {
+  history.unshift(entry);
+  if (history.length > MAX_HISTORY) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  list.textContent = '';
+  history.forEach((h, i) => {
+    const row = el('div', 'hist-item');
+    const ts = el('span', 'hist-ts');
+    ts.textContent = h.time;
+    const prov = el('span', 'hist-prov' + (h.ok ? ' hist-ok' : ' hist-err'));
+    prov.textContent = h.provider || 'auto';
+    prov.style.color = h.ok
+      ? (PROV_COLOR[h.provider] || 'var(--green)')
+      : 'var(--red)';
+    const prev = el('span', 'hist-preview');
+    prev.textContent = h.preview;
+    append(row, ts, prov, prev);
+    row.addEventListener('click', () => {
+      promptEl.value = h.prompt || '';
+      if (h.provider) provEl.value = h.provider;
+    });
+    list.appendChild(row);
+  });
+}
+
+async function doDispatch() {
+  const prompt = promptEl.value.trim();
+  if (!prompt) { setRespStatus('Enter a prompt first.', 'var(--yellow)'); return; }
+
+  const body = { prompt };
+  const roleVal = document.getElementById('role').value;
+  if (roleVal) body.role = roleVal;
+  const prov = provEl.value;
+  if (prov) body.preferredProvider = prov;
+  const prioVal = prioEl.value;
+  if (prioVal) body.priority = prioVal;
+  const sys = sysEl.value.trim();
+  if (sys) body.claudeElevation = sys;
+  const maxTok = parseInt(tokEl.value, 10);
+  if (maxTok > 0) body.maxTokens = maxTok;
+  const toms = parseInt(toEl.value, 10);
+  if (toms > 0) body.timeoutMs = toms;
+
+  respBody.textContent = '';
+  metaBar.textContent = '';
+  const spinEl = el('span', 'spinner');
+  respStat.textContent = '';
+  append(respStat, spinEl, document.createTextNode(' dispatching…'));
+
+  const t0 = Date.now();
+  try {
+    const r = await fetch(BASE + '/api/delegate', {
+      method: 'POST',
+      headers: HEADERS(),
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(toms + 5000),
+    });
+    const data = await r.json();
+    const elapsed = Date.now() - t0;
+
+    if (r.ok && (data.result || data.content)) {
+      const text = data.result || data.content;
+      setRespStatus('OK · ' + elapsed + 'ms', 'var(--green)');
+      respBody.textContent = text;
+      buildMetaBar({ ...data, latencyMs: elapsed });
+      addHistory({
+        time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+        prompt, provider: data.provider, ok: true,
+        preview: text.slice(0, 80),
+      });
+      setLed(data.provider, 'on');
+    } else {
+      const errMsg = (data && data.error) ? data.error : ('HTTP ' + r.status);
+      setRespStatus('Error: ' + errMsg, 'var(--red)');
+      respBody.textContent = JSON.stringify(data, null, 2);
+      addHistory({
+        time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+        prompt, provider: prov || 'auto', ok: false,
+        preview: errMsg,
+      });
+    }
+  } catch (e) {
+    setRespStatus('Network error: ' + e.message, 'var(--red)');
+    respBody.textContent = e.stack || e.message;
+    addHistory({
+      time: new Date().toLocaleTimeString('en-US', { hour12: false }),
+      prompt, provider: prov || 'auto', ok: false,
+      preview: e.message,
+    });
+  }
+}
+
+document.getElementById('btn-dispatch').addEventListener('click', doDispatch);
+document.getElementById('btn-clear').addEventListener('click', () => {
+  promptEl.value = '';
+  sysEl.value = '';
+  respBody.textContent = '';
+  metaBar.textContent = '';
+  setRespStatus('');
+});
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') doDispatch();
+});
+
+// ─── SERVICES ────────────────────────────────────────────────────────────────
+async function refreshServices() {
+  const grid = document.getElementById('services-grid');
+  grid.textContent = '';
+  const modelGrid = document.getElementById('model-grid');
+  modelGrid.textContent = '';
+
+  // Gen health first (no proxy needed)
+  let serviceData = {};
+  try {
+    const r = await fetch(BASE + '/api/delegate/services', { headers: HEADERS(), signal: AbortSignal.timeout(8000) });
+    if (r.ok) serviceData = await r.json();
+  } catch {}
+
+  // Gen health via direct fetch (no auth proxy needed)
+  try {
+    const gr = await fetch(BASE + '/health', { signal: AbortSignal.timeout(2000) });
+    serviceData['gen'] = { available: gr.ok, latencyMs: null, extra: null };
+  } catch { serviceData['gen'] = { available: false, latencyMs: null, extra: null }; }
+
+  // Merge split ollama probes into one entry
+  if (!serviceData['ollama']) {
+    const ps   = serviceData['ollama_ps'];
+    const tags = serviceData['ollama_tags'];
+    const avail = (ps && ps.available) || (tags && tags.available);
+    const latency = ps ? ps.latencyMs : null;
+    const extra = {};
+    if (ps   && ps.extra   && ps.extra.models)   extra.running_models  = ps.extra.models;
+    if (tags && tags.extra && tags.extra.models) extra.available_models = tags.extra.models;
+    serviceData['ollama'] = { available: avail, latencyMs: latency, extra };
+  }
+
+  SERVICES.forEach(svc => {
+    const d = serviceData[svc.id] || {};
+    const online = d.available === true;
+    const latency = d.latencyMs != null ? d.latencyMs + 'ms' : '—';
+
+    const card = el('div', 'svc-card');
+    const head = el('div', 'svc-head');
+    const led = el('div', 'svc-led' + (online ? ' on' : ''));
+    const nameEl = el('span', 'svc-name');
+    nameEl.textContent = svc.label;
+    nameEl.style.color = PROV_COLOR[svc.id === 'lmstudio' ? 'lm-studio' : svc.id] || 'var(--text-hi)';
+    const portEl = el('span', 'svc-port');
+    portEl.textContent = ':' + svc.port;
+    const latEl = el('span', 'svc-latency');
+    latEl.textContent = online ? latency : 'offline';
+    latEl.style.color = online ? 'var(--green)' : 'var(--red)';
+    append(head, led, nameEl, portEl, latEl);
+    card.appendChild(head);
+
+    // Extra detail rows
+    if (d.extra) {
+      const detail = el('div', 'svc-detail');
+      Object.entries(d.extra).forEach(([k, v]) => {
+        if (v == null || v === '') return;
+        const row = el('div', 'svc-kv');
+        const kEl = el('span', 'svc-k');
+        kEl.textContent = k;
+        const vEl = el('span', 'svc-v');
+        const vStr = typeof v === 'object' ? JSON.stringify(v) : String(v);
+        vEl.textContent = vStr;
+        vEl.title = vStr;
+        append(row, kEl, vEl);
+        detail.appendChild(row);
+      });
+      card.appendChild(detail);
+    }
+
+    grid.appendChild(card);
+
+    // Update annunciator LED
+    const annId = svc.id === 'lmstudio' ? 'lm-studio' : svc.id;
+    if (annLeds[annId]) setLed(annId, online ? 'on' : '');
+  });
+
+  // Model details for Ollama + LM Studio
+  const ollamaData = serviceData['ollama'];
+  const lmsData    = serviceData['lmstudio'];
+
+  if (ollamaData && ollamaData.available) {
+    buildProviderModelCards(modelGrid, 'Ollama', ollamaData.extra);
+  }
+  if (lmsData && lmsData.available) {
+    buildProviderModelCards(modelGrid, 'LM Studio', lmsData.extra);
+  }
+}
+
+function buildProviderModelCards(container, providerName, extra) {
+  if (!extra) return;
+  const models = extra.running_models || extra.available_models || extra.models;
+  if (!models || !models.length) return;
+
+  const arr = Array.isArray(models) ? models : [models];
+  arr.forEach(m => {
+    const name = typeof m === 'string' ? m : (m.name || m.id || JSON.stringify(m));
+    const card = el('div', 'model-card');
+    const head = el('div', 'model-head');
+    const nameEl = el('span', 'model-name');
+    nameEl.textContent = name;
+    const badge = el('span', 'model-badge');
+    badge.textContent = providerName;
+    badge.style.color = providerName.includes('Ollama') ? 'var(--ollama)' : 'var(--lmstudio)';
+    append(head, nameEl, badge);
+    card.appendChild(head);
+
+    if (typeof m === 'object' && m !== null) {
+      Object.entries(m).forEach(([k, v]) => {
+        if (k === 'name' || k === 'id' || v == null) return;
+        const row = el('div', 'model-row');
+        const kEl = el('span');
+        kEl.textContent = k;
+        const vEl = el('span');
+        vEl.textContent = typeof v === 'number' && v > 1e6
+          ? (v / 1e9).toFixed(1) + 'GB'
+          : String(v);
+        append(row, kEl, vEl);
+        card.appendChild(row);
+      });
+    }
+
+    container.appendChild(card);
+  });
+}
+
+// ─── SYSTEM ───────────────────────────────────────────────────────────────────
+async function refreshSystem() {
+  const grid = document.getElementById('system-grid');
+  grid.textContent = '';
+
+  let info = null;
+  try {
+    const r = await fetch(BASE + '/api/delegate/sysinfo', { headers: HEADERS(), signal: AbortSignal.timeout(4000) });
+    if (r.ok) info = await r.json();
+  } catch {}
+
+  if (!info) {
+    const msg = el('div');
+    msg.textContent = 'Gen server offline — system metrics unavailable.';
+    msg.style.color = 'var(--text-dim)';
+    grid.appendChild(msg);
+    return;
+  }
+
+  // Host card
+  const hostCard = makeCard('Host');
+  addRow(hostCard, 'Platform', info.platform + ' ' + info.arch);
+  addRow(hostCard, 'CPUs', info.cpuCount + 'x ' + (info.cpuModel || '').split(' ').slice(0, 4).join(' '));
+  addRow(hostCard, 'Load avg', (info.loadAvg || []).map(n => n.toFixed(2)).join(' / '));
+  addRow(hostCard, 'OS uptime', fmtUptime(info.osUptime));
+  grid.appendChild(hostCard);
+
+  // Memory card
+  const memCard = makeCard('Memory');
+  const freeMB  = Math.round(info.freeMem  / 1e6);
+  const totalMB = Math.round(info.totalMem / 1e6);
+  const usedMB  = totalMB - freeMB;
+  const memPct  = Math.round((usedMB / totalMB) * 100);
+  addGauge(memCard, usedMB + 'MB / ' + totalMB + 'MB', memPct);
+  addRow(memCard, 'Free', freeMB + ' MB');
+  addRow(memCard, 'Used', usedMB + ' MB (' + memPct + '%)');
+  grid.appendChild(memCard);
+
+  // Node card
+  const nodeCard = makeCard('Node.js');
+  addRow(nodeCard, 'Version', info.nodeVersion || '—');
+  addRow(nodeCard, 'Uptime', fmtUptime(info.nodeUptime));
+  if (info.nodeMem) {
+    const heapMB = Math.round(info.nodeMem.heapUsed / 1e6);
+    const heapTotalMB = Math.round(info.nodeMem.heapTotal / 1e6);
+    const rssMB  = Math.round(info.nodeMem.rss / 1e6);
+    addRow(nodeCard, 'Heap', heapMB + ' / ' + heapTotalMB + ' MB');
+    addRow(nodeCard, 'RSS', rssMB + ' MB');
+    const heapPct = Math.round((heapMB / heapTotalMB) * 100);
+    addGauge(nodeCard, 'Heap ' + heapPct + '%', heapPct);
+  }
+  grid.appendChild(nodeCard);
+
+  // Queue card
+  let qs = queueStats;
+  try {
+    const r2 = await fetch(BASE + '/api/delegate/queue', { headers: HEADERS(), signal: AbortSignal.timeout(2000) });
+    if (r2.ok) qs = await r2.json();
+  } catch {}
+  const qCard = makeCard('Delegate Queue');
+  addRow(qCard, 'Pending', String(qs.pending || 0));
+  addRow(qCard, 'In-flight', String(qs.inFlight || 0));
+  addRow(qCard, 'Accepted', String(qs.totalAccepted || 0));
+  addRow(qCard, 'Completed', String(qs.totalCompleted || 0));
+  addRow(qCard, 'Failed', String(qs.totalFailed || 0));
+  addRow(qCard, 'Timed out', String(qs.totalTimedOut || 0));
+  if (qs.byPriority) {
+    addRow(qCard, 'high / norm / low',
+      (qs.byPriority.high || 0) + ' / ' +
+      (qs.byPriority.normal || 0) + ' / ' +
+      (qs.byPriority.low || 0));
+  }
+  grid.appendChild(qCard);
+
+  // Provider capacity card
+  if (qs.capacitySnapshot) {
+    const capCard = makeCard('Provider Capacity');
+    Object.entries(qs.capacitySnapshot).forEach(([prov, s]) => {
+      const val = s.inFlight + ' / ' + s.maxSlots + (s.atCapacity ? ' (full)' : '');
+      const vEl = addRow(capCard, prov, val);
+      if (vEl) vEl.style.color = s.atCapacity ? 'var(--red)' : 'var(--green)';
+    });
+    grid.appendChild(capCard);
+  }
+}
+
+function makeCard(title) {
+  const card = el('div', 'sys-card');
+  const t = el('div', 'sys-title');
+  t.textContent = title;
+  card.appendChild(t);
+  return card;
+}
+
+function addRow(card, key, val) {
+  const row = el('div', 'sys-row');
+  const kEl = el('span');
+  kEl.textContent = key;
+  const vEl = el('span');
+  vEl.textContent = val;
+  vEl.title = val;
+  append(row, kEl, vEl);
+  card.appendChild(row);
+  return vEl;
+}
+
+function addGauge(card, label, pct) {
+  const wrap = el('div', 'gauge-wrap');
+  const lbl = el('div', 'gauge-label');
+  const lSpan = el('span');
+  lSpan.textContent = label;
+  const rSpan = el('span');
+  rSpan.textContent = pct + '%';
+  append(lbl, lSpan, rSpan);
+  const track = el('div', 'gauge-track');
+  const fill = el('div', 'gauge-fill ' + (pct > 90 ? 'crit' : pct > 70 ? 'warn' : 'ok'));
+  fill.style.width = pct + '%';
+  track.appendChild(fill);
+  append(wrap, lbl, track);
+  card.appendChild(wrap);
+}
+
+function fmtUptime(s) {
+  if (s == null) return '—';
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h + 'h ' + m + 'm';
+}
+
+// ─── MAINTENANCE ─────────────────────────────────────────────────────────────
+function scoreColor(score) {
+  if (score >= 8) return 'var(--green)';
+  if (score >= 5) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function severityColor(sev) {
+  if (sev === 'critical') return 'var(--red)';
+  if (sev === 'high') return 'var(--yellow)';
+  if (sev === 'medium') return 'var(--amber)';
+  return 'var(--text-dim)';
+}
+
+function statusColor(status) {
+  if (status === 'resolved' || status === 'archived') return 'var(--green)';
+  if (status === 'in_progress') return 'var(--amber)';
+  if (status === 'blocked') return 'var(--red)';
+  return 'var(--text-dim)';
+}
+
+function makeMaintenanceScoreCard(title, value, hint) {
+  const card = makeCard(title);
+  const row = el('div', 'sys-row');
+  const kEl = el('span');
+  kEl.textContent = 'Score';
+  const vEl = el('span');
+  const num = Number(value || 0);
+  vEl.textContent = num.toFixed(2);
+  vEl.style.color = scoreColor(num);
+  append(row, kEl, vEl);
+  card.appendChild(row);
+  if (hint) addRow(card, 'Notes', hint);
+  return card;
+}
+
+async function refreshMaintenance() {
+  const grid = document.getElementById('maintenance-grid');
+  const intel = document.getElementById('maintenance-intel');
+  const daily = document.getElementById('maintenance-daily-summary');
+  const independentRoot = document.getElementById('maintenance-independent');
+  const weeklyRoot = document.getElementById('maintenance-weekly');
+  const runtimeControlsRoot = document.getElementById('maintenance-runtime-controls');
+  const offlineAuditRoot = document.getElementById('maintenance-offline-audit');
+  const metaBrain = document.getElementById('maintenance-meta-brain');
+  const list = document.getElementById('maintenance-records');
+  const state = document.getElementById('maintenance-state');
+
+  grid.textContent = '';
+  intel.textContent = '';
+  daily.textContent = '';
+  independentRoot.textContent = '';
+  weeklyRoot.textContent = '';
+  runtimeControlsRoot.textContent = '';
+  offlineAuditRoot.textContent = '';
+  metaBrain.textContent = '';
+  list.textContent = '';
+  state.textContent = 'Loading…';
+
+  try {
+    const [overviewRes, summaryRes, recordsRes, intelligenceRes, dailyRes, trendsRes, independentRes, weeklyRes, metaBrainRes, modeControlsRes, offlineAuditRes] = await Promise.all([
+      fetch(BASE + '/admin/maintenance/analytics/overview?groupKey=architecture', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/summary?groupKey=architecture', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/architecture?limit=8', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/intelligence?groupKey=architecture', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/intelligence/daily-reviews?groupKey=architecture&reviewerRole=architecture_director&limit=1', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/intelligence/trends?groupKey=architecture&reviewerRole=architecture_director', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/intelligence/independent-eval?groupKey=architecture', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/intelligence/weekly-rollup?groupKey=architecture&reviewerRole=architecture_director', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/meta-brain/summary?repoKey=04-prism&userKey=default-user', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/modes/controls', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(BASE + '/admin/maintenance/intelligence/offline-audit', {
+        headers: HEADERS(),
+        signal: AbortSignal.timeout(5000),
+      }),
+    ]);
+
+    if (!overviewRes.ok || !summaryRes.ok || !recordsRes.ok || !intelligenceRes.ok || !dailyRes.ok || !trendsRes.ok || !independentRes.ok || !weeklyRes.ok || !metaBrainRes.ok || !modeControlsRes.ok || !offlineAuditRes.ok) {
+      throw new Error('Failed to load maintenance endpoints');
+    }
+
+    const overview = await overviewRes.json();
+    const summary = await summaryRes.json();
+    const records = await recordsRes.json();
+    const intelligence = await intelligenceRes.json();
+    const dailyReviews = await dailyRes.json();
+    const trends = await trendsRes.json();
+    const independent = await independentRes.json();
+    const weekly = await weeklyRes.json();
+    const brainSummary = await metaBrainRes.json();
+    const modeControls = await modeControlsRes.json();
+    const offlineAudit = await offlineAuditRes.json();
+
+    grid.appendChild(makeMaintenanceScoreCard('Helpfulness', overview.avgHelpfulness, 'Higher is better'));
+    grid.appendChild(makeMaintenanceScoreCard('Time Cost', overview.avgTimeCost, 'Lower is better'));
+    grid.appendChild(makeMaintenanceScoreCard('Efficiency', overview.avgEfficiency, 'Helpfulness/time'));
+    grid.appendChild(makeMaintenanceScoreCard('Automation Potential', overview.avgAutomationPotential, 'Higher means easier to automate'));
+
+    const statusCard = makeCard('Status Mix');
+    const statusMap = new Map();
+    if (Array.isArray(summary)) {
+      summary.forEach(item => {
+        if (!item || !item.status) return;
+        statusMap.set(item.status, Number(item.count || 0));
+      });
+    }
+    ['open', 'in_progress', 'blocked', 'resolved', 'archived'].forEach(status => {
+      const value = String(statusMap.get(status) || 0);
+      const rowEl = addRow(statusCard, status, value);
+      if (rowEl) rowEl.style.color = statusColor(status);
+    });
+    grid.appendChild(statusCard);
+
+    const totalCard = makeCard('Coverage');
+    addRow(totalCard, 'Analytics rows', String(overview.total || 0));
+    addRow(totalCard, 'Loaded records', Array.isArray(records) ? String(records.length) : '0');
+    grid.appendChild(totalCard);
+
+    const trendCard = makeCard('Daily Trend Delta');
+    const trendRow1 = addRow(trendCard, 'Efficiency Δ', Number(trends?.delta?.avgEfficiency || 0).toFixed(2));
+    const trendRow2 = addRow(trendCard, 'Helpfulness Δ', Number(trends?.delta?.avgHelpfulness || 0).toFixed(2));
+    const trendRow3 = addRow(trendCard, 'Automation Δ', Number(trends?.delta?.avgAutomationPotential || 0).toFixed(2));
+    const trendRow4 = addRow(trendCard, 'Candidates Δ', String(Number(trends?.delta?.automationCandidates || 0)));
+    if (trendRow1) trendRow1.style.color = Number(trends?.delta?.avgEfficiency || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+    if (trendRow2) trendRow2.style.color = Number(trends?.delta?.avgHelpfulness || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+    if (trendRow3) trendRow3.style.color = Number(trends?.delta?.avgAutomationPotential || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+    if (trendRow4) trendRow4.style.color = Number(trends?.delta?.automationCandidates || 0) >= 0 ? 'var(--green)' : 'var(--red)';
+    grid.appendChild(trendCard);
+
+    const correlationsCard = makeCard('Correlations');
+    const corrWrap = el('div', 'maint-list');
+    (Array.isArray(intelligence.correlations) ? intelligence.correlations.slice(0, 6) : []).forEach(item => {
+      const row = el('div', 'maint-list-row');
+      const left = el('span');
+      left.textContent = (item.dimension || 'dim') + ': ' + (item.value || 'n/a');
+      const right = el('span');
+      right.textContent = 'eff ' + Number(item.avgEfficiency || 0).toFixed(2) + ' | n=' + Number(item.count || 0);
+      append(row, left, right);
+      corrWrap.appendChild(row);
+    });
+    if (!corrWrap.childElementCount) {
+      const row = el('div', 'maint-list-row');
+      row.textContent = 'No correlation data yet.';
+      corrWrap.appendChild(row);
+    }
+    correlationsCard.appendChild(corrWrap);
+    intel.appendChild(correlationsCard);
+
+    const patternsCard = makeCard('Response Frequency');
+    const pattWrap = el('div', 'maint-list');
+    (Array.isArray(intelligence.responsePatterns) ? intelligence.responsePatterns.slice(0, 6) : []).forEach(item => {
+      const row = el('div', 'maint-list-row');
+      const left = el('span');
+      left.textContent = item.responseTemplate || '(template)';
+      left.title = left.textContent;
+      const right = el('span');
+      right.textContent = 'x' + Number(item.count || 0) + (item.automationReady ? ' auto' : '');
+      right.style.color = item.automationReady ? 'var(--green)' : 'var(--text-dim)';
+      append(row, left, right);
+      pattWrap.appendChild(row);
+    });
+    if (!pattWrap.childElementCount) {
+      const row = el('div', 'maint-list-row');
+      row.textContent = 'No repeated response templates yet.';
+      pattWrap.appendChild(row);
+    }
+    patternsCard.appendChild(pattWrap);
+    intel.appendChild(patternsCard);
+
+    const autoCard = makeCard('Automation Candidates');
+    const autoWrap = el('div', 'maint-list');
+    (Array.isArray(intelligence.automationCandidates) ? intelligence.automationCandidates.slice(0, 6) : []).forEach(item => {
+      const row = el('div', 'maint-list-row');
+      const left = el('span');
+      left.textContent = item.title || item.recordId || '(record)';
+      const right = el('span');
+      right.textContent = Number(item.automationPotential || 0).toFixed(2);
+      right.style.color = scoreColor(Number(item.automationPotential || 0));
+      append(row, left, right);
+      autoWrap.appendChild(row);
+    });
+    if (!autoWrap.childElementCount) {
+      const row = el('div', 'maint-list-row');
+      row.textContent = 'No high-confidence automation candidates yet.';
+      autoWrap.appendChild(row);
+    }
+    autoCard.appendChild(autoWrap);
+    intel.appendChild(autoCard);
+
+    const findingCard = makeCard('Findings');
+    const findingWrap = el('div', 'maint-list');
+    (Array.isArray(intelligence.findings) ? intelligence.findings.slice(0, 5) : []).forEach(item => {
+      const row = el('div', 'maint-list-row');
+      row.textContent = item;
+      findingWrap.appendChild(row);
+    });
+    if (!findingWrap.childElementCount) {
+      const row = el('div', 'maint-list-row');
+      row.textContent = 'No findings generated yet.';
+      findingWrap.appendChild(row);
+    }
+    findingCard.appendChild(findingWrap);
+    intel.appendChild(findingCard);
+
+    const latestDaily = Array.isArray(dailyReviews) && dailyReviews.length > 0 ? dailyReviews[0] : null;
+    if (latestDaily && latestDaily.summaryMarkdown) {
+      daily.textContent = latestDaily.summaryMarkdown;
+    } else {
+      daily.textContent = 'No daily Architecture Director summary generated yet.';
+      daily.style.color = 'var(--text-dim)';
+    }
+
+    const independentCard = makeCard('Independent Health Signals');
+    addRow(independentCard, 'HotMD fallback rate', Math.round(Number(independent?.hotmd?.fallbackRate || 0) * 100) + '%');
+    addRow(independentCard, 'Budget stopped tasks', String(Number(independent?.budget?.stoppedTasks || 0)));
+    addRow(independentCard, 'Cost accuracy flags', String(Number(independent?.budget?.flaggedCostAccuracy || 0)));
+    addRow(independentCard, 'Skill degradation Δ', Number((independent?.degradation?.deltaSuccessRate || 0) * 100).toFixed(2) + ' pts');
+    addRow(independentCard, 'Routing mismatch 24h', Math.round(Number(independent?.drift?.mismatchRate24h || 0) * 100) + '%');
+    addRow(independentCard, 'Offline confidence', Math.round(Number(independent?.offlineAudit?.avgConfidence || 0) * 100) + '%');
+    independentRoot.appendChild(independentCard);
+
+    const independentFindings = makeCard('Independent Findings');
+    const independentFindingsList = el('div', 'maint-list');
+    (Array.isArray(independent?.findings) ? independent.findings.slice(0, 6) : []).forEach(item => {
+      const row = el('div', 'maint-list-row');
+      row.textContent = item;
+      independentFindingsList.appendChild(row);
+    });
+    if (!independentFindingsList.childElementCount) {
+      const row = el('div', 'maint-list-row');
+      row.textContent = 'No independent findings reported.';
+      independentFindingsList.appendChild(row);
+    }
+    independentFindings.appendChild(independentFindingsList);
+    independentRoot.appendChild(independentFindings);
+
+    const weeklyCard = makeCard('Weekly Delta (Recent vs Prior)');
+    addRow(weeklyCard, 'Efficiency Δ', Number(weekly?.delta?.avgEfficiency || 0).toFixed(2));
+    addRow(weeklyCard, 'Automation Δ', Number(weekly?.delta?.avgAutomationPotential || 0).toFixed(2));
+    addRow(weeklyCard, 'Fallback rate Δ', Number(weekly?.delta?.avgHotmdFallbackRate || 0).toFixed(2));
+    addRow(weeklyCard, 'Drift rate Δ', Number(weekly?.delta?.avgRoutingMismatchRate || 0).toFixed(2));
+    addRow(weeklyCard, 'Degradation Δ', Number(weekly?.delta?.avgDegradationDelta || 0).toFixed(2));
+    addRow(weeklyCard, 'Offline confidence Δ', Number(weekly?.delta?.avgOfflineConfidence || 0).toFixed(2));
+    weeklyRoot.appendChild(weeklyCard);
+
+    const weeklyFindings = makeCard('Weekly Rollup Findings');
+    const weeklyFindingsList = el('div', 'maint-list');
+    (Array.isArray(weekly?.findings) ? weekly.findings.slice(0, 6) : []).forEach(item => {
+      const row = el('div', 'maint-list-row');
+      row.textContent = item;
+      weeklyFindingsList.appendChild(row);
+    });
+    if (!weeklyFindingsList.childElementCount) {
+      const row = el('div', 'maint-list-row');
+      row.textContent = 'No weekly rollup findings yet.';
+      weeklyFindingsList.appendChild(row);
+    }
+    weeklyFindings.appendChild(weeklyFindingsList);
+    weeklyRoot.appendChild(weeklyFindings);
+
+    renderRuntimeControls(runtimeControlsRoot, modeControls);
+    renderOfflineAudit(offlineAuditRoot, offlineAudit);
+
+    const brainCard = makeCard('Meta-Brain (repo/user isolated)');
+    addRow(brainCard, 'Total entries', String(brainSummary.total || 0));
+    const topTeam = Array.isArray(brainSummary.byTeam) && brainSummary.byTeam.length > 0 ? brainSummary.byTeam[0] : null;
+    const topType = Array.isArray(brainSummary.byType) && brainSummary.byType.length > 0 ? brainSummary.byType[0] : null;
+    addRow(brainCard, 'Top team', topTeam ? `${topTeam.sourceTeam} (${topTeam.count})` : 'n/a');
+    addRow(brainCard, 'Top type', topType ? `${topType.sourceType} (${topType.count})` : 'n/a');
+    metaBrain.appendChild(brainCard);
+
+    if (!Array.isArray(records) || records.length === 0) {
+      const empty = el('div');
+      empty.textContent = 'No architecture maintenance records yet.';
+      empty.style.color = 'var(--text-dim)';
+      list.appendChild(empty);
+    } else {
+      records.forEach(record => {
+        const card = el('div', 'maint-record');
+        const head = el('div', 'maint-head');
+
+        const title = el('span', 'maint-title');
+        title.textContent = record.title || '(untitled)';
+
+        const sev = el('span', 'maint-pill');
+        sev.textContent = record.severity || 'low';
+        sev.style.color = severityColor(record.severity);
+        sev.style.borderColor = severityColor(record.severity);
+
+        const st = el('span', 'maint-pill');
+        st.textContent = record.status || 'open';
+        st.style.color = statusColor(record.status);
+        st.style.borderColor = statusColor(record.status);
+
+        append(head, title, sev, st);
+        card.appendChild(head);
+
+        const meta = el('div', 'maint-meta');
+        const cat = el('span');
+        cat.textContent = 'Category: ' + (record.category || 'n/a');
+        const prio = el('span');
+        prio.textContent = 'Priority: ' + (record.priority || 'P2');
+        const conf = el('span');
+        conf.textContent = 'Confidence: ' + (record.confidence || 'unknown');
+        append(meta, cat, prio, conf);
+        card.appendChild(meta);
+
+        if (record.summary) {
+          const summaryEl = el('div', 'maint-summary');
+          summaryEl.textContent = record.summary;
+          card.appendChild(summaryEl);
+        }
+
+        list.appendChild(card);
+      });
+    }
+
+    state.textContent = 'Updated ' + new Date().toLocaleTimeString('en-US', { hour12: false });
+    state.style.color = 'var(--text-dim)';
+  } catch (err) {
+    state.textContent = 'Maintenance metrics unavailable';
+    state.style.color = 'var(--red)';
+    const msg = el('div');
+    msg.textContent = (err && err.message) ? err.message : 'Unknown error';
+    msg.style.color = 'var(--text-dim)';
+    list.appendChild(msg);
+  }
+}
+
+async function recomputeMaintenance() {
+  const state = document.getElementById('maintenance-state');
+  state.textContent = 'Recomputing…';
+  state.style.color = 'var(--amber)';
+
+  try {
+    const res = await fetch(BASE + '/admin/maintenance/analytics/recompute', {
+      method: 'POST',
+      headers: HEADERS(),
+      body: JSON.stringify({ groupKey: 'architecture' }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) throw new Error('Recompute failed');
+    await refreshMaintenance();
+  } catch {
+    state.textContent = 'Recompute failed';
+    state.style.color = 'var(--red)';
+  }
+}
+
+async function generateDailyMaintenanceReview() {
+  const state = document.getElementById('maintenance-state');
+  state.textContent = 'Generating daily review…';
+  state.style.color = 'var(--amber)';
+
+  try {
+    const res = await fetch(BASE + '/admin/maintenance/intelligence/daily-review', {
+      method: 'POST',
+      headers: HEADERS(),
+      body: JSON.stringify({ groupKey: 'architecture', reviewerRole: 'architecture_director' }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) throw new Error('Daily review generation failed');
+    await refreshMaintenance();
+  } catch {
+    state.textContent = 'Daily review failed';
+    state.style.color = 'var(--red)';
+  }
+}
+
+async function exportDailyMaintenanceReview() {
+  const state = document.getElementById('maintenance-state');
+  state.textContent = 'Exporting daily digest…';
+  state.style.color = 'var(--amber)';
+
+  try {
+    const res = await fetch(BASE + '/admin/maintenance/intelligence/export-daily', {
+      method: 'POST',
+      headers: HEADERS(),
+      body: JSON.stringify({ groupKey: 'architecture', reviewerRole: 'architecture_director' }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error('Export failed');
+    state.textContent = 'Exported: ' + (data?.export?.directory || 'ok');
+    state.style.color = 'var(--green)';
+  } catch {
+    state.textContent = 'Export failed';
+    state.style.color = 'var(--red)';
+  }
+}
+
+async function exportWeeklyMaintenanceRollup() {
+  const state = document.getElementById('maintenance-state');
+  state.textContent = 'Exporting weekly rollup…';
+  state.style.color = 'var(--amber)';
+
+  try {
+    const res = await fetch(BASE + '/admin/maintenance/intelligence/export-weekly', {
+      method: 'POST',
+      headers: HEADERS(),
+      body: JSON.stringify({ groupKey: 'architecture', reviewerRole: 'architecture_director' }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error('Weekly export failed');
+    state.textContent = 'Weekly export: ' + (data?.export?.directory || 'ok');
+    state.style.color = 'var(--green)';
+  } catch {
+    state.textContent = 'Weekly export failed';
+    state.style.color = 'var(--red)';
+  }
+}
+
+async function updateRuntimeControls(patch) {
+  const res = await fetch(BASE + '/admin/modes/controls', {
+    method: 'POST',
+    headers: HEADERS(),
+    body: JSON.stringify(patch),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to update runtime controls');
+  }
+  return res.json();
+}
+
+async function runOfflineAuditNow() {
+  const state = document.getElementById('maintenance-state');
+  state.textContent = 'Running offline audit…';
+  state.style.color = 'var(--amber)';
+  const res = await fetch(BASE + '/admin/maintenance/intelligence/offline-audit/run', {
+    method: 'POST',
+    headers: HEADERS(),
+    body: JSON.stringify({ sampleCount: 6 }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Offline audit failed');
+  }
+  state.textContent = 'Offline audit complete';
+  state.style.color = 'var(--green)';
+}
+
+function renderRuntimeControls(root, controls) {
+  root.textContent = '';
+  const card = makeCard('Runtime Toggle Matrix');
+  const wrap = el('div', 'runtime-controls');
+
+  const rows = [
+    ['promptCleanBeforeDelegate', 'Prompt cleaning before delegation'],
+    ['preferOfflineRouting', 'Prefer offline/local routing'],
+    ['offlineAuditEnabled', 'Enable offline confidence audit loop'],
+  ];
+
+  rows.forEach(([key, labelText]) => {
+    const row = el('div', 'runtime-control-row');
+    const label = el('label');
+    label.textContent = labelText;
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = Boolean(controls?.[key]);
+    checkbox.addEventListener('change', async () => {
+      try {
+        await updateRuntimeControls({ [key]: checkbox.checked });
+        await refreshMaintenance();
+      } catch (err) {
+        checkbox.checked = !checkbox.checked;
+        const state = document.getElementById('maintenance-state');
+        state.textContent = (err && err.message) ? err.message : 'Toggle update failed';
+        state.style.color = 'var(--red)';
+      }
+    });
+    append(row, label, checkbox);
+    wrap.appendChild(row);
+  });
+
+  card.appendChild(wrap);
+  root.appendChild(card);
+}
+
+function renderOfflineAudit(root, payload) {
+  root.textContent = '';
+  const card = makeCard('Latest Offline Audit');
+  addRow(card, 'Enabled', payload?.enabled ? 'yes' : 'no');
+  addRow(card, 'Available', payload?.available ? 'yes' : 'no');
+  const latest = payload?.latest || null;
+  if (latest) {
+    addRow(card, 'Generated', latest.generatedAt || 'n/a');
+    addRow(card, 'Model', latest.model || 'n/a');
+    addRow(card, 'Samples', String(latest.sampleCount || 0));
+    addRow(card, 'Avg confidence', Math.round(Number(latest.avgConfidence || 0) * 100) + '%');
+    addRow(card, 'Low-confidence', String(latest.lowConfidenceCount || 0));
+  }
+
+  const actions = el('div', 'maint-actions');
+  const runBtn = el('button', 'btn-secondary');
+  runBtn.type = 'button';
+  runBtn.textContent = 'Run Offline Audit Now';
+  runBtn.disabled = !payload?.enabled;
+  runBtn.addEventListener('click', async () => {
+    try {
+      await runOfflineAuditNow();
+      await refreshMaintenance();
+    } catch (err) {
+      const state = document.getElementById('maintenance-state');
+      state.textContent = (err && err.message) ? err.message : 'Offline audit failed';
+      state.style.color = 'var(--red)';
+    }
+  });
+  actions.appendChild(runBtn);
+  card.appendChild(actions);
+
+  root.appendChild(card);
+}
+
+document.getElementById('btn-maintenance-refresh').addEventListener('click', refreshMaintenance);
+document.getElementById('btn-maintenance-recompute').addEventListener('click', recomputeMaintenance);
+document.getElementById('btn-maintenance-daily').addEventListener('click', generateDailyMaintenanceReview);
+document.getElementById('btn-maintenance-export').addEventListener('click', exportDailyMaintenanceReview);
+document.getElementById('btn-maintenance-export-weekly').addEventListener('click', exportWeeklyMaintenanceRollup);
+
+// ─── Auto-refresh ─────────────────────────────────────────────────────────────
+setInterval(() => {
+  const active = document.querySelector('.tab.active');
+  if (active && active.dataset.tab === 'services') refreshServices();
+  if (active && active.dataset.tab === 'system')   refreshSystem();
+  if (active && active.dataset.tab === 'maintenance') refreshMaintenance();
+}, 10000);
+
+// ─── Role registry ────────────────────────────────────────────────────────────
+let _roles = {};
+
+async function loadRoles() {
+  try {
+    const r = await fetch(BASE + '/api/delegate/roles', { headers: HEADERS(), signal: AbortSignal.timeout(3000) });
+    if (!r.ok) return;
+    _roles = await r.json();
+    const sel = document.getElementById('role');
+    Object.entries(_roles).forEach(([id, def]) => {
+      const opt = el('option');
+      opt.value = id;
+      opt.textContent = id + ' — ' + (def.description || '').split('.')[0];
+      sel.appendChild(opt);
+    });
+  } catch {}
+}
+
+document.getElementById('role').addEventListener('change', function() {
+  const desc = document.getElementById('role-desc');
+  desc.textContent = '';
+  const def = _roles[this.value];
+  if (def) {
+    const parts = [];
+    if (def.preferredProvider) parts.push('provider: ' + def.preferredProvider);
+    if (def.priority) parts.push('priority: ' + def.priority);
+    if (def.task && def.task.claudeModelTier) parts.push('tier: ' + def.task.claudeModelTier);
+    desc.textContent = parts.join(' · ');
+  }
+});
+
+// Also add role to history and meta bar
+const _origBuildMetaBar = buildMetaBar;
+function buildMetaBar(data) {
+  _origBuildMetaBar(data);
+  if (data.role) {
+    const kv = el('div', 'meta-kv');
+    const kEl = el('span', 'meta-k');
+    kEl.textContent = 'role:';
+    const vEl = el('span', 'meta-v');
+    vEl.style.color = 'var(--brass)';
+    vEl.textContent = data.role;
+    append(kv, kEl, vEl);
+    metaBar.appendChild(kv);
+  }
+}
+
+// Initial load
+loadRoles();
+pollGen();
+</script>
+</body>
+</html>

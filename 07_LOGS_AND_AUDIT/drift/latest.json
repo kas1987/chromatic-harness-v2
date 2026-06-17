@@ -1,12 +1,10 @@
 {
   "audit": {
-    "current_entries": 54,
+    "current_entries": 58,
     "expected_entries": 12,
     "missing_required": [],
     "added_unexpected": [
-      ",m.get(wiki_dest)) for m in matches[",
-      "0)",
-      "0))",
+      "'",
       "00_META",
       "01_STATE",
       "02_DOCS",
@@ -20,30 +18,36 @@
       "11_SANDBOX_LAB",
       "AGENTS.md",
       "ARTIFACT_MANIFEST.json",
+      "CHROMATIC_TREES.md",
       "CHROMATIC_VISUAL_CONTROL_PLANE_INDEX.md",
       "DEPLOYMENT_GUIDE.md",
       "GOVERNANCE_AND_ROUTING_ARCHITECTURE.md",
       "GOVERNANCE_EXPANSION_GATE.md",
+      "HARNESS_HEALTH_DASHBOARD.md",
       "INTEGRATION_TEST.ts",
       "OPTION_C_COMPLETE.md",
       "PACKAGE_FILE_INDEX.txt",
       "README.md",
       "VALIDATION_MATRIX.md",
-      "__bh_autoloop_ec.txt",
-      "__bh_autoloop_out.txt",
       "__pycache__",
+      "agent_handoffs",
+      "assets",
       "config",
       "dashboards",
       "examples",
-      "hook_audit.json",
+      "git_hooks",
       "hooks",
+      "issues",
       "mypy.ini",
       "pytest.ini",
+      "queue",
+      "registry",
+      "reports",
       "requirements.txt",
       "schemas",
-      "server_stderr.txt",
-      "server_stdout.txt",
       "src",
+      "state",
+      "templates",
       "tools",
       "visual_node_registry.json"
     ]
@@ -62,16 +66,20 @@
     "passed": true
   },
   "drift": {
-    "status": "baseline_created",
-    "score": 100,
-    "added": [],
+    "status": "ok",
+    "score": 97,
+    "added": [
+      "'"
+    ],
     "removed": [],
     "trend": "stable"
   },
-  "score": 100,
+  "score": 97,
   "trend": "stable",
   "missing_protected": [],
-  "recommendations": [],
+  "recommendations": [
+    "confirm whether new top-level entry is intentional: '"
+  ],
   "passed": true,
-  "timestamp": "20260601T024001Z"
+  "timestamp": "20260616T230743Z"
 }

@@ -40,7 +40,7 @@ def test_self_heal_cycle_runs_intake_and_second_go(monkeypatch, capsys):
     )
     monkeypatch.setattr(
         "sys.argv",
-        ["workflow_self_heal_cycle.py", "--limit", "3"],
+        ["workflow_self_heal_cycle.py", "--limit", "3", "--branch-mode", "off"],
     )
     rc = cycle.main()
     out = json.loads(capsys.readouterr().out)

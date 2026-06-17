@@ -1,0 +1,13 @@
+{
+  "mission_id": "D-OK-001",
+  "objective": "Run a bounded read-only audit of the intake queue.",
+  "agent_role": "agent_lead",
+  "autonomy_level": "L2",
+  "confidence_score": 80,
+  "allowed_tools": ["read", "search"],
+  "allowed_files": ["07_LOGS_AND_AUDIT/intake_queue.jsonl"],
+  "forbidden_files": [".env", "secrets/*"],
+  "stop_conditions": ["scope expands beyond audit"],
+  "required_output": ["summary", "findings"],
+  "metadata": { "mode": "operator" }
+}

@@ -22,7 +22,7 @@ jobs:
         continue-on-error: true
         with:
           client-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }} # pragma: allowlist secret
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
 
       - uses: actions/checkout@v6
         with:
@@ -146,6 +146,17 @@ jobs:
 
       - name: Schema registry validation
         run: python scripts/validate_schema_registry.py
+
+      - name: Mission packet validation (templates + examples)
+        run: |
+          python scripts/validate_mission_packet.py MISSIONS/templates/M1_BASIC_TEMPLATE.yaml
+          python scripts/validate_mission_packet.py MISSIONS/templates/M2_INTERMEDIATE_TEMPLATE.yaml
+          python scripts/validate_mission_packet.py MISSIONS/templates/M3_COMPLEX_TEMPLATE.yaml
+          python scripts/validate_mission_packet.py MISSIONS/templates/M4_ATOMIC_TEMPLATE.yaml
+          python scripts/validate_mission_packet.py MISSIONS/examples/dispatch_valid_L2_operator.json
+          python scripts/validate_mission_packet.py MISSIONS/examples/lifecycle_M2_plus_L1.yaml
+          python scripts/validate_mission_packet.py MISSIONS/examples/M3_example_review_daemon_recovery.yaml
+          python -m pytest tests/test_mission_packet_validator.py -q
 
       - name: Intake close-loop validation (dry-run)
         run: python scripts/validate_intake_loop.py

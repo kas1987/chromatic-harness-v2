@@ -77,7 +77,7 @@ def test_complete_mission_writes_agent_run_log():
                 objective="scaffold new module",
                 agent_role="builder",
                 autonomy_level="L1",
-                confidence_required=80.0,
+                confidence_required=80,
                 allowed_tools=["filesystem.read", "filesystem.write"],
                 stop_conditions=["confidence_below_threshold"],
                 required_outputs=["summary"],

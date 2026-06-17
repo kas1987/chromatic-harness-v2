@@ -1,0 +1,61 @@
+mission_id: M2-LOG-001
+level: M2
+status: draft
+title: "Create agent error log ingestion path"
+objective: "Define and scaffold a basic flow for collecting Harness agent errors into a centralized log."
+background: "Harness activity occurs across multiple IDEs, agents, and terminals. Errors need to be collected for fixes and learning loops."
+scope:
+  - "Create docs/logging-intake.md"
+  - "Define log fields"
+  - "Add example JSON log entry"
+out_of_scope:
+  - "Production deployment"
+  - "External observability vendor integration"
+success_criteria:
+  - "A standard error intake format exists."
+  - "Agents know where to write or hand off errors."
+acceptance_criteria:
+  - "Document includes source, timestamp, agent, error class, evidence, and proposed fix fields."
+constraints:
+  - "No secrets in logs."
+dependencies:
+  - "MISSION_LOG.md"
+risks:
+  - risk: "Logs may contain secrets."
+    mitigation: "Add redaction rule."
+resource_impact: "Low. Documentation and schema only."
+plan:
+  - "Create intake doc."
+  - "Add example log object."
+  - "Queue follow-up validator task."
+allowed_files:
+  - "docs/logging-intake.md"
+  - "MISSION_LOG.md"
+forbidden_files:
+  - ".env"
+  - "secrets/*"
+allowed_tools:
+  - "read"
+  - "write"
+tool_budget:
+  max_total: 5
+  max_search: 1
+  max_read: 2
+  max_write: 1
+  max_execute: 1
+confidence_score: 82
+risk_level: medium
+test_strategy:
+  - "Self-review schema completeness."
+rollback: "Remove created docs or revert commit."
+reviewers:
+  required_count: 1
+approval_required: true
+stop_conditions:
+  - "Need to inspect secrets."
+  - "Scope expands into production logging."
+required_output:
+  - summary
+  - files_changed
+  - validation_result
+  - next_task

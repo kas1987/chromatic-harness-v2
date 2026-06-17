@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "command-center",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "05_FRONTEND_CONSOLE",
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}

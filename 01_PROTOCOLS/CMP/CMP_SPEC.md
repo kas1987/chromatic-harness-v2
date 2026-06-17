@@ -23,12 +23,12 @@ CMP is the control plane for Chromatic Harness. It defines what may happen, who 
 - autonomy_level
 - allowed_tools
 - forbidden_tools
-- allowed_paths
-- forbidden_paths
-- confidence_required
+- allowed_files
+- forbidden_files
+- confidence_score
 - risk_level
 - stop_conditions
-- required_outputs
+- required_output
 - evidence_required
 
 ## Core Rule

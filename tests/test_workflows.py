@@ -290,7 +290,7 @@ def test_orchestrator_create_mission_from_task():
         }
     )
     assert mission.agent_role == "worker"
-    assert mission.confidence_required == 80
+    assert mission.confidence_score == 80
     assert mission.metadata["bead_id"] == "chromatic-harness-v2-test"
 
 

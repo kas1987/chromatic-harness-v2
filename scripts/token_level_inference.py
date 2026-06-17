@@ -18,6 +18,7 @@ keep the prior behaviour for genuinely unknown models rather than guessing.
     from token_level_inference import infer_levels
     c, t, conf = infer_levels("claude-opus-4-8[1m]")   # ("C4", "T4", "inferred")
 """
+
 from __future__ import annotations
 
 import re
@@ -88,5 +89,6 @@ def classify_event(event: dict) -> dict:
 
 if __name__ == "__main__":  # tiny smoke CLI
     import sys
+
     for m in sys.argv[1:] or ["claude-opus-4-8", "claude-sonnet-4-6", "qwen2.5-14b", "???"]:
         print(m, "->", infer_levels(m))

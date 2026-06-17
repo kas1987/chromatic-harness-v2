@@ -27,11 +27,14 @@ def _run_go() -> dict:
         timeout=120,
     )
     raw = (proc.stdout or "").strip()
-    line = raw.split("\n")[-1] if raw else "{}"
     try:
-        data = json.loads(line)
+        data = json.loads(raw) if raw else {}
     except json.JSONDecodeError:
-        data = {"error": "invalid_json", "raw": raw[:2000], "returncode": proc.returncode}
+        line = raw.split("\n")[-1] if raw else "{}"
+        try:
+            data = json.loads(line)
+        except json.JSONDecodeError:
+            data = {"error": "invalid_json", "raw": raw[:2000], "returncode": proc.returncode}
     data["_returncode"] = proc.returncode
     return data
 
@@ -51,9 +54,40 @@ def _run_auto_intake(limit: int) -> dict:
     return data
 
 
+def _run_branch_autonomy(mode: str, apply: bool) -> dict:
+    cmd = [
+        PYTHON,
+        str(REPO / "scripts" / "branch_governance_autonomy.py"),
+        "--mode",
+        mode,
+        "--write",
+    ]
+    if apply:
+        cmd.append("--apply")
+    proc = run_safe(cmd, cwd=REPO, timeout=300)
+    raw = (proc.stdout or "").strip()
+    try:
+        data = json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        data = {"error": "invalid_json", "stderr": (proc.stderr or "")[:500]}
+    data["_returncode"] = proc.returncode
+    return data
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Self-heal closed loop for workflow_go")
     parser.add_argument("--limit", type=int, default=10, help="auto_intake batch limit")
+    parser.add_argument(
+        "--branch-mode",
+        choices=["off", "local", "subagent", "cloud"],
+        default="local",
+        help="branch governance self-heal execution mode during self_heal loop",
+    )
+    parser.add_argument(
+        "--branch-apply",
+        action="store_true",
+        help="allow mutating branch cleanup actions when branch mode supports it",
+    )
     args = parser.parse_args()
 
     first = _run_go()
@@ -72,6 +106,17 @@ def main() -> int:
     intake = _run_auto_intake(args.limit)
     summary["intake"] = intake
     summary["passes"].append({"phase": "auto_intake", "processed": intake.get("processed")})
+
+    if args.branch_mode != "off":
+        branch = _run_branch_autonomy(args.branch_mode, args.branch_apply)
+        summary["branch_autonomy"] = branch
+        summary["passes"].append(
+            {
+                "phase": "branch_autonomy",
+                "mode": args.branch_mode,
+                "ok": branch.get("_returncode") == 0,
+            }
+        )
 
     second = _run_go()
     summary["passes"].append({"phase": "go_after_intake", "decision": second.get("decision")})

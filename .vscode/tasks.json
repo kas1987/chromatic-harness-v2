@@ -115,7 +115,11 @@
       "type": "shell",
       "command": "python scripts/validate_event_schema.py",
       "detail": "Validate 00_META/observability/ERROR_LOG.jsonl against the event schema.",
-      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
       "problemMatcher": []
     },
     {
@@ -123,7 +127,11 @@
       "type": "shell",
       "command": "python scripts/detect_file_collisions.py",
       "detail": "Report active-writer collisions from the file-claim register.",
-      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
       "problemMatcher": []
     },
     {
@@ -131,7 +139,11 @@
       "type": "shell",
       "command": "python scripts/snapshot_git_state.py",
       "detail": "Capture branch/commit/dirty + changed-file breakdown to .chromatic/.",
-      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
       "problemMatcher": []
     },
     {
@@ -139,7 +151,11 @@
       "type": "shell",
       "command": "python scripts/summarize_error_patterns.py",
       "detail": "Aggregate recurring error signatures from the event log.",
-      "presentation": { "reveal": "always", "panel": "shared", "focus": true },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true
+      },
       "problemMatcher": []
     },
     {
@@ -151,6 +167,85 @@
         "Observability: Snapshot git state",
         "Observability: Summarize error patterns"
       ],
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Branch Governance: Autonomy Local (Dry Run)",
+      "type": "shell",
+      "command": "python scripts/branch_governance_autonomy.py --mode local --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Branch Governance: Autonomy Local (Apply)",
+      "type": "shell",
+      "command": "python scripts/branch_governance_autonomy.py --mode local --apply --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Branch Governance: Autonomy Subagent",
+      "type": "shell",
+      "command": "python scripts/branch_governance_autonomy.py --mode subagent --spawn-subagent --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Branch Governance: Autonomy Cloud",
+      "type": "shell",
+      "command": "python scripts/branch_governance_autonomy.py --mode cloud --include-ci-weekly --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Branch Governance: Audit + Autonomy (Dry Run)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Branch Governance: Autonomy Local (Dry Run)"
+      ],
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "SWOT Autonomy: Dry Run",
+      "type": "shell",
+      "command": "python scripts/swot_autonomy_loop.py --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "SWOT Autonomy: Drain (Dry Run)",
+      "type": "shell",
+      "command": "python scripts/swot_autonomy_loop.py --drain --branch-mode local --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "SWOT Autonomy: Apply + Drain",
+      "type": "shell",
+      "command": "python scripts/swot_autonomy_loop.py --apply --drain --close-generated --branch-mode local --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "SWOT Autonomy: Extensive Live Matrix",
+      "type": "shell",
+      "command": "python scripts/swot_autonomy_loop.py --write --audit-strict ; python scripts/swot_autonomy_loop.py --drain --branch-mode local --write --audit-strict ; python scripts/swot_autonomy_loop.py --drain --branch-mode subagent --write --audit-strict ; python scripts/swot_autonomy_loop.py --drain --branch-mode cloud --write --audit-strict ; python scripts/swot_autonomy_loop.py --drain --branch-mode local --write --audit-strict --fail-on-audit",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "SWOT Autonomy: Cleanup Duplicates (Dry Run)",
+      "type": "shell",
+      "command": "python scripts/swot_autonomy_loop.py --cleanup-duplicates --write",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "SWOT Autonomy: Cleanup Duplicates (Apply)",
+      "type": "shell",
+      "command": "python scripts/swot_autonomy_loop.py --cleanup-duplicates --cleanup-apply --write",
       "group": "none",
       "problemMatcher": []
     }

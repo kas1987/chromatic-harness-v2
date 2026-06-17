@@ -1,0 +1,73 @@
+{
+  "classify-route": {
+    "steps": [
+      { "provider": "gemma", "localModelTag": "gemma3:4b" },
+      { "provider": "ollama", "localModelTag": "qwen3:4b" },
+      { "provider": "claude" }
+    ]
+  },
+  "prompt-normalize": {
+    "steps": [
+      { "provider": "gemma", "localModelTag": "gemma3:4b" },
+      { "provider": "ollama", "localModelTag": "qwen3:4b" },
+      { "provider": "claude" }
+    ]
+  },
+  "policy-risk-check": {
+    "steps": [
+      { "provider": "gemma", "localModelTag": "gemma3:4b" },
+      { "provider": "ollama", "localModelTag": "qwen3:8b" },
+      { "provider": "claude" }
+    ]
+  },
+  "code-small-edit": {
+    "steps": [
+      { "provider": "ollama", "localModelTag": "qwen2.5-coder:14b" },
+      { "provider": "ollama", "localModelTag": "qwen2.5-coder:7b" },
+      { "provider": "claude" }
+    ]
+  },
+  "code-complex-refactor": {
+    "steps": [
+      { "provider": "ollama", "localModelTag": "qwen2.5-coder:14b" },
+      { "provider": "ollama", "localModelTag": "deepseek-r1:8b" },
+      { "provider": "claude" }
+    ]
+  },
+  "architecture-decision": {
+    "steps": [
+      { "provider": "ollama", "localModelTag": "deepseek-r1:8b" },
+      { "provider": "ollama", "localModelTag": "qwen2.5-coder:14b" },
+      { "provider": "claude" }
+    ]
+  },
+  "test-generation": {
+    "steps": [
+      { "provider": "ollama", "localModelTag": "qwen2.5-coder:14b" },
+      { "provider": "ollama", "localModelTag": "qwen2.5-coder:7b" },
+      { "provider": "claude" }
+    ]
+  },
+  "review-summary": {
+    "steps": [
+      { "provider": "gemma", "localModelTag": "gemma3:4b" },
+      { "provider": "ollama", "localModelTag": "qwen3:4b" },
+      { "provider": "claude" }
+    ]
+  },
+  "longform-final-user-answer": {
+    "steps": [
+      { "provider": "ollama", "localModelTag": "qwen3:8b" },
+      { "provider": "ollama", "localModelTag": "deepseek-r1:8b" },
+      { "provider": "claude" }
+    ]
+  },
+  "vision-triage": {
+    "steps": [
+      { "provider": "ollama", "localModelTag": "qwen3-vl:8b" },
+      { "provider": "ollama", "localModelTag": "llava:7b" },
+      { "provider": "claude" },
+      { "provider": "gpt" }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+# Budget system Prometheus alerts
+groups:
+  - name: gen_budget
+    rules:
+      - alert: MonthlyModelBudget80Pct
+        expr: |
+          (budget_model_spent_usd / budget_model_allocated_usd) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Monthly model budget 80% consumed for {{ $labels.model }}"
+          description: "Model {{ $labels.model }} has used {{ $value | humanizePercentage }} of its monthly budget"
+
+      - alert: DailyTokenBudget80Pct
+        expr: |
+          sum(budget_tokens_used_today) by (agent_role) / budget_max_tokens_per_day > 0.8
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Daily token budget 80% consumed for role {{ $labels.agent_role }}"
+
+      - alert: DailyTokenBudgetExceeded
+        expr: |
+          sum(budget_tokens_used_today) by (agent_role) / budget_max_tokens_per_day >= 1.0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Daily token budget EXCEEDED for role {{ $labels.agent_role }}"
+
+      - alert: BudgetTokenCountingGap
+        expr: |
+          increase(budget_audit_gaps_total[1h]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Token counting gaps detected (> 5 in last hour)"
+          description: "Claude API responses may not be returning token counts"

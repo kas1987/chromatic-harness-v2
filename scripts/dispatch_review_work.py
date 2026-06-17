@@ -110,7 +110,7 @@ def create_bead(item: Dict[str, Any], bd_bin: str = "bd") -> str | None:
         f"Links:\n{links}".strip()
     )
     cmd = [
-        bd_path,
+        bd_bin,
         "create",
         title,
         "--priority",

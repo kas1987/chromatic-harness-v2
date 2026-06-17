@@ -52,7 +52,7 @@ class TestAgentLead:
         mission = {
             "mission_id": "CHR-LEAD-1",
             "objective": "Implement user authentication module",
-            "confidence_required": 75.0,
+            "confidence_score": 75.0,
             "autonomy_level": "L2",
         }
         output = AgentLead().run(mission, self._sample_events())
@@ -73,7 +73,7 @@ class TestAgentLead:
         mission = {
             "mission_id": "CHR-RISK",
             "objective": "Deploy production hotfix",
-            "confidence_required": 90.0,
+            "confidence_score": 90.0,
         }
         events = [
             MagnetEvent(
@@ -96,7 +96,7 @@ class TestAgentLead:
         mission = {
             "mission_id": "CHR-OK",
             "objective": "Add logging to router",
-            "confidence_required": 60.0,
+            "confidence_score": 60.0,
         }
         output = AgentLead().run(mission, self._sample_events())
         if output.decision in ("proceed", "proceed_reversible_only"):

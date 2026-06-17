@@ -1,0 +1,21 @@
+asset_pack_id: default_neon
+display_name: Default Neon Command Center
+description: Dark tactical UI with purple CMP, blue runtime, green MCP, gold Magnets, teal Beads.
+theme_tokens:
+  background: "#05070d"
+  panel: "#0d1320"
+  text: "#e6edf7"
+  muted: "#7d8799"
+layer_colors:
+  cmp: "#8b5cf6"
+  runtime: "#3b82f6"
+  mcp: "#22c55e"
+  magnets: "#fbbf24"
+  beads: "#14b8a6"
+  risk: "#ef4444"
+icon_style: neon-outline
+panel_style: glass-dark
+background_prompt: "dark futuristic command center interface, neon glass panels, purple blue green gold accents"
+component_notes:
+  - Use for default Operator mode.
+  - Preserve high contrast for operational readability.
