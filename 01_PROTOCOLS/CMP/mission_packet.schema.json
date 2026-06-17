@@ -1,48 +1,105 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Chromatic Mission Packet",
+  "title": "Chromatic Mission Packet (Unified)",
+  "description": "Single superset schema for the whole mission lifecycle. BASE fields are required for every packet. The PLAN profile (triggered by `level`) adds M1-M4 governance requirements; the DISPATCH profile (triggered by `autonomy_level`) adds runtime-contract requirements. A full-lifecycle packet carries both. L5 autonomy requires metadata.human_approved=true (enforced here AND in the validator). Governance field names are canonical: allowed_files/forbidden_files (not *_paths), required_output (not required_outputs), confidence_score int (not confidence_required float). Kept in lockstep with MISSIONS/scripts/validate_mission_packet.py.",
   "type": "object",
-  "required": ["mission_id", "objective", "agent_role", "autonomy_level", "confidence_required", "allowed_tools", "stop_conditions", "required_outputs"],
+  "required": ["mission_id", "objective", "confidence_score", "stop_conditions", "required_output"],
   "properties": {
-    "mission_id": {"type": "string"},
-    "objective": {"type": "string"},
-    "source_intent": {"type": "string"},
-    "agent_role": {"type": "string"},
-    "model": {"type": "string"},
+    "mission_id": { "type": "string" },
+    "level": { "enum": ["M1", "M2", "M3", "M4"] },
+    "status": { "enum": ["draft", "review", "approved", "active", "blocked", "closed"] },
+    "title": { "type": "string" },
+    "objective": { "type": "string" },
+    "source_intent": { "type": "string" },
+    "background": { "type": "string" },
+    "scope": { "type": "array", "items": { "type": "string" } },
+    "out_of_scope": { "type": "array", "items": { "type": "string" } },
+    "success_criteria": { "type": "array", "items": { "type": "string" } },
+    "acceptance_criteria": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array" },
+    "dependencies": { "type": "array" },
+    "integration_points": { "type": "array" },
+    "risks": { "type": "array" },
+
+    "agent_role": { "type": "string" },
+    "model": { "type": "string" },
     "autonomy_level": {
-      "type": "string",
       "enum": ["L0", "L1", "L2", "L3", "L4", "L5"],
-      "$comment": "L0-L4 may be set by prompt modes (operator/auditor/designer). L5 requires metadata.human_approved=true; the validator rejects L5 without it."
+      "$comment": "L0-L4 may be set by prompt modes (operator/auditor/designer). L5 requires metadata.human_approved=true."
     },
-    "confidence_required": {"type": "number", "minimum": 0, "maximum": 100},
-    "risk_level": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
-    "allowed_tools": {"type": "array", "items": {"type": "string"}},
-    "forbidden_tools": {"type": "array", "items": {"type": "string"}},
-    "allowed_paths": {"type": "array", "items": {"type": "string"}},
-    "forbidden_paths": {"type": "array", "items": {"type": "string"}},
-    "tool_budget": {"type": "object"},
-    "stop_conditions": {"type": "array", "items": {"type": "string"}},
-    "required_outputs": {"type": "array", "items": {"type": "string"}},
-    "evidence_required": {"type": "array", "items": {"type": "string"}},
+
+    "confidence_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "risk_level": { "enum": ["low", "medium", "high", "critical"] },
+
+    "allowed_tools": { "type": "array", "items": { "type": "string" } },
+    "forbidden_tools": { "type": "array", "items": { "type": "string" } },
+    "allowed_files": { "type": "array", "items": { "type": "string" } },
+    "forbidden_files": { "type": "array", "items": { "type": "string" } },
+    "tool_budget": {
+      "type": "object",
+      "required": ["max_total"],
+      "properties": {
+        "max_total": { "type": "integer", "minimum": 0 },
+        "max_search": { "type": "integer", "minimum": 0 },
+        "max_read": { "type": "integer", "minimum": 0 },
+        "max_write": { "type": "integer", "minimum": 0 },
+        "max_execute": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "stop_conditions": { "type": "array", "items": { "type": "string" } },
+    "required_output": { "type": "array", "items": { "type": "string" } },
+    "evidence_required": { "type": "array", "items": { "type": "string" } },
+
     "metadata": {
       "type": "object",
       "properties": {
-        "human_approved": {
-          "type": "boolean",
-          "default": false,
-          "$comment": "Must be true for autonomy_level=L5. Never set by prompt modes."
-        },
-        "mode": {
-          "type": "string",
-          "enum": ["operator", "auditor", "designer"],
-          "$comment": "Advisory only. Does not override CMP gate decisions."
-        },
-        "mode_autonomy_ceiling": {
-          "type": "string",
-          "enum": ["L0", "L1", "L2", "L3", "L4"],
-          "$comment": "Maximum autonomy_level a mode may suggest. Always <= L4."
+        "human_approved": { "type": "boolean", "default": false },
+        "mode": { "enum": ["operator", "auditor", "designer"] },
+        "mode_autonomy_ceiling": { "enum": ["L0", "L1", "L2", "L3", "L4"] }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "PLAN profile — required when a complexity level is declared.",
+      "if": { "required": ["level"] },
+      "then": { "required": ["title", "scope", "success_criteria", "acceptance_criteria", "allowed_files", "forbidden_files", "tool_budget", "risk_level"] }
+    },
+    {
+      "if": { "properties": { "level": { "const": "M1" } }, "required": ["level"] },
+      "then": { "required": ["plan", "validation"] }
+    },
+    {
+      "if": { "properties": { "level": { "const": "M2" } }, "required": ["level"] },
+      "then": { "required": ["background", "out_of_scope", "dependencies", "risks", "plan", "test_strategy", "rollback", "reviewers", "approval_required"] }
+    },
+    {
+      "if": { "properties": { "level": { "const": "M3" } }, "required": ["level"] },
+      "then": { "required": ["background", "out_of_scope", "dependencies", "integration_points", "risks", "detailed_plan", "test_strategy", "rollback_plan", "impact_assessment", "reviewers", "approval_required"] }
+    },
+    {
+      "if": { "properties": { "level": { "const": "M4" } }, "required": ["level"] },
+      "then": { "required": ["background", "out_of_scope", "dependencies", "stakeholder_map", "threat_model", "communication_plan", "risks", "full_impact_assessment", "comprehensive_plan", "test_strategy", "rollback_plan", "formal_approval"] }
+    },
+    {
+      "$comment": "DISPATCH profile — required when an autonomy level is declared.",
+      "if": { "required": ["autonomy_level"] },
+      "then": { "required": ["agent_role", "allowed_tools"] }
+    },
+    {
+      "$comment": "L5 autonomy gate — must be explicitly human-approved.",
+      "if": { "properties": { "autonomy_level": { "const": "L5" } }, "required": ["autonomy_level"] },
+      "then": {
+        "required": ["metadata"],
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "required": ["human_approved"],
+            "properties": { "human_approved": { "const": true } }
+          }
         }
       }
     }
-  }
+  ]
 }

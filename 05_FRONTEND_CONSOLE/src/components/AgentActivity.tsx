@@ -6,7 +6,7 @@ interface Mission {
   mission_id: string;
   objective: string;
   status: "pending" | "running" | "completed" | "failed";
-  confidence_required: number;
+  confidence_score: number;
   autonomy_level: number;
   magnets: string[];
   stop_conditions: string[];

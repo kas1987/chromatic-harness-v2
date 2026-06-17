@@ -10,7 +10,7 @@ interface ConfidenceGateProps {
 }
 
 export default function ConfidenceGate({ mission, events, goMode }: ConfidenceGateProps) {
-  const pct = goMode?.confidence?.score ?? mission?.confidence_required ?? 0;
+  const pct = goMode?.confidence?.score ?? mission?.confidence_score ?? 0;
   const riskEvents = events.filter((e) => e.risk_delta > 0.1).length;
 
   const gateDecision =

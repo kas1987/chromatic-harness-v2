@@ -172,7 +172,7 @@ export default function ConsolePage() {
     (selected ? "Awaiting Agent Lead Decision" : "Select a mission");
   const conf = reviews[0]
     ? Math.round(reviews[0].confidence_score * 100)
-    : (selected?.confidence_required ?? 0);
+    : (selected?.confidence_score ?? 0);
 
   // Known magnet names (used for dot row in panel c)
   const knownMagnets = selected?.magnets ?? [];
@@ -587,7 +587,7 @@ export default function ConsolePage() {
                     <span style={{ color: theme.accent, fontWeight: 600 }}>{m.mission_id}</span>
                     <span style={{ marginLeft: 8, color: "#94a3b8" }}>{m.objective.slice(0, 55)}</span>
                     <div style={{ marginTop: 2, fontSize: 9, color: "#475569" }}>
-                      conf={m.confidence_required} · {m.magnets.length} magnets · {m.status}
+                      conf={m.confidence_score} · {m.magnets.length} magnets · {m.status}
                     </div>
                   </div>
                 ))}

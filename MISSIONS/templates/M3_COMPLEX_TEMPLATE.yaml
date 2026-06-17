@@ -1,0 +1,47 @@
+mission_id: M3-000
+level: M3
+status: draft
+title: ""
+objective: ""
+background: ""
+scope: []
+out_of_scope: []
+success_criteria: []
+acceptance_criteria: []
+constraints: []
+dependencies: []
+integration_points: []
+risks:
+  - risk: ""
+    impact: ""
+    likelihood: ""
+    mitigation: ""
+resource_impact: ""
+detailed_plan: []
+allowed_files: []
+forbidden_files: []
+allowed_tools: []
+tool_budget:
+  max_total: 10
+  max_search: 2
+  max_read: 5
+  max_write: 2
+  max_execute: 1
+confidence_score: 80
+risk_level: high
+test_strategy:
+  unit: []
+  integration: []
+  regression: []
+rollback_plan: []
+impact_assessment: ""
+reviewers:
+  required_count: 2
+approval_required: true
+stop_conditions: []
+required_output:
+  - implementation_summary
+  - diff_summary
+  - validation_evidence
+  - risk_update
+  - next_task

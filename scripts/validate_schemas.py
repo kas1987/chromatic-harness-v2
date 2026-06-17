@@ -50,10 +50,10 @@ KNOWN_GOOD = {
             "objective": "Validate schema harness end-to-end",
             "agent_role": "agent_lead",
             "autonomy_level": "L2",
-            "confidence_required": 80.0,
+            "confidence_score": 80,
             "allowed_tools": ["bash", "read"],
             "stop_conditions": ["drift > 20"],
-            "required_outputs": ["report", "bead"],
+            "required_output": ["report", "bead"],
         },
     ),
     "CreateEventRequest": (

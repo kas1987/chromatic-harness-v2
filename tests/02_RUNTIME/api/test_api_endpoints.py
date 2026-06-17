@@ -312,7 +312,7 @@ class TestMissions:
         data = self._create(client)
         assert data["agent_role"] == "agent_lead"
         assert data["autonomy_level"] == "L1"
-        assert data["confidence_required"] == 75.0
+        assert data["confidence_score"] == 75.0
 
     def test_create_mission_custom_fields(self, client: TestClient) -> None:
         resp = client.post(
@@ -321,17 +321,17 @@ class TestMissions:
                 "objective": "Custom",
                 "agent_role": "specialist",
                 "autonomy_level": "L3",
-                "confidence_required": 90.0,
+                "confidence_score": 90.0,
                 "allowed_tools": ["bash", "read"],
                 "stop_conditions": ["success"],
-                "required_outputs": ["report"],
+                "required_output": ["report"],
             },
         )
         assert resp.status_code == 200
         data = resp.json()
         assert data["agent_role"] == "specialist"
         assert data["autonomy_level"] == "L3"
-        assert data["confidence_required"] == 90.0
+        assert data["confidence_score"] == 90.0
         assert "bash" in data["allowed_tools"]
 
     def test_create_mission_missing_objective_returns_422(self, client: TestClient) -> None:

@@ -63,10 +63,10 @@ def test_create_mission_valid_payload_returns_200(client):
             "objective": "validate schema harness",
             "agent_role": "agent_lead",
             "autonomy_level": "L2",
-            "confidence_required": 80.0,
+            "confidence_score": 80.0,
             "allowed_tools": ["bash", "read"],
             "stop_conditions": ["drift > 20"],
-            "required_outputs": ["report"],
+            "required_output": ["report"],
         },
     )
     assert r.status_code == 200, f"Expected 200, got {r.status_code}: {r.text}"

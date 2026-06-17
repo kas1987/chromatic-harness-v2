@@ -1,26 +1,37 @@
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 from typing import Optional
+
+# Canonical mission-packet field names are confidence_score / required_output.
+# These models also accept the pre-migration names (confidence_required /
+# required_outputs) on input so already-persisted rows and legacy API callers
+# keep deserializing during the migration window.
+_CONF_ALIAS = AliasChoices("confidence_score", "confidence_required")
+_OUT_ALIAS = AliasChoices("required_output", "required_outputs")
 
 
 class CreateMissionRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     objective: str
     agent_role: str = "agent_lead"
     autonomy_level: str = "L1"
-    confidence_required: float = 75.0
+    confidence_score: int = Field(75, validation_alias=_CONF_ALIAS)
     allowed_tools: list[str] = Field(default_factory=list)
     stop_conditions: list[str] = Field(default_factory=list)
-    required_outputs: list[str] = Field(default_factory=list)
+    required_output: list[str] = Field(default_factory=list, validation_alias=_OUT_ALIAS)
 
 
 class MissionResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     mission_id: str
     objective: str
     agent_role: str
     autonomy_level: str
-    confidence_required: float
+    confidence_score: int = Field(validation_alias=_CONF_ALIAS)
     allowed_tools: list[str]
     stop_conditions: list[str]
-    required_outputs: list[str]
+    required_output: list[str] = Field(validation_alias=_OUT_ALIAS)
     status: str
     magnets: list[str]
 
@@ -154,7 +165,7 @@ class AgentLeadResponse(BaseModel):
 
 class UserRegisterRequest(BaseModel):
     username: str
-    password: str
+    password: str  # pragma: allowlist secret  (field name, not a secret value)
     role: str = "executor"
 
 
@@ -166,7 +177,7 @@ class UserResponse(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    access_token: str
+    access_token: str  # pragma: allowlist secret  (field name, not a secret value)
     token_type: str = "bearer"
     user_id: str
     role: str

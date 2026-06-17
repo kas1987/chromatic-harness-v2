@@ -1,0 +1,41 @@
+mission_id: M2-000
+level: M2
+status: draft
+title: ""
+objective: ""
+background: ""
+scope: []
+out_of_scope: []
+success_criteria: []
+acceptance_criteria: []
+constraints: []
+dependencies: []
+risks:
+  - risk: ""
+    mitigation: ""
+resource_impact: ""
+plan: []
+allowed_files: []
+forbidden_files: []
+allowed_tools: []
+tool_budget:
+  max_total: 5
+  max_search: 1
+  max_read: 2
+  max_write: 1
+  max_execute: 1
+confidence_score: 75
+risk_level: medium
+test_strategy:
+  - targeted_test
+rollback: "Basic rollback plan required."
+reviewers:
+  required_count: 1
+approval_required: true
+stop_conditions: []
+required_output:
+  - summary
+  - files_changed
+  - tests_run
+  - acceptance_result
+  - next_task

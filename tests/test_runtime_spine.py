@@ -40,7 +40,7 @@ def test_runtime_spine(client):
     # ── Step 1: Create a mission ──────────────────────────────────────────────
     r = client.post(
         "/missions",
-        json={"objective": "spine-test mission", "required_outputs": ["summary"]},
+        json={"objective": "spine-test mission", "required_output": ["summary"]},
     )
     assert r.status_code == 200, f"POST /missions failed: {r.text}"
     mission_data = r.json()
