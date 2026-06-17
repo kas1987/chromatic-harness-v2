@@ -98,7 +98,10 @@ export class MemoryStore {
     const row = this.db.prepare("SELECT embedding FROM memory_embeddings WHERE memory_id = ?").get(memoryId) as any;
     if (!row) return null;
     const buf: Buffer = row.embedding;
-    return new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / Float32Array.BYTES_PER_ELEMENT);
+    // Copy to a new aligned ArrayBuffer — sliced Node.js Buffers may have non-4-byte-aligned
+    // byteOffset which causes a RangeError when passed directly to Float32Array.
+    const alignedBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    return new Float32Array(alignedBuffer);
   }
 
   public close() {

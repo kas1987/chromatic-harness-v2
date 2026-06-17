@@ -20,8 +20,9 @@ const DEFAULT_ALLOCATION: GlobalBudgetAllocation = {
   },
 };
 
-// Fallback chain: claude → gpt → gemini → lm-studio → ollama → gemma (local providers last — free)
-const FALLBACK_CHAIN: LlmProvider[] = ["claude", "gpt", "gemini", "lm-studio", "ollama", "gemma"];
+// Fallback chain: must include every key in DEFAULT_ALLOCATION.allocations so ensureRows() creates
+// a DB row for each provider and recordSpend() never silently no-ops.
+const FALLBACK_CHAIN: LlmProvider[] = ["claude", "gpt", "gemini", "minimax", "lm-studio", "ollama", "gemma"];
 
 function currentMonth(): string {
   const now = new Date();

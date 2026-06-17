@@ -40,6 +40,11 @@ export class ComfyEventBridge {
   }
 
   start(): void {
+    // Tear down any existing connection before starting a new one to prevent
+    // duplicate sockets and duplicate event processing when start() is called again.
+    if (this.ws !== null || this.reconnectTimer !== null) {
+      this.stop();
+    }
     this.stopped = false;
     this.connect();
   }

@@ -203,17 +203,17 @@ export class DelegateQueue {
     this.pollTimer = setInterval(() => {
       if (this.queue.length === 0) return;
 
-      // Count total available slots across all providers
+      // Count providers with at least one open slot — dispatch at most that many jobs
+      // per tick so we never over-saturate a single provider with unroutable work.
       const snapshot = this.capacity.getSnapshot();
-      const availableSlots = Object.values(snapshot).reduce(
-        (sum, s) => sum + Math.max(0, s.maxSlots - s.inFlight),
-        0,
-      );
+      const providersWithSlots = Object.values(snapshot).filter(
+        (s) => s.maxSlots - s.inFlight > 0,
+      ).length;
 
-      if (availableSlots <= 0) return;
+      if (providersWithSlots <= 0) return;
 
-      // Dispatch up to availableSlots jobs this tick
-      const toDispatch = Math.min(availableSlots, this.queue.length);
+      // Dispatch at most one job per provider that has capacity this tick
+      const toDispatch = Math.min(providersWithSlots, this.queue.length);
       for (let i = 0; i < toDispatch; i++) {
         const job = this.queue.shift();
         if (!job) break;

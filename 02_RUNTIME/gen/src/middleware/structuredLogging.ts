@@ -39,19 +39,10 @@ export function structuredLoggingMiddleware(
   const requestId = req.get('x-request-id') || uuidv4();
   const startTime = Date.now();
 
-  // Override res.send to log response
-  const originalSend = res.send;
-  const originalJson = res.json;
-
-  res.send = function (data: any) {
+  // Log once on finish — avoids duplicate entries when res.json() calls res.send() internally
+  res.on('finish', () => {
     logRequest(requestId, req, res, startTime);
-    return originalSend.call(this, data);
-  };
-
-  res.json = function (data: any) {
-    logRequest(requestId, req, res, startTime);
-    return originalJson.call(this, data);
-  };
+  });
 
   // Handle response errors
   res.on('error', (err) => {

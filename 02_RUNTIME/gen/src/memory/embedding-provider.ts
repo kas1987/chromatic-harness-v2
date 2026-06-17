@@ -60,29 +60,40 @@ export class EmbeddingProvider implements IEmbeddingProvider {
   }
 
   public async embedBatch(texts: string[]): Promise<Float32Array[]> {
-    const results: Float32Array[] = [];
+    const results: Float32Array[] = new Array(texts.length);
+    const uncachedTexts: string[] = [];
+    const uncachedIndices: number[] = [];
 
-    for (const text of texts) {
-      const cached = this.cache.get(text);
+    for (let i = 0; i < texts.length; i++) {
+      const cached = this.cache.get(texts[i]);
       if (cached) {
-        results.push(cached);
-        continue;
+        results[i] = cached;
+      } else {
+        uncachedTexts.push(texts[i]);
+        uncachedIndices.push(i);
       }
+    }
 
+    if (uncachedTexts.length > 0) {
+      // Single batched request for all uncached texts — far cheaper than N sequential calls
       const response = await fetch(this.apiUrl, {
         method: "POST",
         headers: { "Authorization": `Bearer ${this.authKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ input: text, model: this.model }),
+        body: JSON.stringify({ input: uncachedTexts, model: this.model }),
       });
 
       if (!response.ok) throw new Error(`Embedding API error: ${response.status}`);
 
       const data = (await response.json()) as { data: Array<{ embedding: number[] }> };
-      if (!data.data || !data.data[0] || !data.data[0].embedding) throw new Error("Invalid embedding response");
+      if (!data.data || data.data.length !== uncachedTexts.length) {
+        throw new Error("Invalid embedding response length");
+      }
 
-      const embedding = new Float32Array(data.data[0].embedding);
-      this.cache.set(text, embedding);
-      results.push(embedding);
+      for (let i = 0; i < uncachedTexts.length; i++) {
+        const embedding = new Float32Array(data.data[i].embedding);
+        this.cache.set(uncachedTexts[i], embedding);
+        results[uncachedIndices[i]] = embedding;
+      }
     }
 
     return results;
