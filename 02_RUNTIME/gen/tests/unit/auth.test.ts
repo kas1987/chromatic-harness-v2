@@ -4,7 +4,7 @@ import { authMiddleware } from "../../src/middleware/auth";
 
 describe("Auth Middleware", () => {
   it("authMiddleware should block requests without token", () => {
-    process.env.GEN_TOKEN = "secret-token";
+    process.env["GEN_TOKEN"] = "secret-token";
 
     const mockReq = {
       headers: {},
@@ -29,7 +29,7 @@ describe("Auth Middleware", () => {
   });
 
   it("authMiddleware should block requests with wrong token", () => {
-    process.env.GEN_TOKEN = "secret-token";
+    process.env["GEN_TOKEN"] = "secret-token";
 
     const mockReq = {
       headers: { authorization: "Bearer wrong-token" },

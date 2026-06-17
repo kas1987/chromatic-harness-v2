@@ -59,7 +59,7 @@ async function buildApp(mockService: AdminMemoryService) {
   return app;
 }
 
-const ADMIN_TOKEN = "test-admin-secret";
+const ADMIN_CRED = "test-admin-secret";
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -72,7 +72,7 @@ describe("Admin Memories API", () => {
   beforeEach(async () => {
     // Reset module registry so each test gets a fresh router state
     vi.resetModules();
-    process.env.GEN_ADMIN_TOKEN = ADMIN_TOKEN;
+    process.env.GEN_ADMIN_CRED = ADMIN_CRED;
 
     // Re-import after resetModules to pick up fresh module state
     const { initializeAdminMemoriesRouter } = await import("../../src/routes/admin-memories");
@@ -107,7 +107,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .get("/admin/memories")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
     expect(res.status).toBe(200);
   });
 
@@ -119,7 +119,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .get("/admin/memories")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(res.status).toBe(200);
     expect(res.body.items).toHaveLength(1);
@@ -136,7 +136,7 @@ describe("Admin Memories API", () => {
 
     await request(app)
       .get("/admin/memories?limit=10&offset=20")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(mockService.listMemories).toHaveBeenCalledWith(
       expect.objectContaining({ limit: 10, offset: 20 })
@@ -148,7 +148,7 @@ describe("Admin Memories API", () => {
 
     await request(app)
       .get("/admin/memories?sensitivity=confidential")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(mockService.listMemories).toHaveBeenCalledWith(
       expect.objectContaining({ sensitivity: "confidential" })
@@ -160,7 +160,7 @@ describe("Admin Memories API", () => {
 
     await request(app)
       .get("/admin/memories?projectId=proj-42")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(mockService.listMemories).toHaveBeenCalledWith(
       expect.objectContaining({ projectId: "proj-42" })
@@ -174,7 +174,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .get("/admin/memories")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(res.status).toBe(500);
   });
@@ -187,7 +187,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .get("/admin/memories/mem-xyz")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(res.status).toBe(200);
     expect(res.body.id).toBe("mem-xyz");
@@ -200,7 +200,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .get("/admin/memories/does-not-exist")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBe("Memory not found");
@@ -213,7 +213,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .get("/admin/memories/mem-xyz")
-      .set("X-Admin-Token", ADMIN_TOKEN);
+      .set("X-Admin-Token", ADMIN_CRED);
 
     expect(res.status).toBe(500);
   });
@@ -226,7 +226,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .patch("/admin/memories/mem-abc123")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ text: "updated text" });
 
     expect(res.status).toBe(200);
@@ -243,7 +243,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .patch("/admin/memories/mem-abc123")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ sensitivity: "confidential", expiresAt: "2099-01-01T00:00:00.000Z" });
 
     expect(res.status).toBe(200);
@@ -260,7 +260,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .patch("/admin/memories/mem-ghost")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ text: "noop" });
 
     expect(res.status).toBe(404);
@@ -273,7 +273,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .patch("/admin/memories/mem-abc123")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ text: "noop" });
 
     expect(res.status).toBe(500);
@@ -286,7 +286,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .delete("/admin/memories/mem-abc123")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ reason: "test cleanup" });
 
     expect(res.status).toBe(204);
@@ -296,7 +296,7 @@ describe("Admin Memories API", () => {
   it("DELETE /admin/memories/:id returns 400 when reason is missing", async () => {
     const res = await request(app)
       .delete("/admin/memories/mem-abc123")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({});
 
     expect(res.status).toBe(400);
@@ -307,7 +307,7 @@ describe("Admin Memories API", () => {
   it("DELETE /admin/memories/:id returns 400 when reason is whitespace only", async () => {
     const res = await request(app)
       .delete("/admin/memories/mem-abc123")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ reason: "   " });
 
     expect(res.status).toBe(400);
@@ -321,7 +321,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .delete("/admin/memories/mem-ghost")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ reason: "cleanup" });
 
     expect(res.status).toBe(404);
@@ -335,7 +335,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .post("/admin/memories/scan-confidential")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({});
 
     expect(res.status).toBe(200);
@@ -349,7 +349,7 @@ describe("Admin Memories API", () => {
 
     await request(app)
       .post("/admin/memories/scan-confidential")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ projectId: "proj-42" });
 
     expect(mockService.scanConfidential).toHaveBeenCalledWith("proj-42");
@@ -362,7 +362,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .post("/admin/memories/scan-confidential")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({});
 
     expect(res.status).toBe(500);
@@ -376,7 +376,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .post("/admin/memories/find-stale")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ olderThanDays: 30 });
 
     expect(res.status).toBe(200);
@@ -387,7 +387,7 @@ describe("Admin Memories API", () => {
   it("POST /admin/memories/find-stale returns 400 when olderThanDays is missing", async () => {
     const res = await request(app)
       .post("/admin/memories/find-stale")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({});
 
     expect(res.status).toBe(400);
@@ -398,7 +398,7 @@ describe("Admin Memories API", () => {
   it("POST /admin/memories/find-stale returns 400 when olderThanDays is zero", async () => {
     const res = await request(app)
       .post("/admin/memories/find-stale")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ olderThanDays: 0 });
 
     expect(res.status).toBe(400);
@@ -408,7 +408,7 @@ describe("Admin Memories API", () => {
   it("POST /admin/memories/find-stale returns 400 when olderThanDays is negative", async () => {
     const res = await request(app)
       .post("/admin/memories/find-stale")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ olderThanDays: -5 });
 
     expect(res.status).toBe(400);
@@ -422,7 +422,7 @@ describe("Admin Memories API", () => {
 
     const res = await request(app)
       .post("/admin/memories/find-stale")
-      .set("X-Admin-Token", ADMIN_TOKEN)
+      .set("X-Admin-Token", ADMIN_CRED)
       .send({ olderThanDays: 7 });
 
     expect(res.status).toBe(500);

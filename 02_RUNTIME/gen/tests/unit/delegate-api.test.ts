@@ -11,11 +11,11 @@ import { delegateRouter, initializeDelegateRouter } from "../../src/routes/deleg
 describe("Delegate API (mounted)", () => {
   let app: express.Application;
   let dbPath: string;
-  let prevToken: string | undefined;
+  let prevCred: string | undefined;
 
   beforeEach(() => {
-    prevToken = process.env.GEN_TOKEN;
-    process.env.GEN_TOKEN = "delegate-api-test-token-unique";
+    prevCred = process.env["GEN_TOKEN"];
+    process.env["GEN_TOKEN"] = "delegate-api-test-token-unique";
 
     dbPath = path.join(os.tmpdir(), `gen-delegate-test-${Date.now()}.db`);
     const db = new Database(dbPath);
@@ -28,10 +28,10 @@ describe("Delegate API (mounted)", () => {
   });
 
   afterEach(() => {
-    if (prevToken === undefined) {
-      delete process.env.GEN_TOKEN;
+    if (prevCred === undefined) {
+      delete process.env["GEN_TOKEN"];
     } else {
-      process.env.GEN_TOKEN = prevToken;
+      process.env["GEN_TOKEN"] = prevCred;
     }
     try {
       fs.unlinkSync(dbPath);

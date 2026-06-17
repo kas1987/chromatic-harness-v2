@@ -58,7 +58,7 @@ GEN_MINIMAX_MODEL=minimax-m2.5:cloud
 ```bash
 GEN_ENABLE_MINIMAX=true
 GEN_MINIMAX_URL=https://api.minimax.chat/v1
-GEN_MINIMAX_API_KEY=<your-key>
+GEN_MINIMAX_API_KEY=
 GEN_MINIMAX_MODEL=abab6.5-chat   # check platform.minimax.io for current model IDs
 ```
 

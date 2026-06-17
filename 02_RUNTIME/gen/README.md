@@ -47,12 +47,12 @@ npm start
 - `POST /hooks/pretool` — Pre-tool hook
 - `POST /hooks/posttool` — Post-tool hook
 - `POST /hooks/user-prompt` — User prompt hook  
-  When **`GEN_TOKEN`** is set, send `Authorization: Bearer <GEN_TOKEN>`.
+  When **`GEN_TOKEN`** is set, send an `Authorization: Bearer` header with your token.
 - `POST /hooks/dispatch-outcome` — Queue async dispatch completion lines for a **`sessionId`** (same auth as hooks). Body: `{ "sessionId": "...", "hop_id": "...", "status": "completed", "summary": "optional" }`. The **next** `/hooks/user-prompt` for that session prepends a **`[DISPATCH UPDATES]`** block to the raw prompt so Claude sees worker results on the following turn.
 
 ### Model dispatch gateway (`/api/delegate`)
 
-Server-side **multi-provider** completions (Claude / GPT / Gemini / Ollama / LM Studio / MiniMax) with queue, capacity limits, and a SQLite **`delegation_log`** audit trail. Same **`Authorization: Bearer <GEN_TOKEN>`** as other protected routes.
+Server-side **multi-provider** completions (Claude / GPT / Gemini / Ollama / LM Studio / MiniMax) with queue, capacity limits, and a SQLite **`delegation_log`** audit trail. Same `Authorization: Bearer` header (with your token) as other protected routes.
 
 - `POST /api/delegate` — Body: `{ "prompt": "..." }` plus optional `role`, `preferredProvider`, `task`, `workflowType` (`interactive` default, `background` for fail-open when all providers fail), and envelope fields (`repo`, `userId`, `sessionId`, `taskIntent`, `riskLevel`, `toolContext`). See **[`../docs/architecture/MODEL-DISPATCH-GATEWAY.md`](../docs/architecture/MODEL-DISPATCH-GATEWAY.md)**.
 - `GET /api/delegate/status` | `queue` | `roles` | `services` | `sysinfo` — Operations and UI helpers ([`public/dispatch.html`](public/dispatch.html)).
@@ -97,7 +97,7 @@ Tables evolve with features (memories, budgets, learning, ingest, queue, etc.). 
 
 ## Security
 
-- When **`GEN_TOKEN`** is set, clients must send `Authorization: Bearer <GEN_TOKEN>` for protected routes; if **`GEN_TOKEN`** is unset, auth middleware logs a warning and **allows** requests (dev convenience — see [`src/middleware/auth.ts`](src/middleware/auth.ts)).
+- When **`GEN_TOKEN`** is set, clients must send an `Authorization: Bearer` header with their token for protected routes; if **`GEN_TOKEN`** is unset, auth middleware logs a warning and **allows** requests (dev convenience — see [`src/middleware/auth.ts`](src/middleware/auth.ts)).
 - `BudgetGuard` and hook logic still enforce dangerous-operation blocks where configured.
 - Fail-open: if Gen is unreachable, the client hook implementation typically continues (product-specific).
 

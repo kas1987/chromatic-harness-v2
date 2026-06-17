@@ -97,7 +97,7 @@ npm test -- --run   → 15 passed (15)
 **.env**
 ```
 PORT=43123
-RUDALO_TOKEN=dev-token-change-me
+RUDALO_TOKEN=
 RUDALO_DB_PATH=./rudalo.db
 NODE_ENV=development
 ```

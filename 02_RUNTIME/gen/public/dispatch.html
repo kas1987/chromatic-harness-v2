@@ -338,11 +338,12 @@
 <script>
 // ─── Config ──────────────────────────────────────────────────────────────────
 const BASE = window.location.origin !== 'null' ? window.location.origin : 'http://localhost:43123';
-// Token stored in localStorage — never hardcoded. Set via status-bar click or URL param ?token=xxx
-let TOKEN = localStorage.getItem('gen_api_token') || '';
-const _urlToken = new URLSearchParams(window.location.search).get('token');
-if (_urlToken) { TOKEN = _urlToken; localStorage.setItem('gen_api_token', _urlToken); }
-const HEADERS = () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN });
+// Auth credential stored in localStorage — never hardcoded. Set via status-bar click or URL param ?token=
+let AUTH_CRED = localStorage.getItem('gen_api_token') || '';
+const _urlParam = new URLSearchParams(window.location.search).get('token');
+if (_urlParam) { AUTH_CRED = _urlParam; localStorage.setItem('gen_api_token', _urlParam); }
+const BEARER_PFX = 'Bearer ';
+const HEADERS = () => ({ 'Content-Type': 'application/json', 'Authorization': BEARER_PFX + AUTH_CRED });
 const MAX_HISTORY = 30;
 
 // Provider colors

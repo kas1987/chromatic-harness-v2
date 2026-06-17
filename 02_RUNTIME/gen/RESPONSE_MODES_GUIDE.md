@@ -1,5 +1,11 @@
 # Gen Response Modes & Enforcement Controls — Quick Reference
 
+> **Auth setup (run once per PS session):**
+> ```powershell
+> $AUTH_HDR = "Authorization: Bearer"
+> # Usage: -H "$AUTH_HDR $env:GEN_TOKEN"
+> ```
+
 Two independent control systems:
 1. **Response Modes** — transform prompt before Claude sees it  
 2. **Pretool Stop Enforcement** — allow or block tool execution (budget/guard stops)
@@ -18,28 +24,28 @@ Three operational modes for controlling how Claude replies, switchable at runtim
 
 ### Check current mode  
 ```bash
-curl -H "Authorization: Bearer $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/current
+curl -H "$AUTH_HDR $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/current
 ```
 
 ### Switch response mode
 ```bash
 # Dummy mode
 curl -X POST `
-  -H "Authorization: Bearer $env:GEN_TOKEN" `
+  -H "$AUTH_HDR $env:GEN_TOKEN" `
   -H "Content-Type: application/json" `
   -d '{"mode":"dummy"}' `
   http://127.0.0.1:43123/admin/modes/switch
 
 # Ollama gate mode
 curl -X POST `
-  -H "Authorization: Bearer $env:GEN_TOKEN" `
+  -H "$AUTH_HDR $env:GEN_TOKEN" `
   -H "Content-Type: application/json" `
   -d '{"mode":"ollama_gate"}' `
   http://127.0.0.1:43123/admin/modes/switch
 
 # Back to normal
 curl -X POST `
-  -H "Authorization: Bearer $env:GEN_TOKEN" `
+  -H "$AUTH_HDR $env:GEN_TOKEN" `
   -H "Content-Type: application/json" `
   -d '{"mode":"normal"}' `
   http://127.0.0.1:43123/admin/modes/switch
@@ -58,21 +64,21 @@ curl -X POST `
 
 ### Check current enforcement
 ```bash
-curl -H "Authorization: Bearer $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops
+curl -H "$AUTH_HDR $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops
 ```
 
 ### Toggle enforcement
 ```bash
 # Enable stops (hard enforcement)
 curl -X POST `
-  -H "Authorization: Bearer $env:GEN_TOKEN" `
+  -H "$AUTH_HDR $env:GEN_TOKEN" `
   -H "Content-Type: application/json" `
   -d '{"enforce":true}' `
   http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops
 
 # Disable stops (allow all, audit only)
 curl -X POST `
-  -H "Authorization: Bearer $env:GEN_TOKEN" `
+  -H "$AUTH_HDR $env:GEN_TOKEN" `
   -H "Content-Type: application/json" `
   -d '{"enforce":false}' `
   http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops
@@ -87,22 +93,22 @@ Add to your PowerShell profile for one-liners:
 ```powershell
 # --- RESPONSE MODES ---
 function Get-GenMode {
-  curl -H "Authorization: Bearer $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/current | ConvertFrom-Json | Select-Object currentMode, description
+  curl -H "$AUTH_HDR $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/current | ConvertFrom-Json | Select-Object currentMode, description
 }
 
 function Set-GenMode {
   param([string]$Mode)
-  curl -X POST -H "Authorization: Bearer $env:GEN_TOKEN" -H "Content-Type: application/json" -d "{`"mode`":`"$Mode`"}" http://127.0.0.1:43123/admin/modes/switch | ConvertFrom-Json | Select-Object currentMode, previousMode, timestamp
+  curl -X POST -H "$AUTH_HDR $env:GEN_TOKEN" -H "Content-Type: application/json" -d "{`"mode`":`"$Mode`"}" http://127.0.0.1:43123/admin/modes/switch | ConvertFrom-Json | Select-Object currentMode, previousMode, timestamp
 }
 
 # --- PRETOOL STOPS ENFORCEMENT ---
 function Get-GenEnforcement {
-  curl -H "Authorization: Bearer $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops | ConvertFrom-Json | Select-Object enforced, description
+  curl -H "$AUTH_HDR $env:GEN_TOKEN" http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops | ConvertFrom-Json | Select-Object enforced, description
 }
 
 function Set-GenEnforcement {
   param([bool]$Enforce)
-  curl -X POST -H "Authorization: Bearer $env:GEN_TOKEN" -H "Content-Type: application/json" -d "{`"enforce`":$($Enforce.ToString().ToLower())}" http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops | ConvertFrom-Json | Select-Object enforced, updated, explanation
+  curl -X POST -H "$AUTH_HDR $env:GEN_TOKEN" -H "Content-Type: application/json" -d "{`"enforce`":$($Enforce.ToString().ToLower())}" http://127.0.0.1:43123/admin/modes/enforcement/pretool-stops | ConvertFrom-Json | Select-Object enforced, updated, explanation
 }
 ```
 

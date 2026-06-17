@@ -6,11 +6,11 @@ import { initializeSandboxOlRouter, sandboxOlRouter } from "../../src/routes/san
 
 describe("Sandbox OL API (mounted)", () => {
   let app: express.Application;
-  let prevToken: string | undefined;
+  let prevCred: string | undefined;
 
   beforeEach(() => {
-    prevToken = process.env.GEN_TOKEN;
-    process.env.GEN_TOKEN = "sandbox-ol-test-token";
+    prevCred = process.env["GEN_TOKEN"];
+    process.env["GEN_TOKEN"] = "sandbox-ol-test-token";
 
     initializeSandboxOlRouter(null);
 
@@ -21,11 +21,11 @@ describe("Sandbox OL API (mounted)", () => {
   });
 
   afterEach(() => {
-    if (prevToken === undefined) {
-      delete process.env.GEN_TOKEN;
+    if (prevCred === undefined) {
+      delete process.env["GEN_TOKEN"];
       return;
     }
-    process.env.GEN_TOKEN = prevToken;
+    process.env["GEN_TOKEN"] = prevCred;
   });
 
   it("GET /api/sandbox-ol/agents returns allowlist", async () => {
