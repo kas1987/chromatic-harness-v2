@@ -29,11 +29,16 @@ class MissionPacket:
     objective: str
     agent_role: str
     autonomy_level: str
-    confidence_score: int
+    confidence_required: float
     allowed_tools: list[str]
     stop_conditions: list[str]
-    required_output: list[str]
+    required_outputs: list[str]
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def confidence_score(self) -> float:
+        """Alias for confidence_required for backwards-compatibility."""
+        return self.confidence_required
 
 
 class Orchestrator:
@@ -43,14 +48,14 @@ class Orchestrator:
             objective=intent,
             agent_role="agent_lead",
             autonomy_level="L1",
-            confidence_score=75,
+            confidence_required=75,
             allowed_tools=["filesystem.read"],
             stop_conditions=[
                 "confidence_below_threshold",
                 "scope_unclear",
                 "security_risk_detected",
             ],
-            required_output=["agent_lead_report", "next_bead"],
+            required_outputs=["agent_lead_report", "next_bead"],
         )
 
     def create_mission_from_task(self, task: dict[str, Any]) -> MissionPacket:
@@ -81,10 +86,10 @@ class Orchestrator:
             objective=title,
             agent_role=role,
             autonomy_level="L2" if tool_budget > 20 else "L1",
-            confidence_score=confidence_score,
+            confidence_required=confidence_score,
             allowed_tools=allowed_tools,
             stop_conditions=stop_conditions,
-            required_output=["task_result", "verifier_report"],
+            required_outputs=["task_result", "verifier_report"],
             metadata={
                 "task_id": task.get("task_id", ""),
                 "assigned_model": task.get("assigned_model", ""),

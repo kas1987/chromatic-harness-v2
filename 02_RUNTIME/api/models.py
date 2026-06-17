@@ -1,12 +1,11 @@
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 from typing import Optional
 
-# Canonical mission-packet field names are confidence_score / required_output.
-# These models also accept the pre-migration names (confidence_required /
-# required_outputs) on input so already-persisted rows and legacy API callers
-# keep deserializing during the migration window.
-_CONF_ALIAS = AliasChoices("confidence_score", "confidence_required")
-_OUT_ALIAS = AliasChoices("required_output", "required_outputs")
+# Canonical mission-packet field names are confidence_required / required_outputs.
+# These models also accept the migration names (confidence_score / required_output)
+# so legacy callers keep deserializing during the migration window.
+_CONF_ALIAS = AliasChoices("confidence_required", "confidence_score")
+_OUT_ALIAS = AliasChoices("required_outputs", "required_output")
 
 
 class CreateMissionRequest(BaseModel):
@@ -15,10 +14,10 @@ class CreateMissionRequest(BaseModel):
     objective: str
     agent_role: str = "agent_lead"
     autonomy_level: str = "L1"
-    confidence_score: int = Field(75, validation_alias=_CONF_ALIAS)
+    confidence_required: float = Field(75.0, validation_alias=_CONF_ALIAS)
     allowed_tools: list[str] = Field(default_factory=list)
     stop_conditions: list[str] = Field(default_factory=list)
-    required_output: list[str] = Field(default_factory=list, validation_alias=_OUT_ALIAS)
+    required_outputs: list[str] = Field(default_factory=list, validation_alias=_OUT_ALIAS)
 
 
 class MissionResponse(BaseModel):
@@ -28,10 +27,10 @@ class MissionResponse(BaseModel):
     objective: str
     agent_role: str
     autonomy_level: str
-    confidence_score: int = Field(validation_alias=_CONF_ALIAS)
+    confidence_required: float = Field(validation_alias=_CONF_ALIAS)
     allowed_tools: list[str]
     stop_conditions: list[str]
-    required_output: list[str] = Field(validation_alias=_OUT_ALIAS)
+    required_outputs: list[str] = Field(validation_alias=_OUT_ALIAS)
     status: str
     magnets: list[str]
 
