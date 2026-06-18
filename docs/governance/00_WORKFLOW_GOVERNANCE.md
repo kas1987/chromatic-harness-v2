@@ -61,6 +61,16 @@ Default allowed transcript access:
 - max 3 sampled files for cost audit
 - indexed summaries preferred
 
+## Cost & Model Governance
+
+See dedicated SOPs:
+
+- [OPUS_AUTHORIZATION_GATE.md](OPUS_AUTHORIZATION_GATE.md) — when Opus is justified; default-deny to Sonnet
+- [SESSION_COST_ALERT_SOP.md](SESSION_COST_ALERT_SOP.md) — per-session cost tiers and response actions
+- [CACHE_HEALTH_SOP.md](CACHE_HEALTH_SOP.md) — system prompt freeze policy; Haiku consolidation; monitoring queries
+
+Daily data source: `~/.claude/usage.db` (refreshed by `usage-sync.sh` at SessionStart).
+
 ## Stop Conditions
 
 Stop immediately if:
