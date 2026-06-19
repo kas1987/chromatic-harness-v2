@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
-const glob = require('glob');
+const { glob } = require('glob');
 const marked = require('marked');
 const moment = require('moment');
 
@@ -209,12 +209,9 @@ class DataLoader {
   }
 
   globAsync(pattern) {
-    return new Promise((resolve, reject) => {
-      glob(pattern, (err, files) => {
-        if (err) reject(err);
-        else resolve(files);
-      });
-    });
+    // Normalize Windows backslashes to forward slashes for glob
+    const normalizedPattern = pattern.replace(/\\/g, '/');
+    return glob(normalizedPattern);
   }
 }
 
