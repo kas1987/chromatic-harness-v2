@@ -51,6 +51,23 @@ if str(_RUNTIME) not in sys.path:
 
 from router.billing_axis import classify as classify_axis  # noqa: E402
 
+# Lazy import so this module still works without the scripts/ dir on sys.path.
+# lru_cache: ~10 model names in practice; inference rules are static constants.
+import functools
+
+@functools.lru_cache(maxsize=64)
+def _infer_levels(model: str | None):
+    """Return (c_level, t_level) from model name, or (None, None) on miss."""
+    try:
+        _scripts = _REPO / "scripts"
+        if str(_scripts) not in sys.path:
+            sys.path.insert(0, str(_scripts))
+        from token_level_inference import infer_levels
+        c, t, _ = infer_levels(model)
+        return c, t
+    except Exception:
+        return None, None
+
 # ── Default paths (all overridable, for tests / alternate roots) ────────────
 _DEFAULT_TODAY = Path.home() / ".claude" / "powerline" / "usage" / "today.json"
 _DEFAULT_PRICING = Path.home() / ".claude" / "powerline" / "usage" / "pricing.json"
@@ -187,18 +204,21 @@ def today_rows(today: dict, pricing: dict[str, dict]) -> list[LedgerRow]:
         est = estimate_usd_from_usage(model, usage, pricing)
         # Prefer ccusage's own costUSD; fall back to our estimate.
         usd = float(reported) if reported is not None else (est or 0.0)
-        known = (model in pricing) and (reported is not None or est is not None)
+        # Axis P is always prepaid — cost classification is known by definition
+        # even when the model isn't in pricing.json (cost is $0, not unknown).
+        c_level, t_level = _infer_levels(model)
         rows.append(
             LedgerRow(
                 decision_id=_decision_id("today", ts, model, usd),
                 ts=ts,
                 axis="P",
-                cost_center=CostCenter(model=model, agent="native_claude", repo=""),
+                cost_center=CostCenter(model=model, agent="native_claude", repo="",
+                                       c_level=c_level, t_level=t_level),
                 tokens=_usage_tokens(usage),
                 usd=usd,
                 quota_delta_pct=None,  # filled by forecast layer from quota_state
                 source="today",
-                confidence="known" if known else "unknown",
+                confidence="known",  # Axis P cost is always known ($0 prepaid)
             )
         )
     return rows
@@ -226,8 +246,18 @@ def route_rows(
 
         cost = ev.get("cost_estimate_usd")
         usd = float(cost) if cost is not None else 0.0
-        if cost is None:
+        # Axis P (native_claude) and Axis F (local) have known-$0 cost by definition.
+        # Only Axis D events with null cost are genuinely unknown.
+        if cost is None and axis == "D":
             confidence = "unknown"  # null cost is the gate.py:427 backfill gap
+
+        # Backfill c_level/t_level from model name when router didn't set them.
+        raw_c = ev.get("c_level") or ev.get("c_class")
+        raw_t = ev.get("t_level")
+        if not raw_c or not raw_t:
+            inf_c, inf_t = _infer_levels(model)
+            raw_c = raw_c or inf_c
+            raw_t = raw_t or inf_t or provider
 
         decision_id = ev.get("decision_id") or _decision_id("routes", ts, ev.get("request_id"), provider, model)
         rows.append(
@@ -240,8 +270,8 @@ def route_rows(
                     agent=str(ev.get("caller", "") or ""),
                     tool=str(ev.get("task_type", "") or ""),
                     model=model,
-                    c_level=ev.get("c_level") or ev.get("c_class"),
-                    t_level=ev.get("t_level") or provider,
+                    c_level=raw_c,
+                    t_level=raw_t,
                 ),
                 tokens=0,  # routes carry no token counts (cost is pre-estimated)
                 usd=usd,
