@@ -29,6 +29,42 @@ def _session_id(raw: str | None) -> str:
     return "anonymous-session"
 
 
+def _smart_truncate(text: str, max_chars: int, script: str) -> str:
+    """Compress with Headroom if available and output is large; else tail-truncate.
+
+    Wraps the text as a tool_result message so Headroom's smart_sample/kompress
+    strategies can target it properly. Falls back to tail-truncation silently.
+    """
+    if len(text) <= max_chars:
+        return text
+    try:
+        from headroom import compress  # type: ignore[import]
+
+        msgs = [
+            {"role": "user", "content": f"Show output of {script}."},
+            {
+                "role": "assistant",
+                "content": [{"type": "tool_use", "id": "t0", "name": script, "input": {}}],
+            },
+            {
+                "role": "user",
+                "content": [{"type": "tool_result", "tool_use_id": "t0", "content": text}],
+            },
+        ]
+        result = compress(msgs, model="claude-sonnet-4-6")
+        for msg in getattr(result, "messages", []):
+            content = msg.get("content")
+            if isinstance(content, list):
+                for blk in content:
+                    if isinstance(blk, dict) and blk.get("type") == "tool_result":
+                        compressed = blk.get("content", "")
+                        if compressed:
+                            return compressed
+    except Exception:
+        pass
+    return text[-max_chars:]
+
+
 def _run_script(script: str, *args: str, timeout: int = 120) -> dict[str, Any]:
     proc = subprocess.run(
         [PYTHON, str(REPO_ROOT / "scripts" / script), *args],
@@ -41,7 +77,7 @@ def _run_script(script: str, *args: str, timeout: int = 120) -> dict[str, Any]:
     return {
         "ok": proc.returncode == 0,
         "exit_code": proc.returncode,
-        "stdout": (proc.stdout or "")[-8000:],
+        "stdout": _smart_truncate(proc.stdout or "", 8000, script),
         "stderr": (proc.stderr or "")[-2000:],
     }
 
@@ -50,9 +86,7 @@ def workflow_go(mode: str = "GO") -> dict[str, Any]:
     return _run_script("workflow_go.py", mode)
 
 
-def workflow_git_ship(
-    *, dry_run: bool = True, session_id: str | None = None
-) -> dict[str, Any]:
+def workflow_git_ship(*, dry_run: bool = True, session_id: str | None = None) -> dict[str, Any]:
     args = ["ship", "--from-log", "--verifier", "approve", "--run-tests"]
     if not dry_run:
         args.append("--execute")

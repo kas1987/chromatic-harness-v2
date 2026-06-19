@@ -1,15 +1,8 @@
 {
-  "generated_at": "2026-06-16T23:40:40.978204+00:00",
+  "generated_at": "2026-06-19T20:22:59.318791+00:00",
   "mode": "dry_run",
   "current_branch": "feat/command-center-p1-p2",
-  "results": [
-    {
-      "branch": "feat/omh-3-loop-budget-guard",
-      "action": "dry_run",
-      "command": "git branch -D -- feat/omh-3-loop-budget-guard",
-      "ok": true
-    }
-  ],
-  "deleted_count": 1,
+  "results": [],
+  "deleted_count": 0,
   "failed_count": 0
 }

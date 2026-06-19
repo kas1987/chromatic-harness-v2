@@ -1,0 +1,154 @@
+mission_id: M3-RELAY-001
+level: M3
+status: draft
+title: "native_claude relay + routing completion"
+objective: >
+  Stand up a lightweight HTTP relay server that bridges the Windows Claude Code CLI
+  to the harness router so that C3/C4 tasks actually dispatch to Axis P (prepaid quota)
+  instead of silently falling through to Axis D (billed). Fix the three remaining gaps
+  from the SWOT session: relay server, routing table completion for desktop/server
+  contexts, and the _infer_levels hot-path import overhead.
+
+background: >
+  SWOT analysis (2026-06-19) confirmed that 77.5% of C3/C4 traffic routes to
+  Axis D while the prepaid Axis P quota target is 90%. Root cause: the routing table
+  lists native_claude first for C3/C4 in laptop/remote contexts, but on Windows
+  shutil.which("claude") returns a path that fails with WinError 2 when spawned as
+  a subprocess. The native_claude_adapter.py already supports a relay mode
+  (NATIVE_CLAUDE_RELAY_URL env var → HTTP POST /complete) — the relay server just
+  doesn't exist yet. Additionally, context_desktop and context_server routing tables
+  still don't include native_claude for C3/C4, and portfolio_token_telemetry.py
+  calls infer_levels() per-event without caching.
+
+scope:
+  - Write scripts/native_claude_relay.py — minimal FastAPI server exposing /health + /complete
+  - Add NATIVE_CLAUDE_RELAY_URL to chromatic-stack .env.example and docker-compose.yml extra_hosts
+  - Add native_claude first in context_desktop and context_server C3/C4 routing entries
+  - Add functools.lru_cache to _infer_levels() in tools/portfolio_token_telemetry.py
+  - Add startup instructions to docs/SOPs/NATIVE_CLAUDE_RELAY_SOP.md
+
+out_of_scope:
+  - Changing native_claude_adapter.py (already correct)
+  - Changing provider_selector.py availability check (already correct)
+  - Adding authentication to the relay (localhost-only binding is the security model)
+  - Supporting multi-session relay multiplexing (single-user machine)
+  - Changing the Claude Code CLI itself
+
+success_criteria:
+  - relay server starts with `python scripts/native_claude_relay.py` and responds 200 on /health
+  - C3 dispatch with NATIVE_CLAUDE_RELAY_URL set returns a non-mock result
+  - Axis P % in next governance loop ≥ 50% (up from 15%; 90% is the steady-state target post-adoption)
+  - portfolio_token_telemetry.run() on 11k-row ledger shows no repeated import warnings
+  - routing-table.yaml contains native_claude first in context_desktop/C3, C4 and context_server/C3, C4
+
+acceptance_criteria:
+  - pytest tests/test_native_claude_relay.py green (health endpoint + /complete mock path)
+  - pytest tests/test_portfolio_token_telemetry.py green (no regression on confidence_band)
+  - routing table validated by existing test_routing_context_pure_functions.py
+  - Manual smoke test: start relay, set NATIVE_CLAUDE_RELAY_URL=http://localhost:9090, trigger a C3 dispatch, confirm ledger row shows axis=P
+
+constraints:
+  - Relay must bind to 127.0.0.1 only (localhost-only; no external exposure)
+  - Relay must not store session tokens or prompt content on disk
+  - Relay timeout must match native_claude_adapter default (60s)
+  - Must not require admin/elevated privileges to start
+
+dependencies:
+  - native_claude_adapter.py relay path already implemented (02_RUNTIME/router/adapters/native_claude_adapter.py)
+  - fastapi and uvicorn available (or fallback to stdlib http.server if not)
+  - claude CLI on PATH and authenticated
+
+integration_points:
+  - NATIVE_CLAUDE_RELAY_URL env var read by native_claude_adapter.py at init time
+  - chromatic-stack docker-compose.yml extra_hosts: host.docker.internal already present
+  - provider_selector._native_claude_available() checks the env var first
+  - token_governance_closed_loop.py indirectly validates via confidence_band output
+
+risks:
+  - risk: "claude CLI subprocess still fails on some Windows configurations despite relay wrapper"
+    impact: "Relay returns 500; adapter falls through to Axis D as before"
+    likelihood: "low"
+    mitigation: "Relay uses asyncio.create_subprocess_exec with explicit shell=False; test on actual machine before declaring done"
+  - risk: "relay port 9090 conflicts with another service"
+    impact: "Relay won't start"
+    likelihood: "low"
+    mitigation: "Port configurable via NATIVE_CLAUDE_RELAY_PORT env var; default 9090"
+  - risk: "lru_cache on _infer_levels causes stale results if scripts/token_level_inference.py changes at runtime"
+    impact: "Wrong c/t level assignment until process restart"
+    likelihood: "very low"
+    mitigation: "Inference rules are module-level constants; runtime changes require process restart anyway"
+
+resource_impact: "One always-on local process (~5 MB RAM). Zero cloud cost. Zero boot tax to harness — relay is a separate process, not imported."
+
+detailed_plan:
+  - "B1: PDR + mission packet (this doc)"
+  - "B2: scripts/native_claude_relay.py + tests/test_native_claude_relay.py"
+  - "B3: routing-table.yaml desktop/server C3/C4 entries + routing test validation"
+  - "B4: _infer_levels lru_cache + telemetry regression test"
+  - "B5: docs/SOPs/NATIVE_CLAUDE_RELAY_SOP.md + .env.example update"
+  - "B6: Integration smoke test (relay live, C3 dispatch, ledger row confirmed axis=P)"
+
+allowed_files:
+  - scripts/native_claude_relay.py
+  - tests/test_native_claude_relay.py
+  - 09_DEPLOYMENT/config/routing/routing-table.yaml
+  - tools/portfolio_token_telemetry.py
+  - docs/SOPs/NATIVE_CLAUDE_RELAY_SOP.md
+  - chromatic-stack/.env.example
+
+forbidden_files:
+  - 02_RUNTIME/router/adapters/native_claude_adapter.py
+  - 02_RUNTIME/router/provider_selector.py
+  - config/routing/providers.yaml
+  - .claude/settings.json
+
+allowed_tools:
+  - Read
+  - Edit
+  - Write
+  - Bash
+  - Grep
+  - Glob
+
+tool_budget:
+  max_total: 40
+  max_search: 6
+  max_read: 10
+  max_write: 8
+  max_execute: 6
+
+confidence_score: 82
+risk_level: medium
+
+test_strategy:
+  unit:
+    - "tests/test_native_claude_relay.py: /health returns 200; /complete with mock CLI returns expected shape"
+    - "tests/test_portfolio_token_telemetry.py: no regression in confidence_band; lru_cache hit on second call"
+  integration:
+    - "Start relay, set NATIVE_CLAUDE_RELAY_URL, call provider_selector.select() for C3 → assert native_claude is first choice"
+    - "Run token_governance_closed_loop.py → confirm unknown_pct < 30%"
+  regression:
+    - "tests/test_routing_context_pure_functions.py — must stay green after routing table edits"
+    - "Full test suite: pytest tests/ -x"
+
+rollback_plan:
+  - "Stop the relay process (Ctrl+C or kill PID). Router falls through to Gemini/claude_api as before."
+  - "Unset NATIVE_CLAUDE_RELAY_URL env var. No code change needed."
+  - "Revert routing-table.yaml context_desktop/context_server changes via git revert."
+  - "Revert lru_cache addition in portfolio_token_telemetry.py via git revert."
+
+reviewers:
+  required_count: 1
+approval_required: false
+
+stop_conditions:
+  - "relay server cannot be started without admin privileges"
+  - "claude CLI subprocess returns non-zero on every /complete attempt after 3 retries"
+  - "any change touches native_claude_adapter.py or provider_selector.py"
+
+required_output:
+  - implementation_summary
+  - diff_summary
+  - validation_evidence
+  - risk_update
+  - next_task

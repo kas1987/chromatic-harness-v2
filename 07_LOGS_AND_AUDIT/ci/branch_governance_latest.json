@@ -1,213 +1,30 @@
 {
-  "generated_at": "2026-06-16T23:40:39.988600+00:00",
+  "generated_at": "2026-06-19T20:23:16.493310+00:00",
   "default_branch": "main",
   "caps": {
     "local_max_total": 35,
     "remote_max_total": 80
   },
   "counts": {
-    "local_total": 24,
-    "remote_total": 26,
-    "local_stale": 12,
-    "remote_stale": 10,
-    "local_gone_upstream": 1,
+    "local_total": 3,
+    "remote_total": 5,
+    "local_stale": 0,
+    "remote_stale": 1,
+    "local_gone_upstream": 0,
     "local_merged_candidates": 0
   },
   "violations": [],
-  "local_stale": [
-    {
-      "name": "archive/concurrent-unpushed-all",
-      "upstream": "",
-      "upstream_track": "",
-      "last_commit_at": "2026-06-01 09:51:44 -0400",
-      "age_days": 15.41,
-      "category": "default",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "docs/omh-postmortem",
-      "upstream": "origin/docs/omh-postmortem",
-      "upstream_track": "",
-      "last_commit_at": "2026-06-02 16:30:09 -0400",
-      "age_days": 14.13,
-      "category": "docs",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "feat/0yoy-kos-stage7-canon-registry",
-      "upstream": "",
-      "upstream_track": "",
-      "last_commit_at": "2026-05-31 19:10:29 -0400",
-      "age_days": 16.02,
-      "category": "feature",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "feat/merge-gate-clean",
-      "upstream": "origin/feat/merge-gate-clean",
-      "upstream_track": "",
-      "last_commit_at": "2026-06-02 19:12:19 -0400",
-      "age_days": 14.02,
-      "category": "feature",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "feat/merge-gate-phase1",
-      "upstream": "origin/main",
-      "upstream_track": "[ahead 1, behind 21]",
-      "last_commit_at": "2026-06-02 19:01:12 -0400",
-      "age_days": 14.03,
-      "category": "feature",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "feat/omh-3-loop-budget-guard",
-      "upstream": "origin/feat/omh-3-loop-budget-guard",
-      "upstream_track": "[gone]",
-      "last_commit_at": "2026-06-02 18:22:08 -0400",
-      "age_days": 14.05,
-      "category": "feature",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "feat/u8uj-4-local",
-      "upstream": "",
-      "upstream_track": "",
-      "last_commit_at": "2026-06-02 17:18:07 -0400",
-      "age_days": 14.1,
-      "category": "feature",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "feat/u8uj-4-router-orchestrator-split",
-      "upstream": "origin/feat/u8uj-4-router-orchestrator-split",
-      "upstream_track": "",
-      "last_commit_at": "2026-06-02 18:36:20 -0400",
-      "age_days": 14.04,
-      "category": "feature",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "feat/w0wk-2-chromatic-envelope",
-      "upstream": "origin/feat/w0wk-2-chromatic-envelope",
-      "upstream_track": "[ahead 1]",
-      "last_commit_at": "2026-06-02 19:06:28 -0400",
-      "age_days": 14.02,
-      "category": "feature",
-      "stale_threshold_days": 14.0
-    },
-    {
-      "name": "session/auto-mode-governance-20260530",
-      "upstream": "",
-      "upstream_track": "",
-      "last_commit_at": "2026-05-30 18:32:44 -0400",
-      "age_days": 17.05,
-      "category": "session",
-      "stale_threshold_days": 3.0
-    },
-    {
-      "name": "session/observability-pdr",
-      "upstream": "origin/session/chromatic-harness-v2-initial",
-      "upstream_track": "[ahead 5, behind 210]",
-      "last_commit_at": "2026-06-01 14:11:47 -0400",
-      "age_days": 15.23,
-      "category": "session",
-      "stale_threshold_days": 3.0
-    },
-    {
-      "name": "temp/fix-rollout-guide",
-      "upstream": "origin/docs/multi-drive-rollout-guide",
-      "upstream_track": "[behind 12]",
-      "last_commit_at": "2026-06-03 13:54:52 -0400",
-      "age_days": 13.24,
-      "category": "temp",
-      "stale_threshold_days": 3.0
-    }
-  ],
+  "local_stale": [],
   "remote_stale": [
     {
       "name": "__dolt_remote_info__",
       "last_commit_at": "2026-06-02 16:21:52 -0400",
-      "age_days": 14.14,
+      "age_days": 17.0,
       "category": "default",
-      "stale_threshold_days": 14.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "chore/8tse-run-safe-shell",
-      "last_commit_at": "2026-06-02 00:42:51 -0400",
-      "age_days": 14.79,
-      "category": "chore",
-      "stale_threshold_days": 10.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "chore/j2r0-closeout",
-      "last_commit_at": "2026-06-02 00:32:41 -0400",
-      "age_days": 14.8,
-      "category": "chore",
-      "stale_threshold_days": 10.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "chore/xarw3-repoint-claude-config",
-      "last_commit_at": "2026-06-02 15:18:39 -0400",
-      "age_days": 14.18,
-      "category": "chore",
-      "stale_threshold_days": 10.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "docs/omh-postmortem",
-      "last_commit_at": "2026-06-02 16:30:09 -0400",
-      "age_days": 14.13,
-      "category": "docs",
-      "stale_threshold_days": 14.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "feat/8lri.3-runtime-layer-map",
-      "last_commit_at": "2026-06-02 14:40:50 -0400",
-      "age_days": 14.21,
-      "category": "feature",
-      "stale_threshold_days": 14.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "feat/merge-gate-clean",
-      "last_commit_at": "2026-06-02 19:12:19 -0400",
-      "age_days": 14.02,
-      "category": "feature",
-      "stale_threshold_days": 14.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "feat/u8uj-4-router-orchestrator-split",
-      "last_commit_at": "2026-06-02 18:36:20 -0400",
-      "age_days": 14.04,
-      "category": "feature",
-      "stale_threshold_days": 14.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "feat/w0wk-2-chromatic-envelope",
-      "last_commit_at": "2026-06-02 19:05:19 -0400",
-      "age_days": 14.02,
-      "category": "feature",
-      "stale_threshold_days": 14.0,
-      "has_open_pr": false
-    },
-    {
-      "name": "fix/e2e-git-snapshot-isolation",
-      "last_commit_at": "2026-06-02 11:29:23 -0400",
-      "age_days": 14.34,
-      "category": "fix",
       "stale_threshold_days": 14.0,
       "has_open_pr": false
     }
   ],
-  "local_gone_upstream": [
-    "feat/omh-3-loop-budget-guard"
-  ],
+  "local_gone_upstream": [],
   "local_merged_candidates": []
 }

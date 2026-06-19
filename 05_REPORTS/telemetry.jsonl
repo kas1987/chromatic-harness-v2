@@ -108,3 +108,17 @@
 {"event": "knowledge_feedback", "new_candidates": 0, "session_id": "ae3b545c-0f38-4da0-a525-ddb2e553b2aa", "timestamp": "2026-06-03T01:49:23.686071+00:00"}
 {"event": "knowledge_feedback", "new_candidates": 0, "session_id": "14a9587f-1cea-4e57-99e9-798172609c88", "timestamp": "2026-06-03T01:49:40.090403+00:00"}
 {"date": "2026-06-03", "branch": "claude/test-coverage-analysis-F9XyC", "commit": "729682ec674b19c50ff5e21591dbad25217b229e", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "0dfce23a-657d-4638-8591-112cb5408aa6", "timestamp": "2026-06-17T22:43:26.712058+00:00"}
+{"date": "2026-06-17", "branch": "feat/command-center-p1-p2", "commit": "5f3292f17ff36583c0d2f016e02c249612e7e124", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "9da96d84-9a2e-496d-a7cd-206613a4ae38", "timestamp": "2026-06-17T23:41:01.052696+00:00"}
+{"date": "2026-06-17", "branch": "feat/command-center-p1-p2", "commit": "5f3292f17ff36583c0d2f016e02c249612e7e124", "beads_closed": 20, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "aaf2341c-fcf5-4f02-a6f1-4a09c5d52264", "timestamp": "2026-06-18T00:34:15.800081+00:00"}
+{"date": "2026-06-17", "branch": "feat/command-center-p1-p2", "commit": "5ead5e87364a4871ee5574ba777f47f043211e1a", "beads_closed": 20, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "ef342b04-becf-4d2d-af3e-bd8348807798", "timestamp": "2026-06-18T00:48:20.815079+00:00"}
+{"date": "2026-06-17", "branch": "feat/command-center-p1-p2", "commit": "5ead5e87364a4871ee5574ba777f47f043211e1a", "beads_closed": 23, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "b3da27cc-44bc-4088-b428-0724792f2d83", "timestamp": "2026-06-18T04:09:43.907851+00:00"}
+{"date": "2026-06-18", "branch": "feat/command-center-p1-p2", "commit": "5ead5e87364a4871ee5574ba777f47f043211e1a", "beads_closed": 5, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "442e4790-ab0a-4ce0-a2c9-4f20463d84ea", "timestamp": "2026-06-19T15:27:42.766996+00:00"}
+{"date": "2026-06-19", "branch": "feat/command-center-p1-p2", "commit": "5ead5e87364a4871ee5574ba777f47f043211e1a", "beads_closed": 0, "notes": ""}
+{"event": "knowledge_feedback", "new_candidates": 0, "session_id": "ea9a1026-fab2-483a-bee6-c89b84a293b9", "timestamp": "2026-06-19T16:53:32.133953+00:00"}
+{"date": "2026-06-19", "branch": "feat/command-center-p1-p2", "commit": "514e3f4b9abaac70575b80e4e70c83b19e143434", "beads_closed": 3, "notes": ""}

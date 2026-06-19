@@ -19,9 +19,9 @@ channel_caps:
     weekly_usd: 40.0
     monthly_usd: 160.0
   claude_code:
-    daily_usd: 5.0
-    weekly_usd: 20.0
-    monthly_usd: 80.0
+    daily_usd: 20.0
+    weekly_usd: 110.0
+    monthly_usd: 440.0
   codex:
     daily_usd: 5.0
     weekly_usd: 20.0
