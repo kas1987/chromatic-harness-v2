@@ -354,6 +354,12 @@ SUITES = [
             "test_mission_packet.py",
         ],
     ),
+    (
+        "native_claude relay server (M3-RELAY-001 B2)",
+        [
+            "test_native_claude_relay.py",
+        ],
+    ),
 ]
 
 
