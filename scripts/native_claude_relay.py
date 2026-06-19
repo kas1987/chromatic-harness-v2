@@ -15,9 +15,16 @@ Timeout: NATIVE_CLAUDE_RELAY_TIMEOUT_S env var, default 60.
 import http.server
 import json
 import os
+import socketserver
 import subprocess
 import sys
 import time
+
+
+class _ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
 
 PORT = int(os.environ.get("NATIVE_CLAUDE_RELAY_PORT", "9090"))
 TIMEOUT_S = int(os.environ.get("NATIVE_CLAUDE_RELAY_TIMEOUT_S", "60"))
@@ -91,15 +98,18 @@ class RelayHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(500, {"error": f"claude CLI exited {result.returncode}: {err}"})
             return
 
-        self._send_json(200, {
-            "result": result.stdout.strip(),
-            "model": model,
-            "latency_ms": latency_ms,
-        })
+        self._send_json(
+            200,
+            {
+                "result": result.stdout.strip(),
+                "model": model,
+                "latency_ms": latency_ms,
+            },
+        )
 
 
 def main():
-    server = http.server.HTTPServer(("127.0.0.1", PORT), RelayHandler)
+    server = _ThreadingHTTPServer(("127.0.0.1", PORT), RelayHandler)
     print(f"native_claude_relay: listening on http://127.0.0.1:{PORT}", flush=True)
     try:
         server.serve_forever()
