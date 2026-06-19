@@ -1,0 +1,290 @@
+{
+  "registry_name": "Claude Code Audit Standards Registry",
+  "version": "1.0",
+  "last_updated": "2026-06-19",
+  "purpose": "Machine-readable index of all standards, procedures, templates, and memory for agent access",
+  "standards": [
+    {
+      "standard_id": "CCAS-0001",
+      "title": "Audit Framework",
+      "file": "CCAS-0001-audit-framework.md",
+      "scope": "Core principles, audit standards (8 total), materiality levels",
+      "audience": "All committee members",
+      "last_updated": "2026-06-19"
+    },
+    {
+      "standard_id": "CCAS-0002",
+      "title": "Code Review Standards",
+      "file": "CCAS-0002-code-review-standards.md",
+      "scope": "8-angle methodology, verification criteria, bug classification",
+      "audience": "Code Review Agent",
+      "last_updated": "TBD"
+    },
+    {
+      "standard_id": "CCAS-0003",
+      "title": "Scorecard & Grading Standards",
+      "file": "CCAS-0003-scorecard-standards.md",
+      "scope": "14-dimension framework, grading rubric (A-F), threshold definitions",
+      "audience": "Audit Agent",
+      "last_updated": "TBD"
+    },
+    {
+      "standard_id": "CCAS-0004",
+      "title": "Independence & Objectivity",
+      "file": "CCAS-0004-independence.md",
+      "scope": "Audit committee independence rules, conflicts of interest, recusal procedures",
+      "audience": "Audit Committee",
+      "last_updated": "TBD"
+    }
+  ],
+  "procedures": [
+    {
+      "sop_id": "SOP-001",
+      "title": "Pre-Mission Planning",
+      "file": "procedures/SOP-001-pre-mission-planning.md",
+      "trigger": "SessionStart event",
+      "owner": "User + Audit Agent",
+      "estimated_duration_minutes": 15,
+      "checklist_template": "templates/checklist-pre-mission.md"
+    },
+    {
+      "sop_id": "SOP-002",
+      "title": "Execution Monitoring",
+      "file": "procedures/SOP-002-execution-monitoring.md",
+      "trigger": "Manual checkpoint or auto at 150% variance",
+      "owner": "Audit Agent",
+      "estimated_duration_minutes": 30,
+      "checklist_template": "templates/checklist-mid-mission.md"
+    },
+    {
+      "sop_id": "SOP-003",
+      "title": "Code Review",
+      "file": "procedures/SOP-003-code-review.md",
+      "trigger": "After code is written, before deployment",
+      "owner": "Code Review Agent",
+      "estimated_duration_minutes": 60,
+      "checklist_template": "templates/checklist-code-review.md",
+      "related_standard": "CCAS-0002"
+    },
+    {
+      "sop_id": "SOP-004",
+      "title": "Post-Mission Audit",
+      "file": "procedures/SOP-004-post-mission-audit.md",
+      "trigger": "SessionEnd event or `/audit-mission` command",
+      "owner": "Audit Agent + Code Review Agent",
+      "estimated_duration_minutes": 120,
+      "checklist_template": "templates/checklist-post-mission.md",
+      "related_standard": "CCAS-0003"
+    },
+    {
+      "sop_id": "SOP-005",
+      "title": "Escalation Procedures",
+      "file": "procedures/SOP-005-escalation.md",
+      "trigger": "Yellow or red threshold crossed",
+      "owner": "Governance Bot + Audit Agent",
+      "estimated_duration_minutes": 15,
+      "decision_matrix": "standards/escalation-decision-matrix.json"
+    },
+    {
+      "sop_id": "SOP-006",
+      "title": "Quality Control of Audits",
+      "file": "procedures/SOP-006-quality-control.md",
+      "trigger": "Audit report completed, before User approval",
+      "owner": "Independent auditor (second review)",
+      "estimated_duration_minutes": 45,
+      "checklist_template": "templates/checklist-audit-qa.md"
+    }
+  ],
+  "templates": {
+    "mission_planning": [
+      {
+        "template_id": "T-PDR-001",
+        "name": "Mission PDR (Plan)",
+        "file": "templates/mission-pdr-template.md",
+        "format": "markdown",
+        "fields": ["title", "start_time", "planned_duration", "planned_scope", "success_metrics", "risk_register", "team_composition", "notes"],
+        "usage": "Fill this at mission start (SessionStart hook)"
+      },
+      {
+        "template_id": "T-PDR-FILLED",
+        "name": "Mission PDR (Example - filled)",
+        "file": "templates/mission-pdr-example-filled.md",
+        "format": "markdown",
+        "usage": "Reference example; shows how to complete PDR"
+      }
+    ],
+    "audit_reporting": [
+      {
+        "template_id": "T-AUDIT-001",
+        "name": "14-Point Audit Report",
+        "file": "templates/mission-audit-template.md",
+        "format": "markdown",
+        "sections": ["planned_vs_actual", "quality_assessment", "swot", "improvements", "grade"],
+        "usage": "Fill after mission (SessionEnd hook)"
+      },
+      {
+        "template_id": "T-SCORECARD-001",
+        "name": "Mission Scorecard",
+        "file": "templates/mission-scorecard.json",
+        "format": "json",
+        "fields": ["date", "title", "pdr", "execution", "quality", "grades", "swot", "improvements"],
+        "usage": "Structured data export of audit report"
+      }
+    ],
+    "code_review": [
+      {
+        "template_id": "T-CR-001",
+        "name": "8-Angle Code Review Checklist",
+        "file": "templates/checklist-code-review-8-angles.md",
+        "format": "markdown",
+        "angles": ["line-by-line", "removed-behaviors", "cross-file", "reuse", "simplification", "efficiency", "altitude", "conventions"],
+        "usage": "Complete one angle at a time; capture findings for each"
+      },
+      {
+        "template_id": "T-CR-FINDING",
+        "name": "Code Review Finding Template",
+        "file": "templates/code-review-finding.json",
+        "format": "json",
+        "fields": ["file", "line", "summary", "failure_scenario", "severity", "root_cause", "prevention"],
+        "usage": "Document each finding (one JSON object per bug/issue)"
+      }
+    ],
+    "checklists": [
+      {
+        "checklist_id": "CL-PRE-001",
+        "name": "Pre-Mission Checklist",
+        "file": "templates/checklist-pre-mission.md",
+        "format": "markdown",
+        "items_count": 12,
+        "usage": "Verify PDR completeness before mission starts"
+      },
+      {
+        "checklist_id": "CL-MID-001",
+        "name": "Mid-Mission Checkpoint",
+        "file": "templates/checklist-mid-mission.md",
+        "format": "markdown",
+        "items_count": 8,
+        "usage": "Assess variance, escalation needs at 2-4 hour marks"
+      },
+      {
+        "checklist_id": "CL-POST-001",
+        "name": "Post-Mission Checklist",
+        "file": "templates/checklist-post-mission.md",
+        "format": "markdown",
+        "items_count": 14,
+        "usage": "Verify all audit dimensions completed"
+      },
+      {
+        "checklist_id": "CL-QA-001",
+        "name": "Audit QA Checklist",
+        "file": "templates/checklist-audit-qa.md",
+        "format": "markdown",
+        "items_count": 10,
+        "usage": "Second auditor review before User approval"
+      }
+    ]
+  },
+  "memory_bank": {
+    "location": "memory/",
+    "sections": [
+      {
+        "section_id": "M-FINDINGS",
+        "name": "Audit Findings Database",
+        "file": "memory/findings-database.json",
+        "description": "Indexed repository of all audit findings (by type, severity, root cause)",
+        "query_api": "agents can query by: finding_type, severity, date_range, root_cause_pattern",
+        "example_queries": [
+          "Get all CONFIRMED bugs from 2026-06-15 to 2026-06-19",
+          "Get all findings with root_cause='off-by-one'",
+          "Get top 5 recurring issues"
+        ]
+      },
+      {
+        "section_id": "M-LESSONS",
+        "name": "Lessons Learned Catalog",
+        "file": "memory/lessons-learned.md",
+        "description": "Actionable insights from past audits; what we learned and will do differently",
+        "indexed_by": "date, improvement_category, priority",
+        "example": "2026-06-19: Top 3 improvements from LOGHOUSE mission — (1) explicit PDR upfront, (2) mid-mission checkpoint, (3) pre-commit code review"
+      },
+      {
+        "section_id": "M-RISKS",
+        "name": "Risk Register",
+        "file": "memory/risk-register.json",
+        "description": "Cumulative risk register from all missions; recurring risks that keep emerging",
+        "indexed_by": "risk_category, probability, impact, mitigation_status",
+        "example": "Timeline estimation off by >50%: probability=high, impact=high, mitigation='explicit estimation review + buffer'"
+      },
+      {
+        "section_id": "M-BLOCKERS",
+        "name": "Common Blockers & Mitigations",
+        "file": "memory/blockers-and-mitigations.md",
+        "description": "Patterns of blockers that recur; proven mitigations for each",
+        "indexed_by": "blocker_type, frequency, avg_impact_hours, recommended_mitigation",
+        "example": "Blocker: External API timeout. Frequency: 2/5 missions. Mitigation: Implement retry + circuit breaker"
+      },
+      {
+        "section_id": "M-PATTERNS",
+        "name": "Bug Patterns by Phase",
+        "file": "memory/bug-patterns-by-phase.json",
+        "description": "Which types of bugs appear in which mission phases? (planning, execution, testing, deployment)",
+        "indexed_by": "bug_type, phase, frequency, root_cause, prevention",
+        "example": "Off-by-one errors appear 60% in execution phase → recommend range-based testing in SOP-003"
+      },
+      {
+        "section_id": "M-BENCHMARKS",
+        "name": "Team Efficiency Benchmarks",
+        "file": "memory/benchmarks.json",
+        "description": "Historical performance data: timeline variance, scope expansion, bug rates, parallelization efficiency",
+        "indexed_by": "metric, percentile, trend",
+        "example": "Average timeline variance: 35% (p75); target: <30%. Trend: improving (+3% per quarter)"
+      }
+    ]
+  },
+  "agent_access": {
+    "description": "How agents can access registry and memory",
+    "registry_query_api": {
+      "endpoint": "Query this JSON file (CCAS-REGISTRY.json)",
+      "by_id": "standards[?standard_id=='CCAS-0001']",
+      "by_type": "procedures[?sop_id=='SOP-003']",
+      "by_audience": "templates.code_review[?audience=='Code Review Agent']",
+      "example_agent_prompt": "Query CCAS-REGISTRY.json for all Code Review Agent templates: $.templates.code_review[*].file"
+    },
+    "memory_query_api": {
+      "endpoint": "Read memory/*.json files directly",
+      "examples": [
+        "Find all CONFIRMED bugs in findings-database.json with status='CONFIRMED' AND severity='critical'",
+        "Get lessons-learned.md entries from last 7 days sorted by priority",
+        "Query risk-register.json for risks with probability='high' AND mitigation_status='open'"
+      ]
+    },
+    "template_loading": {
+      "description": "Agents can load templates by file path",
+      "example": "Agent loads templates/mission-pdr-template.md to present PDR structure to User",
+      "format_support": "markdown and JSON templates; agents parse as needed"
+    }
+  },
+  "quarterly_review": {
+    "schedule": "End of every quarter (Mar 31, Jun 30, Sep 30, Dec 31)",
+    "deliverable": "trends/YYYY-Q#-health-report.md",
+    "metrics_analyzed": [
+      "Average timeline variance (target: <30%)",
+      "Average scope expansion (target: <20%)",
+      "Bug rate per mission (target: <3 CONFIRMED per mission)",
+      "Improvements implemented from prior quarter (target: 70%+)",
+      "Recurring issues trend (target: <20% repeat rate)"
+    ],
+    "outputs": [
+      "Quarterly health report (trends, patterns, concerns)",
+      "Strategic recommendations (process/tooling improvements)",
+      "Updated benchmarks (for next quarter forecasting)",
+      "Audit committee effectiveness score (A-F)"
+    ]
+  },
+  "governance": {
+    "committee_charter": "audit-committee-charter.md",
+    "standards_authority": "User (Project Owner)",
+    "amendment_process": "User requests → Committee reviews → CCAS version incremented",
+    "approval_workflow": "Committee → User → Implementation"
+  }
+}
