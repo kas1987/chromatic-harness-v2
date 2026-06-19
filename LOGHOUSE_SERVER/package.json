@@ -1,0 +1,28 @@
+{
+  "name": "loghouse-server",
+  "version": "1.0.0",
+  "description": "LOGHOUSE audit report server with dashboard and API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build-client": "cd client && npm run build",
+    "setup": "npm install && cd client && npm install"
+  },
+  "keywords": ["loghouse", "audit", "dashboard"],
+  "author": "kas41",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "fs-extra": "^11.1.1",
+    "moment": "^2.29.4",
+    "glob": "^10.2.6",
+    "marked": "^9.0.0",
+    "json2csv": "^6.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
