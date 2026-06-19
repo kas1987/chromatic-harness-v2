@@ -75,6 +75,11 @@ class DataLoader {
   }
 
   async getAllCorrelations() {
+    const cacheKey = 'all-correlations';
+    if (this.cache[cacheKey] && Date.now() - this.cache[cacheKey].time < this.cacheExpiry) {
+      return this.cache[cacheKey].data;
+    }
+
     const files = await this.globAsync(path.join(this.correlationPath, '*.md'));
     const correlations = [];
 
@@ -93,10 +98,16 @@ class DataLoader {
     }
 
     correlations.sort((a, b) => new Date(b.date) - new Date(a.date));
+    this.cache[cacheKey] = { data: correlations, time: Date.now() };
     return correlations;
   }
 
   async getSWOTAnalysis() {
+    const cacheKey = 'all-swots';
+    if (this.cache[cacheKey] && Date.now() - this.cache[cacheKey].time < this.cacheExpiry) {
+      return this.cache[cacheKey].data;
+    }
+
     const files = await this.globAsync(path.join(this.swotPath, '*.md'));
     const swots = [];
 
@@ -115,6 +126,7 @@ class DataLoader {
     }
 
     swots.sort((a, b) => new Date(b.date) - new Date(a.date));
+    this.cache[cacheKey] = { data: swots, time: Date.now() };
     return swots;
   }
 
@@ -136,7 +148,7 @@ class DataLoader {
   async exportReports(format = 'json') {
     const audits = await this.getAllAudits();
     const correlations = await this.getAllCorrelations();
-    const swots = await this.getSWOATAnalysis();
+    const swots = await this.getSWOTAnalysis();
 
     const data = {
       generated: new Date().toISOString(),
@@ -154,7 +166,9 @@ class DataLoader {
       rows.push('Type,Date,Title,Filename');
 
       [...audits, ...correlations, ...swots].forEach(item => {
-        rows.push(`${item.type},${item.date},"${item.title}",${item.filename}`);
+        // Escape quotes in title by doubling them (RFC 4180 CSV standard)
+        const escapedTitle = item.title.replace(/"/g, '""');
+        rows.push(`${item.type},${item.date},"${escapedTitle}",${item.filename}`);
       });
 
       return rows.join('\n');
@@ -182,13 +196,13 @@ class DataLoader {
   extractMetrics(content) {
     const metrics = {};
 
-    const toolsMatch = content.match(/(\d+,?\d+)\s+tool/i);
+    const toolsMatch = content.match(/(\d{1,}(?:,\d{3})*|\d+)\s+tool/i);
     if (toolsMatch) metrics.tools = toolsMatch[1].replace(/,/g, '');
 
-    const turnsMatch = content.match(/(\d+,?\d+)\s+turn/i);
+    const turnsMatch = content.match(/(\d{1,}(?:,\d{3})*|\d+)\s+turn/i);
     if (turnsMatch) metrics.turns = turnsMatch[1].replace(/,/g, '');
 
-    const peakMatch = content.match(/Peak.*?(\d+[\d,]*)\s*tool/i);
+    const peakMatch = content.match(/Peak.*?(\d{1,}(?:,\d{3})*|\d+)\s*tool/i);
     if (peakMatch) metrics.peak = peakMatch[1].replace(/,/g, '');
 
     return metrics;

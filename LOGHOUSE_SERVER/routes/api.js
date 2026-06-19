@@ -128,25 +128,38 @@ router.get('/export/:type', async (req, res) => {
 router.get('/git-correlation/:date', async (req, res) => {
   try {
     const date = req.params.date;
+
+    // Validate date format (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
+    }
+
     const repoPath = path.resolve(__dirname, '..', '..');
 
-    // Get commits for the date
-    const cmd = `cd "${repoPath}" && git log --since="${date} 00:00" --until="${date} 23:59" --pretty=format:"%h %ai %s" 2>/dev/null || echo ""`;
+    // Get commits for the date (using git rev-list for safer parsing)
+    const sinceDate = `${date} 00:00:00`;
+    const untilDate = `${date} 23:59:59`;
+    const cmd = `cd "${repoPath}" && git log --since="${sinceDate}" --until="${untilDate}" --pretty=format:"%h%n%ai%n%s" 2>/dev/null || echo ""`;
     const output = execSync(cmd, { encoding: 'utf-8' });
-    const commits = output.trim().split('\n').filter(line => line.length > 0);
+    const lines = output.trim().split('\n').filter(line => line.length > 0);
+
+    // Parse structured git output (hash, timestamp, message on separate lines)
+    const commits = [];
+    for (let i = 0; i < lines.length; i += 3) {
+      if (i + 2 < lines.length) {
+        commits.push({
+          hash: lines[i],
+          timestamp: lines[i + 1],
+          message: lines[i + 2]
+        });
+      }
+    }
 
     res.json({
       status: 'success',
       date,
       commits_count: commits.length,
-      commits: commits.map(line => {
-        const parts = line.split(' ');
-        return {
-          hash: parts[0],
-          timestamp: `${parts[1]} ${parts[2]}`,
-          message: parts.slice(3).join(' ')
-        };
-      })
+      commits
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -28,11 +28,13 @@ function Correlations() {
 
   const handleDateSelect = async (date) => {
     setSelectedDate(date);
+    setError(null);
+    setGitCommits([]);
     try {
       const res = await axios.get(`/api/audits/git-correlation/${date}`);
       setGitCommits(res.data.commits);
     } catch (err) {
-      console.error(err);
+      setError(`Failed to fetch commits for ${date}: ${err.message}`);
     }
   };
 
@@ -96,8 +98,14 @@ function Correlations() {
               </>
             )}
 
-            {selectedDate && gitCommits.length === 0 && (
+            {selectedDate && gitCommits.length === 0 && !error && (
               <div style={{ color: '#cbd5e1' }}>No commits found for {selectedDate}</div>
+            )}
+
+            {error && (
+              <div style={{ color: '#ef4444', marginBottom: '12px', padding: '8px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px' }}>
+                ⚠️ {error}
+              </div>
             )}
           </div>
         </div>
