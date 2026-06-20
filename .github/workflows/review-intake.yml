@@ -41,6 +41,12 @@ jobs:
           touch 07_LOGS_AND_AUDIT/review_intake/findings.jsonl
           test -f 07_LOGS_AND_AUDIT/review_intake/queue.json || echo '{"items":[]}' > 07_LOGS_AND_AUDIT/review_intake/queue.json
 
+      - name: Record intake workflow start time
+        run: |
+          echo "INTAKE_START=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_ENV
+          mkdir -p 07_LOGS_AND_AUDIT/review_intake/timing
+          echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') workflow_started" >> 07_LOGS_AND_AUDIT/review_intake/timing/event_${{ github.event.number || 0 }}.log
+
       - name: Ingest GitHub review event
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
@@ -54,6 +60,20 @@ jobs:
             --findings 07_LOGS_AND_AUDIT/review_intake/findings.jsonl \
             --queue 07_LOGS_AND_AUDIT/review_intake/queue.json \
             --state 07_LOGS_AND_AUDIT/review_intake/state.json
+          echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') ingest_complete" >> 07_LOGS_AND_AUDIT/review_intake/timing/event_${{ github.event.number || 0 }}.log
+
+      - name: Optionally dispatch to beads (if 'review-intake: analyze' tag present)
+        continue-on-error: true
+        run: |
+          if grep -q "review-intake: analyze" 07_LOGS_AND_AUDIT/review_intake/findings.jsonl 2>/dev/null; then
+            echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') dispatch_attempted" >> 07_LOGS_AND_AUDIT/review_intake/timing/event_${{ github.event.number || 0 }}.log
+            python scripts/dispatch_review_work.py \
+              --queue 07_LOGS_AND_AUDIT/review_intake/queue.json \
+              --emit-beads 2>&1 | tee -a 07_LOGS_AND_AUDIT/review_intake/dispatch.log || true
+            echo "$(date -u +'%Y-%m-%dT%H:%M:%SZ') dispatch_complete" >> 07_LOGS_AND_AUDIT/review_intake/timing/event_${{ github.event.number || 0 }}.log
+          else
+            echo "No 'review-intake: analyze' tag found; skipping dispatch"
+          fi
 
       # State is published as a workflow artifact rather than pushed to a protected
       # branch. A downstream collector (scripts/review_intake_central_collector.py)
