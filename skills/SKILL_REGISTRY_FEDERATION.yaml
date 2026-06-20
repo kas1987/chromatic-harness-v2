@@ -1,0 +1,541 @@
+---
+# Unified Skill Registry Federation
+# Canonical source: C:/chromatic-harness-v2/skills/
+# Generated: 2026-06-20
+# Version: 1.0.0
+# Last Updated: 2026-06-20T20:30:00Z
+
+# FEDERATION POLICY
+federation:
+  version: 1.0.0
+  canonical_repo: chromatic-harness-v2
+  conflict_resolution: "harness-authoritative"
+  scopes:
+    - chromatic-harness-v2
+    - claude-home
+    - cursor-octopus
+    - cursor-basic
+    - cursor-plugins
+  last_audit: 2026-06-20
+  next_audit_due: 2026-07-20
+  maintainer: kas41866@gmail.com
+
+# SKILL CATALOG - HARNESS (Authoritative)
+skills:
+  # ============================================================================
+  # CHROMATIC-HARNESS-V2 (Canonical implementations)
+  # ============================================================================
+  - name: audit-solution
+    repository: chromatic-harness-v2
+    path: .agents/skills/audit-solution/SKILL.md
+    status: active
+    tier: execution
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Single-pass audit for solution evaluation before building.
+      Checks if a gap/feature already has a suitable solution before implementation.
+    triggers:
+      - "before I build"
+      - "does something exist"
+      - "is there a library for"
+      - "should I build or use"
+      - "find me a solution for"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 1.0
+
+  - name: converter
+    repository: chromatic-harness-v2
+    path: .agents/skills/converter/SKILL.md
+    status: active
+    tier: execution
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Cross-platform skill converter. Parse AgentOps skills into a universal bundle format,
+      then convert to target platforms (Codex, Cursor).
+    triggers:
+      - "convert"
+      - "converter"
+      - "convert skill"
+      - "export skill"
+      - "cross-platform"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.85
+
+  - name: flywheel
+    repository: chromatic-harness-v2
+    path: .agents/skills/flywheel/SKILL.md
+    status: active
+    tier: monitoring
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Knowledge flywheel health monitoring. Checks velocity, pool depths, staleness.
+      Used to monitor knowledge compounding and artifact consistency.
+    triggers:
+      - "flywheel status"
+      - "knowledge health"
+      - "is knowledge compounding"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.9
+
+  - name: harvest
+    repository: chromatic-harness-v2
+    path: .agents/skills/harvest/SKILL.md
+    status: active
+    tier: execution
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Knowledge harvesting from sessions. Extract learnings, patterns, and decisions
+      into the knowledge base.
+    triggers:
+      - "harvest"
+      - "extract learnings"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.95
+
+  - name: harvest-insights
+    repository: chromatic-harness-v2
+    path: .agents/skills/harvest-insights/SKILL.md
+    status: active
+    tier: execution
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Parses /insights reports and autonomously generates PDRs, queues items,
+      writes audit records, and updates meta-brain.
+    triggers:
+      - "harvest insights"
+      - "process insights"
+    dependencies:
+      - harvest
+    last_verified: 2026-06-20
+    confidence: 0.9
+
+  - name: heal-skill
+    repository: chromatic-harness-v2
+    path: .agents/skills/heal-skill/SKILL.md
+    status: active
+    tier: maintenance
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Automated skill maintenance. Detects and fixes: missing frontmatter, name mismatches,
+      unlinked references, empty directories, dead references, and Codex parity drift.
+    triggers:
+      - "heal-skill"
+      - "heal skill"
+      - "fix skills"
+      - "skill maintenance"
+      - "repair skills"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.92
+
+  - name: hook-audit
+    repository: chromatic-harness-v2
+    path: .agents/skills/hook-audit/SKILL.md
+    status: active
+    tier: maintenance
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Audit Claude Code hook configuration across 4 phases:
+      inventory, coverage, cost profiling, and verification.
+    triggers:
+      - "hook-audit"
+      - "audit hooks"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.88
+
+  - name: inbox
+    repository: chromatic-harness-v2
+    path: .agents/skills/inbox/SKILL.md
+    status: active
+    tier: coordination
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Unified inbox: Agent Mail MCP (agent coordination) + Chromatic Intake Harness
+      (file/email/GitHub ingestion pipeline).
+    triggers:
+      - "inbox"
+      - "check mail"
+      - "any messages"
+      - "show inbox"
+      - "pending messages"
+      - "who needs help"
+      - "check intake"
+      - "what is in the queue"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.9
+
+  - name: provenance
+    repository: chromatic-harness-v2
+    path: .agents/skills/provenance/SKILL.md
+    status: active
+    tier: knowledge
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Trace knowledge artifact lineage and sources. Find orphans, stale citations,
+      and validate provenance chains.
+    triggers:
+      - "where did this come from"
+      - "trace this learning"
+      - "knowledge lineage"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.93
+
+  - name: skill-inventory
+    repository: chromatic-harness-v2
+    path: .agents/skills/skill-inventory/SKILL.md
+    status: active
+    tier: maintenance
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Skill Depreciation Inventory. Identify which skills are appreciating vs depreciating
+      in the AI era.
+    triggers:
+      - "skill inventory"
+      - "skill depreciation"
+      - "which skills matter"
+      - "skills audit"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.85
+
+  - name: trace
+    repository: chromatic-harness-v2
+    path: .agents/skills/trace/SKILL.md
+    status: active
+    tier: knowledge
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Trace design decisions and concepts through session history, handoffs, and git.
+      Find decision provenance and design lineage.
+    triggers:
+      - "trace decision"
+      - "how did we decide"
+      - "where did this come from"
+      - "design provenance"
+      - "decision history"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.92
+
+  - name: windows-check
+    repository: chromatic-harness-v2
+    path: .agents/skills/windows-check/SKILL.md
+    status: active
+    tier: maintenance
+    version: 1.0.0
+    owner: kas41866@gmail.com
+    description: |
+      Windows compatibility validator. Scans SKILL.md files for Mac/Linux-only patterns,
+      reports compatibility score, generates fix suggestions.
+    triggers:
+      - "windows check"
+      - "check windows compat"
+      - "find brew install"
+      - "windows compatibility"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.9
+
+  # ============================================================================
+  # CLAUDE-HOME (Web/extraction skills)
+  # ============================================================================
+  - name: firecrawl
+    repository: claude-home
+    path: ~/.claude/.agents/skills/firecrawl/SKILL.md
+    status: active
+    tier: execution
+    version: 1.8.0
+    owner: kas41866@gmail.com
+    description: |
+      Web scraping, search, crawling, and page interaction via the Firecrawl CLI.
+      Real-time web search with full page content extraction.
+    triggers:
+      - "search the web"
+      - "find articles"
+      - "research a topic"
+      - "scrape a webpage"
+      - "extract data from website"
+      - "crawl documentation"
+      - "download a site"
+    dependencies: []
+    last_verified: 2026-06-20
+    confidence: 0.95
+
+  - name: firecrawl-agent
+    repository: claude-home
+    path: ~/.claude/.agents/skills/firecrawl-agent/SKILL.md
+    status: active
+    tier: execution
+    version: 1.8.0
+    owner: kas41866@gmail.com
+    description: |
+      Firecrawl agent mode for autonomous web interaction and learning.
+    triggers:
+      - "firecrawl agent"
+      - "autonomous scraping"
+    dependencies:
+      - firecrawl
+    last_verified: 2026-06-20
+    confidence: 0.85
+    note: "Sub-skill of firecrawl; prefer parent for simple tasks"
+
+  - name: firecrawl-crawl
+    repository: claude-home
+    path: ~/.claude/.agents/skills/firecrawl-crawl/SKILL.md
+    status: active
+    tier: execution
+    version: 1.8.0
+    owner: kas41866@gmail.com
+    description: |
+      Firecrawl crawl mode for multi-page site traversal.
+    triggers:
+      - "crawl site"
+      - "site crawl"
+    dependencies:
+      - firecrawl
+    last_verified: 2026-06-20
+    confidence: 0.85
+    note: "Sub-skill of firecrawl"
+
+  - name: firecrawl-download
+    repository: claude-home
+    path: ~/.claude/.agents/skills/firecrawl-download/SKILL.md
+    status: active
+    tier: execution
+    version: 1.8.0
+    owner: kas41866@gmail.com
+    description: |
+      Firecrawl download mode for bulk page capture.
+    triggers:
+      - "download pages"
+      - "bulk scrape"
+    dependencies:
+      - firecrawl
+    last_verified: 2026-06-20
+    confidence: 0.85
+    note: "Sub-skill of firecrawl"
+
+  - name: firecrawl-instruct
+    repository: claude-home
+    path: ~/.claude/.agents/skills/firecrawl-instruct/SKILL.md
+    status: active
+    tier: execution
+    version: 1.8.0
+    owner: kas41866@gmail.com
+    description: |
+      Firecrawl instruct mode for custom extraction instructions.
+    triggers:
+      - "firecrawl instruct"
+      - "custom extraction"
+    dependencies:
+      - firecrawl
+    last_verified: 2026-06-20
+    confidence: 0.85
+    note: "Sub-skill of firecrawl"
+
+  - name: firecrawl-map
+    repository: claude-home
+    path: ~/.claude/.agents/skills/firecrawl-map/SKILL.md
+    status: active
+    tier: execution
+    version: 1.8.0
+    owner: kas41866@gmail.com
+    description: |
+      Firecrawl map mode for site structure analysis.
+    triggers:
+      - "firecrawl map"
+      - "site structure"
+    dependencies:
+      - firecrawl
+    last_verified: 2026-06-20
+    confidence: 0.85
+    note: "Sub-skill of firecrawl"
+
+  - name: firecrawl-search
+    repository: claude-home
+    path: ~/.claude/.agents/skills/firecrawl-search/SKILL.md
+    status: active
+    tier: execution
+    version: 1.8.0
+    owner: kas41866@gmail.com
+    description: |
+      Firecrawl search mode for web searching and result extraction.
+    triggers:
+      - "web search"
+      - "firecrawl search"
+    dependencies:
+      - firecrawl
+    last_verified: 2026-06-20
+    confidence: 0.95
+    note: "Preferred sub-skill for search tasks"
+
+  # ============================================================================
+  # DUPLICATES DETECTED (Will be consolidated)
+  # ============================================================================
+  # The following skills exist in multiple repositories but have canonical
+  # authoritative versions in chromatic-harness-v2. Duplicates in Cursor/Claude
+  # should be deprecated and redirected to canonical versions.
+
+  - name: skill-audit
+    repository: cursor-octopus
+    path: ~/.cursor/claude-octopus/skills/skill-audit/SKILL.md
+    status: duplicate
+    canonical: audit-solution
+    tier: execution
+    owner: kas41866@gmail.com
+    description: |
+      [DUPLICATE] This is a duplicate of audit-solution in harness.
+      Will be deprecated in favor of canonical implementation.
+    last_verified: 2026-06-20
+    confidence: 0.0
+    note: "Redirect to audit-solution (chromatic-harness-v2)"
+
+  - name: skill-code-review
+    repository: cursor-octopus
+    path: ~/.cursor/claude-octopus/skills/skill-code-review/SKILL.md
+    status: active
+    tier: execution
+    repository_specific: true
+    owner: kas41866@gmail.com
+    description: |
+      Expert multi-AI code review with inline PR comments.
+      (Cursor-specific implementation; no harness equivalent)
+    last_verified: 2026-06-20
+    confidence: 0.9
+
+  - name: flow-develop
+    repository: cursor-octopus
+    path: ~/.cursor/claude-octopus/skills/flow-develop/SKILL.md
+    status: active
+    tier: execution
+    repository_specific: true
+    owner: kas41866@gmail.com
+    description: |
+      Multi-AI implementation using Codex and Gemini CLIs (Double Diamond Develop).
+      (Cursor-octopus specific; no harness equivalent)
+    last_verified: 2026-06-20
+    confidence: 0.9
+
+# ============================================================================
+# ALLOWLIST - Skills approved for automatic invocation
+# ============================================================================
+allowlist:
+  version: 1.0.0
+  approved_count: 36
+  review_date: 2026-06-20
+  next_review: 2026-07-20
+  enforced_by: go-mode
+
+  approved_skills:
+    # HARNESS CORE (11 skills)
+    - audit-solution
+    - converter
+    - flywheel
+    - harvest
+    - harvest-insights
+    - heal-skill
+    - hook-audit
+    - inbox
+    - provenance
+    - skill-inventory
+    - trace
+    - windows-check
+
+    # FIRECRAWL FAMILY (7 skills - aggregated)
+    - firecrawl
+    - firecrawl-agent
+    - firecrawl-crawl
+    - firecrawl-download
+    - firecrawl-instruct
+    - firecrawl-map
+    - firecrawl-search
+
+    # CURSOR-OCTOPUS REPOSITORY-SPECIFIC (18 skills)
+    - skill-code-review
+    - flow-define
+    - flow-develop
+    - flow-deliver
+    - flow-discover
+    - flow-parallel
+    - flow-spec
+    - octopus-architecture
+    - octopus-quick
+    - octopus-research
+    - octopus-security-audit
+    - octopus-ui-ux-design
+    - skill-council
+    - skill-cost-projections
+    - skill-coverage-audit
+    - skill-debate
+    - skill-decision-support
+    - skill-parallel-agents
+
+  # Skills removed from allowlist (deprecated or archived)
+  deprecated_skills:
+    - microsoft-foundry (archived 2026-05-02)
+    - _archived_nsfw (retired from service)
+
+# ============================================================================
+# CONFLICT RESOLUTION LOG
+# ============================================================================
+conflicts_resolved:
+  - skill: skill-audit
+    locations:
+      - cursor-octopus/skills/skill-audit/SKILL.md
+      - chromatic-harness-v2/.agents/skills/audit-solution/SKILL.md
+    resolution: canonical=audit-solution
+    reason: Harness implementation is authoritative; Cursor duplicate to be deprecated
+    resolved_date: 2026-06-20
+
+  - skill: skill-code-review
+    locations:
+      - cursor-octopus/skills/skill-code-review/SKILL.md
+    resolution: repository-specific
+    reason: Cursor-specific multi-AI implementation with no harness equivalent; kept active
+    resolved_date: 2026-06-20
+
+# ============================================================================
+# FEDERATION ROUTING TABLE
+# ============================================================================
+routing:
+  default_tier: execution
+  tier_definitions:
+    execution: "Active workflow skills; high-confidence, production-ready"
+    maintenance: "Infrastructure and skill health monitoring"
+    monitoring: "Health checks, velocity tracking, staleness detection"
+    coordination: "Agent mail, inbox, intake pipelines"
+    knowledge: "Knowledge artifact tracing and provenance"
+
+  execution_priority:
+    - chromatic-harness-v2
+    - cursor-octopus
+    - claude-home
+
+# ============================================================================
+# DEPLOYMENT STATUS
+# ============================================================================
+deployment:
+  status: "federation-active"
+  go_mode_enforcement: "enabled"
+  invocation_guard: "active"
+  unknown_skill_handling: "warn + deny"
+  last_deployment: 2026-06-20T20:30:00Z
+  validation_status: "passed"
