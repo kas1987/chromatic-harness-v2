@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "chromatic-harness": {
+      "command": "python",
+      "args": ["-m", "chromatic_mcp.server"],
+      "cwd": ".",
+      "env": {
+        "PYTHONPATH": "02_RUNTIME",
+        "HARNESS_API_HOST": "${env:HARNESS_API_HOST}",
+        "HARNESS_REMOTE_MODE": "1"
+      }
+    },
+    "chromatic-harness-api": {
+      "type": "sse",
+      "url": "${env:HARNESS_API_URL}"
+    }
+  }
+}

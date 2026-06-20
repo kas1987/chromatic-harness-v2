@@ -1,7 +1,7 @@
 # Repo and Rig Inventory
 
 > **Regenerate:** `powershell -File scripts/audit_local_repos.ps1`  
-> **Last audit:** 2026-05-30 (`scripts/audit_local_repos.ps1`)  
+> **Last audit:** 2026-06-20 (manual — junction layer corrected)  
 > **Standards:** [AGENT_OPERATIONS.md](../AGENT_OPERATIONS.md), [12_HANDOFFS/SESSION_COMPACT.md](../12_HANDOFFS/SESSION_COMPACT.md)
 
 Canonical map of Chromatic repos on this machine vs GitHub (`kas1987`), with harness v2 alignment checks.
@@ -29,7 +29,7 @@ Canonical map of Chromatic repos on this machine vs GitHub (`kas1987`), with har
 
 | Project | Path | GitHub | Branch | Role | Alignment |
 |---------|------|--------|--------|------|-----------|
-| Chromatic Harness v2 | `C:\Users\kas41\chromatic-harness-v2` | `kas1987/chromatic-harness-v2` | `session/chromatic-harness-v2-initial` | Primary harness | **Aligned** |
+| Chromatic Harness v2 | `E:\.02_chromatic-harness-v2` (aliases: `C:\chromatic-harness-v2`, `D:\chromatic-harness-v2`) | `kas1987/chromatic-harness-v2` | `main` | Primary harness | **Aligned** |
 | Fusion Computer | `C:\Users\kas41\fusion-computer` | `kas1987/fusion-computer` | `session/2026-05-28-harness-v2` | Templates & standards rig | **Aligned** |
 | Claude config | `C:\Users\kas41\.claude` | `kas1987/claude-config` | `session/mc-x1bi-governance-fixes` | Global Claude config | **Aligned** |
 | Chromatic stack | `C:\Users\kas41\chromatic-stack` | `kas1987/chromatic-stack` | `master` | Docker local agent stack | **Aligned** |
@@ -38,6 +38,8 @@ Canonical map of Chromatic repos on this machine vs GitHub (`kas1987`), with har
 | Zelexdoll theme | `C:\Users\kas41\archived\zelexdoll-theme` | *(none)* | — | Shopify theme (archived 2026-05-30) | **Archived** — see `ARCHIVED.md` in folder |
 | Global agents hub | `C:\Users\kas41\.agents` | *(none)* | — | Cross-rig learnings | **Fixed** — `.git` removed; plain directory hub |
 | User home | `C:\Users\kas41` | *(none)* | — | Was accidental git root | **Fixed** — backup `.git` deleted 2026-05-30 |
+
+**Note:** `C:\Users\kas41\chromatic-harness-v2` is NOT the harness — it is `Claude_Master` (`kas1987/Claude_Master`). Do not confuse.
 
 **Submodule (correct):** `chromatic-harness-v2/02_RUNTIME/runtime-engines/roach-pi` → `tmdgusya/roach-pi`
 
