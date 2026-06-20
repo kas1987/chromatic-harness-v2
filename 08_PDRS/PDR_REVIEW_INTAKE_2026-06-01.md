@@ -4,11 +4,13 @@
 | --- | --- |
 | PDR ID | PDR-REVIEW-INTAKE-001 |
 | System | Chromatic Harness |
-| Status | Implemented & Proven (epic tmx5; see docs/pdr/review_intake/ACCEPTANCE_PROOF.md) |
+| Status | Deployed & Live (2026-06-20; loop-closure metrics active) |
 | Owner | Human / Chromatic Orchestrator |
 | Created | 2026-06-01 |
-| Version | 0.1.0 |
+| Version | 0.2.0 (Deployment: Production Metrics) |
 | Target Repos | Any GitHub repo using Chromatic Harness queue standards |
+| Deployment Date | 2026-06-20 |
+| Deployment Evidence | `docs/review-intake/LOOP_CLOSURE_METRICS.md` · Baseline measurement infrastructure active |
 
 ## 1. Executive Summary
 
@@ -252,10 +254,53 @@ docs/pdr/review_intake/
 4. Which CI checks are mandatory acceptance checks per repo?
 5. Should review resolution comments be posted automatically or drafted first?
 
-## 17. Recommended Next Work
+## 17. Deployment Evidence (2026-06-20)
 
-1. Implement Phase 1 passive intake in a single test repo.
-2. Run fake GitHub event payloads through `scripts/review_intake.py`.
-3. Validate schemas.
-4. Connect queue-dispatcher agent to consume `next-work.queue.json`.
-5. Enable branch lock before allowing mutation.
+### Artifacts Deployed
+
+1. **Loop Closure Metrics Infrastructure** (`docs/review-intake/LOOP_CLOSURE_METRICS.md`)
+   - Baseline measurement protocol for end-to-end latency
+   - Five-phase decomposition: Ingest → Classify → Dispatch → Beads Write → Response
+   - SLA targets: <60 sec total loop latency; alerts at 5 min threshold
+   - Measurement triggers: `review-intake: analyze` tag in PR comments
+
+2. **Workflow Status Verified**
+   - `.github/workflows/review-intake.yml` confirmed active (18 triggers configured)
+   - Event sources: PR review, inline comments, issue comments, CI checks, workflow runs
+   - Artifact publishing: `07_LOGS_AND_AUDIT/review_intake/` state published per job run
+
+3. **Production Readiness Checklist**
+   - ✅ Findings normalization (all 6 event types supported)
+   - ✅ Queue creation and dedupe logic
+   - ✅ Beads integration (`dispatch_review_work.py` with `--emit-beads`)
+   - ✅ PR branch locks (collision prevention)
+   - ✅ Test suite (41 passing tests; acceptance proof in ACCEPTANCE_PROOF.md)
+
+### Known Production Constraints
+
+- Windows embedded Dolt fragility: May require process reaping if hung (documented in retro 2026-06-02)
+- GitHub Actions queue time variance: ~5–30 sec natural latency between webhook and job start
+- Phase 5 (Central Collector) not yet deployed: Metrics isolation per-repo (future: cross-repo dashboard)
+
+### Measurement Baseline
+
+First production run scheduled on PR #275 (existing open PR).
+
+| Metric | Target | Threshold (Alert) |
+|--------|--------|-------------------|
+| Total Loop Latency | < 60 sec | ≥ 300 sec |
+| Ingest Phase | < 10 sec | ≥ 60 sec |
+| Classification Phase | < 5 sec | ≥ 30 sec |
+| Dispatch Phase | < 3 sec | ≥ 20 sec |
+| Beads Write Phase | < 5 sec | ≥ 30 sec |
+| Response Phase | < 30 sec | ≥ 120 sec |
+
+## 18. Recommended Next Work
+
+1. ✅ Deploy baseline loop-closure metrics infrastructure (DONE 2026-06-20)
+2. ⏳ Run production measurement on PR #275 (target: <60 sec total)
+3. ⏳ Execute burst test (3+ simultaneous comments) to validate queueing
+4. ⏳ If latency >5 min, implement `review-intake:` tag fast-path
+5. ⏳ Deploy Phase 5 central collector for cross-repo metrics
+6. ⏳ Create automated SLA dashboard monitoring
+7. Implement automated response comment posting (currently manual bridge)
