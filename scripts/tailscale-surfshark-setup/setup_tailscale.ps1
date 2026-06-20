@@ -1,5 +1,5 @@
 # setup_tailscale.ps1
-# Companion script to setup_tailscale.bat — runs as Administrator.
+# Companion script to setup_tailscale.bat -- runs as Administrator.
 # Configures Tailscale to coexist with Surfshark by:
 #   - Temporarily stopping Surfshark WireGuard so Tailscale can authenticate
 #   - Adding persistent bypass routes for Tailscale's IP ranges via the LAN gateway
@@ -11,18 +11,18 @@ $ErrorActionPreference = "Stop"
 
 function Write-Step([string]$msg) {
     Write-Host ""
-    Write-Host "► $msg" -ForegroundColor Cyan
+    Write-Host "> $msg" -ForegroundColor Cyan
 }
 
 function Write-OK([string]$msg) {
-    Write-Host "  ✓ $msg" -ForegroundColor Green
+    Write-Host "  OK: $msg" -ForegroundColor Green
 }
 
 function Write-Warn([string]$msg) {
-    Write-Host "  ! $msg" -ForegroundColor Yellow
+    Write-Host "  WARN: $msg" -ForegroundColor Yellow
 }
 
-# ── Detect LAN gateway (not Surfshark, not Tailscale, not loopback) ──────────
+# -- Detect LAN gateway (not Surfshark, not Tailscale, not loopback) ----------
 Write-Step "Detecting LAN gateway..."
 
 $lanRoute = Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue |
@@ -43,35 +43,34 @@ $IfIndex = $lanRoute.ifIndex
 $IfAlias = $lanRoute.InterfaceAlias
 Write-OK "Gateway: $GW via $IfAlias (ifIndex $IfIndex)"
 
-# ── Tailscale IP ranges to bypass Surfshark ───────────────────────────────────
+# -- Tailscale IP ranges to bypass Surfshark ----------------------------------
 # These routes send Tailscale's traffic directly through the LAN adapter,
-# not through Surfshark's tunnel. Persistent (-PolicyStore PersistentStore)
-# so they survive reboots.
+# not through Surfshark's tunnel. PersistentStore survives reboots.
 $routes = @(
-    @{ Prefix = "100.64.0.0/10";    Desc = "Tailscale CGNAT mesh range" },
+    @{ Prefix = "100.64.0.0/10";      Desc = "Tailscale CGNAT mesh range" },
     @{ Prefix = "100.100.100.100/32"; Desc = "Tailscale MagicDNS" },
-    @{ Prefix = "192.200.0.0/24";   Desc = "controlplane.tailscale.com" }
+    @{ Prefix = "192.200.0.0/24";     Desc = "controlplane.tailscale.com" }
 )
 
-# ── Step 1: Stop Surfshark WireGuard ─────────────────────────────────────────
+# -- Step 1: Stop Surfshark WireGuard -----------------------------------------
 Write-Step "Stopping Surfshark WireGuard service..."
 try {
     Stop-Service -Name "Surfshark WireGuard" -Force -ErrorAction Stop
     Write-OK "Surfshark WireGuard stopped"
 } catch {
     Write-Warn "Could not stop Surfshark WireGuard: $_"
-    Write-Warn "Proceeding anyway — login may still succeed"
+    Write-Warn "Proceeding anyway -- login may still succeed"
 }
 
 Start-Sleep -Seconds 2
 
-# ── Step 2: Reset Tailscale to clear failed state ─────────────────────────────
+# -- Step 2: Reset Tailscale to clear failed state ----------------------------
 Write-Step "Restarting Tailscale service..."
 Restart-Service -Name "Tailscale" -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 3
 Write-OK "Tailscale service restarted"
 
-# ── Step 3: Tailscale login ───────────────────────────────────────────────────
+# -- Step 3: Tailscale login --------------------------------------------------
 Write-Step "Opening Tailscale login in your browser..."
 Write-Host "  Complete the login in the browser window that opens." -ForegroundColor White
 Write-Host "  This window will wait until authentication is confirmed." -ForegroundColor White
@@ -103,17 +102,12 @@ if (-not $authed) {
     $status | Select-Object -First 3 | ForEach-Object { Write-Host "  $_" }
 }
 
-# ── Step 4: Add persistent bypass routes ─────────────────────────────────────
+# -- Step 4: Add persistent bypass routes -------------------------------------
 Write-Step "Adding persistent bypass routes for Tailscale traffic..."
 
 foreach ($r in $routes) {
-    $parts    = $r.Prefix -split "/"
-    $dest     = $parts[0]
-    $prefix   = [int]$parts[1]
     try {
-        # Remove existing conflicting route if present
         Remove-NetRoute -DestinationPrefix $r.Prefix -ErrorAction SilentlyContinue -Confirm:$false
-
         New-NetRoute `
             -DestinationPrefix $r.Prefix `
             -NextHop $GW `
@@ -121,18 +115,17 @@ foreach ($r in $routes) {
             -RouteMetric 1 `
             -PolicyStore PersistentStore `
             -ErrorAction Stop | Out-Null
-
-        Write-OK "$($r.Prefix) → $GW  ($($r.Desc))"
+        Write-OK "$($r.Prefix) --> $GW  ($($r.Desc))"
     } catch {
         Write-Warn "Route $($r.Prefix) skipped: $_"
     }
 }
 
-# ── Step 5: Bring Tailscale up ────────────────────────────────────────────────
+# -- Step 5: Bring Tailscale up -----------------------------------------------
 Write-Step "Bringing Tailscale up..."
 & tailscale up 2>&1 | ForEach-Object { Write-Host "  $_" }
 
-# ── Step 6: Restart Surfshark WireGuard ──────────────────────────────────────
+# -- Step 6: Restart Surfshark WireGuard --------------------------------------
 Write-Step "Restarting Surfshark WireGuard..."
 try {
     Start-Service -Name "Surfshark WireGuard" -ErrorAction Stop
@@ -144,29 +137,29 @@ try {
 
 Start-Sleep -Seconds 3
 
-# ── Final status ──────────────────────────────────────────────────────────────
+# -- Final status --------------------------------------------------------------
 Write-Step "Final status check..."
 Write-Host ""
-Write-Host "── Tailscale ─────────────────────────────────────" -ForegroundColor DarkGray
+Write-Host "-- Tailscale -----------------------------------------" -ForegroundColor DarkGray
 & tailscale status 2>&1 | Select-Object -First 10 | ForEach-Object { Write-Host "  $_" }
 
 Write-Host ""
-Write-Host "── Active bypass routes ──────────────────────────" -ForegroundColor DarkGray
+Write-Host "-- Active bypass routes ------------------------------" -ForegroundColor DarkGray
 foreach ($r in $routes) {
     $rt = Get-NetRoute -DestinationPrefix $r.Prefix -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($rt) {
-        Write-Host "  $($r.Prefix) → $($rt.NextHop)  [$($rt.InterfaceAlias)]" -ForegroundColor Green
+        Write-Host "  $($r.Prefix) --> $($rt.NextHop)  [$($rt.InterfaceAlias)]" -ForegroundColor Green
     } else {
-        Write-Host "  $($r.Prefix) → NOT FOUND" -ForegroundColor Red
+        Write-Host "  $($r.Prefix) --> NOT FOUND" -ForegroundColor Red
     }
 }
 
 Write-Host ""
-Write-Host "═══════════════════════════════════════════════════" -ForegroundColor DarkGray
-Write-Host " Setup complete. Both Tailscale and Surfshark"      -ForegroundColor White
-Write-Host " should now run without conflict."                   -ForegroundColor White
+Write-Host "-----------------------------------------------------" -ForegroundColor DarkGray
+Write-Host " Setup complete. Both Tailscale and Surfshark"         -ForegroundColor White
+Write-Host " should now run without conflict."                      -ForegroundColor White
 Write-Host ""
-Write-Host " To get your Tailscale IP (for laptop config):"     -ForegroundColor White
-Write-Host "   tailscale ip -4"                                  -ForegroundColor Yellow
-Write-Host "═══════════════════════════════════════════════════" -ForegroundColor DarkGray
+Write-Host " To get your Tailscale IP (for laptop config):"        -ForegroundColor White
+Write-Host "   tailscale ip -4"                                     -ForegroundColor Yellow
+Write-Host "-----------------------------------------------------"  -ForegroundColor DarkGray
 Write-Host ""
