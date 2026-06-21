@@ -28,6 +28,14 @@ from db import init_db  # noqa: E402
 @pytest_asyncio.fixture
 async def client():
     await init_db()
+    # Clear users table before each test to prevent cross-test state leakage
+    import aiosqlite
+
+    db_path = os.environ.get("CHROMATIC_DB_PATH", "")
+    if db_path:
+        async with aiosqlite.connect(db_path) as db:
+            await db.execute("DELETE FROM users")
+            await db.commit()
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
 
