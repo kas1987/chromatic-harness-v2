@@ -10,7 +10,7 @@
     "docs/playbooks/VISUAL_CONTROL_PLANE_PLAYBOOK.md"
   ],
   "adapters": {
-    "claude": ".claude/CLAUDE.md",
+    "claude": "CLAUDE.md",
     "cursor": ".cursor/rules/chromatic-visual-control-plane.mdc",
     "vscode": ".vscode/tasks.json",
     "github_actions": ".github/workflows/visual-control-plane.yml"
@@ -20,7 +20,7 @@
     "python scripts/generate_harness_mermaid.py",
     "python scripts/install_visual_control_plane.py --target /path/to/repo",
     "python scripts/auto_clean.py --dry-run",
-    "python scripts/auto_heal.py",
+    "python scripts/auto_heal.py --check-only",
     "python scripts/harness_swot.py"
   ],
   "scripts": {
