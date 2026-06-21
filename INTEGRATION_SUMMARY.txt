@@ -1,0 +1,204 @@
+HARNESS V2 ↔ CAT BI-DIRECTIONAL INTEGRATION - FILE REFERENCE
+
+==============================================================================
+LAYER 3c: INTAKE BRIDGE (Harness V2 → CAT)
+==============================================================================
+
+File: C:\chromatic-harness-v2\scripts\cat_intake_bridge.py
+
+Purpose:
+  Convert Harness intake queue entries to CAT BEAD YAML format
+
+Input:
+  ~/.agents/ol_queue/intake_queue.jsonl (JSONL format)
+  
+Output:
+  E:\chromatic-atomic-tower\beads\active\BEAD-CAT-*.yaml (YAML format)
+
+Usage:
+  python scripts/cat_intake_bridge.py          # Normal run
+  python scripts/cat_intake_bridge.py --dry-run  # Preview only
+
+Key Functions:
+  - read_intake_queue(path): Read entries from intake queue
+  - entry_to_bead(entry): Convert to BEAD structure
+  - write_bead_yaml(bead): Write YAML to beads/active/
+  - validate_bead(bead_id): Validate written BEAD
+  - main(): CLI entrypoint
+
+Environment:
+  No environment variables required
+  Uses hardcoded paths (can be overridden in code)
+
+==============================================================================
+LAYER 3d: CAT ADAPTER (Router Request → CAT HTTP)
+==============================================================================
+
+File 1: C:\chromatic-harness-v2\02_RUNTIME\router\adapters\cat_adapter.py
+
+Purpose:
+  Adapter enabling Harness V2 router to dispatch requests to CAT
+
+Inherits:
+  BaseAdapter (from router.contracts)
+
+Methods:
+  - __init__(cfg): Initialize with config
+  - health(): Check CAT HTTP server reachability
+  - complete(req: RouteRequest): Route request to CAT, return response
+
+Integration:
+  Registered in adapters.yaml as "atomic-tower"
+  Loaded by AdapterFactory at router startup
+  Used when PRISM_ORCHESTRATOR_ENABLED=true
+
+Environment:
+  PRISM_ORCHESTRATOR_ENABLED (enable/disable)
+  PRISM_ORCHESTRATOR_URL (default: http://127.0.0.1:8900)
+  CAT_ROOT (default: E:/chromatic-atomic-tower)
+
+File 2: C:\chromatic-harness-v2\02_RUNTIME\router\adapters\adapters.yaml
+
+Change:
+  Added entry:
+    atomic-tower:
+      module: "router.adapters.cat_adapter"
+      class: "CATAdapter"
+
+Effect:
+  Enables AdapterFactory to instantiate CATAdapter for "atomic-tower" provider
+
+==============================================================================
+LAYER 3e: HTTP WRAPPER (CAT Subprocess Dispatch)
+==============================================================================
+
+File: E:\chromatic-atomic-tower\scripts\cat_http_server.py
+
+Purpose:
+  FastAPI HTTP server that wraps cat_resolve_go.py for remote dispatch
+
+Endpoints:
+  GET /health
+    Response: {status, service, sprint, timestamp}
+    
+  POST /run
+    Request: {prompt, entrypoint, metadata}
+    Response: {ok, output, service, sprint}
+
+Subprocess Call:
+  Invokes: python scripts/cat_resolve_go.py --objective <prompt>
+  Timeout: 30 seconds (configurable)
+  Returns: stdout on success, stderr on error
+
+Dependencies:
+  FastAPI
+  Pydantic
+  uvicorn
+
+Launch:
+  python scripts/cat_http_server.py
+
+Environment:
+  ATOMIC_TOWER_PORT (default: 8900)
+  ATOMIC_TOWER_LOG_LEVEL (default: info)
+
+==============================================================================
+CONFIGURATION & MCP
+==============================================================================
+
+File: C:\chromatic-harness-v2\09_DEPLOYMENT\.env.example
+
+Added Variables:
+  PRISM_ORCHESTRATOR_ENABLED=true
+    - Enable CAT adapter in router
+  PRISM_ORCHESTRATOR_URL=http://127.0.0.1:8900
+    - CAT HTTP server URL
+  CAT_ROOT=E:/chromatic-atomic-tower
+    - CAT installation directory
+  ATOMIC_TOWER_PORT=8900
+    - HTTP server listening port
+  ATOMIC_TOWER_LOG_LEVEL=info
+    - HTTP server log level
+
+File: C:\chromatic-harness-v2\02_RUNTIME\chromatic_mcp\handlers.py
+
+Added Function:
+  cat_sync_intake(*, dry_run: bool = False) -> dict[str, Any]
+    - Invokes scripts/cat_intake_bridge.py
+    - Returns {ok, exit_code, stdout, stderr}
+
+Added Handler:
+  "cat_sync_intake": lambda args: cat_sync_intake(
+      dry_run=bool(args.get("dry_run", False))
+  )
+
+Added Tool Spec:
+  {
+    "name": "cat_sync_intake",
+    "description": "Sync queued Harness intake entries into CAT BEADs",
+    "inputSchema": {
+      "type": "object",
+      "properties": {"dry_run": {"type": "boolean", "default": false}}
+    }
+  }
+
+Callable from:
+  MCP clients via call_tool("cat_sync_intake", {"dry_run": false})
+
+==============================================================================
+DATA FLOW SUMMARY
+==============================================================================
+
+INTAKE SYNC FLOW:
+  intake_queue.jsonl
+    ↓
+  cat_intake_bridge.py (reads + converts)
+    ↓
+  BEAD-CAT-*.yaml (in beads/active/)
+
+ROUTING FLOW:
+  Harness Router (RouteRequest)
+    ↓
+  CAT Adapter (if PRISM_ORCHESTRATOR_ENABLED=true)
+    ↓
+  HTTP POST /run to CAT HTTP server
+    ↓
+  cat_http_server.py (subprocess call)
+    ↓
+  cat_resolve_go.py (CAT dispatch)
+    ↓
+  RouteResponse (back to router)
+
+MCP FLOW:
+  Claude Code / MCP Client
+    ↓
+  call_tool("cat_sync_intake")
+    ↓
+  chromatic_mcp.handlers.py
+    ↓
+  subprocess: scripts/cat_intake_bridge.py
+    ↓
+  Result: {ok, exit_code, stdout, stderr}
+
+==============================================================================
+ACTIVATION CHECKLIST
+==============================================================================
+
+To activate bi-directional integration:
+
+1. [ ] Copy .env.example to .env (or update existing .env)
+2. [ ] Set PRISM_ORCHESTRATOR_ENABLED=true in .env
+3. [ ] Verify CAT_ROOT points to correct path (E:\chromatic-atomic-tower)
+4. [ ] Start CAT HTTP server:
+        cd E:\chromatic-atomic-tower
+        python scripts/cat_http_server.py
+5. [ ] Verify HTTP server listening:
+        curl http://127.0.0.1:8900/health
+6. [ ] Test intake sync (MCP tool):
+        cat_sync_intake(dry_run=True)   # Preview
+        cat_sync_intake(dry_run=False)  # Actual sync
+7. [ ] Verify BEADs created in:
+        E:\chromatic-atomic-tower\beads\active\BEAD-CAT-*.yaml
+8. [ ] Test router dispatch to CAT (route orchestration task)
+
+==============================================================================
