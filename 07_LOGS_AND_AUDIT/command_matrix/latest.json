@@ -1,6 +1,6 @@
 {
   "status": "error",
-  "error": "[Errno 2] No such file or directory: 'C:\\\\Users\\\\kas41\\\\AppData\\\\Local\\\\Temp\\\\pytest-of-kas41\\\\pytest-967\\\\test_summarize_fail_open_on_ba1\\\\nope.yaml'",
+  "error": "[Errno 2] No such file or directory: 'C:\\\\Users\\\\kas41\\\\AppData\\\\Local\\\\Temp\\\\pytest-of-kas41\\\\pytest-978\\\\test_summarize_fail_open_on_ba1\\\\nope.yaml'",
   "command_count": null,
   "in_sync": null
 }

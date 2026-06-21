@@ -95,3 +95,17 @@
 [2026-06-20T14:00:00Z] PAGE   [SLA:LATENCY] test alert
 [2026-06-21T18:33:39.786Z] WARN   [SLA:LATENCY] p95 latency 335ms above baseline 100ms
 [2026-06-21T18:33:39.787Z] PAGE   [SLA:LATENCY] p95 latency 1000ms exceeds SLA 500ms
+[2026-06-21T18:35:38.810Z] WARN   [SLA:LATENCY] p95 latency 285ms above baseline Nonems
+[2026-06-21T18:35:38.813Z] PAGE   [SLA:LATENCY] p95 latency 600ms exceeds SLA 500ms
+[2026-06-21T18:35:38.814Z] PAGE   [SLA:LATENCY] p95 latency 600ms exceeds SLA 500ms
+[2026-06-20T14:00:00Z] PAGE   [SLA:LATENCY] test alert
+[2026-06-20T14:00:00Z] PAGE   [SLA:LATENCY] test alert
+[2026-06-21T18:35:38.861Z] WARN   [SLA:LATENCY] p95 latency 335ms above baseline 100ms
+[2026-06-21T18:35:38.861Z] PAGE   [SLA:LATENCY] p95 latency 1000ms exceeds SLA 500ms
+[2026-06-21T18:35:50.361Z] WARN   [SLA:LATENCY] p95 latency 285ms above baseline Nonems
+[2026-06-21T18:35:50.371Z] PAGE   [SLA:LATENCY] p95 latency 600ms exceeds SLA 500ms
+[2026-06-21T18:35:50.377Z] PAGE   [SLA:LATENCY] p95 latency 600ms exceeds SLA 500ms
+[2026-06-20T14:00:00Z] PAGE   [SLA:LATENCY] test alert
+[2026-06-20T14:00:00Z] PAGE   [SLA:LATENCY] test alert
+[2026-06-21T18:35:50.423Z] WARN   [SLA:LATENCY] p95 latency 335ms above baseline 100ms
+[2026-06-21T18:35:50.428Z] PAGE   [SLA:LATENCY] p95 latency 1000ms exceeds SLA 500ms
