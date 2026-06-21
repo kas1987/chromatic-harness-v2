@@ -215,7 +215,65 @@ def test_resolve_bd_argv_returns_list() -> None:
 
 def test_resolve_bd_argv_last_element() -> None:
     result = resolve_bd_argv()
-    assert result[-1].endswith("bd") or result[-1] == "bd"
+    import os
+
+    last = os.path.splitext(result[-1])[0]  # strip .cmd / .exe on Windows
+    assert last.endswith("bd") or last == "bd"
+
+
+def test_resolve_bd_argv_posix_found(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cover the non-Windows branch: shutil.which finds bd."""
+    import intake.bd_runner as _mod
+    import shutil
+
+    monkeypatch.setattr(_mod, "os", __import__("types").SimpleNamespace(name="posix"))
+    monkeypatch.setattr(shutil, "which", lambda name: "/usr/local/bin/bd" if name == "bd" else None)
+    result = resolve_bd_argv()
+    assert result == ["/usr/local/bin/bd"]
+
+
+def test_resolve_bd_argv_posix_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cover the non-Windows branch: shutil.which returns None → fallback."""
+    import intake.bd_runner as _mod
+    import shutil
+
+    monkeypatch.setattr(_mod, "os", __import__("types").SimpleNamespace(name="posix"))
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    result = resolve_bd_argv()
+    assert result == ["bd"]
+
+
+# ── intake.gk_runner ──────────────────────────────────────────────────────────
+
+from intake.gk_runner import resolve_gk_argv  # noqa: E402
+
+
+def test_resolve_gk_argv_returns_list() -> None:
+    result = resolve_gk_argv()
+    assert isinstance(result, list)
+    assert len(result) >= 1
+
+
+def test_resolve_gk_argv_posix_found(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cover the non-Windows branch: shutil.which finds gk."""
+    import intake.gk_runner as _gk_mod
+    import shutil
+
+    monkeypatch.setattr(_gk_mod, "os", __import__("types").SimpleNamespace(name="posix"))
+    monkeypatch.setattr(shutil, "which", lambda name: "/usr/local/bin/gk" if name == "gk" else None)
+    result = resolve_gk_argv()
+    assert result == ["/usr/local/bin/gk"]
+
+
+def test_resolve_gk_argv_posix_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cover the non-Windows branch: shutil.which returns None → fallback."""
+    import intake.gk_runner as _gk_mod
+    import shutil
+
+    monkeypatch.setattr(_gk_mod, "os", __import__("types").SimpleNamespace(name="posix"))
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    result = resolve_gk_argv()
+    assert result == ["gk"]
 
 
 # ── intake.auto_intake ────────────────────────────────────────────────────────

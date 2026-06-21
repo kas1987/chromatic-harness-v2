@@ -98,19 +98,29 @@ class TestRun:
         assert result["stdout"] == ""
 
     def test_real_run_ok(self, tmp_path):
-        result = _run(["true"], tmp_path, dry_run=False)
+        import sys
+
+        result = _run([sys.executable, "-c", "import sys; sys.exit(0)"], tmp_path, dry_run=False)
         assert result["status"] == "ok"
         assert result["returncode"] == 0
 
     def test_real_run_failed_nonzero(self, tmp_path):
-        result = _run(["false"], tmp_path, dry_run=False)
+        import sys
+
+        result = _run([sys.executable, "-c", "import sys; sys.exit(1)"], tmp_path, dry_run=False)
         assert result["status"] == "failed"
         assert result["returncode"] != 0
 
     def test_stdout_truncated_to_2000(self, tmp_path):
-        # produce more than 2000 chars of output
+        import sys
+
+        # produce more than 2000 chars of output via python (cross-platform)
         long_str = "x" * 3000
-        result = _run(["sh", "-c", f"echo '{long_str}'"], tmp_path, dry_run=False)
+        result = _run(
+            [sys.executable, "-c", f"print('{long_str}')"],
+            tmp_path,
+            dry_run=False,
+        )
         assert len(result["stdout"]) <= 2001  # newline may be included
 
 
