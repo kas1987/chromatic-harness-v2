@@ -39,6 +39,9 @@ adapters:
   native_claude:
     module: "router.adapters.native_claude_adapter"
     class: "NativeClaudeAdapter"
+  atomic-tower:
+    module: "router.adapters.cat_adapter"
+    class: "CATAdapter"
 
 prefixes:
   # OllamaRemoteAdapter matches "ollama", "ollama_local", "ollama_remote_desktop", etc.

@@ -1,0 +1,22 @@
+{
+  "comment": "SLA Metrics Collector Configuration — Copy to ~/.config/sla_metrics.json to customize",
+
+  "latency_p95_baseline_ms": 100,
+  "latency_p95_threshold_warn_ms": 200,
+  "latency_p95_threshold_page_ms": 500,
+  "latency_p99_threshold_sla_ms": 2500,
+
+  "queue_depth_yellow_threshold": 15,
+  "queue_depth_red_threshold": 30,
+
+  "token_burn_baseline_per_min": 500000,
+  "token_burn_threshold_warn_multiplier": 2.0,
+  "token_burn_threshold_page_multiplier": 3.0,
+
+  "window_size_minutes": 5,
+  "snapshot_interval_seconds": 60,
+  "escalation_delay_minutes": 5,
+
+  "pagerduty_integration_key": null,
+  "slack_webhook_url": null
+}
