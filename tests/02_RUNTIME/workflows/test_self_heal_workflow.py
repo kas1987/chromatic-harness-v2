@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from workflows.models import ConfidenceRecord, WorkflowDecision
+import workflows.self_heal as _self_heal_mod
 from workflows.self_heal import (
     SELF_HEAL_MAX,
     SELF_HEAL_MIN,
@@ -214,21 +216,35 @@ class TestApplySelfHeal:
         assert "task_graph_path" in result
 
     def test_fallback_objective_when_no_title(self, tmp_path):
+        import types
+
         bead = {"bead_id": "BID-42"}
         record = _make_record(60.0, WorkflowDecision.PLAN_ONLY)
         mock_entry = MagicMock()
-        with patch.dict("sys.modules", {"intake.queue": MagicMock(append_entry=mock_entry)}):
-            with patch("workflows.self_heal.write_active_graph", return_value=tmp_path / "active-graph.json"):
-                with patch("workflows.self_heal.build_standard_pipeline") as mock_pipeline:
-                    mock_pipeline.return_value = {
-                        "workflow_id": "WF-BID-42",
-                        "tasks": [
-                            {"task_id": "t-scout", "title": "Scout", "role": "scout"},
-                        ],
-                    }
-                    apply_self_heal(tmp_path, bead, record)
-                    # Read call_args *inside* the patch context so the mock object
-                    # has not been reset or garbage-collected by teardown ordering.
-                    call_args = mock_pipeline.call_args
-                    assert call_args is not None, "build_standard_pipeline was not called"
-                    assert "Re-decompose" in call_args[0][0] or "Re-decompose" in str(call_args)
+        # apply_self_heal was imported at collection time. Its __globals__ IS
+        # the __dict__ of the original module object, regardless of whether
+        # another test has since replaced sys.modules["workflows.self_heal"]
+        # with a fresh module via importlib._load(). We must patch the globals
+        # dict that apply_self_heal actually reads at call time.
+        fn_globals = apply_self_heal.__globals__
+        orig_bsp = fn_globals["build_standard_pipeline"]
+        orig_wag = fn_globals["write_active_graph"]
+        mock_pipeline = MagicMock()
+        mock_pipeline.return_value = {
+            "workflow_id": "WF-BID-42",
+            "tasks": [
+                {"task_id": "t-scout", "title": "Scout", "role": "scout"},
+            ],
+        }
+        mock_wag = MagicMock(return_value=tmp_path / "active-graph.json")
+        fn_globals["build_standard_pipeline"] = mock_pipeline
+        fn_globals["write_active_graph"] = mock_wag
+        try:
+            with patch.dict("sys.modules", {"intake.queue": MagicMock(append_entry=mock_entry)}):
+                apply_self_heal(tmp_path, bead, record)
+            call_args = mock_pipeline.call_args
+            assert call_args is not None, "build_standard_pipeline was not called"
+            assert "Re-decompose" in call_args[0][0] or "Re-decompose" in str(call_args)
+        finally:
+            fn_globals["build_standard_pipeline"] = orig_bsp
+            fn_globals["write_active_graph"] = orig_wag
