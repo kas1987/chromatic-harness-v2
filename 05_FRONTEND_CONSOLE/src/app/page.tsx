@@ -21,6 +21,7 @@ import ModeSwitcher from "@/components/ModeSwitcher";
 import AgentProfiles from "@/components/AgentProfiles";
 import AgentRegistration from "@/components/AgentRegistration";
 import MissionReplay from "@/components/MissionReplay";
+import ClaimsCollisionDashboard from "@/components/ClaimsCollisionDashboard";
 import useWebSocketEvents from "@/hooks/useWebSocketEvents";
 
 const REPO = process.env.NEXT_PUBLIC_REPO || "chromatic-harness-v2";
@@ -482,6 +483,11 @@ export default function ConsolePage() {
             setSelectedAgent(agent);
           }}
         />
+      </div>
+
+      {/* Full-width row: Collision Claims Dashboard */}
+      <div style={{ marginTop: 16 }}>
+        <ClaimsCollisionDashboard />
       </div>
     </div>
   );
