@@ -1,7 +1,7 @@
 {
   "workflow_id": "WF-pipeline",
   "objective": "Next harness task",
-  "created_at": "2026-06-21T18:32:32Z",
+  "created_at": "2026-06-21T18:50:11Z",
   "risk_level": "low",
   "global_stop_conditions": [
     "confidence_below_threshold",

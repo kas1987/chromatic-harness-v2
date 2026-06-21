@@ -81,10 +81,10 @@
       "OPTION_C_COMPLETE.md",
       "__pycache__"
     ],
-    "trend": "stable"
+    "trend": "worsening"
   },
   "score": 70,
-  "trend": "stable",
+  "trend": "worsening",
   "missing_protected": [],
   "recommendations": [
     "confirm whether new top-level entry is intentional: HARNESS_V2_30DAY_REMEDIATION_COMPLETE.md",
@@ -97,5 +97,5 @@
     "confirm removal of expected entry is intentional: __pycache__"
   ],
   "passed": true,
-  "timestamp": "20260621T185204Z"
+  "timestamp": "20260621T184228Z"
 }

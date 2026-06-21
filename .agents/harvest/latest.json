@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-06-21T18:37:09.956528+00:00",
+  "generated_at": "2026-06-21T18:54:49.690627+00:00",
   "rigs_scanned": [
     ".02_chromatic-harness-v2"
   ],
-  "artifacts_found": 172,
+  "artifacts_found": 182,
   "unique_count": 114,
-  "duplicate_count": 58,
+  "duplicate_count": 68,
   "promoted": [],
   "skipped": [
     {

@@ -1,6 +1,6 @@
 # Branch Governance Audit
 
-Generated: 2026-06-21T18:37:40.333000+00:00
+Generated: 2026-06-21T18:55:16.709784+00:00
 
 ## Counts
 

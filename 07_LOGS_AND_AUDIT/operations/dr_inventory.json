@@ -1,20 +1,20 @@
 {
   "schema": "dr_inventory_v1",
-  "timestamp": "20260621T183505Z",
+  "timestamp": "20260621T185111Z",
   "repo": "E:\\.02_chromatic-harness-v2",
   "rto_hours": 4,
   "rpo_hours": 24,
-  "total_critical_bytes": 62882731,
-  "total_critical_human": "59.0 MB",
+  "total_critical_bytes": 63390886,
+  "total_critical_human": "60.0 MB",
   "items": [
     {
       "path": ".beads",
       "description": "Beads issue tracker (local Dolt DB + JSONL export)",
       "priority": "P1",
       "exists": true,
-      "size_bytes": 40261667,
+      "size_bytes": 40265722,
       "size_human": "38.0 MB",
-      "last_modified": "2026-06-21T18:34:56.349260+00:00",
+      "last_modified": "2026-06-21T18:50:21.851964+00:00",
       "recovery_note": "Restore from .beads/ backup; run `bd dolt pull` to sync remote."
     },
     {
@@ -22,9 +22,9 @@
       "description": "Agent handoffs, plans, council, harvest, swarm results",
       "priority": "P1",
       "exists": true,
-      "size_bytes": 1523949,
+      "size_bytes": 1674426,
       "size_human": "1.0 MB",
-      "last_modified": "2026-06-21T18:34:56.361871+00:00",
+      "last_modified": "2026-06-21T18:50:26.724467+00:00",
       "recovery_note": "Restore from backup; re-run `python scripts/session_start.py` to rebuild state."
     },
     {
@@ -34,7 +34,7 @@
       "exists": true,
       "size_bytes": 69763,
       "size_human": "68.0 KB",
-      "last_modified": "2026-06-21T18:34:56.349260+00:00",
+      "last_modified": "2026-06-21T18:39:13.112264+00:00",
       "recovery_note": "Restore from git history or backup snapshot."
     },
     {
@@ -42,9 +42,9 @@
       "description": "Telemetry, budget ledger, audit trails, security scans",
       "priority": "P2",
       "exists": true,
-      "size_bytes": 9797594,
+      "size_bytes": 10151454,
       "size_human": "9.0 MB",
-      "last_modified": "2026-06-21T18:35:03.525912+00:00",
+      "last_modified": "2026-06-21T18:51:09.903695+00:00",
       "recovery_note": "Restore from backup. Historical logs not strictly required for operation."
     },
     {
@@ -54,7 +54,7 @@
       "exists": true,
       "size_bytes": 40199,
       "size_human": "39.0 KB",
-      "last_modified": "2026-06-21T18:34:56.343606+00:00",
+      "last_modified": "2026-06-21T18:39:13.112264+00:00",
       "recovery_note": "Restore from git or backup. Reconstruct queue from beads if lost."
     },
     {
@@ -62,9 +62,9 @@
       "description": "Runtime engines, router config, roach-pi submodule",
       "priority": "P2",
       "exists": true,
-      "size_bytes": 11136275,
+      "size_bytes": 11136038,
       "size_human": "10.0 MB",
-      "last_modified": "2026-06-21T18:34:56.372339+00:00",
+      "last_modified": "2026-06-21T18:50:08.810371+00:00",
       "recovery_note": "Restore from git checkout + submodule update."
     },
     {
@@ -84,7 +84,7 @@
       "exists": true,
       "size_bytes": 50993,
       "size_human": "49.0 KB",
-      "last_modified": "2026-06-21T18:34:56.349260+00:00",
+      "last_modified": "2026-06-21T18:47:29.427850+00:00",
       "recovery_note": "Regenerate with `python scripts/generate_pre_session_inventory.py`."
     }
   ]

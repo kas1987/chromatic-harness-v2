@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-06-21T18:30:28Z",
+  "generated_at_utc": "2026-06-21T18:48:59Z",
   "overall_status": "red",
   "readiness_score": 0,
   "counts": {
@@ -11,18 +11,18 @@
     {
       "name": "input_freshness_governance_intelligence",
       "status": "fail",
-      "message": "input 'governance_intelligence' is 537.68h old (fail threshold: 72h)",
+      "message": "input 'governance_intelligence' is 537.98h old (fail threshold: 72h)",
       "value": {
-        "age_h": 537.68,
+        "age_h": 537.98,
         "threshold_fail_h": 72
       }
     },
     {
       "name": "input_freshness_token_governance",
       "status": "fail",
-      "message": "input 'token_governance' is 453.88h old (fail threshold: 72h)",
+      "message": "input 'token_governance' is 454.19h old (fail threshold: 72h)",
       "value": {
-        "age_h": 453.88,
+        "age_h": 454.19,
         "threshold_fail_h": 72
       }
     },
@@ -47,8 +47,8 @@
     {
       "name": "unified_guard_fresh",
       "status": "fail",
-      "message": "age_min=1643.61",
-      "value": 1643.61
+      "message": "age_min=1662.11",
+      "value": 1662.11
     },
     {
       "name": "handoff_present",
@@ -83,10 +83,10 @@
     {
       "name": "agent_log_fresh_and_populated",
       "status": "pass",
-      "message": "age_min=0.4 lines=155",
+      "message": "age_min=3.7 lines=169",
       "value": {
-        "age_min": 0.4,
-        "lines": 155
+        "age_min": 3.7,
+        "lines": 169
       }
     },
     {
@@ -176,12 +176,12 @@
   "stale_inputs": [
     {
       "input": "governance_intelligence",
-      "age_h": 537.68,
+      "age_h": 537.98,
       "level": "fail"
     },
     {
       "input": "token_governance",
-      "age_h": 453.88,
+      "age_h": 454.19,
       "level": "fail"
     }
   ],

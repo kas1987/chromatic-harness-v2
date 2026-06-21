@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-21T18:37:40.333000+00:00",
+  "generated_at": "2026-06-21T18:55:16.709784+00:00",
   "default_branch": "main",
   "caps": {
     "local_max_total": 35,
@@ -20,7 +20,7 @@
       "upstream": "",
       "upstream_track": "",
       "last_commit_at": "2026-06-02 16:21:52 -0400",
-      "age_days": 18.93,
+      "age_days": 18.94,
       "category": "default",
       "stale_threshold_days": 14.0
     },
@@ -29,7 +29,7 @@
       "upstream": "",
       "upstream_track": "",
       "last_commit_at": "2026-06-02 12:16:26 -0400",
-      "age_days": 19.1,
+      "age_days": 19.11,
       "category": "docs",
       "stale_threshold_days": 14.0
     }
@@ -38,7 +38,7 @@
     {
       "name": "__dolt_remote_info__",
       "last_commit_at": "2026-06-02 16:21:52 -0400",
-      "age_days": 18.93,
+      "age_days": 18.94,
       "category": "default",
       "stale_threshold_days": 14.0,
       "has_open_pr": false
