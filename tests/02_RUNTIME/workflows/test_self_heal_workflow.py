@@ -227,5 +227,8 @@ class TestApplySelfHeal:
                         ],
                     }
                     apply_self_heal(tmp_path, bead, record)
-        call_args = mock_pipeline.call_args
-        assert "Re-decompose" in call_args[0][0] or "Re-decompose" in str(call_args)
+                    # Read call_args *inside* the patch context so the mock object
+                    # has not been reset or garbage-collected by teardown ordering.
+                    call_args = mock_pipeline.call_args
+                    assert call_args is not None, "build_standard_pipeline was not called"
+                    assert "Re-decompose" in call_args[0][0] or "Re-decompose" in str(call_args)
