@@ -20,3 +20,7 @@ requests>=2.31.0
 python-jose>=3.3.0
 bcrypt>=4.0.0
 redis>=5.0.0
+
+# Pin antlr4 to 4.9.3 — omegaconf 2.3.0 is incompatible with antlr4 >=4.10
+# (ATN serialized version mismatch: expected 4, got 3 with newer antlr4)
+antlr4-python3-runtime==4.9.3
