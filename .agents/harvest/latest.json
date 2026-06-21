@@ -1,128 +1,16 @@
 {
-  "generated_at": "2026-06-21T18:33:15.080509+00:00",
+  "generated_at": "2026-06-21T18:37:09.956528+00:00",
   "rigs_scanned": [
     ".02_chromatic-harness-v2"
   ],
-  "artifacts_found": 156,
-  "unique_count": 85,
-  "duplicate_count": 71,
+  "artifacts_found": 172,
+  "unique_count": 114,
+  "duplicate_count": 58,
   "promoted": [],
   "skipped": [
     {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-cloud-vs-local-routing-strategy.md",
-      "reason": "duplicate of 2026-04-26-cloud-vs-local-routing-strategy.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-driver-abstraction-for-os-bound-code.md",
-      "reason": "duplicate of 2026-04-26-driver-abstraction-for-os-bound-code.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-2026-04-26-mcp-stdio-client-lifecycle.md",
-      "reason": "duplicate of 2026-04-26-mcp-stdio-client-lifecycle.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-non-blocking-observer-hooks-for-policy.md",
-      "reason": "duplicate of 2026-04-26-non-blocking-observer-hooks-for-policy.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-routing-session.md",
-      "reason": "duplicate of 2026-04-26-routing-session-post-mortem.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-subagent-overhead-vs-task-complexity.md",
-      "reason": "duplicate of 2026-04-26-subagent-overhead-vs-task-complexity.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-windows-crlf-in-jq-mapfile-pipelines.md",
-      "reason": "duplicate of 2026-04-26-windows-crlf-in-jq-mapfile-pipelines.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-check-existing-skills.md",
-      "reason": "duplicate of 2026-05-02-check-existing-skills-before-designing.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-env-clash-session.md",
-      "reason": "duplicate of 2026-05-02-env-clash-session.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\principle-hook-audit-skill-build.md",
-      "reason": "duplicate of 2026-05-02-hook-audit-skill-build.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-session-branch-workflow.md",
-      "reason": "duplicate of 2026-05-02-session-branch-workflow.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-whisper-call-parallel-mcp-l2-tests.md",
-      "reason": "duplicate of 2026-05-02-whisper-call-parallel-mcp-l2-tests.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-bats-guard-test-before-consumer.md",
-      "reason": "duplicate of 2026-05-21-bats-guard-test-before-consumer.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-env-var-override-for-test-path-assumptions.md",
-      "reason": "duplicate of 2026-05-21-env-var-override-for-test-path-assumptions.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-fixture-guard-mcp-layout.md",
-      "reason": "duplicate of 2026-05-21-fixture-guard-mcp-layout.md"
-    },
-    {
       "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\principle-posttooluse-formatter-reformat.md",
       "reason": "duplicate of 2026-05-21-postToolUse-formatter-reformat.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\principle-session-closeout.md",
-      "reason": "duplicate of 2026-05-21-session-closeout-hook-cleanup.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-router-governance.md",
-      "reason": "duplicate of 2026-05-27-router-governance-session.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-beads-intake.md",
-      "reason": "duplicate of 2026-05-28-beads-unified-intake.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-governance-hooks-mc-x1bi.md",
-      "reason": "duplicate of 2026-05-28-governance-hooks-mc-x1bi.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-magnets-scoring.md",
-      "reason": "duplicate of 2026-05-28-magnet-scoring-determinism.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-option-c-interface-first.md",
-      "reason": "duplicate of 2026-05-28-option-c-interface-first.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-phase7-agent-registration.md",
-      "reason": "duplicate of 2026-05-28-phase7-agent-registration.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\principle-pre-session-context-governance.md",
-      "reason": "duplicate of 2026-05-29-pre-session-context-governance.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-closeout-epic-governance.md",
-      "reason": "duplicate of 2026-05-30-closeout-epic-governance.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-delegation-correlation-contract.md",
-      "reason": "duplicate of 2026-05-30-delegation-correlation-contract.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\anti_pattern-delegation-loop-observability-shell-safety.md",
-      "reason": "duplicate of 2026-05-30-delegation-loop-observability-and-shell-safety.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\principle-governance-guards-is2f.md",
-      "reason": "duplicate of 2026-05-30-governance-guards-is2f.md"
-    },
-    {
-      "path": "E:\\.02_chromatic-harness-v2\\.agents\\patterns\\pattern-integration-testing.md",
-      "reason": "duplicate of 2026-05-30-integration-testing-patterns.md"
     }
   ],
   "dry_run": false,
