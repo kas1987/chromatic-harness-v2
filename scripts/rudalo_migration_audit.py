@@ -300,7 +300,6 @@ def write_migration_status_yaml(result: dict):
     passed = result["passed"]
     mode = s["mode"]
 
-    _dep_entry = '    - path: "{p}"\n      status: "deprecated"\n'
     _legacy_block = "".join(
         '    - path: "' + p + '"\n      status: "deprecated"\n'
         for p in ["10_RUNTIME", "02_RUNTIME/10_RUNTIME"]
