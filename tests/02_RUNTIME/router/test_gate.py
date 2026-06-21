@@ -314,6 +314,12 @@ class TestMainGateLogic:
         )
         monkeypatch.setattr("sys.stdin", MagicMock(read=lambda: payload))
 
+        # Neutralise the session-scoped loop guard so accumulated test
+        # dispatches don't cause a LOOP BLOCK, hiding the real tier logic.
+        _loop_ok = {"ok": True, "count": 1, "level": "ok", "signature": "abc123"}
+        monkeypatch.setattr(gate_mod._loop_guard, "bump_and_check", lambda *a, **kw: _loop_ok)
+        monkeypatch.setattr(gate_mod._loop_guard, "advisory_note", lambda v: "")
+
         with patch("router.gate.log_entry"), patch("router.gate.audit_router_decision"):
             with pytest.raises(SystemExit) as exc_info:
                 gate_mod.main()
