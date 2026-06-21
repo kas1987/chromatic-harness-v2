@@ -128,9 +128,10 @@ server_stderr.txt
 # Isolated per-worker git worktrees (task_runner / claude_delegate_gate dispatch)
 .worktrees/
 .claude/worktrees/
-<<<<<<< HEAD
 
 # Generated usage-calibration dashboard (regenerated each session)
 05_REPORTS/USAGE_CALIBRATION_DASHBOARD.md
-=======
->>>>>>> origin/session/chromatic-harness-v2-initial
+
+# Added by auto_heal.py
+# Log files
+*.log

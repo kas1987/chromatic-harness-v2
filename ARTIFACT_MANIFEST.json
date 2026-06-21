@@ -18,6 +18,26 @@
   "commands": [
     "python scripts/validate_visual_registry.py",
     "python scripts/generate_harness_mermaid.py",
-    "python scripts/install_visual_control_plane.py --target /path/to/repo"
-  ]
+    "python scripts/install_visual_control_plane.py --target /path/to/repo",
+    "python scripts/auto_clean.py --dry-run",
+    "python scripts/auto_heal.py",
+    "python scripts/harness_swot.py"
+  ],
+  "scripts": {
+    "auto_clean": {
+      "path": "scripts/auto_clean.py",
+      "description": "Automated cleanup of stale worktrees, .pyc files, empty dirs, and merged branches. Supports --dry-run mode.",
+      "added": "2026-06-21"
+    },
+    "auto_heal": {
+      "path": "scripts/auto_heal.py",
+      "description": "Automated self-healing for harness health issues: manifest staleness, missing gitignore entries, and orphaned artifacts.",
+      "added": "2026-06-21"
+    },
+    "harness_swot": {
+      "path": "scripts/harness_swot.py",
+      "description": "Generates a SWOT analysis report for the Harness V2 based on audit data from structure, test, GitHub, artifacts, and docs audits.",
+      "added": "2026-06-21"
+    }
+  }
 }
