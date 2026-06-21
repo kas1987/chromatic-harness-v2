@@ -123,12 +123,20 @@ class TestDB:
     async def test_get_learnings_filter_by_category(self, tmp_db, store_mod):
         """get_learnings filters by category correctly."""
         l1 = store_mod.Learning(
-            id=str(uuid.uuid4()), title="Sec Learning", category="security",
-            confidence="high", scope="cross-cutting", content="sec content",
+            id=str(uuid.uuid4()),
+            title="Sec Learning",
+            category="security",
+            confidence="high",
+            scope="cross-cutting",
+            content="sec content",
         )
         l2 = store_mod.Learning(
-            id=str(uuid.uuid4()), title="Arch Learning", category="architecture",
-            confidence="medium", scope="cross-cutting", content="arch content",
+            id=str(uuid.uuid4()),
+            title="Arch Learning",
+            category="architecture",
+            confidence="medium",
+            scope="cross-cutting",
+            content="arch content",
         )
         await tmp_db.insert_learning(l1)
         await tmp_db.insert_learning(l2)
@@ -142,12 +150,22 @@ class TestDB:
     async def test_get_learnings_active_only_filter(self, tmp_db, store_mod):
         """active_only=True excludes inactive learnings."""
         active = store_mod.Learning(
-            id=str(uuid.uuid4()), title="Active", category="testing",
-            confidence="high", scope="cross-cutting", content="active", active=True,
+            id=str(uuid.uuid4()),
+            title="Active",
+            category="testing",
+            confidence="high",
+            scope="cross-cutting",
+            content="active",
+            active=True,
         )
         inactive = store_mod.Learning(
-            id=str(uuid.uuid4()), title="Inactive", category="testing",
-            confidence="high", scope="cross-cutting", content="inactive", active=False,
+            id=str(uuid.uuid4()),
+            title="Inactive",
+            category="testing",
+            confidence="high",
+            scope="cross-cutting",
+            content="inactive",
+            active=False,
         )
         await tmp_db.insert_learning(active)
         await tmp_db.insert_learning(inactive)
@@ -274,12 +292,20 @@ class TestDB:
         """INSERT OR REPLACE: re-inserting same id updates the record without error."""
         lid = str(uuid.uuid4())
         l1 = store_mod.Learning(
-            id=lid, title="Original", category="testing",
-            confidence="low", scope="cross-cutting", content="v1",
+            id=lid,
+            title="Original",
+            category="testing",
+            confidence="low",
+            scope="cross-cutting",
+            content="v1",
         )
         l2 = store_mod.Learning(
-            id=lid, title="Updated", category="testing",
-            confidence="high", scope="cross-cutting", content="v2",
+            id=lid,
+            title="Updated",
+            category="testing",
+            confidence="high",
+            scope="cross-cutting",
+            content="v2",
         )
         await tmp_db.insert_learning(l1)
         await tmp_db.insert_learning(l2)

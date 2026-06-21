@@ -135,15 +135,11 @@ class TestSLAMetricsCollector:
         collector._emit_page_with_cooldown("test_key", delay_minutes=1, now_ts=now_ts, alert=alert)
         count_1 = len(collector.alerts_queue)
         # Immediate second page should be blocked
-        collector._emit_page_with_cooldown(
-            "test_key", delay_minutes=1, now_ts=now_ts + 10, alert=alert
-        )
+        collector._emit_page_with_cooldown("test_key", delay_minutes=1, now_ts=now_ts + 10, alert=alert)
         count_2 = len(collector.alerts_queue)
         assert count_1 == count_2  # No new alert emitted
         # Page after cooldown expires should emit
-        collector._emit_page_with_cooldown(
-            "test_key", delay_minutes=1, now_ts=now_ts + 70, alert=alert
-        )
+        collector._emit_page_with_cooldown("test_key", delay_minutes=1, now_ts=now_ts + 70, alert=alert)
         count_3 = len(collector.alerts_queue)
         assert count_3 > count_2  # New alert emitted
 
@@ -236,10 +232,7 @@ class TestSLAThresholds:
     def test_token_burn_multipliers_ordered(self):
         """Verify token burn multipliers are in proper order."""
         config = DEFAULT_SLA_CONFIG
-        assert (
-            config["token_burn_threshold_warn_multiplier"]
-            < config["token_burn_threshold_page_multiplier"]
-        )
+        assert config["token_burn_threshold_warn_multiplier"] < config["token_burn_threshold_page_multiplier"]
 
 
 class TestIntegration:
@@ -278,7 +271,7 @@ class TestIntegration:
         for i in range(90):
             collector.observe_mission_latency(f"mission-{i}", "phase", 100)
         for i in range(10):
-            collector.observe_mission_latency(f"mission-{90+i}", "phase", 1000)
+            collector.observe_mission_latency(f"mission-{90 + i}", "phase", 1000)
         metrics = collector.measure_current_metrics()
         assert metrics.p99_latency_ms > 500
         # Should have emitted alert if p95 also breached

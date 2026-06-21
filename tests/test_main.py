@@ -33,6 +33,7 @@ for _p in (str(_REPO), str(_RUNTIME), str(_API)):
 # Minimal stubs for modules that would open network connections or databases
 # ---------------------------------------------------------------------------
 
+
 def _stub_db():
     """Return (fake_conn, fake_db_module)."""
     fake_conn = MagicMock()
@@ -52,6 +53,7 @@ def _stub_db():
 # ---------------------------------------------------------------------------
 # TestMain
 # ---------------------------------------------------------------------------
+
 
 class TestMain:
     """Tests for the FastAPI application defined in api/main.py.
@@ -84,24 +86,25 @@ class TestMain:
         fake_orch_inst = MagicMock()
         fake_orch_inst.create_mission = MagicMock(return_value=fake_packet)
         fake_orch_inst.dispatch = MagicMock(return_value=fake_dispatch)
-        fake_orch_inst.synthesize_mission = MagicMock(return_value=MagicMock(
-            decision="approve",
-            composite_score=0.85,
-            final_report="ok",
-            pr_package={},
-            next_steps=[],
-            audit_log=[],
-            handoff_prep={},
-            suggested_bead=None,
-        ))
+        fake_orch_inst.synthesize_mission = MagicMock(
+            return_value=MagicMock(
+                decision="approve",
+                composite_score=0.85,
+                final_report="ok",
+                pr_package={},
+                next_steps=[],
+                audit_log=[],
+                handoff_prep={},
+                suggested_bead=None,
+            )
+        )
 
         fake_orch_class = MagicMock(return_value=fake_orch_inst)
         return fake_orch_class, fake_packet
 
     def _make_fake_router(self):
-        from router.contracts import (
-            RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs, PrivacyClass
-        )
+        from router.contracts import RouteResponse, OutputType, RouteOutput, RouteUsage, RouteLogs, PrivacyClass
+
         fake_resp = RouteResponse(
             request_id="req-test",
             selected_provider="ollama",
@@ -141,6 +144,7 @@ class TestMain:
 
         with patch.dict(sys.modules, patches):
             with patch("importlib.util.spec_from_file_location") as mock_spec:
+
                 def _fake_load(name, path):
                     if "orchestrator" in str(path):
                         m = MagicMock()
@@ -171,6 +175,7 @@ class TestMain:
 
         # Patch router module
         from router import contracts as _rc
+
         fake_router_mod = MagicMock()
         fake_router_mod.ChromaticRouter = router_class
         sys.modules["router.router"] = fake_router_mod

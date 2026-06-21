@@ -1,6 +1,6 @@
 # Harness SWOT Analysis Report
 
-Generated: 2026-06-21T15:52:32Z  
+Generated: 2026-06-21T18:31:31Z  
 Harness root: `E:\.02_chromatic-harness-v2`
 
 ---
@@ -36,7 +36,7 @@ Harness root: `E:\.02_chromatic-harness-v2`
 ### Script Validation Coverage
 - Scripts with test counterparts: **97**
 - Scripts without tests: **139**
-- Test files total: **293**
+- Test files total: **312**
 
 ### Git Health
 - Current branch: `feature/harness-finalization-2026-06-20`
@@ -90,22 +90,21 @@ Harness root: `E:\.02_chromatic-harness-v2`
 - Tracked `.pyc` files: **0**
 
 ### Empty Directories
-- Count: **9**
+- Count: **15**
+  - `.agents\intake/`
+  - `.beads\backup\oldgen/`
   - `.beads\embeddeddolt\chromatic_harness_v2\.dolt\git-remote-cache\cca1faf81f34e57d939cf365ac5c69e61cc8f9987bb15efa0aea4098493b5614\repo.git\branches/`
   - `.beads\embeddeddolt\chromatic_harness_v2\.dolt\git-remote-cache\cca1faf81f34e57d939cf365ac5c69e61cc8f9987bb15efa0aea4098493b5614\repo.git\objects\info/`
   - `.beads\embeddeddolt\chromatic_harness_v2\.dolt\git-remote-cache\cca1faf81f34e57d939cf365ac5c69e61cc8f9987bb15efa0aea4098493b5614\repo.git\refs\dolt/`
   - `.beads\embeddeddolt\chromatic_harness_v2\.dolt\git-remote-cache\cca1faf81f34e57d939cf365ac5c69e61cc8f9987bb15efa0aea4098493b5614\repo.git\refs\tags/`
   - `.beads\embeddeddolt\chromatic_harness_v2\.dolt\noms\oldgen/`
   - `.git\modules\02_RUNTIME\runtime-engines\roach-pi\objects\info/`
-  - `.git\objects\info/`
-  - `.git\refs\tags/`
-  - `09_DEPLOYMENT\dashboards\exporter\__pycache__/`
+  - `.git\refs\heads\docs/`
+  - `.git\refs\heads\fix/`
+  - _(and 5 more)_
 
 ### Stale Branches (merged into main, not deleted)
-- Count: **3**
-  - `CC-Desk/bold-mayer-90b4d5`
-  - `feat/harness-v2-30day-remediation-complete`
-  - `feat/review-intake-loop-metrics`
+- Count: **0**
 
 ### Documentation Staleness (>90 days)
 - Old docs count: **0**
@@ -143,14 +142,13 @@ Top 10 highest-value test gap targets (by file size):
   - `seed_issues_to_beads.py`
 
 ### Branch Simplification
-- Remote branches total: **8**
-- Non-main remote branches (merge/prune candidates): **7**
+- Remote branches total: **7**
+- Non-main remote branches (merge/prune candidates): **6**
   - `origin/__dolt_remote_info__`
   - `origin/docs/harness-v2-assessment-synthesis`
   - `origin/feat/command-center-p1-p2`
   - `origin/feat/review-intake-loop-metrics`
   - `origin/feature/harness-finalization-2026-06-20`
-  - `origin/fix/junction-path-correction-2026-06-20`
   - `origin/session/chromatic-harness-v2-initial`
 
 ---
@@ -161,7 +159,7 @@ Top 10 highest-value test gap targets (by file size):
 - Count: **0**
 
 ### Potential Secret Exposure
-- Files with secret-pattern hits: **18**
+- Files with secret-pattern hits: **20**
 
   - `.github\workflows\auto-label.yml`
     - line 17: private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secret
@@ -182,6 +180,10 @@ Top 10 highest-value test gap targets (by file size):
     - line 23: const token = req.headers.authorization?.replace("Bearer ", ""); // pragma: allo
   - `02_RUNTIME\router\adapters\openhuman_adapter.py`
     - line 51: token = os.environ.get(self.cfg.get("env_key", "OPENHUMAN_BEARER_TOKEN"), "")
+  - `05_REPORTS\HARNESS_SWOT_REPORT.md`
+    - line 165: - line 17: private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secr
+    - line 167: - line 36: private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secr
+    - line 169: - line 25: private-key: ${{ secrets.APP_PRIVATE_KEY }}  # pragma: allowlist secr
   - `12_HANDOFFS\SESSION_2026-05-28_FINAL.md`
     - line 84: GITHUB_TOKEN=ghp_REDACTED_ROTATED_2026-06-21...
     - line 89: PRISM_GEN_TOKEN=dev-local-token-2026
@@ -193,17 +195,10 @@ Top 10 highest-value test gap targets (by file size):
     - line 253: token = _read_json(TOKEN_GOV)  # pragma: allowlist secret
   - `scripts\session_closeout.py`
     - line 1488: token = line.split()[0] if line else ""
-  - `tests\02_RUNTIME\concurrency\test_session_lock.py`
-    - line 128: token = acquire_lock("mylock", session_id="s1")  # pragma: allowlist secret
-    - line 133: token = acquire_lock("mylock", session_id="session-abc")  # pragma: allowlist se
-    - line 185: token = acquire_lock("stale-lock", session_id="new-session", timeout_seconds=1.0
 
 ### Syntax Errors in Python Files
-- Files with syntax errors: **1**
-
-| File | Error |
-|------|-------|
-| `scripts\rudalo_migration_audit.py` | line 339: f-string expression part cannot include a backslash |
+- Files with syntax errors: **0**
+  - _No syntax errors detected._
 
 ### Missing Required Files
   - _All required files present._
@@ -214,9 +209,9 @@ Top 10 highest-value test gap targets (by file size):
 
 | Quadrant | Key Metric |
 |----------|-----------|
-| Strengths | 14 CI workflows · 97 validated scripts · 293 test files |
-| Weaknesses | 139 untested scripts · 3 stale branches · 9 empty dirs |
+| Strengths | 14 CI workflows · 97 validated scripts · 312 test files |
+| Weaknesses | 139 untested scripts · 0 stale branches · 15 empty dirs |
 | Opportunities | 6 auto-heal targets · 41.1% → 100% coverage potential |
-| Threats | 0 large files · 18 secret-pattern files · 1 syntax errors |
+| Threats | 0 large files · 20 secret-pattern files · 0 syntax errors |
 
-_Report generated by `scripts/harness_swot.py` at 2026-06-21T15:52:32Z_
+_Report generated by `scripts/harness_swot.py` at 2026-06-21T18:31:31Z_

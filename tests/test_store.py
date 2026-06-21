@@ -160,12 +160,22 @@ class TestStore:
     async def test_insert_learning_upsert(self, store):
         lid = str(uuid.uuid4())
         l1 = Learning(
-            id=lid, title="First", category="testing", confidence="high",
-            scope="cross-cutting", content="v1", source="test",
+            id=lid,
+            title="First",
+            category="testing",
+            confidence="high",
+            scope="cross-cutting",
+            content="v1",
+            source="test",
         )
         l2 = Learning(
-            id=lid, title="Updated", category="testing", confidence="high",
-            scope="cross-cutting", content="v2", source="test",
+            id=lid,
+            title="Updated",
+            category="testing",
+            confidence="high",
+            scope="cross-cutting",
+            content="v2",
+            source="test",
         )
         await store.insert_learning(l1)
         await store.insert_learning(l2)
@@ -229,14 +239,24 @@ class TestStore:
     @pytest.mark.asyncio
     async def test_get_violations_filter_by_severity(self, store):
         v_warn = ScopeViolation(
-            id=str(uuid.uuid4()), mission_id="M", task_id="T",
-            expected_scope="src/", violated_files=["x.py"],
-            detected_by="test", resolution="ok", severity="warning",
+            id=str(uuid.uuid4()),
+            mission_id="M",
+            task_id="T",
+            expected_scope="src/",
+            violated_files=["x.py"],
+            detected_by="test",
+            resolution="ok",
+            severity="warning",
         )
         v_crit = ScopeViolation(
-            id=str(uuid.uuid4()), mission_id="M", task_id="T",
-            expected_scope="src/", violated_files=["y.py"],
-            detected_by="test", resolution="ok", severity="critical",
+            id=str(uuid.uuid4()),
+            mission_id="M",
+            task_id="T",
+            expected_scope="src/",
+            violated_files=["y.py"],
+            detected_by="test",
+            resolution="ok",
+            severity="critical",
         )
         await store.record_violation(v_warn)
         await store.record_violation(v_crit)

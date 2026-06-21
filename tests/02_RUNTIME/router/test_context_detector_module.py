@@ -29,14 +29,17 @@ from router.context_detector import ContextDetector
 # _available_memory_ratio — platform dispatch
 # ---------------------------------------------------------------------------
 
+
 class TestAvailableMemoryRatioDispatch:
     def test_windows_dispatch(self, monkeypatch):
         """On Windows-like platform, _windows_available_memory_ratio is called."""
         monkeypatch.setattr("platform.system", lambda: "Windows")
         called = []
+
         def _fake_windows():
             called.append(1)
             return 0.5
+
         monkeypatch.setattr(ContextDetector, "_windows_available_memory_ratio", staticmethod(_fake_windows))
         result = ContextDetector._available_memory_ratio()
         assert result == 0.5
@@ -46,9 +49,11 @@ class TestAvailableMemoryRatioDispatch:
         """On Linux-like platform, _linux_available_memory_ratio is called."""
         monkeypatch.setattr("platform.system", lambda: "Linux")
         called = []
+
         def _fake_linux():
             called.append(1)
             return 0.35
+
         monkeypatch.setattr(ContextDetector, "_linux_available_memory_ratio", staticmethod(_fake_linux))
         result = ContextDetector._available_memory_ratio()
         assert result == 0.35
@@ -65,6 +70,7 @@ class TestAvailableMemoryRatioDispatch:
 # _windows_available_memory_ratio — failure paths
 # ---------------------------------------------------------------------------
 
+
 class TestWindowsAvailableMemoryRatio:
     def test_returns_float_on_success(self):
         """On Windows, the method should return a float or None."""
@@ -75,11 +81,14 @@ class TestWindowsAvailableMemoryRatio:
     def test_returns_none_on_exception(self, monkeypatch):
         """If ctypes call raises, return None safely."""
         import builtins
+
         real_import = builtins.__import__
+
         def _fake_import(name, *args, **kwargs):
             if name == "ctypes":
                 raise ImportError("no ctypes")
             return real_import(name, *args, **kwargs)
+
         monkeypatch.setattr(builtins, "__import__", _fake_import)
         # Should not raise
         result = ContextDetector._windows_available_memory_ratio()
@@ -90,6 +99,7 @@ class TestWindowsAvailableMemoryRatio:
 # _linux_available_memory_ratio
 # ---------------------------------------------------------------------------
 
+
 class TestLinuxAvailableMemoryRatio:
     def test_parses_proc_meminfo(self, tmp_path, monkeypatch):
         """Parse /proc/meminfo if it exists (mocked)."""
@@ -99,10 +109,12 @@ class TestLinuxAvailableMemoryRatio:
         with patch("router.context_detector.Path") as mock_path_cls:
             # We need to intercept Path("/proc/meminfo") but let other Path() calls work
             original_path = Path
+
             def _path_factory(arg):
                 if str(arg) == "/proc/meminfo":
                     return fake_path
                 return original_path(arg)
+
             mock_path_cls.side_effect = _path_factory
             result = ContextDetector._linux_available_memory_ratio()
         # 8000000 / 16000000 = 0.5
@@ -122,10 +134,12 @@ class TestLinuxAvailableMemoryRatio:
         fake_path.write_text(fake_meminfo, encoding="utf-8")
         with patch("router.context_detector.Path") as mock_path_cls:
             original_path = Path
+
             def _path_factory(arg):
                 if str(arg) == "/proc/meminfo":
                     return fake_path
                 return original_path(arg)
+
             mock_path_cls.side_effect = _path_factory
             result = ContextDetector._linux_available_memory_ratio()
         assert result is None
@@ -135,11 +149,14 @@ class TestLinuxAvailableMemoryRatio:
 # _probe_gpu — coverage for nvidia-smi parsing
 # ---------------------------------------------------------------------------
 
+
 class TestProbeGpu:
     def test_no_gpu_returns_none_tuple(self, monkeypatch):
         """When nvidia-smi is not available, returns (None, None)."""
+
         def _fail(*args, **kwargs):
             raise FileNotFoundError("nvidia-smi not found")
+
         monkeypatch.setattr("subprocess.run", _fail)
         result = ContextDetector._probe_gpu()
         assert result == (None, None)
@@ -175,6 +192,7 @@ class TestProbeGpu:
 # build_routing_context — integration with detect()
 # ---------------------------------------------------------------------------
 
+
 class TestBuildRoutingContext:
     @patch("router.context_detector.ContextDetector._probe_gpu", return_value=(None, None))
     @patch("router.context_detector.ContextDetector._probe_ollama_local", return_value=(False, []))
@@ -182,6 +200,7 @@ class TestBuildRoutingContext:
     @patch("router.context_detector.ContextDetector._probe_battery", return_value=False)
     def test_returns_routing_context(self, *_mocks):
         from router.contracts import RoutingContext
+
         ctx = ContextDetector().build_routing_context(
             objective="implement login flow",
             task_description="add auth",
@@ -217,6 +236,7 @@ class TestBuildRoutingContext:
     def test_routing_context_remote_endpoints_dict(self, *_mocks):
         """Ensure dict endpoints are converted to OllamaEndpoint."""
         from router.contracts import OllamaEndpoint
+
         ctx = ContextDetector().build_routing_context(
             objective="task",
             # No remote endpoints — just test it doesn't blow up

@@ -13,6 +13,7 @@ import pytest
 # ---------------------------------------------------------------------------
 _RUNTIME = Path(__file__).resolve().parent.parent / "02_RUNTIME"
 
+
 def _load(name: str, rel: str):
     path = _RUNTIME / rel
     spec = importlib.util.spec_from_file_location(name, path)
@@ -20,6 +21,7 @@ def _load(name: str, rel: str):
     sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
+
 
 # Load dependency first, then the module under test
 _git_policy = _load("workflows.git_policy", "workflows/git_policy.py")

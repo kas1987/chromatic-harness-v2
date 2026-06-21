@@ -30,11 +30,16 @@ for _p in (str(_REPO), str(_RUNTIME), str(_SRC)):
 # Helpers to build minimal RouteRequest objects
 # ---------------------------------------------------------------------------
 
+
 def _make_request(request_id: str = "req-001", objective: str = "hello", messages=None):
     from router.contracts import (
-        RouteRequest, RouteInput, RouteConstraints, RouteConfidence,
+        RouteRequest,
+        RouteInput,
+        RouteConstraints,
+        RouteConfidence,
         TaskType,
     )
+
     return RouteRequest(
         request_id=request_id,
         task_id="task-1",
@@ -48,12 +53,11 @@ def _make_request(request_id: str = "req-001", objective: str = "hello", message
 # Helper: fake httpx response
 # ---------------------------------------------------------------------------
 
+
 def _fake_httpx_response(status: int = 200, json_body: dict | None = None):
     resp = MagicMock()
     resp.status_code = status
-    resp.json = MagicMock(return_value=json_body or {
-        "message": {"content": "mocked response text"}
-    })
+    resp.json = MagicMock(return_value=json_body or {"message": {"content": "mocked response text"}})
     return resp
 
 
@@ -61,13 +65,14 @@ def _fake_httpx_response(status: int = 200, json_body: dict | None = None):
 # TestOllamaAdapter
 # ---------------------------------------------------------------------------
 
-class TestOllamaAdapter:
 
+class TestOllamaAdapter:
     # ── _prune_messages ──────────────────────────────────────────────────────
 
     def test_prune_messages_no_op_when_within_limit(self):
         """Messages within max_turns are returned unchanged."""
         from router.adapters.ollama_remote import _prune_messages
+
         msgs = [
             {"role": "user", "content": "a"},
             {"role": "assistant", "content": "b"},
@@ -78,6 +83,7 @@ class TestOllamaAdapter:
     def test_prune_messages_keeps_system_always(self):
         """System messages are preserved even when non-system turns exceed the cap."""
         from router.adapters.ollama_remote import _prune_messages
+
         system = {"role": "system", "content": "instructions"}
         # 6 user+assistant pairs (12 msgs) but cap is 2 turns (4 msgs)
         convs = []
@@ -92,6 +98,7 @@ class TestOllamaAdapter:
     def test_prune_messages_zero_means_keep_all(self):
         """max_turns=0 disables pruning."""
         from router.adapters.ollama_remote import _prune_messages
+
         msgs = [{"role": "user", "content": str(i)} for i in range(100)]
         result = _prune_messages(msgs, max_turns=0)
         assert len(result) == 100
@@ -99,6 +106,7 @@ class TestOllamaAdapter:
     def test_prune_messages_empty_input(self):
         """Empty message list returns empty list."""
         from router.adapters.ollama_remote import _prune_messages
+
         assert _prune_messages([], max_turns=5) == []
 
     # ── OllamaRemoteAdapter construction ────────────────────────────────────
@@ -106,6 +114,7 @@ class TestOllamaAdapter:
     def test_remote_adapter_defaults(self):
         """OllamaRemoteAdapter stores host/port/model from cfg."""
         from router.adapters.ollama_remote import OllamaRemoteAdapter
+
         adapter = OllamaRemoteAdapter("ollama", {"host": "192.168.1.10", "port": 11434, "model": "mistral"})
         assert adapter.host == "192.168.1.10"
         assert adapter.port == 11434
@@ -114,6 +123,7 @@ class TestOllamaAdapter:
     def test_remote_adapter_url_construction(self):
         """_url() builds correct http://host:port/path string."""
         from router.adapters.ollama_remote import OllamaRemoteAdapter
+
         adapter = OllamaRemoteAdapter("ollama", {"host": "gpu-box", "port": 11434, "model": "x"})
         assert adapter._url("/api/tags") == "http://gpu-box:11434/api/tags"
 
@@ -265,16 +275,19 @@ class TestOllamaAdapter:
         """OllamaAdapter from src/ is a subclass of OllamaRemoteAdapter."""
         from chromatic_router.adapters.ollama_adapter import OllamaAdapter
         from router.adapters.ollama_remote import OllamaRemoteAdapter
+
         assert issubclass(OllamaAdapter, OllamaRemoteAdapter)
 
     def test_ollama_adapter_default_cfg(self):
         """OllamaAdapter() with no cfg defaults to localhost:11434."""
         from chromatic_router.adapters.ollama_adapter import OllamaAdapter
+
         adapter = OllamaAdapter()
         assert adapter.host == "localhost" or adapter.cfg.get("base_url", "").startswith("http://localhost")
 
     def test_ollama_adapter_custom_cfg(self):
         """OllamaAdapter accepts a custom cfg dict."""
         from chromatic_router.adapters.ollama_adapter import OllamaAdapter
+
         adapter = OllamaAdapter({"enabled": True, "base_url": "http://gpu-box:11434", "host": "gpu-box"})
         assert adapter.enabled is True

@@ -21,6 +21,7 @@ SCRIPT = REPO / "scripts" / "harness_swot.py"
 # Loader
 # ---------------------------------------------------------------------------
 
+
 def _load(harness_root: Path | None = None):
     """Load harness_swot as an isolated module.
 
@@ -46,6 +47,7 @@ def _load(harness_root: Path | None = None):
 # ---------------------------------------------------------------------------
 # Minimal fixture factories
 # ---------------------------------------------------------------------------
+
 
 def _minimal_strengths() -> dict:
     return {
@@ -108,6 +110,7 @@ def _minimal_threats() -> dict:
 # Test 1 — render_report does not crash and returns a non-empty string
 # ---------------------------------------------------------------------------
 
+
 def test_render_report_does_not_crash():
     """render_report must return a non-empty Markdown string without raising."""
     mod = _load()
@@ -124,6 +127,7 @@ def test_render_report_does_not_crash():
 # ---------------------------------------------------------------------------
 # Test 2 — report file is written to the correct location inside tmp_path
 # ---------------------------------------------------------------------------
+
 
 def test_report_written_to_correct_location(tmp_path, monkeypatch):
     """main() must write the report to <harness_root>/05_REPORTS/HARNESS_SWOT_REPORT.md."""
@@ -147,6 +151,7 @@ def test_report_written_to_correct_location(tmp_path, monkeypatch):
 # Test 3 — all four SWOT section headers appear in the rendered output
 # ---------------------------------------------------------------------------
 
+
 def test_all_swot_sections_present_in_output(tmp_path, monkeypatch):
     """The rendered Markdown must contain all four S/W/O/T section headers."""
     mod = _load(harness_root=tmp_path)
@@ -169,6 +174,7 @@ def test_all_swot_sections_present_in_output(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 # Test 4 — script exits with code 0 on success (subprocess integration)
 # ---------------------------------------------------------------------------
+
 
 def test_exit_code_zero_on_success(tmp_path):
     """Running harness_swot.py as a subprocess must exit with code 0."""
@@ -222,6 +228,7 @@ for p in _patches:
 # Test 5 — render_report includes metrics from each quadrant's data
 # ---------------------------------------------------------------------------
 
+
 def test_render_report_embeds_quadrant_metrics():
     """Key numeric values from each quadrant must appear verbatim in the report."""
     mod = _load()
@@ -247,14 +254,14 @@ def test_render_report_embeds_quadrant_metrics():
 # Test 6 — _scan_secrets ignores placeholder patterns
 # ---------------------------------------------------------------------------
 
+
 def test_scan_secrets_ignores_placeholders(tmp_path):
     """Lines containing YOUR_/REPLACE_ME/EXAMPLE_KEY should not flag as secrets."""
     mod = _load()
 
     fake_file = tmp_path / "config.py"
     fake_file.write_text(
-        'api_key = "YOUR_API_KEY_HERE"\n'
-        'token = "REPLACE_ME_WITH_REAL_TOKEN"\n',
+        'api_key = "YOUR_API_KEY_HERE"\ntoken = "REPLACE_ME_WITH_REAL_TOKEN"\n',
         encoding="utf-8",
     )
 
@@ -265,6 +272,7 @@ def test_scan_secrets_ignores_placeholders(tmp_path):
 # ---------------------------------------------------------------------------
 # Test 7 — _has_syntax_error detects bad Python and passes clean Python
 # ---------------------------------------------------------------------------
+
 
 def test_has_syntax_error_detection(tmp_path):
     """_has_syntax_error must return None for valid Python and a string for broken Python."""

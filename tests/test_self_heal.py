@@ -42,6 +42,7 @@ SELF_HEAL_MAX = _sh.SELF_HEAL_MAX
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_record(score: float, decision: WorkflowDecision = WorkflowDecision.PLAN_ONLY) -> ConfidenceRecord:
     return ConfidenceRecord(
         confidence_score=score,
@@ -200,9 +201,7 @@ class TestSelfHeal:
         assert ids == []
 
     def test_enqueue_missing_workflow_id_uses_default(self, tmp_path):
-        graph = {
-            "tasks": [{"task_id": "T1", "role": "worker", "title": "Work"}]
-        }
+        graph = {"tasks": [{"task_id": "T1", "role": "worker", "title": "Work"}]}
         captured = []
         fake_queue = MagicMock()
         fake_queue.append_entry = lambda entry: captured.append(entry)

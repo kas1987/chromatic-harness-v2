@@ -61,7 +61,6 @@ def smod():
 
 
 class TestServer:
-
     # 1. import clean --------------------------------------------------------
     def test_import_clean(self):
         """server.py loads without error; SERVER_NAME is set."""
@@ -125,6 +124,7 @@ class TestServer:
         if smod.Server is not None:
             pytest.skip("mcp package is installed; skip absence test")
         import asyncio
+
         with pytest.raises(RuntimeError, match="mcp package required"):
             asyncio.run(smod.run_stdio())
 
@@ -158,6 +158,7 @@ class TestServer:
     # 8. smoke — call_tool wraps handler exceptions in ok=False --------------
     def test_call_tool_wraps_handler_exception(self, handlers, monkeypatch):
         """If a handler raises, call_tool returns ok=False with error text."""
+
         def _boom(_):
             raise RuntimeError("simulated failure")
 

@@ -36,6 +36,7 @@ def tg():
 # Helpers to build minimal valid task/graph dicts
 # ---------------------------------------------------------------------------
 
+
 def _minimal_task(**overrides) -> dict:
     base = {
         "task_id": "t1",
@@ -69,7 +70,6 @@ def _write_graph(tmp_path: Path, data: dict, filename: str = "graph.json") -> Pa
 
 
 class TestTaskGraph:
-
     # 1. import clean --------------------------------------------------------
     def test_import_clean(self):
         """Module loads and exposes expected public symbols."""

@@ -41,6 +41,7 @@ verify_task_completion = _verifier.verify_task_completion
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _task(**overrides) -> TaskNode:
     defaults = dict(
         task_id="T-001",
@@ -63,8 +64,8 @@ def _task(**overrides) -> TaskNode:
 # TestVerifier
 # ---------------------------------------------------------------------------
 
-class TestVerifier:
 
+class TestVerifier:
     def test_approve_clean_task(self):
         """All constraints satisfied → decision is approve."""
         task = _task()

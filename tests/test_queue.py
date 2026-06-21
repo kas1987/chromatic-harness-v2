@@ -39,8 +39,8 @@ def qmod():
 
 # ---------------------------------------------------------------------------
 
-class TestQueue:
 
+class TestQueue:
     # 1. import clean --------------------------------------------------------
     def test_import_clean(self):
         """Module loads without errors and exports expected symbols."""
@@ -186,9 +186,7 @@ class TestQueue:
 
     def test_normalize_entry_bead_dispatch_sets_bead_id(self, qmod):
         """normalize_entry sets bead_id from id for bead_dispatch kind."""
-        out = qmod.normalize_entry(
-            {"source": "bead_hook", "kind": "bead_dispatch", "title": "x", "id": "abc"}
-        )
+        out = qmod.normalize_entry({"source": "bead_hook", "kind": "bead_dispatch", "title": "x", "id": "abc"})
         assert out["bead_id"] == "abc"
 
     # 7. record_status appends transition entry ------------------------------

@@ -15,6 +15,7 @@ every test that exercises a function directly monkey-patches the module-level
 path constant so it points to our tmp tree — which is the correct approach
 for an integration-style unit test without mocking filesystem calls.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -46,6 +47,7 @@ def _load_module(harness_root: Path) -> types.ModuleType:
 # ---------------------------------------------------------------------------
 # TestPycCleanup
 # ---------------------------------------------------------------------------
+
 
 class TestPycCleanup:
     """Tests for clean_pycache()."""
@@ -100,6 +102,7 @@ class TestPycCleanup:
 # ---------------------------------------------------------------------------
 # TestEmptyDirCleanup
 # ---------------------------------------------------------------------------
+
 
 class TestEmptyDirCleanup:
     """Tests for remove_empty_dirs()."""
@@ -158,6 +161,7 @@ class TestEmptyDirCleanup:
 # TestDryRun
 # ---------------------------------------------------------------------------
 
+
 class TestDryRun:
     """Cross-cutting dry-run safety: nothing is deleted when dry_run=True."""
 
@@ -192,6 +196,7 @@ class TestDryRun:
         # Force mtime to 10 days ago
         old_mtime = time.time() - (10 * 86_400)
         import os
+
         os.utime(old_log, (old_mtime, old_mtime))
 
         mod = _load_module(tmp_path)
@@ -204,6 +209,7 @@ class TestDryRun:
 # TestLogCleanup
 # ---------------------------------------------------------------------------
 
+
 class TestLogCleanup:
     """Tests for clean_old_logs() and report_stale_logs()."""
 
@@ -211,6 +217,7 @@ class TestLogCleanup:
         path.write_text("log content")
         mtime = time.time() - (age_days * 86_400)
         import os
+
         os.utime(path, (mtime, mtime))
 
     def test_removes_old_log_files_in_force_mode(self, tmp_path: Path):
@@ -272,6 +279,7 @@ class TestLogCleanup:
 # TestLargeFileCheck
 # ---------------------------------------------------------------------------
 
+
 class TestLargeFileCheck:
     """Tests for check_large_files()."""
 
@@ -311,6 +319,7 @@ class TestLargeFileCheck:
 # ---------------------------------------------------------------------------
 # TestSummary
 # ---------------------------------------------------------------------------
+
 
 class TestSummary:
     """Tests for print_summary() output."""
@@ -375,6 +384,6 @@ class TestSummary:
         mod.print_summary(results, dry_run=True, errors=False)
         out = capsys.readouterr().out
         # Spot-check: the numeric values surface in the output
-        assert "3" in out   # pyc_files
-        assert "5" in out   # empty_dirs
-        assert "4" in out   # stale_logs
+        assert "3" in out  # pyc_files
+        assert "5" in out  # empty_dirs
+        assert "4" in out  # stale_logs

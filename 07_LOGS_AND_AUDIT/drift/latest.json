@@ -1,10 +1,9 @@
 {
   "audit": {
-    "current_entries": 58,
+    "current_entries": 60,
     "expected_entries": 12,
     "missing_required": [],
     "added_unexpected": [
-      "'",
       "00_META",
       "01_STATE",
       "02_DOCS",
@@ -14,7 +13,6 @@
       "06_DATA",
       "08_PDRS",
       "09_DEPLOYMENT",
-      "10_RUNTIME",
       "11_SANDBOX_LAB",
       "AGENTS.md",
       "ARTIFACT_MANIFEST.json",
@@ -24,12 +22,15 @@
       "GOVERNANCE_AND_ROUTING_ARCHITECTURE.md",
       "GOVERNANCE_EXPANSION_GATE.md",
       "HARNESS_HEALTH_DASHBOARD.md",
+      "HARNESS_V2_30DAY_REMEDIATION_COMPLETE.md",
+      "HARNESS_V2_ASSESSMENT_SYNTHESIS.md",
+      "INTEGRATION_SUMMARY.txt",
       "INTEGRATION_TEST.ts",
+      "MISSIONS",
       "OPTION_C_COMPLETE.md",
       "PACKAGE_FILE_INDEX.txt",
       "README.md",
       "VALIDATION_MATRIX.md",
-      "__pycache__",
       "agent_handoffs",
       "assets",
       "config",
@@ -45,6 +46,7 @@
       "reports",
       "requirements.txt",
       "schemas",
+      "skills",
       "src",
       "state",
       "templates",
@@ -67,19 +69,32 @@
   },
   "drift": {
     "status": "ok",
-    "score": 97,
+    "score": 75,
     "added": [
-      "'"
+      "HARNESS_V2_30DAY_REMEDIATION_COMPLETE.md",
+      "HARNESS_V2_ASSESSMENT_SYNTHESIS.md",
+      "INTEGRATION_SUMMARY.txt",
+      "MISSIONS",
+      "skills"
     ],
-    "removed": [],
+    "removed": [
+      "10_RUNTIME",
+      "__pycache__"
+    ],
     "trend": "stable"
   },
-  "score": 97,
+  "score": 75,
   "trend": "stable",
   "missing_protected": [],
   "recommendations": [
-    "confirm whether new top-level entry is intentional: '"
+    "confirm whether new top-level entry is intentional: HARNESS_V2_30DAY_REMEDIATION_COMPLETE.md",
+    "confirm whether new top-level entry is intentional: HARNESS_V2_ASSESSMENT_SYNTHESIS.md",
+    "confirm whether new top-level entry is intentional: INTEGRATION_SUMMARY.txt",
+    "confirm whether new top-level entry is intentional: MISSIONS",
+    "confirm whether new top-level entry is intentional: skills",
+    "confirm removal of expected entry is intentional: 10_RUNTIME",
+    "confirm removal of expected entry is intentional: __pycache__"
   ],
   "passed": true,
-  "timestamp": "20260616T230743Z"
+  "timestamp": "20260621T183213Z"
 }

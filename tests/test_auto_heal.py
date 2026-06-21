@@ -21,12 +21,14 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _load_module() -> ModuleType:
     """Return a fresh import of auto_heal (re-import to reset module state)."""
     mod_name = "scripts.auto_heal"
     if mod_name in sys.modules:
         del sys.modules[mod_name]
     import scripts.auto_heal as ah  # noqa: PLC0415
+
     return ah
 
 
@@ -124,6 +126,7 @@ class TestHealGitIndexLock:
         # Back-date mtime so the lock appears old (> 60 s)
         old_mtime = time.time() - 120
         import os
+
         os.utime(lock, (old_mtime, old_mtime))
 
         result = ah.HealResult()
@@ -151,6 +154,7 @@ class TestHealGitIndexLock:
         lock = git_dir / "index.lock"
         lock.write_text("", encoding="utf-8")
         import os
+
         old_mtime = time.time() - 200
         os.utime(lock, (old_mtime, old_mtime))
 
@@ -368,6 +372,7 @@ class TestCheckOnlyFlag:
         lock = git_dir / "index.lock"
         lock.write_bytes(b"")
         import os
+
         os.utime(lock, (time.time() - 300, time.time() - 300))
 
         pkg = tmp_path / "02_RUNTIME"
