@@ -164,7 +164,7 @@ def test_provider_selector_speed_laptop_c3(selector, classifier):
     assert sel.c_level == "C3"
     assert len(sel.ranked_choices) > 0
     first = sel.ranked_choices[0].provider
-    assert first in ("gemini", "claude_api", "openrouter")
+    assert first in ("native_claude", "agnes", "gemini", "claude_api", "openrouter")
 
 
 def test_provider_selector_offline_forces_low(selector, classifier):

@@ -48,6 +48,7 @@ from router.adapters.openai_adapter import OpenAIAdapter  # noqa: E402
 from router.adapters.anthropic_adapter import AnthropicAdapter  # noqa: E402
 from router.adapters.google_adapter import GoogleAdapter  # noqa: E402
 from router.adapters.openrouter_adapter import OpenRouterAdapter  # noqa: E402
+from router.adapters.agnes_adapter import AgnesAdapter  # noqa: E402
 from router.adapters.featherless_adapter import FeatherlessAdapter  # noqa: E402
 
 __all__ = [
@@ -80,6 +81,7 @@ __all__ = [
     "AnthropicAdapter",
     "GoogleAdapter",
     "OpenRouterAdapter",
+    "AgnesAdapter",
     "FeatherlessAdapter",
     "SystemMemoryStore",
     "ScopeEnforcer",

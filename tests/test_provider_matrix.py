@@ -12,8 +12,8 @@ from router.context_detector import RuntimeContext
 from router.provider_selector import ProviderSelector
 
 _REPO = Path(__file__).resolve().parent.parent
-_ROUTING_TABLE = _REPO / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
-_OPENROUTER_MODELS = _REPO / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
+_ROUTING_TABLE = _REPO / "config" / "routing" / "routing-table.yaml"
+_OPENROUTER_MODELS = _REPO / "config" / "routing" / "openrouter-models.yaml"
 EMPTY_PREFS = Path(__file__).resolve().parent / "fixtures" / "empty_prefs.yaml"
 
 CLOUD_PROVIDERS = frozenset({"gemini", "openai", "claude_api", "openrouter", "together_ai"})

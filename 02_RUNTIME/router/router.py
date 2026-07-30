@@ -1,5 +1,8 @@
 """Chromatic API Router — main entry point for provider-neutral routing."""
 
+__all__ = ["ChromaticRouter", "RouteRequest", "RouteResponse"]
+
+import os
 import time
 import uuid
 from typing import Any
@@ -17,7 +20,7 @@ from .confidence import ConfidenceGate
 from .privacy import PrivacyGate
 from .budget import BudgetGate
 from .observability import ObservabilityLogger
-from .adapters.base import BaseAdapter
+from .adapters.base import AdapterHealth, BaseAdapter
 from .adapters.mock import MockAdapter
 from .adapters.adapter_factory import build as _build_adapters
 from .complexity_classifier import ComplexityClassifier
@@ -38,9 +41,13 @@ class ChromaticRouter:
         loader: PolicyLoader | None = None,
         logger: ObservabilityLogger | None = None,
         adapters: dict[str, BaseAdapter] | None = None,
+        allow_mock_fallback: bool | None = None,
     ):
         self.loader = loader or PolicyLoader()
         self.logger = logger or ObservabilityLogger()
+        if allow_mock_fallback is None:
+            allow_mock_fallback = os.environ.get("ROUTER_ALLOW_MOCK_FALLBACK", "false").lower() == "true"
+        self.allow_mock_fallback = allow_mock_fallback
         self.context_gate = ContextGate()
         self.context_policy_loader = ContextPolicyLoader()
         self.confidence_gate = ConfidenceGate()
@@ -51,16 +58,47 @@ class ChromaticRouter:
         self.context_detector = ContextDetector()
         self.provider_selector = ProviderSelector()
         self.adapters: dict[str, BaseAdapter] = {}
+        self.provider_health_cache: dict[str, AdapterHealth] = {}
         if adapters:
             self.adapters.update(adapters)
         else:
-            self._register_default_adapters()
+            # All adapters now come from the YAML factory; logical providers are
+            # declared in providers.yaml and wired via adapters.yaml.
+            providers = self.loader.providers()
+            self.adapters.update(_build_adapters(providers))
 
-    def _register_default_adapters(self):
-        providers = self.loader.providers()
-        self.adapters.update(_build_adapters(providers))
-        if "mock" not in self.adapters:
-            self.adapters["mock"] = MockAdapter()
+    async def _probe_provider_health(self, provider_names: list[str] | None = None) -> None:
+        names = provider_names or list(self.adapters.keys())
+        for provider_name in names:
+            adapter = self.adapters.get(provider_name)
+            if adapter is None:
+                continue
+            try:
+                health = await adapter.health()
+            except Exception as exc:  # pragma: no cover - defensive fallback
+                health = AdapterHealth(reachable=False, latency_ms=0, error=str(exc))
+            self.provider_health_cache[provider_name] = health
+
+    async def _provider_is_available_async(self, name: str, req: RouteRequest | None = None) -> bool:
+        adapter = self.adapters.get(name)
+        if not adapter:
+            return False
+        if not adapter.enabled:
+            return False
+        if name == "openhuman":
+            import os
+
+            if os.environ.get("OPENHUMAN_ENABLED", "false").lower() != "true":
+                return False
+            if req is not None:
+                if not req.constraints.allow_openhuman:
+                    return False
+                if req.constraints.privacy_class.value in ("P3", "P4", "P5"):
+                    return False
+        health = self.provider_health_cache.get(name)
+        if health is not None and not health.reachable:
+            return False
+        return True
 
     @staticmethod
     def _request_prompt_text(req: RouteRequest) -> str:
@@ -91,8 +129,9 @@ class ChromaticRouter:
     def _resolve_provider(self, req: RouteRequest) -> tuple[str, list[str], RouteLogs]:
         logs = RouteLogs()
         preferred = req.preferred_provider
+        pc = req.constraints.privacy_class
 
-        # ── NEW: context-aware route when no explicit preference ────────────
+        # ── AUTO: context-aware route (canonical) ───────────────────────────
         if not preferred or preferred == "auto":
             try:
                 context = self.context_detector.detect()
@@ -103,7 +142,7 @@ class ChromaticRouter:
                 selection = self.provider_selector.select(
                     complexity=complexity,
                     context=context,
-                    privacy_class=req.constraints.privacy_class.value,
+                    privacy_class=pc.value,
                 )
                 ranked = selection.ranked_choices
                 if ranked:
@@ -113,41 +152,26 @@ class ChromaticRouter:
                         f"Context route: C={complexity.level} speed={selection.speed_mode} "
                         f"provider={primary} ({len(fallback)} fallbacks)"
                     )
-                    pc = req.constraints.privacy_class
-                    primary, fallback, logs = self._apply_privacy_gate(primary, fallback, pc, logs)
-                    return primary, fallback, logs
+                    return self._apply_privacy_gate(primary, fallback, pc, logs)
+                logs.warnings.append("Context routing produced no candidates.")
             except Exception as exc:
-                logs.warnings.append(f"Context routing failed ({exc}), falling back to legacy route.")
+                logs.warnings.append(f"Context routing failed ({exc}).")
 
-        # ── LEGACY: task-type based route ────────────────────────────────────
-        task_route = self.loader.route_for_task(req.task_type.value)
-        if preferred and preferred != "auto":
-            primary = preferred
-            fallback = list(req.fallback_chain)
-        else:
-            primary = task_route.get("default", "mock")
-            fallback = list(task_route.get("fallback", []))
+            # Auto-routing no longer falls back to the legacy task-type table.
+            # Let the privacy gate record the failure and return a safe default.
+            return self._apply_privacy_gate("mock", [], pc, logs)
 
-        pc = req.constraints.privacy_class
+        # ── EXPLICIT: operator/provider override ─────────────────────────────
+        primary = preferred
+        fallback = list(req.fallback_chain)
         return self._apply_privacy_gate(primary, fallback, pc, logs)
 
-    # Logical provider names emitted by the routing table / provider_selector
-    # that don't have their own registered adapter — map them onto the adapter
-    # that actually serves them. routing-table uses ollama_local /
-    # ollama_remote_desktop; providers.yaml registers a single "ollama" adapter.
-    # Without this alias the auto-path picks ollama_local, finds no adapter (and
-    # gets dropped by the privacy gate, whose allowlist uses canonical names),
-    # then silently falls through to mock instead of the local model.
-    _ADAPTER_ALIASES = {
-        "ollama_local": "ollama",
-        "ollama_remote_desktop": "ollama",
-        "ollama_remote": "ollama",
-    }
-
+    # Provider names used by the routing table now map 1:1 to registered
+    # adapter instances. Logical Ollama endpoints (ollama_local,
+    # ollama_remote_desktop, ollama_remote) are first-class entries in
+    # providers.yaml and are built by the YAML adapter factory.
     def _resolve_adapter_name(self, name: str) -> str:
-        if name in self.adapters:
-            return name
-        return self._ADAPTER_ALIASES.get(name, name)
+        return name
 
     def _apply_privacy_gate(
         self,
@@ -163,21 +187,19 @@ class ChromaticRouter:
         for cand in candidates:
             if cand == "local_vault":
                 cand = "mock"
-            # Check the allowlist against the canonical adapter name so logical
-            # aliases (ollama_local -> ollama) survive the gate. Keep the
-            # original name in the chain so the adapter alias resolves later too.
-            canonical = self._resolve_adapter_name(cand)
-            if canonical in allowed or cand in allowed or cand == "mock":
+            if cand in allowed or (cand == "mock" and self.allow_mock_fallback):
                 filtered.append(cand)
             else:
                 logs.warnings.append(f"Provider {cand} removed by privacy policy for {pc.value}.")
         if not filtered:
             logs.errors.append("No candidate provider passed privacy gate.")
-            return "mock", [], logs
+            if self.allow_mock_fallback:
+                return "mock", [], logs
+            return "", [], logs
         return filtered[0], filtered[1:], logs
 
     def _provider_is_available(self, name: str, req: RouteRequest | None = None) -> bool:
-        adapter = self.adapters.get(self._resolve_adapter_name(name))
+        adapter = self.adapters.get(name)
         if not adapter:
             return False
         if not adapter.enabled:
@@ -244,6 +266,8 @@ class ChromaticRouter:
             self.logger.log(req, resp)
             return resp
 
+        await self._probe_provider_health(list(self.adapters.keys()))
+
         # 2. Confidence gate
         ok, clogs = self.confidence_gate.check(req)
         logs.policy_checks.extend(clogs.policy_checks)
@@ -271,6 +295,23 @@ class ChromaticRouter:
         logs.policy_checks.extend(rlogs.policy_checks)
         logs.warnings.extend(rlogs.warnings)
         logs.errors.extend(rlogs.errors)
+
+        if not chosen:
+            resp = RouteResponse(
+                request_id=req.request_id,
+                selected_provider="",
+                route_reason="all_providers_failed",
+                confidence_score=req.confidence.score,
+                privacy_class=req.constraints.privacy_class,
+                context_resources=cg_result.allowed_resources,
+                output=RouteOutput(
+                    type=OutputType.ERROR,
+                    content="No provider passed the routing gates and mock fallback is disabled.",
+                ),
+                logs=logs,
+            )
+            self.logger.log(req, resp)
+            return resp
 
         ok, blogs, est_cost = self.budget_gate.check(req, chosen)
         logs.policy_checks.extend(blogs.policy_checks)
@@ -300,10 +341,29 @@ class ChromaticRouter:
         resp: RouteResponse | None = None  # type: ignore[no-redef]
         last_error_resp: RouteResponse | None = None
         for cand in [chosen, *fallbacks]:
-            if not self._provider_is_available(cand, req):
+            if cand == "mock" and not self.allow_mock_fallback:
+                logs.warnings.append("Mock fallback disabled by configuration.")
+                continue
+            health = self.provider_health_cache.get(cand)
+            if health is not None and not health.reachable:
+                logs.warnings.append(
+                    f"Provider {cand} marked unreachable at startup ({health.error or 'health check failed'})."
+                )
+                continue
+            if not await self._provider_is_available_async(cand, req):
                 logs.warnings.append(f"Provider {cand} not available or disabled.")
                 continue
-            adapter = self.adapters.get(self._resolve_adapter_name(cand))
+            adapter = self.adapters.get(cand)
+            if not await self._provider_is_available_async(cand, req):
+                health = self.provider_health_cache.get(cand)
+                if health is not None and not health.reachable:
+                    logs.warnings.append(
+                        f"Provider {cand} marked unreachable at startup ({health.error or 'health check failed'})."
+                    )
+                else:
+                    logs.warnings.append(f"Provider {cand} not available or disabled.")
+                continue
+            adapter = self.adapters.get(cand)
             if adapter is None:
                 logs.warnings.append(f"No adapter registered for {cand}.")
                 continue
@@ -334,10 +394,21 @@ class ChromaticRouter:
 
         if resp is None:
             mock = self.adapters.get("mock")
-            if mock:
+            if mock and self.allow_mock_fallback:
                 resp = await mock.complete(req)
                 provider_used = "mock"
                 fallback_used = True
+            elif mock and not self.allow_mock_fallback:
+                logs.warnings.append("Mock fallback disabled by configuration.")
+                resp = RouteResponse(
+                    request_id=req.request_id,
+                    selected_provider="",
+                    route_reason="all_providers_failed",
+                    output=RouteOutput(
+                        type=OutputType.ERROR,
+                        content="All providers failed and mock fallback is disabled.",
+                    ),
+                )
             elif last_error_resp is not None:
                 # No mock, but at least one provider gave a real error — surface it.
                 resp = last_error_resp

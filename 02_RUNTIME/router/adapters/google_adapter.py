@@ -20,7 +20,7 @@ _DEFAULT_MODEL = "gemini-2.0-flash"
 
 
 class GoogleAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = dict(cfg) if cfg else {}
         api_key = os.environ.get(cfg.get("env_key", "GOOGLE_API_KEY"), "")  # pragma: allowlist secret
         cfg.setdefault("enabled", bool(api_key))

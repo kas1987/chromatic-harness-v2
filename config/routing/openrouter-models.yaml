@@ -1,0 +1,23 @@
+# OpenRouter model allowlist — docs/governance/OPENROUTER_BROKER_POLICY.md
+version: "1.0"
+
+models:
+  - id: anthropic/claude-sonnet-4-6
+    allowed_complexity: [C3, C4]
+    max_privacy: P2
+    notes: "Reasoning fallback when direct Anthropic unavailable."
+
+  - id: moonshotai/kimi-k2-6
+    allowed_complexity: [C2, C3]
+    max_privacy: P2
+    notes: "Builder/scout broker fallback."
+
+  - id: google/gemini-flash
+    allowed_complexity: [C2, C3]
+    max_privacy: P2
+    notes: "Cheap broad context fallback."
+
+  - id: openai/gpt-4o-mini
+    allowed_complexity: [C1, C2]
+    max_privacy: P2
+    notes: "Cheap structured tasks."

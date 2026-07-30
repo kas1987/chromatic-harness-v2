@@ -1,0 +1,6 @@
+version: 2
+
+speed_mode: balance
+auto_adjust: true
+provider_blocklist: []
+provider_preference: agnes

@@ -7,15 +7,15 @@ version: 2
 context_laptop:
   speed:
     C1: [ollama_local:llama3.2:3b, gemini:gemini-2.5-flash, native_claude]
-    C2: [gemini:gemini-2.5-flash, openai:gpt-4o-mini, ollama_local:qwen2.5-coder:14b]
-    C3: [native_claude, gemini:gemini-2.5-pro, openrouter:moonshotai/kimi-k2-6, claude_api:sonnet]
-    C4: [native_claude, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro]
+    C2: [gemini:gemini-2.5-flash, agnes:agnes-2.5-flash, openai:gpt-4o-mini, ollama_local:qwen2.5-coder:14b]
+    C3: [native_claude, agnes:agnes-2.5-flash, gemini:gemini-2.5-pro, openrouter:moonshotai/kimi-k2-6, claude_api:sonnet]
+    C4: [native_claude, agnes:agnes-2.5-flash, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro]
 
   balance:
     C1: [ollama_local:llama3.2:3b, ollama_local:qwen2.5-coder:14b]
-    C2: [ollama_local:qwen2.5-coder:14b, gemini:gemini-2.5-flash]
-    C3: [native_claude, gemini:gemini-2.5-pro, openrouter:moonshotai/kimi-k2-6, claude_api:sonnet]
-    C4: [native_claude, gemini:gemini-2.5-pro, claude_api:sonnet]
+    C2: [ollama_local:qwen2.5-coder:14b, agnes:agnes-2.5-flash, gemini:gemini-2.5-flash]
+    C3: [native_claude, agnes:agnes-2.5-flash, gemini:gemini-2.5-pro, openrouter:moonshotai/kimi-k2-6, claude_api:sonnet]
+    C4: [native_claude, agnes:agnes-2.5-flash, gemini:gemini-2.5-pro, claude_api:sonnet]
 
   low:
     C1: [ollama_local:llama3.2:3b]
@@ -28,14 +28,14 @@ context_laptop_remote:
   speed:
     C1: [ollama_local:llama3.2:3b, gemini:gemini-2.5-flash]
     C2: [ollama_remote_desktop:qwen2.5-coder:14b, gemini:gemini-2.5-flash, openrouter:moonshotai/kimi-k2-6]
-    C3: [native_claude, ollama_remote_desktop:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
-    C4: [native_claude, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro, claude_api:sonnet]
+    C3: [native_claude, agnes:agnes-2.5-flash, ollama_remote_desktop:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
+    C4: [native_claude, agnes:agnes-2.5-flash, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro, claude_api:sonnet]
 
   balance:
     C1: [ollama_local:llama3.2:3b]
     C2: [ollama_remote_desktop:llama3.1:8b, ollama_local:qwen2.5-coder:14b]
-    C3: [native_claude, ollama_remote_desktop:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
-    C4: [native_claude, gemini:gemini-2.5-pro, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6]
+    C3: [native_claude, agnes:agnes-2.5-flash, ollama_remote_desktop:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
+    C4: [native_claude, agnes:agnes-2.5-flash, gemini:gemini-2.5-pro, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6]
 
   low:
     C1: [ollama_local:llama3.2:3b]
@@ -48,14 +48,14 @@ context_desktop:
   speed:
     C1: [ollama_local:llama3.1:8b, gemini:gemini-2.5-flash]
     C2: [ollama_local:llama3.1:8b, gemini:gemini-2.5-flash, together_ai:moonshotai/Kimi-K2.6]
-    C3: [native_claude, ollama_local:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
-    C4: [native_claude, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro, claude_api:sonnet]
+    C3: [native_claude, agnes:agnes-2.5-flash, ollama_local:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
+    C4: [native_claude, agnes:agnes-2.5-flash, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro, claude_api:sonnet]
 
   balance:
     C1: [ollama_local:llama3.1:8b]
-    C2: [ollama_local:llama3.1:8b, ollama_local:qwen2.5-coder:14b]
-    C3: [native_claude, ollama_local:qwen2.5-coder:14b, ollama_local:gemma2:9b]
-    C4: [native_claude, gemini:gemini-2.5-pro, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6]
+    C2: [ollama_local:llama3.1:8b, agnes:agnes-2.5-flash, ollama_local:qwen2.5-coder:14b]
+    C3: [native_claude, agnes:agnes-2.5-flash, ollama_local:qwen2.5-coder:14b, ollama_local:gemma2:9b]
+    C4: [native_claude, agnes:agnes-2.5-flash, gemini:gemini-2.5-pro, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6]
 
   low:
     C1: [ollama_local:llama3.1:8b]
@@ -68,14 +68,14 @@ context_server:
   speed:
     C1: [ollama_local:llama3.1:8b]
     C2: [ollama_local:qwen2.5-coder:14b]
-    C3: [native_claude, ollama_local:gemma2:27b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
-    C4: [native_claude, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro]
+    C3: [native_claude, agnes:agnes-2.5-flash, ollama_local:gemma2:27b, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro]
+    C4: [native_claude, agnes:agnes-2.5-flash, claude_api:sonnet, openrouter:anthropic/claude-sonnet-4-6, gemini:gemini-2.5-pro]
 
   balance:
     C1: [ollama_local:llama3.1:8b]
     C2: [ollama_local:qwen2.5-coder:14b]
-    C3: [native_claude, ollama_local:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6]
-    C4: [native_claude, ollama_local:gemma2:27b, gemini:gemini-2.5-pro, openrouter:anthropic/claude-sonnet-4-6]
+    C3: [native_claude, agnes:agnes-2.5-flash, ollama_local:qwen2.5-coder:14b, openrouter:moonshotai/kimi-k2-6]
+    C4: [native_claude, agnes:agnes-2.5-flash, ollama_local:gemma2:27b, gemini:gemini-2.5-pro, openrouter:anthropic/claude-sonnet-4-6]
 
   low:
     C1: [ollama_local:llama3.1:8b]

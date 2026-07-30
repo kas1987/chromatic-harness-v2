@@ -296,3 +296,68 @@ class TestNativeClaudeComplete:
 
         assert resp.output.type == OutputType.ERROR
         assert "timed out" in resp.output.content
+
+    async def test_complete_subprocess_uses_resolved_cli_exec(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("router.adapters.native_claude_adapter.shutil.which", return_value="C:/shim/claude.cmd"):
+                adapter = NativeClaudeAdapter({"enabled": True, "relay_url": "", "model": "claude-haiku"})
+
+        output = json.dumps({"result": "ok", "usage": {"input_tokens": 1, "output_tokens": 1}})
+        mock_proc = MagicMock()
+        mock_proc.returncode = 0
+        mock_proc.communicate = AsyncMock(return_value=(output.encode(), b""))
+
+        with (
+            patch(
+                "router.adapters.native_claude_adapter.asyncio.create_subprocess_exec",
+                AsyncMock(return_value=mock_proc),
+            ) as mock_spawn_exec,
+            patch(
+                "router.adapters.native_claude_adapter.asyncio.create_subprocess_shell",
+                AsyncMock(return_value=mock_proc),
+            ) as mock_spawn_shell,
+        ):
+            resp = await adapter.complete(_make_request())
+
+        assert resp.output.type == OutputType.TEXT
+        if os.name == "nt":
+            assert mock_spawn_shell.called
+        else:
+            assert mock_spawn_exec.call_args.args[0] == "C:/shim/claude.cmd"
+
+    async def test_complete_subprocess_windows_cmd_uses_shell(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("router.adapters.native_claude_adapter.shutil.which", return_value="C:/shim/claude.cmd"):
+                adapter = NativeClaudeAdapter({"enabled": True, "relay_url": "", "model": "claude-haiku"})
+
+        output = json.dumps({"result": "ok", "usage": {"input_tokens": 1, "output_tokens": 1}})
+        mock_proc = MagicMock()
+        mock_proc.returncode = 0
+        mock_proc.communicate = AsyncMock(return_value=(output.encode(), b""))
+
+        with patch("router.adapters.native_claude_adapter.sys.platform", "win32"):
+            with patch(
+                "router.adapters.native_claude_adapter.asyncio.create_subprocess_shell",
+                AsyncMock(return_value=mock_proc),
+            ) as mock_shell:
+                resp = await adapter.complete(_make_request())
+
+        assert resp.output.type == OutputType.TEXT
+        assert mock_shell.called
+
+    async def test_complete_subprocess_nonzero_uses_stdout_when_stderr_empty(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with patch("router.adapters.native_claude_adapter.shutil.which", return_value="/usr/bin/claude"):
+                adapter = NativeClaudeAdapter({"enabled": True, "relay_url": "", "model": "claude-haiku"})
+
+        mock_proc = MagicMock()
+        mock_proc.returncode = 1
+        mock_proc.communicate = AsyncMock(return_value=(b"stdout failure", b""))
+
+        with patch(
+            "router.adapters.native_claude_adapter.asyncio.create_subprocess_exec", AsyncMock(return_value=mock_proc)
+        ):
+            resp = await adapter.complete(_make_request())
+
+        assert resp.output.type == OutputType.ERROR
+        assert "stdout failure" in resp.output.content

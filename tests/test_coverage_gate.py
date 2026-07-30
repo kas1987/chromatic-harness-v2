@@ -62,6 +62,12 @@ def test_parse_coverage_invalid_raises():
         parse_coverage("no coverage info here at all")
 
 
+def test_parse_coverage_json_file(tmp_path):
+    path = tmp_path / "coverage.json"
+    path.write_text(json.dumps({"totals": {"percent_covered": 88.5}}))
+    assert parse_coverage(path) == 88.5
+
+
 # ---------------------------------------------------------------------------
 # Helpers to build fake collect results
 # ---------------------------------------------------------------------------

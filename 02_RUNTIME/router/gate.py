@@ -14,7 +14,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 # ── Self-contained loader ────────────────────────────────────────────────────
 _ROUTER_DIR = Path(__file__).resolve().parent
@@ -34,7 +34,7 @@ if "router" not in sys.modules:
         pass
 
 
-def _load_submodule(name: str, fname: str):
+def _load_submodule(name: str, fname: str) -> Any:
     key = f"router.{name}"
     if key in sys.modules:
         return sys.modules[key]
@@ -86,9 +86,10 @@ _extract_file_refs = extract_file_refs
 _count_impacted = count_impacted
 
 
-def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
+def _impact_fan_out(description: str, prompt: str, runner: Callable[[list[str]], str] | None = None) -> int | None:
     """Gate-level wrapper — reads impact module's IMPACT_ENABLED so tests can monkeypatch it."""
     import router.pipeline.impact as _impact
+
     if not _impact.IMPACT_ENABLED:
         return None
     try:
@@ -100,6 +101,8 @@ def _impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
         return max(count, len(refs))
     except Exception:
         return None
+
+
 _billing_for_route = billing_for_route
 _cost_estimate_usd = cost_estimate_usd
 _context_gate_advisory = context_gate_advisory

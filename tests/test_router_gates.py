@@ -68,6 +68,9 @@ async def test_router_selects_provider_from_policy(router):
     assert resp.request_id == req.request_id
     assert resp.selected_provider in [
         "ollama",
+        "ollama_local",
+        "ollama_remote_desktop",
+        "ollama_remote",
         "lmstudio",
         "featherless",
         "mock",

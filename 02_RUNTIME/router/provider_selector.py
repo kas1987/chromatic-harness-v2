@@ -8,7 +8,7 @@ import shutil
 import urllib.request
 import yaml
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal, cast
 
 from .context_detector import ContextDetector, RuntimeContext
 from .complexity_classifier import ComplexityResult
@@ -22,6 +22,7 @@ _ROUTING_TO_POLICY: dict[str, str] = {
     "gemini": "gemini",
     "claude_api": "claude_api",
     "openai": "openai",
+    "agnes": "agnes",
     "openrouter": "openrouter",
     "together_ai": "together_ai",
     "ollama_local": "ollama_local",
@@ -35,7 +36,9 @@ _LOCAL_ROUTING_PROVIDERS: frozenset[str] = frozenset(
 )
 
 # Cloud/broker ids in routing-table.yaml (blocked for P3–P5 per broker policy)
-_CLOUD_ROUTING_PROVIDERS: frozenset[str] = frozenset({"gemini", "openai", "claude_api", "openrouter", "together_ai"})
+_CLOUD_ROUTING_PROVIDERS: frozenset[str] = frozenset(
+    {"gemini", "openai", "claude_api", "agnes", "openrouter", "together_ai"}
+)
 
 _PRIVACY_ORDER: dict[str, int] = {
     "P0": 0,
@@ -66,19 +69,11 @@ class SelectionResult:
 class ProviderSelector:
     """Reads routing-table.yaml and resolves providers."""
 
-    DEFAULT_ROUTING_TABLE = (
-        Path(__file__).resolve().parent.parent.parent / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
-    )
+    DEFAULT_ROUTING_TABLE = Path("routing-table.yaml")
 
     DEFAULT_PREFS = Path.home() / ".claude" / "config" / "routing" / "user-preferences.yaml"
 
-    DEFAULT_OPENROUTER_MODELS = (
-        Path(__file__).resolve().parent.parent.parent
-        / "09_DEPLOYMENT"
-        / "config"
-        / "routing"
-        / "openrouter-models.yaml"
-    )
+    DEFAULT_OPENROUTER_MODELS = Path("openrouter-models.yaml")
 
     def __init__(
         self,
@@ -87,20 +82,56 @@ class ProviderSelector:
         openrouter_models_path: Path | None = None,
         policy_loader: PolicyLoader | None = None,
     ):
-        self._table_path = routing_table_path or self.DEFAULT_ROUTING_TABLE
-        self._prefs_path = prefs_path or self.DEFAULT_PREFS
-        self._openrouter_models_path = openrouter_models_path or self.DEFAULT_OPENROUTER_MODELS
         self._policy_loader = policy_loader or PolicyLoader()
-        self._table: dict = {}
-        self._prefs: dict = {}
-        self._providers_cfg: dict = {}
+        self._table_path = routing_table_path or (self._policy_loader.config_dir / self.DEFAULT_ROUTING_TABLE)
+        self._prefs_path = prefs_path or self._default_prefs_path(self._table_path, self._policy_loader.config_dir)
+        self._openrouter_models_path = openrouter_models_path or (
+            self._policy_loader.config_dir / self.DEFAULT_OPENROUTER_MODELS
+        )
+        self._table: dict[str, Any] = {}
+        self._prefs: dict[str, Any] = {}
+        self._providers_cfg: dict[str, Any] = {}
         self._openrouter_allowlist: set[str] = set()
         self._load()
+
+    @staticmethod
+    def _default_prefs_path(routing_table_path: Path | None = None, policy_config_dir: Path | None = None) -> Path:
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        candidates: list[Path] = []
+
+        if routing_table_path is not None:
+            candidates.append(routing_table_path.parent / "user-preferences.yaml")
+            candidates.append(routing_table_path.parent / "config" / "routing" / "user-preferences.yaml")
+
+        if policy_config_dir is not None:
+            candidates.append(policy_config_dir / "user-preferences.yaml")
+
+        for base in [repo_root, Path.cwd()]:
+            if not base.exists():
+                continue
+            candidates.extend(
+                [
+                    base / "config" / "routing" / "user-preferences.yaml",
+                    base / "09_DEPLOYMENT" / "config" / "routing" / "user-preferences.yaml",
+                ]
+            )
+
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+        return Path.home() / ".claude" / "config" / "routing" / "user-preferences.yaml"
 
     def _load(self) -> None:
         if self._table_path.exists():
             with open(self._table_path, "r", encoding="utf-8") as f:
-                self._table = yaml.safe_load(f) or {}
+                table_data = yaml.safe_load(f) or {}
+                # Support both top-level context keys and a wrapped context_matrix.
+                if isinstance(table_data, dict) and isinstance(table_data.get("context_matrix"), dict):
+                    self._table = table_data["context_matrix"]
+                elif isinstance(table_data, dict):
+                    self._table = table_data
+                else:
+                    self._table = {}
         else:
             self._table = {}
 
@@ -116,8 +147,15 @@ class ProviderSelector:
     def _load_openrouter_allowlist(self) -> set[str]:
         path = self._openrouter_models_path
         if not path.exists():
-            alt = Path(__file__).resolve().parent.parent.parent / "config" / "routing" / "openrouter-models.yaml"
-            path = alt if alt.exists() else path
+            repo_root = Path(__file__).resolve().parent.parent.parent
+            candidates = [
+                repo_root / "config" / "routing" / "openrouter-models.yaml",
+                repo_root / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml",
+            ]
+            for candidate in candidates:
+                if candidate.exists():
+                    path = candidate
+                    break
         if not path.exists():
             return set()
         with open(path, "r", encoding="utf-8") as f:
@@ -142,6 +180,7 @@ class ProviderSelector:
         filtered = self._filter_by_availability(choices, context)
         filtered = self._filter_by_privacy(filtered, privacy_class)
         filtered = self._apply_blocklist(filtered)
+        filtered = self._apply_agnes_default(filtered, mode, c_level)
         filtered = self._apply_preference_override(filtered)
 
         return SelectionResult(
@@ -157,16 +196,15 @@ class ProviderSelector:
         if explicit:
             return explicit
 
-        # Persistent user setting
-        user_mode = self._prefs.get("speed_mode")
-        if user_mode in ("speed", "balance", "low"):
-            return user_mode  # type: ignore[return-value]
+        # Connectivity and battery always override the user's persisted preference.
+        if not context.internet_reachable or context.is_battery:
+            return "low"
 
-        # Auto-detect
-        if not context.internet_reachable:
-            return "low"
-        if context.is_battery:
-            return "low"
+        # Persistent user setting
+        user_mode = cast(str | None, self._prefs.get("speed_mode"))
+        if user_mode in ("speed", "balance", "low"):
+            return cast(SpeedMode, user_mode)
+
         return "balance"
 
     # ── Context key ───────────────────────────────────────────────────────
@@ -216,6 +254,8 @@ class ProviderSelector:
         if provider in ("lmstudio", "native_claude"):
             return 0
         if provider == "openai":
+            return 2
+        if provider == "agnes":
             return 2
         if provider == "gemini":
             return 3
@@ -281,7 +321,7 @@ class ProviderSelector:
         return shutil.which("claude") is not None
 
     @staticmethod
-    def _probe_remote_ollama(endpoints: list[dict]) -> bool:
+    def _probe_remote_ollama(endpoints: list[dict[str, Any]]) -> bool:
         for ep in endpoints:
             if not ep.get("enabled", True):
                 continue
@@ -355,6 +395,35 @@ class ProviderSelector:
         rest = [c for c in choices if c.provider != pref]
         return front + rest
 
+    def _apply_agnes_default(
+        self, choices: list[ProviderChoice], mode: SpeedMode, c_level: str
+    ) -> list[ProviderChoice]:
+        """Prefer Agnes for connected C2+ routes unless user explicitly opts out.
+
+        This keeps low-cost/offline C1 behavior untouched while making Agnes the
+        default execution path for medium/high-complexity online work.
+        """
+        if not choices:
+            return choices
+        if mode == "low":
+            return choices
+        if c_level not in {"C2", "C3", "C4"}:
+            return choices
+
+        # Keep local-first behavior intact for cost/latency compatibility.
+        if any(c.provider in _LOCAL_ROUTING_PROVIDERS for c in choices):
+            return choices
+
+        # Allow explicit opt-out in user preferences.
+        if self._prefs.get("agnes_default", True) is False:
+            return choices
+
+        front = [c for c in choices if c.provider == "agnes"]
+        if not front:
+            return choices
+        rest = [c for c in choices if c.provider != "agnes"]
+        return front + rest
+
     # ── Pure-function stage over RoutingContext ──────────────────────────────
 
     def select_context(self, ctx: RoutingContext, complexity: ComplexityResult) -> SelectionResult:
@@ -389,7 +458,7 @@ class ProviderSelector:
         if not ctx.internet_reachable or ctx.is_battery:
             effective_speed = "low"
         elif ctx.speed_mode != "balance":
-            effective_speed = ctx.speed_mode  # type: ignore[assignment]
+            effective_speed = ctx.speed_mode
 
         return self.select(
             complexity=complexity,

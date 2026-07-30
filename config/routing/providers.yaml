@@ -4,10 +4,30 @@
 version: "2.0"
 
 providers:
-  ollama:
+  # Logical Ollama providers. The adapter factory matches these via the
+  # "ollama" prefix in adapters.yaml and instantiates OllamaRemoteAdapter
+  # with the provider-specific host/port/model. This removes the need for
+  # runtime alias mapping inside router.py.
+  ollama_local:
     type: local
     enabled: true
-    host: host.docker.internal
+    host: localhost
+    port: 11434
+    model: llama3.2:3b
+    privacy_max: P2
+
+  ollama_remote_desktop:
+    type: local
+    enabled: true
+    host: desktop.local
+    port: 11434
+    model: llama3.1:8b
+    privacy_max: P2
+
+  ollama_remote:
+    type: local
+    enabled: true
+    host: localhost
     port: 11434
     model: llama3.2:3b
     privacy_max: P2
@@ -17,9 +37,12 @@ providers:
     enabled: true
     base_url: https://ollama.com
     env_key: OLLAMA_API_KEY
-    model: qwen3:235b
+    model: gpt-oss:20b
+    fallback_models:
+      - qwen3.5:397b
+      - gpt-oss:120b
     privacy_max: P1
-    note: "Ollama.com frontier cloud API; default model refreshed to current Qwen3 235B MoE."
+    note: "Ollama.com frontier cloud API; default model plus fallback models reduce breakage from model catalog churn."
 
   lmstudio:
     type: local
@@ -94,4 +117,9 @@ providers:
     enabled: true
     base_url: http://host.docker.internal:8000
     env_key: PRISM_ORCHESTRATOR_ENABLED
+    privacy_max: P2
+
+  mock:
+    type: test
+    enabled: false
     privacy_max: P2

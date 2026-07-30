@@ -19,7 +19,7 @@ from ..contracts import (
 
 
 class OpenAIAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = dict(cfg) if cfg else {}
         env_key = cfg.get("env_key", "OPENAI_API_KEY")
         cfg["enabled"] = bool(os.environ.get(env_key))

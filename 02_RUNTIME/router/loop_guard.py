@@ -23,18 +23,14 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 WARN_THRESHOLD = int(os.environ.get("ROUTER_LOOP_WARN", "10"))
 BLOCK_THRESHOLD = int(os.environ.get("ROUTER_LOOP_BLOCK", "25"))
 
 
 def _session_id() -> str:
-    return (
-        os.environ.get("CLAUDE_SESSION_ID")
-        or os.environ.get("CHROMATIC_SESSION_ID")
-        or "default"
-    )
+    return os.environ.get("CLAUDE_SESSION_ID") or os.environ.get("CHROMATIC_SESSION_ID") or "default"
 
 
 def task_signature(description: str, subagent_type: str = "") -> str:
@@ -51,8 +47,8 @@ def _state_path(repo_root: Path) -> Path:
 def _load(path: Path, session_id: str) -> dict[str, Any]:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-        if data.get("session_id") == session_id:
-            return data
+        if isinstance(data, dict) and data.get("session_id") == session_id:
+            return cast(dict[str, Any], data)
     except Exception:
         pass
     return {"session_id": session_id, "counts": {}}
@@ -101,7 +97,6 @@ def advisory_note(verdict: dict[str, Any]) -> str:
         )
     if level == "block":
         return (
-            f" | LOOP BLOCK: dispatched {count}x this session "
-            f"(>{BLOCK_THRESHOLD}) — change approach or hand off (SOP)"
+            f" | LOOP BLOCK: dispatched {count}x this session (>{BLOCK_THRESHOLD}) — change approach or hand off (SOP)"
         )
     return ""

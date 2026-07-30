@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import json
 import os
 from pathlib import Path
@@ -18,7 +20,7 @@ def _repo() -> Path:
     return _REPO
 
 
-def read_routing_overlay() -> dict | None:
+def read_routing_overlay() -> dict[str, Any] | None:
     """Read control-plane routing_policy_overlay.json. Fail-open → None."""
     overlay_path = _repo() / "07_LOGS_AND_AUDIT" / "control_plane" / "routing_policy_overlay.json"
     if not overlay_path.is_file():
@@ -53,7 +55,7 @@ def context_gate_advisory(description: str, prompt: str, complexity_level: str) 
 
         router_dir = Path(__file__).resolve().parents[1]
 
-        def _load(name: str, fname: str):
+        def _load(name: str, fname: str) -> Any:
             path = router_dir / fname
             spec = importlib.util.spec_from_file_location(f"router.{name}", path)
             mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]

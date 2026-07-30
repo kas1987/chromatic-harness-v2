@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 
 IMPACT_ENABLED = os.environ.get("ROUTER_CODEGRAPH_IMPACT", "false").lower() == "true"
@@ -61,7 +62,7 @@ def _default_runner(files: list[str]) -> str:
     return proc.stdout or ""
 
 
-def impact_fan_out(description: str, prompt: str, runner=None) -> int | None:
+def impact_fan_out(description: str, prompt: str, runner: Callable[[list[str]], str] | None = None) -> int | None:
     """Real codegraph blast radius for files the task references, else None.
 
     None → no evidence; classifier uses keyword path unchanged.

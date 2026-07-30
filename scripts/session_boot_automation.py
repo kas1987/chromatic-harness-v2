@@ -26,6 +26,7 @@ _SCRIPTS = _REPO / "scripts"
 
 sys.path.insert(0, str(_SCRIPTS))
 from common_harness import run_safe  # noqa: E402
+from pre_session_manifest import PACK_VERSION_FILES, _pack_version  # noqa: E402
 
 
 def _repo_root() -> Path:
@@ -68,14 +69,27 @@ def manifest_is_fresh(max_age_hours: float) -> bool:
 
         # If any MCP descriptor file is newer than the manifest, MCPs may have
         # changed since the last audit — force a re-run.
+        manifest_mtime = manifest.stat().st_mtime
         mcps_path = (data.get("mcp_audit") or {}).get("mcps_path")
         if mcps_path:
-            manifest_mtime = manifest.stat().st_mtime
             mcps_dir = Path(mcps_path)
             if mcps_dir.is_dir():
                 for f in mcps_dir.rglob("*.json"):
                     if f.stat().st_mtime > manifest_mtime:
                         return False
+
+        # If the pack-version inputs changed, the manifest content is stale.
+        # Skip when the field is absent (legacy manifests) to avoid forcing a
+        # rebuild on every boot until the next manifest refresh writes it.
+        repo = _repo_root()
+        stored_pack = data.get("pack_version")
+        if stored_pack is not None and stored_pack != _pack_version(repo):
+            return False
+
+        # If the handoff file is newer than the manifest, loaded_docs may be stale.
+        handoff = repo / ".agents" / "handoffs" / "latest.json"
+        if handoff.is_file() and handoff.stat().st_mtime > manifest_mtime:
+            return False
 
         return True
     except (json.JSONDecodeError, OSError):
@@ -164,7 +178,9 @@ def run_boot(
     errors: list[str] = []
     notices: list[str] = []
     branch_policy = _load_branch_policy()
-    startup_awareness = branch_policy.get("startup_awareness") if isinstance(branch_policy.get("startup_awareness"), dict) else {}
+    startup_awareness = (
+        branch_policy.get("startup_awareness") if isinstance(branch_policy.get("startup_awareness"), dict) else {}
+    )
     autonomy_cfg = branch_policy.get("autonomy") if isinstance(branch_policy.get("autonomy"), dict) else {}
 
     if _run([str(_SCRIPTS / "check_agent_operations.py")], timeout=30, quiet=True) != 0:

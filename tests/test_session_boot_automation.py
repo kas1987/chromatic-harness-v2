@@ -106,7 +106,6 @@ def test_boot_skips_when_fresh(tmp_path):
             {
                 "generated_at": now,
                 "context_tier": "P0",
-                "pack_version": "abc",
             }
         ),
         encoding="utf-8",
@@ -240,3 +239,67 @@ def test_boot_summary_includes_manifest_age(tmp_path):
     summary = json.loads(r.stdout)
     assert "manifest_age_hours" in summary
     assert isinstance(summary["manifest_age_hours"], float)
+
+
+def test_manifest_is_fresh_detects_pack_version_change(tmp_path, monkeypatch):
+    """manifest_is_fresh returns False when pack-version inputs change."""
+    sys.path.insert(0, str(REPO / "scripts"))
+    import importlib
+    import session_boot_automation  # noqa: E402
+
+    importlib.reload(session_boot_automation)
+
+    fake_repo = tmp_path / "repo"
+    ctx_dir = fake_repo / ".agents" / "context"
+    ctx_dir.mkdir(parents=True)
+    (ctx_dir / "BOOT_CONTEXT.md").write_text("# ok")
+
+    manifest_dir = tmp_path / "pre_session"
+    manifest_dir.mkdir()
+    manifest = manifest_dir / "latest.json"
+
+    now = datetime.now(timezone.utc).isoformat()
+    manifest.write_text(
+        json.dumps({"generated_at": now, "pack_version": "old-hash"}),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv("CHROMATIC_PRE_SESSION_DIR", str(manifest_dir))
+    monkeypatch.setenv("CHROMATIC_REPO", str(fake_repo))
+    assert session_boot_automation.manifest_is_fresh(6.0) is False
+
+
+def test_manifest_is_fresh_detects_newer_handoff(tmp_path, monkeypatch):
+    """manifest_is_fresh returns False when the handoff file is newer than the manifest."""
+    sys.path.insert(0, str(REPO / "scripts"))
+    import importlib
+    import session_boot_automation  # noqa: E402
+
+    importlib.reload(session_boot_automation)
+
+    fake_repo = tmp_path / "repo"
+    ctx_dir = fake_repo / ".agents" / "context"
+    ctx_dir.mkdir(parents=True)
+    (ctx_dir / "BOOT_CONTEXT.md").write_text("# ok")
+    handoff_dir = fake_repo / ".agents" / "handoffs"
+    handoff_dir.mkdir(parents=True)
+    handoff = handoff_dir / "latest.json"
+    handoff.write_text("{}")
+
+    manifest_dir = tmp_path / "pre_session"
+    manifest_dir.mkdir()
+    manifest = manifest_dir / "latest.json"
+
+    now = datetime.now(timezone.utc).isoformat()
+    manifest.write_text(
+        json.dumps({"generated_at": now}),
+        encoding="utf-8",
+    )
+    import time
+
+    time.sleep(0.05)
+    handoff.touch()  # handoff now newer than manifest
+
+    monkeypatch.setenv("CHROMATIC_PRE_SESSION_DIR", str(manifest_dir))
+    monkeypatch.setenv("CHROMATIC_REPO", str(fake_repo))
+    assert session_boot_automation.manifest_is_fresh(6.0) is False

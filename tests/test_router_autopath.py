@@ -1,14 +1,13 @@
 """Router auto-path robustness tests.
 
-Regression coverage for two bugs found 2026-05-31:
-1. An adapter returning an ERROR RouteResponse (not raising) was treated as
-   success and broke the fallback loop — so a broken provider (native_claude
-   with no working CLI -> WinError 2) dead-ended instead of handing off to a
-   reachable one.
-2. The routing table / provider_selector use logical names (ollama_local) but
-   the adapter is registered as 'ollama'; without an alias the auto-path picked
-   a name with no adapter and the privacy gate (allowlist uses canonical names)
-   dropped it, silently falling through to mock.
+Regression coverage for routing fallback behavior:
+1. An adapter returning an ERROR RouteResponse (not raising) must not break the
+   fallback loop — a broken provider (e.g. native_claude with no working CLI)
+   must hand off to a reachable one.
+2. Logical provider names emitted by the routing table (ollama_local) must be
+   first-class providers in providers.yaml so the adapter factory creates a
+   dedicated adapter and the privacy allowlist admits them. Runtime alias
+   remapping inside router.py has been removed.
 
 Uses fake adapters so nothing touches the network.
 """
@@ -104,17 +103,19 @@ def test_raised_exception_falls_through():
     assert resp.selected_provider == "ollama"
 
 
-def test_ollama_local_alias_resolves_to_ollama_adapter():
-    good = _FakeAdapter("ollama", mode="ok")
-    router = _router_with({"ollama": good})
-    # The routing table emits 'ollama_local'; the alias must map it to 'ollama'.
-    assert router._resolve_adapter_name("ollama_local") == "ollama"
+def test_ollama_local_is_registered_logical_provider():
+    # The routing table emits 'ollama_local'; providers.yaml now declares it as
+    # a first-class logical provider, so the adapter factory creates an adapter
+    # with that exact name and the privacy allowlist admits it.
+    good = _FakeAdapter("ollama_local", mode="ok")
+    router = _router_with({"ollama_local": good})
+    assert router._resolve_adapter_name("ollama_local") == "ollama_local"
     assert router._provider_is_available("ollama_local") is True
 
 
-def test_ollama_local_routes_through_alias():
-    good = _FakeAdapter("ollama", mode="ok")
-    router = _router_with({"ollama": good})
+def test_ollama_local_routes_through_logical_adapter():
+    good = _FakeAdapter("ollama_local", mode="ok")
+    router = _router_with({"ollama_local": good})
     resp = asyncio.run(router.route(_req("ollama_local")))
     assert resp.output.type == OutputType.TEXT
     assert good.calls == 1

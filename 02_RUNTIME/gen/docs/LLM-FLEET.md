@@ -67,7 +67,8 @@ GEN_MINIMAX_MODEL=abab6.5-chat   # check platform.minimax.io for current model I
 
 The harness `ollama_cloud` provider calls Ollama's paid cloud API for frontier-class models (no local GPU required). This is **separate** from the MiniMax `:cloud` tag above.
 
-Current default model: `qwen3:235b` (Qwen3 235B MoE, 128K context, strong coding/reasoning).
+Current default model: `gpt-oss:20b` (selected for broad account availability and reliable smoke checks).
+Recommended fallback models: `qwen3.5:397b`, `gpt-oss:120b`.
 
 ```bash
 # Required env var
@@ -76,7 +77,10 @@ OLLAMA_API_KEY=
 # In harness config (config/routing/providers.yaml)
 #   ollama_cloud:
 #     base_url: https://ollama.com
-#     model: qwen3:235b
+#     model: gpt-oss:20b
+#     fallback_models:
+#       - qwen3.5:397b
+#       - gpt-oss:120b
 ```
 
 To use a different Ollama Cloud model, change `model` in `config/routing/providers.yaml` and verify it is available at `ollama.com/library`.

@@ -34,6 +34,7 @@ def _registry() -> dict:
 _EXPECTED_BY_TYPE = {
     "native": "P",
     "local": "F",
+    "test": "F",
     "frontier": "D",
     "broker": "D",
     "sidecar": "D",

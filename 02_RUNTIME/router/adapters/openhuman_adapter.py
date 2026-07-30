@@ -37,32 +37,25 @@ class OpenHumanAdapter(BaseAdapter):
     def __init__(self, cfg: dict[str, Any] | None = None):
         if cfg is None:
             cfg = {
-                "enabled": os.environ.get("OPENHUMAN_ENABLED", "false").lower()
-                == "true",
-                "base_url": os.environ.get(
-                    "OPENHUMAN_BASE_URL", "http://127.0.0.1:8787"
-                ),
-                "env_key": "OPENHUMAN_BEARER_TOKEN",
+                "enabled": os.environ.get("OPENHUMAN_ENABLED", "false").lower() == "true",
+                "base_url": os.environ.get("OPENHUMAN_BASE_URL", "http://127.0.0.1:8787"),
+                "env_key": "OPENHUMAN_BEARER_TOKEN",  # pragma: allowlist secret
                 "privacy_max": "P2",
                 "default_mode": "read_only",
             }
         super().__init__("openhuman", cfg)
         self.base_url = self.cfg.get("base_url", "http://127.0.0.1:8787").rstrip("/")
-        token = os.environ.get(self.cfg.get("env_key", "OPENHUMAN_BEARER_TOKEN"), "")
-        self.headers = {"Authorization": f"Bearer {token}"} if token else {}
+        token = os.environ.get(self.cfg.get("env_key", "OPENHUMAN_BEARER_TOKEN"), "")  # pragma: allowlist secret
+        self.headers = {"Authorization": f"Bearer {token}"} if token else {}  # pragma: allowlist secret
         self.mode = self.cfg.get("default_mode", "read_only")
 
     async def health(self) -> AdapterHealth:
         if not self.enabled:
-            return AdapterHealth(
-                reachable=False, latency_ms=0, error="disabled_by_config"
-            )
+            return AdapterHealth(reachable=False, latency_ms=0, error="disabled_by_config")
         t0 = time.perf_counter()
         try:
             async with httpx.AsyncClient() as client:
-                r = await client.get(
-                    f"{self.base_url}/health", headers=self.headers, timeout=5.0
-                )
+                r = await client.get(f"{self.base_url}/health", headers=self.headers, timeout=5.0)
             latency = int((time.perf_counter() - t0) * 1000)
             ok = r.status_code == 200
             return AdapterHealth(
@@ -78,7 +71,7 @@ class OpenHumanAdapter(BaseAdapter):
         meta = req.input.metadata or {}
         action = meta.get("action", "")
         if action:
-            return action  # type: ignore[return-value]
+            return str(action)
         mapping = {
             "personal_context": "memory_search",
             "research": "context_query",
@@ -89,25 +82,19 @@ class OpenHumanAdapter(BaseAdapter):
     async def complete(self, req: RouteRequest) -> RouteResponse:
         logs = RouteLogs()
         if not self.enabled:
-            logs.errors.append(
-                "OpenHuman is disabled by config (OPENHUMAN_ENABLED=false)."
-            )
+            logs.errors.append("OpenHuman is disabled by config (OPENHUMAN_ENABLED=false).")
             return RouteResponse(
                 request_id=req.request_id,
                 selected_provider=self.name,
                 route_reason="openhuman_disabled",
-                output=RouteOutput(
-                    type=OutputType.ERROR, content="OpenHuman disabled."
-                ),
+                output=RouteOutput(type=OutputType.ERROR, content="OpenHuman disabled."),
                 logs=logs,
             )
 
         action = self._action_from_request(req)
 
         if self.mode == "read_only" and action not in self.READONLY_ACTIONS:
-            logs.errors.append(
-                f"OpenHuman action '{action}' blocked in read-only mode."
-            )
+            logs.errors.append(f"OpenHuman action '{action}' blocked in read-only mode.")
             return RouteResponse(
                 request_id=req.request_id,
                 selected_provider=self.name,
@@ -148,9 +135,7 @@ class OpenHumanAdapter(BaseAdapter):
                 )
             latency = int((time.perf_counter() - t0) * 1000)
             if r.status_code != 200:
-                logs.errors.append(
-                    f"OpenHuman returned {r.status_code}: {r.text[:200]}"
-                )
+                logs.errors.append(f"OpenHuman returned {r.status_code}: {r.text[:200]}")
                 return RouteResponse(
                     request_id=req.request_id,
                     selected_provider=self.name,

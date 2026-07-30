@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
+
+from .base import BaseAdapter
 
 _REGISTRY_PATH = Path(__file__).parent / "adapters.yaml"
 
@@ -14,28 +16,26 @@ def _load_registry(registry_path: Path) -> dict[str, Any]:
         import yaml
     except ImportError as exc:
         raise ImportError("pyyaml required for AdapterFactory: pip install pyyaml") from exc
-    return yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+    return cast(dict[str, Any], yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {})
 
 
-def _instantiate(entry: dict[str, Any], name: str, cfg: dict[str, Any]):
+def _instantiate(entry: dict[str, Any], name: str, cfg: dict[str, Any]) -> BaseAdapter:
     mod = importlib.import_module(entry["module"])
     cls = getattr(mod, entry["class"])
     if entry.get("pass_name"):
-        return cls(name, cfg)
-    return cls(cfg)
+        return cast(BaseAdapter, cls(name, cfg))
+    return cast(BaseAdapter, cls(cfg))
 
 
 def build(
     providers: dict[str, Any],
     registry_path: Path | None = None,
-) -> dict:
+) -> dict[str, BaseAdapter]:
     """Return {provider_name: adapter_instance} for every provider in *providers*.
 
     Providers with no registry entry are silently skipped (same behaviour as
     the old if-elif chain which had no else branch).
     """
-    from .base import BaseAdapter
-
     registry = _load_registry(registry_path or _REGISTRY_PATH)
     exact: dict[str, Any] = registry.get("adapters", {})
     prefixes: dict[str, Any] = registry.get("prefixes", {})

@@ -363,6 +363,78 @@ class TestPreferenceOverride:
         result = sel._apply_preference_override(choices)
         assert result[0].provider == "gemini"
 
+    def test_uses_workspace_preferences_when_home_prefs_missing(self, tmp_path, monkeypatch):
+        repo_root = tmp_path / "repo"
+        (repo_root / "config" / "routing").mkdir(parents=True, exist_ok=True)
+        (repo_root / "config" / "routing" / "user-preferences.yaml").write_text(
+            "provider_preference: agnes\n", encoding="utf-8"
+        )
+
+        monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path / "no-home")
+
+        from router.provider_selector import ProviderSelector
+
+        selector = ProviderSelector(
+            routing_table_path=repo_root / "routing-table.yaml",
+            prefs_path=None,
+            openrouter_models_path=repo_root / "openrouter-models.yaml",
+            policy_loader=None,
+        )
+
+        assert selector._prefs_path == repo_root / "config" / "routing" / "user-preferences.yaml"
+        assert selector._prefs.get("provider_preference") == "agnes"
+
+
+class TestDefaultSourceUnification:
+    def test_default_routing_table_uses_policy_loader_config_dir(self, tmp_path):
+        from router.policy import PolicyLoader
+
+        (tmp_path / "routing-table.yaml").write_text("{}\n", encoding="utf-8")
+        (tmp_path / "providers.yaml").write_text("providers: {}\n", encoding="utf-8")
+        (tmp_path / "user-preferences.yaml").write_text("{}\n", encoding="utf-8")
+
+        selector = ProviderSelector(
+            policy_loader=PolicyLoader(config_dir=tmp_path),
+            prefs_path=tmp_path / "user-preferences.yaml",
+        )
+
+        assert selector._table_path == tmp_path / "routing-table.yaml"
+
+
+class TestAgnesDefaultPriority:
+    def test_agnes_is_promoted_for_speed_mode_c2_plus(self, selector_from):
+        sel = selector_from(routing_table={}, prefs={})
+        choices = [
+            ProviderChoice(provider="gemini", model=None, tier=3, reason="test"),
+            ProviderChoice(provider="agnes", model="agnes-2.5-flash", tier=2, reason="test"),
+            ProviderChoice(provider="openai", model=None, tier=2, reason="test"),
+        ]
+
+        result = sel._apply_agnes_default(choices, "speed", "C3")
+        assert result[0].provider == "agnes"
+
+    def test_agnes_not_promoted_in_low_mode_or_c1(self, selector_from):
+        sel = selector_from(routing_table={}, prefs={})
+        choices = [
+            ProviderChoice(provider="gemini", model=None, tier=3, reason="test"),
+            ProviderChoice(provider="agnes", model="agnes-2.5-flash", tier=2, reason="test"),
+        ]
+
+        result_low = sel._apply_agnes_default(choices, "low", "C3")
+        result_c1 = sel._apply_agnes_default(choices, "speed", "C1")
+        assert result_low[0].provider == "gemini"
+        assert result_c1[0].provider == "gemini"
+
+    def test_agnes_default_can_be_disabled_in_prefs(self, selector_from):
+        sel = selector_from(routing_table={}, prefs={"agnes_default": False})
+        choices = [
+            ProviderChoice(provider="gemini", model=None, tier=3, reason="test"),
+            ProviderChoice(provider="agnes", model="agnes-2.5-flash", tier=2, reason="test"),
+        ]
+
+        result = sel._apply_agnes_default(choices, "speed", "C3")
+        assert result[0].provider == "gemini"
+
 
 # ── Speed-mode prefs ──────────────────────────────────────────────────────────
 

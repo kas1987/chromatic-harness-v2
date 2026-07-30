@@ -10,7 +10,7 @@ auto_adjust: true         # allow router to override based on budget/connectivit
 provider_blocklist: []
 
 # Override: always prefer this provider when available (ignores routing table)
-provider_preference: null   # e.g. "gemini", "ollama_local", "native_claude"
+provider_preference: agnes   # e.g. "agnes", "gemini", "ollama_local", "native_claude"
 
 # ── API Keys (set in environment, listed here for reference) ───────────────
 # Required env vars:

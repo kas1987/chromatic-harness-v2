@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import os
 import time
 
@@ -19,7 +21,7 @@ from ..contracts import (
 
 
 class OpenRouterAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = dict(cfg) if cfg else {}
         env_key = cfg.get("env_key", "OPENROUTER_API_KEY")
         cfg["enabled"] = bool(os.environ.get(env_key))
@@ -53,9 +55,7 @@ class OpenRouterAdapter(BaseAdapter):
             start = time.time()
             resp = await client.get("https://openrouter.ai/api/v1/models")
             latency_ms = int((time.time() - start) * 1000)
-            return AdapterHealth(
-                reachable=resp.status_code == 200, latency_ms=latency_ms
-            )
+            return AdapterHealth(reachable=resp.status_code == 200, latency_ms=latency_ms)
         except Exception as e:
             return AdapterHealth(reachable=False, latency_ms=0, error=str(e))
 
@@ -63,18 +63,12 @@ class OpenRouterAdapter(BaseAdapter):
         logs = RouteLogs()
         try:
             if not self.enabled:
-                return self.normalize_error(
-                    req.request_id, "OPENROUTER_API_KEY not configured"
-                )
+                return self.normalize_error(req.request_id, "OPENROUTER_API_KEY not configured")
 
             client = self._get_client()
             start = time.time()
 
-            messages = (
-                req.input.messages
-                if req.input.messages
-                else [{"role": "user", "content": req.objective}]
-            )
+            messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
             response = await client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
                 json={
@@ -87,9 +81,7 @@ class OpenRouterAdapter(BaseAdapter):
 
             latency_ms = int((time.time() - start) * 1000)
             if response.status_code != 200:
-                return self.normalize_error(
-                    req.request_id, f"OpenRouter status {response.status_code}"
-                )
+                return self.normalize_error(req.request_id, f"OpenRouter status {response.status_code}")
 
             data = response.json()
             content = data["choices"][0]["message"]["content"]

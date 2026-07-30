@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import yaml
 
@@ -57,11 +57,7 @@ class ContextPolicy:
         return min(caps)
 
     def effective_budget_pct(self) -> int:
-        return (
-            self.task_rule.context_budget_pct
-            if self.task_rule
-            else self.max_context_budget_pct
-        )
+        return self.task_rule.context_budget_pct if self.task_rule else self.max_context_budget_pct
 
     def effective_max_risk(self) -> RiskLevel | None:
         risks: list[str] = []
@@ -100,16 +96,12 @@ class ContextPolicyLoader:
     """Loads context-policy.yaml and resolves rules for a given task."""
 
     DEFAULT_PATH = (
-        Path(__file__).resolve().parent.parent.parent
-        / "09_DEPLOYMENT"
-        / "config"
-        / "routing"
-        / "context-policy.yaml"
+        Path(__file__).resolve().parent.parent.parent / "09_DEPLOYMENT" / "config" / "routing" / "context-policy.yaml"
     )
 
     def __init__(self, policy_path: Path | str | None = None):
         self._path = Path(policy_path) if policy_path else self.DEFAULT_PATH
-        self._raw: dict = {}
+        self._raw: dict[str, Any] = {}
         self._load()
 
     def _load(self) -> None:
@@ -122,7 +114,7 @@ class ContextPolicyLoader:
     # ── Public API ─────────────────────────────────────────────────────
 
     def defaults(self) -> dict[str, Any]:
-        return self._raw.get("defaults", {})
+        return cast(dict[str, Any], self._raw.get("defaults", {}))
 
     def rules_for_task(self, task_type: TaskType) -> TaskRule | None:
         raw = self._raw.get("task_rules", {}).get(task_type.value)
@@ -156,7 +148,7 @@ class ContextPolicyLoader:
         )
 
     def context_budget_for_privacy(self, pc: PrivacyClass) -> int:
-        return self._raw.get("context_budget", {}).get(pc.value, 25)
+        return cast(int, self._raw.get("context_budget", {}).get(pc.value, 25))
 
     def resolve(
         self,
@@ -167,8 +159,8 @@ class ContextPolicyLoader:
         """Resolve the most restrictive combined policy for a task."""
         defaults = self.defaults()
         return ContextPolicy(
-            max_context_budget_pct=defaults.get("max_context_budget_pct", 25),
-            max_resources=defaults.get("max_resources", 20),
+            max_context_budget_pct=cast(int, defaults.get("max_context_budget_pct", 25)),
+            max_resources=cast(int, defaults.get("max_resources", 20)),
             task_rule=self.rules_for_task(task_type),
             complexity_cap=self.rules_for_complexity(complexity),
             privacy_rule=self.rules_for_privacy(privacy),

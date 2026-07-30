@@ -20,7 +20,7 @@ def read_stdin() -> dict[str, Any]:
 
 def emit_advisory(advisory: str) -> None:
     if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        sys.stdout.reconfigure(encoding="utf-8")
     sys.stdout.write(
         json.dumps(
             {"hookSpecificOutput": {"additionalContext": advisory}},
@@ -31,7 +31,7 @@ def emit_advisory(advisory: str) -> None:
 
 def emit_deny(advisory: str) -> None:
     if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        sys.stdout.reconfigure(encoding="utf-8")
     sys.stdout.write(
         json.dumps(
             {

@@ -40,13 +40,8 @@ class ObservabilityLogger:
         root = _repo_root()
         self.log_dir = log_dir or (root / "07_LOGS_AND_AUDIT" / "routing")
         self.log_dir.mkdir(parents=True, exist_ok=True)
-        self._file = (
-            self.log_dir
-            / f"routes_{datetime.now(timezone.utc).strftime('%Y%m%d')}.jsonl"
-        )
-        self._agent_run_log = agent_run_log or (
-            root / "07_LOGS_AND_AUDIT" / "AGENT_RUN_LOG.jsonl"
-        )
+        self._file = self.log_dir / f"routes_{datetime.now(timezone.utc).strftime('%Y%m%d')}.jsonl"
+        self._agent_run_log = agent_run_log or (root / "07_LOGS_AND_AUDIT" / "AGENT_RUN_LOG.jsonl")
 
     def _redact(self, text: str) -> str:
         import re
@@ -75,7 +70,7 @@ class ObservabilityLogger:
         req: RouteRequest,
         resp: RouteResponse,
         extra: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "request_id": req.request_id,

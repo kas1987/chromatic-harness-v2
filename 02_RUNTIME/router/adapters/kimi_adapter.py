@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import os
 import time
 
@@ -22,7 +24,7 @@ _DEFAULT_MODEL = "moonshot-v1-32k"
 
 
 class KimiAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = dict(cfg) if cfg else {}
         env_key = cfg.get("env_key", "MOONSHOT_API_KEY")
         cfg["enabled"] = bool(os.environ.get(env_key))
@@ -45,17 +47,13 @@ class KimiAdapter(BaseAdapter):
 
     async def health(self) -> AdapterHealth:
         if not self.enabled:
-            return AdapterHealth(
-                reachable=False, latency_ms=0, error="MOONSHOT_API_KEY not set"
-            )
+            return AdapterHealth(reachable=False, latency_ms=0, error="MOONSHOT_API_KEY not set")
         try:
             client = self._get_client()
             start = time.time()
             resp = await client.get(f"{self.cfg.get('base_url', _BASE_URL)}/models")
             latency_ms = int((time.time() - start) * 1000)
-            return AdapterHealth(
-                reachable=resp.status_code == 200, latency_ms=latency_ms
-            )
+            return AdapterHealth(reachable=resp.status_code == 200, latency_ms=latency_ms)
         except Exception as e:
             return AdapterHealth(reachable=False, latency_ms=0, error=str(e))
 
@@ -63,17 +61,11 @@ class KimiAdapter(BaseAdapter):
         logs = RouteLogs()
         try:
             if not self.enabled:
-                return self.normalize_error(
-                    req.request_id, "MOONSHOT_API_KEY not configured"
-                )
+                return self.normalize_error(req.request_id, "MOONSHOT_API_KEY not configured")
 
             client = self._get_client()
             start = time.time()
-            messages = (
-                req.input.messages
-                if req.input.messages
-                else [{"role": "user", "content": req.objective}]
-            )
+            messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
             base_url = self.cfg.get("base_url", _BASE_URL)
             response = await client.post(
                 f"{base_url}/chat/completions",
@@ -86,9 +78,7 @@ class KimiAdapter(BaseAdapter):
             )
             latency_ms = int((time.time() - start) * 1000)
             if response.status_code != 200:
-                return self.normalize_error(
-                    req.request_id, f"Kimi status {response.status_code}"
-                )
+                return self.normalize_error(req.request_id, f"Kimi status {response.status_code}")
 
             data = response.json()
             content = data["choices"][0]["message"]["content"]

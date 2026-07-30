@@ -32,6 +32,7 @@ from common_harness import run_safe  # noqa: E402
 
 ARTIFACT_DIR = REPO / "07_LOGS_AND_AUDIT" / "coverage"
 BASELINE_FILE = ARTIFACT_DIR / "baseline.json"
+PYTEST_COV_JSON = ARTIFACT_DIR / "pytest-cov.json"
 
 # Eval 1: absolute minimum coverage (0 = do not hard-fail on absolute by default).
 COVERAGE_MIN = float(os.environ.get("COVERAGE_MIN", "0"))
@@ -44,17 +45,28 @@ COVERAGE_DROP_TOLERANCE = float(os.environ.get("COVERAGE_DROP_TOLERANCE", "2.0")
 # ---------------------------------------------------------------------------
 
 
-def parse_coverage(text: str) -> float:
+def parse_coverage(text: str | Path) -> float:
     """Parse a coverage percentage from pytest-cov terminal or JSON output.
 
     Accepts:
     - pytest-cov terminal line: "TOTAL   ... 72%"
     - coverage.py JSON dict with "totals": {"percent_covered": 72.3}
+    - pytest-cov JSON report file path
     - Plain numeric string "72.3"
 
     Returns the percentage as a float (0-100).
     Raises ValueError if no coverage value can be found.
     """
+    # If a path is passed, read the pytest-cov JSON report.
+    if isinstance(text, Path):
+        data = json.loads(text.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            if "totals" in data and "percent_covered" in data["totals"]:
+                return float(data["totals"]["percent_covered"])
+            if "percent_covered" in data:
+                return float(data["percent_covered"])
+        raise ValueError("No coverage percentage found in JSON report")
+
     # Try JSON first.
     try:
         data = json.loads(text)
@@ -125,6 +137,10 @@ def collect_coverage() -> dict:
 
     Degrades to status='not_instrumented' if pytest-cov is unavailable.
     Never returns a false pass.
+
+    Writes a pytest-cov JSON report to PYTEST_COV_JSON and prefers parsing it
+    over the terminal summary, making the gate robust to pytest output format
+    changes and test collection errors that omit a TOTAL line.
     """
     if not _pytest_cov_available():
         return {
@@ -133,11 +149,35 @@ def collect_coverage() -> dict:
             "raw": "pytest-cov not available",
         }
 
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    json_report = f"--cov-report=json:{PYTEST_COV_JSON}"
     code, out = _run(
-        [sys.executable, "-m", "pytest", "--cov", "--cov-report=term-missing", "-q"],
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--cov",
+            "--cov-report=term-missing",
+            json_report,
+            "-q",
+        ],
         timeout=300,
     )
 
+    # Prefer the structured pytest-cov JSON artifact if it exists.
+    if PYTEST_COV_JSON.exists():
+        try:
+            pct = parse_coverage(PYTEST_COV_JSON)
+            return {
+                "status": "ok",
+                "coverage": pct,
+                "raw": out[-2000:],
+                "exit_code": code,
+            }
+        except (ValueError, OSError):
+            pass
+
+    # Fallback to terminal parsing.
     try:
         pct = parse_coverage(out)
         return {

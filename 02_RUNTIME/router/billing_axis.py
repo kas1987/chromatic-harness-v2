@@ -20,7 +20,7 @@ membership check OR by deriving from the providers.yaml registry's ``type`` fiel
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from .policy import PolicyLoader
 
@@ -34,9 +34,7 @@ BillingAxis = Literal["P", "D", "F"]
 _PREPAID_PROVIDERS: frozenset[str] = frozenset({"native_claude"})
 
 # Axis F — free local models (quota-neutral, tracked for offload value only).
-_LOCAL_PROVIDERS: frozenset[str] = frozenset(
-    {"ollama", "ollama_local", "ollama_remote_desktop", "lmstudio"}
-)
+_LOCAL_PROVIDERS: frozenset[str] = frozenset({"ollama", "ollama_local", "ollama_remote_desktop", "lmstudio"})
 
 # Axis D — dollar-billed API providers (hard $ ceiling per agent_budget.yaml).
 _CLOUD_PROVIDERS: frozenset[str] = frozenset(
@@ -59,6 +57,7 @@ _CLOUD_PROVIDERS: frozenset[str] = frozenset(
 _TYPE_TO_AXIS: dict[str, BillingAxis] = {
     "native": "P",
     "local": "F",
+    "test": "F",  # mock/test adapter is quota-neutral
     "frontier": "D",
     "broker": "D",
     "sidecar": "D",
@@ -67,12 +66,12 @@ _TYPE_TO_AXIS: dict[str, BillingAxis] = {
 }
 
 
-def _registry() -> dict:
+def _registry() -> dict[str, Any]:
     """Load the providers.yaml registry (cached by PolicyLoader)."""
     return PolicyLoader().providers()
 
 
-def classify(provider_id: str, registry: dict | None = None) -> BillingAxis:
+def classify(provider_id: str, registry: dict[str, Any] | None = None) -> BillingAxis:
     """Return the billing axis ``'P'`` | ``'D'`` | ``'F'`` for ``provider_id``.
 
     Resolution order:
@@ -103,7 +102,7 @@ def classify(provider_id: str, registry: dict | None = None) -> BillingAxis:
     return "D"
 
 
-def billing_axis(provider_id: str, registry: dict | None = None) -> BillingAxis:
+def billing_axis(provider_id: str, registry: dict[str, Any] | None = None) -> BillingAxis:
     """Alias helper for :func:`classify` (spec-named accessor)."""
     return classify(provider_id, registry=registry)
 

@@ -3,7 +3,7 @@
 import os
 import yaml
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 def _repo_root() -> Path:
@@ -40,27 +40,27 @@ class PolicyLoader:
         return self._cache[name]
 
     def providers(self) -> dict[str, Any]:
-        data = self._load("providers.yaml") or {}
-        return data.get("providers", {})  # type: ignore[return-value]
+        data = cast(dict[str, Any] | None, self._load("providers.yaml")) or {}
+        return cast(dict[str, Any], data.get("providers", {}))
 
     def routes(self) -> dict[str, Any]:
-        data = self._load("routing-table.yaml") or {}
-        return data.get("routes", {})  # type: ignore[return-value]
+        data = cast(dict[str, Any] | None, self._load("routing-table.yaml")) or {}
+        return cast(dict[str, Any], data.get("routes", {}))
 
     def privacy(self) -> dict[str, Any]:
-        data = self._load("privacy-policy.yaml") or {}
-        return data.get("privacy_classes", {})  # type: ignore[return-value]
+        data = cast(dict[str, Any] | None, self._load("privacy-policy.yaml")) or {}
+        return cast(dict[str, Any], data.get("privacy_classes", {}))
 
     def budget(self) -> dict[str, Any]:
-        data = self._load("budget-policy.yaml") or {}
-        return data.get("budget", {})  # type: ignore[return-value]
+        data = cast(dict[str, Any] | None, self._load("budget-policy.yaml")) or {}
+        return cast(dict[str, Any], data.get("budget", {}))
 
     def provider_costs(self) -> dict[str, float]:
-        data = self._load("budget-policy.yaml") or {}
-        return data.get("provider_cost_estimates", {})  # type: ignore[return-value]
+        data = cast(dict[str, Any] | None, self._load("budget-policy.yaml")) or {}
+        return cast(dict[str, float], data.get("provider_cost_estimates", {}))
 
     def route_for_task(self, task_type: str) -> dict[str, Any]:
-        return self.routes().get(task_type, {})  # type: ignore[return-value]
+        return cast(dict[str, Any], self.routes().get(task_type, {}))
 
     def provider_cfg(self, name: str) -> dict[str, Any]:
-        return self.providers().get(name, {})  # type: ignore[return-value]
+        return cast(dict[str, Any], self.providers().get(name, {}))

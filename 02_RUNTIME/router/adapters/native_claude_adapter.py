@@ -6,7 +6,10 @@ import asyncio
 import json
 import os
 import shutil
+import subprocess
+import sys
 import time
+from typing import Any
 
 import httpx
 
@@ -34,16 +37,28 @@ class NativeClaudeAdapter(BaseAdapter):
       subprocess — run `claude -p` directly (used when CLI is in PATH).
     """
 
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = dict(cfg) if cfg else {}
         relay_url = os.environ.get("NATIVE_CLAUDE_RELAY_URL", "")
-        has_cli = bool(shutil.which("claude"))
+        cli_exec = self._detect_cli_executable()
+        has_cli = bool(cli_exec)
         cfg.setdefault("enabled", bool(relay_url) or has_cli)
         cfg.setdefault("relay_url", relay_url)
+        cfg.setdefault("cli_exec", cli_exec or "claude")
         cfg.setdefault("model", os.environ.get("NATIVE_CLAUDE_MODEL", _DEFAULT_MODEL))
         cfg.setdefault("timeout", _TIMEOUT)
         super().__init__("native_claude", cfg)
         self._http: httpx.AsyncClient | None = None
+
+    @staticmethod
+    def _detect_cli_executable() -> str | None:
+        # On Windows, npm often installs claude.cmd/claude.ps1 shims.
+        # The .cmd shim is directly executable from Python subprocess.
+        for candidate in ("claude.cmd", "claude", "claude.exe", "claude.bat"):
+            resolved = shutil.which(candidate)
+            if resolved:
+                return resolved
+        return None
 
     def _use_relay(self) -> bool:
         return bool(self.cfg.get("relay_url"))
@@ -72,8 +87,9 @@ class NativeClaudeAdapter(BaseAdapter):
                 return AdapterHealth(reachable=False, latency_ms=0, error=str(e)[:200])
         try:
             start = time.time()
+            cli_exec = self.cfg.get("cli_exec", "claude")
             proc = await asyncio.create_subprocess_exec(
-                "claude",
+                cli_exec,
                 "--version",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -91,42 +107,34 @@ class NativeClaudeAdapter(BaseAdapter):
         if not self.enabled:
             return self.normalize_error(req.request_id, "native_claude not available")
 
-        messages = (
-            req.input.messages
-            if req.input.messages
-            else [{"role": "user", "content": req.objective}]
-        )
-        prompt = "\n".join(
-            m.get("content", "") for m in messages if m.get("role") != "system"
-        )
-        system_parts = [
-            m.get("content", "") for m in messages if m.get("role") == "system"
-        ]
+        messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
+        prompt = "\n".join(m.get("content", "") for m in messages if m.get("role") != "system")
+        system_parts = [m.get("content", "") for m in messages if m.get("role") == "system"]
         model = self.cfg.get("model", _DEFAULT_MODEL)
         timeout = self.cfg.get("timeout", _TIMEOUT)
 
         if self._use_relay():
-            return await self._complete_relay(  # type: ignore[return-value]
-                req, prompt, system_parts, model, timeout, logs
-            )
-        return await self._complete_subprocess(  # type: ignore[return-value]
-            req, prompt, system_parts, model, timeout, logs
-        )
+            return await self._complete_relay(req, prompt, system_parts, model, timeout, logs)
+        return await self._complete_subprocess(req, prompt, system_parts, model, timeout, logs)
 
-    async def _complete_relay(self, req, prompt, system_parts, model, timeout, logs):
+    async def _complete_relay(
+        self,
+        req: RouteRequest,
+        prompt: str,
+        system_parts: list[str],
+        model: str,
+        timeout: int,
+        logs: RouteLogs,
+    ) -> RouteResponse:
         try:
             start = time.time()
             payload = {"prompt": prompt, "model": model}
             if system_parts:
                 payload["system"] = " ".join(system_parts)
-            resp = await self._http_client().post(
-                f"{self.cfg['relay_url']}/complete", json=payload
-            )
+            resp = await self._http_client().post(f"{self.cfg['relay_url']}/complete", json=payload)
             latency_ms = int((time.time() - start) * 1000)
             if resp.status_code != 200:
-                return self.normalize_error(
-                    req.request_id, f"relay {resp.status_code}: {resp.text[:200]}"
-                )
+                return self.normalize_error(req.request_id, f"relay {resp.status_code}: {resp.text[:200]}")
             data = resp.json()
             content = data.get("result", "")
             usage = data.get("usage", {})
@@ -137,8 +145,7 @@ class NativeClaudeAdapter(BaseAdapter):
                 usage=RouteUsage(
                     input_tokens=usage.get("input_tokens", 0),
                     output_tokens=usage.get("output_tokens", 0),
-                    total_tokens=usage.get("input_tokens", 0)
-                    + usage.get("output_tokens", 0),
+                    total_tokens=usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
                 ),
                 latency_ms=latency_ms,
                 logs=logs,
@@ -148,25 +155,41 @@ class NativeClaudeAdapter(BaseAdapter):
             return self.normalize_error(req.request_id, str(e)[:300])
 
     async def _complete_subprocess(
-        self, req, prompt, system_parts, model, timeout, logs
-    ):
-        cmd = ["claude", "-p", prompt, "--output-format", "json", "--model", model]
+        self,
+        req: RouteRequest,
+        prompt: str,
+        system_parts: list[str],
+        model: str,
+        timeout: int,
+        logs: RouteLogs,
+    ) -> RouteResponse:
+        cli_exec = self.cfg.get("cli_exec", "claude")
+        cmd = [cli_exec, "-p", prompt, "--output-format", "json", "--model", model]
         if system_parts:
             cmd += ["--system-prompt", " ".join(system_parts)]
         try:
             start = time.time()
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+            # On Windows, .cmd shims are best executed via shell to avoid launcher edge cases.
+            if sys.platform == "win32" and str(cli_exec).lower().endswith((".cmd", ".bat")):
+                run_cmd = subprocess.list2cmdline(cmd)
+                proc = await asyncio.create_subprocess_shell(
+                    run_cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            else:
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
             latency_ms = int((time.time() - start) * 1000)
             if proc.returncode != 0:
-                err = stderr.decode("utf-8", errors="replace")[:300]
-                return self.normalize_error(
-                    req.request_id, f"claude CLI exit {proc.returncode}: {err}"
-                )
+                err = stderr.decode("utf-8", errors="replace").strip()
+                out = stdout.decode("utf-8", errors="replace").strip()
+                detail = err or out or "(no stderr/stdout from claude CLI)"
+                return self.normalize_error(req.request_id, f"claude CLI exit {proc.returncode}: {detail[:300]}")
             data = json.loads(stdout.decode("utf-8", errors="replace"))
             if data.get("is_error") or data.get("subtype") == "error":
                 err_msg = data.get("result") or data.get("error") or "claude CLI error"
@@ -180,16 +203,13 @@ class NativeClaudeAdapter(BaseAdapter):
                 usage=RouteUsage(
                     input_tokens=usage.get("input_tokens", 0),
                     output_tokens=usage.get("output_tokens", 0),
-                    total_tokens=usage.get("input_tokens", 0)
-                    + usage.get("output_tokens", 0),
+                    total_tokens=usage.get("input_tokens", 0) + usage.get("output_tokens", 0),
                 ),
                 latency_ms=latency_ms,
                 logs=logs,
             )
         except asyncio.TimeoutError:
-            return self.normalize_error(
-                req.request_id, f"claude CLI timed out after {timeout}s"
-            )
+            return self.normalize_error(req.request_id, f"claude CLI timed out after {timeout}s")
         except Exception as e:
             logs.errors.append(f"native_claude subprocess error: {e}")
             return self.normalize_error(req.request_id, str(e)[:300])

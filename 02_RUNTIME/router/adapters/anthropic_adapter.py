@@ -19,7 +19,7 @@ from ..contracts import (
 
 
 class AnthropicAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = dict(cfg) if cfg else {}
         env_key = cfg.get("env_key", "ANTHROPIC_API_KEY")
         cfg["enabled"] = bool(os.environ.get(env_key))
@@ -81,7 +81,7 @@ class AnthropicAdapter(BaseAdapter):
             if not chat_messages:
                 chat_messages = [{"role": "user", "content": req.objective}]
 
-            system_param: list[dict] | None = None
+            system_param: list[dict[str, Any]] | None = None
             if system_msgs:
                 # Merge all system content; handle both str and list-of-blocks formats.
                 parts: list[str] = []
@@ -91,9 +91,7 @@ class AnthropicAdapter(BaseAdapter):
                         parts.append(content)
                     elif isinstance(content, list):
                         parts.extend(
-                            p.get("text", "")
-                            for p in content
-                            if isinstance(p, dict) and p.get("type") == "text"
+                            p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text"
                         )
                 system_text = "\n".join(p for p in parts if p)
                 if system_text:

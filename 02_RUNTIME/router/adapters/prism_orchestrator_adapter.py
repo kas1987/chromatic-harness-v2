@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import os
 import time
 
@@ -19,16 +21,12 @@ from ..contracts import (
 
 
 class PrismOrchestratorAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = dict(cfg) if cfg else {}
         if "enabled" not in cfg:
-            cfg["enabled"] = (
-                os.environ.get("PRISM_ORCHESTRATOR_ENABLED", "false").lower() == "true"
-            )
+            cfg["enabled"] = os.environ.get("PRISM_ORCHESTRATOR_ENABLED", "false").lower() == "true"
         if "base_url" not in cfg:
-            cfg["base_url"] = os.environ.get(
-                "PRISM_ORCHESTRATOR_URL", "http://127.0.0.1:8000"
-            )
+            cfg["base_url"] = os.environ.get("PRISM_ORCHESTRATOR_URL", "http://127.0.0.1:8000")
         cfg.setdefault("timeout", 60)
         super().__init__("prism-orchestrator", cfg)
         self._client: httpx.AsyncClient | None = None
@@ -51,9 +49,7 @@ class PrismOrchestratorAdapter(BaseAdapter):
             url = f"{self.cfg.get('base_url')}/health"
             resp = await client.get(url)
             latency_ms = int((time.time() - start) * 1000)
-            return AdapterHealth(
-                reachable=resp.status_code == 200, latency_ms=latency_ms
-            )
+            return AdapterHealth(reachable=resp.status_code == 200, latency_ms=latency_ms)
         except Exception as e:
             return AdapterHealth(reachable=False, latency_ms=0, error=str(e)[:200])
 
@@ -61,18 +57,12 @@ class PrismOrchestratorAdapter(BaseAdapter):
         logs = RouteLogs()
         try:
             if not self.enabled:
-                return self.normalize_error(
-                    req.request_id, "PRISM_ORCHESTRATOR_ENABLED not set"
-                )
+                return self.normalize_error(req.request_id, "PRISM_ORCHESTRATOR_ENABLED not set")
 
             client = self._get_client()
             start = time.time()
 
-            messages = (
-                req.input.messages
-                if req.input.messages
-                else [{"role": "user", "content": req.objective}]
-            )
+            messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
             prompt = "\n".join([m.get("content", "") for m in messages])
 
             payload = {
@@ -98,9 +88,7 @@ class PrismOrchestratorAdapter(BaseAdapter):
 
             data = response.json()
             if not data.get("ok", True) and not data.get("output"):
-                error_msg = (
-                    data.get("error") or data.get("reason") or "Prism returned ok=false"
-                )
+                error_msg = data.get("error") or data.get("reason") or "Prism returned ok=false"
                 return self.normalize_error(req.request_id, f"Prism: {error_msg[:300]}")
 
             content = data.get("output") or ""

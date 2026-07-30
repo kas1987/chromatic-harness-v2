@@ -8,7 +8,7 @@ import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 LOG_DIR = Path(os.environ.get("ROUTER_LOG_DIR", Path.home() / ".claude" / ".agents" / "router"))
 LOG_FILE = LOG_DIR / "log.jsonl"
@@ -24,7 +24,7 @@ def _repo() -> Path:
     return _REPO
 
 
-def log_entry(entry: dict) -> None:
+def log_entry(entry: dict[str, Any]) -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     with open(LOG_FILE, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -41,7 +41,7 @@ def log_entry(entry: dict) -> None:
         pass
 
 
-def audit_router_decision(entry: dict, billing_fn=None) -> None:
+def audit_router_decision(entry: dict[str, Any], billing_fn: Callable[[str], dict[str, Any]] | None = None) -> None:
     """Write router.decision span + execution entry to two-log audit. Fail-open.
 
     billing_fn: callable(provider) -> dict with cost/axis keys. Defaults to
@@ -53,7 +53,7 @@ def audit_router_decision(entry: dict, billing_fn=None) -> None:
         runtime_dir = repo / "02_RUNTIME"
         if str(runtime_dir) not in sys.path:
             sys.path.insert(0, str(runtime_dir))
-        from audit.two_log import TwoLogAudit  # type: ignore[import]
+        from audit.two_log import TwoLogAudit
 
         audit = TwoLogAudit(repo)
         audit.append_execution(
@@ -96,7 +96,9 @@ def audit_router_decision(entry: dict, billing_fn=None) -> None:
 
         decision_id = entry.get("decision_id") or uuid.uuid4().hex[:16]
         if billing_fn is None:
-            from router.pipeline.billing import billing_for_route as billing_fn  # type: ignore[assignment]
+            from router.pipeline.billing import billing_for_route
+
+            billing_fn = billing_for_route
         _billing: dict[str, Any] = billing_fn(entry.get("provider", ""))
 
         with routing_log.open("a", encoding="utf-8") as fh:

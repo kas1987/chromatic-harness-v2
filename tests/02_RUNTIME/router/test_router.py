@@ -30,9 +30,10 @@ from router.confidence import ConfidenceGate
 
 
 class FakeAdapter(BaseAdapter):
-    def __init__(self, name: str, *, mode: str = "ok", enabled: bool = True):
+    def __init__(self, name: str, *, mode: str = "ok", enabled: bool = True, health_reachable: bool = True):
         super().__init__(name, {"enabled": enabled})
         self.mode = mode
+        self.health_reachable = health_reachable
         self.calls: list[RouteRequest] = []
 
     async def complete(self, req: RouteRequest) -> RouteResponse:
@@ -52,7 +53,9 @@ class FakeAdapter(BaseAdapter):
         )
 
     async def health(self) -> AdapterHealth:
-        return AdapterHealth(reachable=True, latency_ms=1)
+        return AdapterHealth(
+            reachable=self.health_reachable, latency_ms=1, error="" if self.health_reachable else "simulated-down"
+        )
 
 
 # ── Helper factories ──────────────────────────────────────────────────────────
@@ -243,6 +246,22 @@ class TestConfidenceGateBlocking:
 
 class TestFallbackLogic:
     @pytest.mark.asyncio
+    async def test_startup_probe_skips_unreachable_provider_and_uses_live_fallback(self):
+        # Use ollama_local (a real P1-allowed logical provider) so the privacy
+        # gate does not remove it before the startup health check runs.
+        broken = FakeAdapter("ollama_local", mode="ok", health_reachable=False)
+        good = FakeAdapter("mock", mode="ok", health_reachable=True)
+        router = ChromaticRouter(adapters={"ollama_local": broken, "mock": good})
+        req = _make_req(preferred_provider="ollama_local", fallback_chain=["mock"])
+
+        resp = await router.route(req)
+
+        assert broken.calls == []
+        assert good.calls
+        assert resp.selected_provider == "mock"
+        assert any("simulated-down" in log.lower() or "unreachable" in log.lower() for log in resp.logs.warnings)
+
+    @pytest.mark.asyncio
     async def test_falls_through_to_fallback_on_error_response(self):
         broken = FakeAdapter("primary", mode="error")
         good = FakeAdapter("mock", mode="ok")
@@ -298,14 +317,20 @@ class TestFallbackLogic:
 # ── Adapter alias resolution ───────────────────────────────────────────────────
 
 
-class TestAdapterAliasResolution:
-    def test_ollama_local_resolves_to_ollama(self):
-        router = _router_with_mock()
-        assert router._resolve_adapter_name("ollama_local") == "ollama"
+class TestLogicalProviderResolution:
+    """Logical Ollama endpoints are first-class providers in providers.yaml.
 
-    def test_ollama_remote_desktop_resolves_to_ollama(self):
+    The router no longer maps them to a canonical "ollama" adapter at runtime;
+    the YAML adapter factory creates a dedicated adapter per logical provider.
+    """
+
+    def test_logical_name_resolves_to_itself(self):
         router = _router_with_mock()
-        assert router._resolve_adapter_name("ollama_remote_desktop") == "ollama"
+        assert router._resolve_adapter_name("ollama_local") == "ollama_local"
+
+    def test_remote_desktop_name_resolves_to_itself(self):
+        router = _router_with_mock()
+        assert router._resolve_adapter_name("ollama_remote_desktop") == "ollama_remote_desktop"
 
     def test_unknown_name_returns_itself(self):
         router = _router_with_mock()
@@ -316,16 +341,62 @@ class TestAdapterAliasResolution:
         assert router._resolve_adapter_name("mock") == "mock"
 
     @pytest.mark.asyncio
-    async def test_ollama_local_routes_through_ollama_adapter(self):
-        ollama = FakeAdapter("ollama", mode="ok")
-        router = ChromaticRouter(adapters={"ollama": ollama, "mock": FakeAdapter("mock")})
+    async def test_ollama_local_routes_through_own_adapter(self):
+        ollama_local = FakeAdapter("ollama_local", mode="ok")
+        router = ChromaticRouter(adapters={"ollama_local": ollama_local, "mock": FakeAdapter("mock")})
         req = _make_req(preferred_provider="ollama_local")
         resp = await router.route(req)
         assert resp.output.type == OutputType.TEXT
-        assert ollama.calls  # adapter was called
+        assert ollama_local.calls  # logical adapter was called
 
 
 # ── _build_request convenience method ────────────────────────────────────────
+
+
+class TestAutoRoutingNoLegacyFallback:
+    """Auto-routing must never silently fall back to the legacy task-type table."""
+
+    @pytest.mark.asyncio
+    async def test_context_routing_failure_does_not_use_legacy_task_table(self, monkeypatch):
+        router = _router_with_mock()
+        # Simulate a context-detector failure (e.g. network probe unavailable).
+        monkeypatch.setattr(
+            router.context_detector,
+            "detect",
+            MagicMock(side_effect=RuntimeError("probe unavailable")),
+        )
+        req = _make_req(preferred_provider="auto", confidence_score=90.0)
+        resp = await router.route(req)
+        # Should land on mock via the privacy gate, not on the legacy default.
+        assert resp.selected_provider == "mock"
+        assert any("Context routing failed" in w for w in resp.logs.warnings)
+        assert all("legacy route" not in w.lower() for w in resp.logs.warnings)
+
+
+class TestMockFallbackGuard:
+    """Mock fallback must be opt-in; disabled by default in production."""
+
+    @pytest.mark.asyncio
+    async def test_mock_disabled_by_default_returns_error(self):
+        router = ChromaticRouter(
+            adapters={"mock": FakeAdapter("mock", mode="ok")},
+            allow_mock_fallback=False,
+        )
+        req = _make_req(preferred_provider="auto", confidence_score=90.0)
+        resp = await router.route(req)
+        assert resp.selected_provider == ""
+        assert resp.route_reason == "all_providers_failed"
+        assert any("Mock fallback disabled" in w for w in resp.logs.warnings)
+
+    @pytest.mark.asyncio
+    async def test_mock_allowed_when_opted_in(self):
+        router = ChromaticRouter(
+            adapters={"mock": FakeAdapter("mock", mode="ok")},
+            allow_mock_fallback=True,
+        )
+        req = _make_req(preferred_provider="auto", confidence_score=90.0)
+        resp = await router.route(req)
+        assert resp.selected_provider == "mock"
 
 
 class TestBuildRequest:

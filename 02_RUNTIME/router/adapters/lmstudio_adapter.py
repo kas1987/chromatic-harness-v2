@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import time
 
 import httpx
@@ -18,7 +20,7 @@ from ..contracts import (
 
 
 class LMStudioAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = cfg or {
             "enabled": True,
             "host": "localhost",
@@ -45,9 +47,7 @@ class LMStudioAdapter(BaseAdapter):
             start = time.time()
             resp = await client.get(self._url("/v1/models"))
             latency_ms = int((time.time() - start) * 1000)
-            return AdapterHealth(
-                reachable=resp.status_code == 200, latency_ms=latency_ms
-            )
+            return AdapterHealth(reachable=resp.status_code == 200, latency_ms=latency_ms)
         except Exception as e:
             return AdapterHealth(reachable=False, latency_ms=0, error=str(e))
 
@@ -57,11 +57,7 @@ class LMStudioAdapter(BaseAdapter):
             client = self._get_client()
             start = time.time()
 
-            messages = (
-                req.input.messages
-                if req.input.messages
-                else [{"role": "user", "content": req.objective}]
-            )
+            messages = req.input.messages if req.input.messages else [{"role": "user", "content": req.objective}]
             response = await client.post(
                 self._url("/v1/chat/completions"),
                 json={
@@ -74,9 +70,7 @@ class LMStudioAdapter(BaseAdapter):
 
             latency_ms = int((time.time() - start) * 1000)
             if response.status_code != 200:
-                return self.normalize_error(
-                    req.request_id, f"LMStudio status {response.status_code}"
-                )
+                return self.normalize_error(req.request_id, f"LMStudio status {response.status_code}")
 
             data = response.json()
             content = data["choices"][0]["message"]["content"]

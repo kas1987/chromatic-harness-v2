@@ -41,7 +41,7 @@ def _make_remote_adapter(host: str = "localhost", port: int = 11434, model: str 
     return OllamaRemoteAdapter("ollama-remote", cfg)
 
 
-def _make_cloud_adapter(base_url: str = "https://ollama.com", model: str = "qwen3:235b") -> OllamaRemoteAdapter:
+def _make_cloud_adapter(base_url: str = "https://ollama.com", model: str = "gpt-oss:20b") -> OllamaRemoteAdapter:
     cfg = {
         "enabled": True,
         "base_url": base_url,
@@ -264,6 +264,38 @@ class TestOllamaRemoteComplete:
         call_kwargs = call_args.kwargs
         assert call_args.args[0] == "https://ollama.com/api/chat"
         assert call_kwargs["headers"]["Authorization"] == "Bearer tok-abc"
+
+    async def test_complete_falls_back_when_model_not_found(self):
+        cfg = {
+            "enabled": True,
+            "base_url": "https://ollama.com",
+            "env_key": "OLLAMA_API_KEY",
+            "model": "missing:model",
+            "fallback_models": ["gpt-oss:20b"],
+        }
+        adapter = OllamaRemoteAdapter("ollama-cloud", cfg)
+        missing_resp = _mock_response(404, {"error": "model 'missing:model' not found"})
+        ok_resp = _mock_response(200, {"message": {"content": "OK"}})
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(side_effect=[missing_resp, ok_resp])
+        adapter._client = mock_client
+
+        resp = await adapter.complete(_make_request())
+        assert resp.output.type == OutputType.TEXT
+        assert resp.output.content == "OK"
+        assert resp.selected_model == "gpt-oss:20b"
+        assert mock_client.post.call_count == 2
+
+    async def test_complete_model_not_found_without_fallback_returns_error(self):
+        adapter = _make_cloud_adapter(model="missing:model")
+        missing_resp = _mock_response(404, {"error": "model 'missing:model' not found"})
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(return_value=missing_resp)
+        adapter._client = mock_client
+
+        resp = await adapter.complete(_make_request())
+        assert resp.output.type == OutputType.ERROR
+        assert "unavailable" in resp.output.content.lower()
 
 
 # ---------------------------------------------------------------------------

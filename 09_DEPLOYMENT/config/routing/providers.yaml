@@ -102,6 +102,19 @@ providers:
     latency_ms_estimate: 600
     authentication: env_var    # OPENAI_API_KEY
 
+  agnes:
+    name: "Agnes AI"
+    endpoint: "https://apihub.agnes-ai.com/v1"
+    type: "cloud"
+    cost_per_1m_tokens_estimate:
+      agnes-2.5-flash: { input: 0.00, output: 0.00 }
+    latency_ms_estimate: 700
+    authentication: env_var    # AGNES_API_KEY
+    models:
+      - name: "agnes-2.5-flash"
+        context: 524288
+        best_for: [C2, C3, C4]
+
   claude_api:
     name: "Anthropic Claude (API)"
     endpoint: "https://api.anthropic.com"

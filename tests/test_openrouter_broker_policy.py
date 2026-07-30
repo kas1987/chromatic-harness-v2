@@ -1,7 +1,7 @@
 """OpenRouter broker policy + privacy enforcement on provider_selector.
 
 Policy: docs/governance/OPENROUTER_BROKER_POLICY.md
-Allowlist: 09_DEPLOYMENT/config/routing/openrouter-models.yaml
+Allowlist: config/routing/openrouter-models.yaml
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from router.provider_selector import ProviderSelector
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _ROUTING_TABLE = _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "routing-table.yaml"
-_OPENROUTER_MODELS = _REPO_ROOT / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml"
+_OPENROUTER_MODELS = _REPO_ROOT / "config" / "routing" / "openrouter-models.yaml"
 
 
 @pytest.fixture

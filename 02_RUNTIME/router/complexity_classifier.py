@@ -5,7 +5,7 @@ from __future__ import annotations
 import yaml
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from .contracts import RoutingContext
@@ -39,7 +39,7 @@ class ComplexityClassifier:
 
     def __init__(self, config_path: Path | None = None):
         self._config_path = config_path or self.DEFAULT_CONFIG
-        self._levels: dict[str, dict] = {}
+        self._levels: dict[str, dict[str, Any]] = {}
         self._load()
 
     def _load(self) -> None:
@@ -185,7 +185,7 @@ class ComplexityClassifier:
 
     # ── Batch utility for validation ────────────────────────────────────────
 
-    def batch_classify(self, tasks: list[dict]) -> list[ComplexityResult]:
+    def batch_classify(self, tasks: list[dict[str, Any]]) -> list[ComplexityResult]:
         """Classify many descriptions; useful for the 50-test validation suite."""
         out = []
         for t in tasks:
