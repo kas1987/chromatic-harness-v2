@@ -151,6 +151,9 @@ providers:
         context: 1048576
         best_for: [C2, C3, C4]
         note: "AI-powered model selection"
+      - name: "anthropic/claude-opus-4-8"
+        context: 1000000
+        best_for: [C4]
       - name: "anthropic/claude-sonnet-4-6"
         context: 1000000
         best_for: [C3, C4]

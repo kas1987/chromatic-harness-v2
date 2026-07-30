@@ -2,6 +2,11 @@
 version: "1.0"
 
 models:
+  - id: anthropic/claude-opus-4-8
+    allowed_complexity: [C4]
+    max_privacy: P2
+    notes: "Latest Anthropic deep-reasoning / coding model via OpenRouter."
+
   - id: anthropic/claude-sonnet-4-6
     allowed_complexity: [C3, C4]
     max_privacy: P2

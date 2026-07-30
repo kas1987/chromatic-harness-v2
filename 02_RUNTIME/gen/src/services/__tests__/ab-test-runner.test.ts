@@ -2,24 +2,29 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ABTestRunner } from "../ab-test-runner";
 import { OllamaClient } from "../../ollama/ollama-client";
 
+// Mutable reference so individual tests can change the resolved prompt id
+const submitComfyPromptMock = vi.hoisted(() => vi.fn().mockResolvedValue("comfy-prompt-id-123"));
+
 // Mock OllamaClient
 vi.mock("../../ollama/ollama-client", () => ({
-  OllamaClient: vi.fn().mockImplementation(() => ({
-    listTextGenModels: vi.fn().mockResolvedValue(["qwen3:4b", "phi4:latest"]),
-    generate: vi.fn().mockResolvedValue("expanded beautiful woman on beach, golden hour, photorealistic"),
-    isAvailable: vi.fn().mockResolvedValue(true),
-  })),
+  OllamaClient: vi.fn(function () {
+    return {
+      listTextGenModels: vi.fn().mockResolvedValue(["qwen3:4b", "phi4:latest"]),
+      generate: vi.fn().mockResolvedValue("expanded beautiful woman on beach, golden hour, photorealistic"),
+      isAvailable: vi.fn().mockResolvedValue(true),
+    };
+  }),
 }));
 
 // Mock submitComfyPrompt
-vi.mock("../../lib/comfy-submit-prompt", () => ({
-  submitComfyPrompt: vi.fn().mockResolvedValue("comfy-prompt-id-123"),
+vi.mock("../../lib/comfy-submit-prompt.js", () => ({
+  submitComfyPrompt: submitComfyPromptMock,
 }));
 
 // Mock fs (workflow loading)
 vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("fs")>();
-  return {
+  const mocked = {
     ...actual,
     existsSync: vi.fn().mockReturnValue(true),
     readFileSync: vi.fn().mockReturnValue(
@@ -31,6 +36,8 @@ vi.mock("fs", async (importOriginal) => {
       })
     ),
   };
+  (mocked as any).default = mocked;
+  return mocked;
 });
 
 describe("ABTestRunner", () => {
@@ -93,8 +100,7 @@ describe("ABTestRunner", () => {
   describe("onComfyComplete", () => {
     it("updates job status to vision_review when comfyPromptId matches", async () => {
       // Start a non-dry run (but mock submitComfyPrompt)
-      const { submitComfyPrompt } = await import("../../lib/comfy-submit-prompt");
-      vi.mocked(submitComfyPrompt).mockResolvedValue("known-prompt-id");
+      submitComfyPromptMock.mockResolvedValue("known-prompt-id");
 
       const run = await runner.startRun({
         basePrompt: "test",

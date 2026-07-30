@@ -52,8 +52,12 @@ describe("BudgetAllocator.getFallbackModel", () => {
     expect(allocator.getFallbackModel("gpt")).toBe("gemini");
   });
 
-  it("GetFallbackModel_Gemini_ReturnsLmStudio: gemini → lm-studio", () => {
-    expect(allocator.getFallbackModel("gemini")).toBe("lm-studio");
+  it("GetFallbackModel_Gemini_ReturnsMinimax: gemini → minimax", () => {
+    expect(allocator.getFallbackModel("gemini")).toBe("minimax");
+  });
+
+  it("GetFallbackModel_Minimax_ReturnsLmStudio: minimax → lm-studio", () => {
+    expect(allocator.getFallbackModel("minimax")).toBe("lm-studio");
   });
 
   it("GetFallbackModel_LmStudio_ReturnsOllama: lm-studio → ollama", () => {
@@ -68,7 +72,7 @@ describe("BudgetAllocator.getFallbackModel", () => {
     expect(allocator.getFallbackModel("ollama")).toBe("gemma");
   });
 
-  it("chain traversal: claude → gpt → gemini → lm-studio → ollama → gemma (stops at end)", () => {
+  it("chain traversal: claude → gpt → gemini → minimax → lm-studio → ollama → gemma (stops at end)", () => {
     const chain: LlmProvider[] = [];
     let current: LlmProvider = "claude";
     for (let i = 0; i < 8; i++) {
@@ -79,9 +83,10 @@ describe("BudgetAllocator.getFallbackModel", () => {
     }
     expect(chain[0]).toBe("gpt");
     expect(chain[1]).toBe("gemini");
-    expect(chain[2]).toBe("lm-studio");
-    expect(chain[3]).toBe("ollama");
-    expect(chain[4]).toBe("gemma");
+    expect(chain[2]).toBe("minimax");
+    expect(chain[3]).toBe("lm-studio");
+    expect(chain[4]).toBe("ollama");
+    expect(chain[5]).toBe("gemma");
   });
 });
 

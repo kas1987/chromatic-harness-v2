@@ -3,11 +3,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const ollamaGenerate = vi.hoisted(() => vi.fn().mockResolvedValue("mocked-out"));
 
 vi.mock("../../src/ollama/ollama-client.js", () => ({
-  OllamaClient: vi.fn().mockImplementation(() => ({
-    generate: ollamaGenerate,
-    isAvailable: vi.fn().mockResolvedValue(true),
-    listModels: vi.fn().mockResolvedValue(["gemma3:4b", "qwen3:4b"]),
-  })),
+  OllamaClient: vi.fn(function () {
+    return {
+      generate: ollamaGenerate,
+      isAvailable: vi.fn().mockResolvedValue(true),
+      listModels: vi.fn().mockResolvedValue(["gemma3:4b", "qwen3:4b"]),
+    };
+  }),
 }));
 
 import { OllamaClientWrapper, GemmaOllamaClient } from "../../src/llm/llm-client-factory.js";

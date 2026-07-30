@@ -242,7 +242,8 @@ function isOfflineProvider(provider: LlmProvider): boolean {
 function cleanPromptForDelegation(prompt: string): string {
   const normalizedLines = prompt
     .replace(/\r\n/g, "\n")
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    // eslint-disable-next-line no-control-regex
+    .replace(new RegExp("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]", "g"), "")
     .split("\n")
     .map((line) => line.replace(/[ \t]+$/g, ""));
 

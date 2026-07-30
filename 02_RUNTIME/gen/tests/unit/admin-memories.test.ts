@@ -59,7 +59,8 @@ async function buildApp(mockService: AdminMemoryService) {
   return app;
 }
 
-const ADMIN_CRED = "test-admin-secret";
+const ADMIN_CRED = "test-admin-secret"; // pragma: allowlist secret
+process.env.GEN_ADMIN_TOKEN = ADMIN_CRED; // pragma: allowlist secret
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -72,7 +73,7 @@ describe("Admin Memories API", () => {
   beforeEach(async () => {
     // Reset module registry so each test gets a fresh router state
     vi.resetModules();
-    process.env.GEN_ADMIN_CRED = ADMIN_CRED;
+    process.env.GEN_ADMIN_TOKEN = ADMIN_CRED; // pragma: allowlist secret
 
     // Re-import after resetModules to pick up fresh module state
     const { initializeAdminMemoriesRouter } = await import("../../src/routes/admin-memories");

@@ -96,7 +96,7 @@ function selectSampleFiles(roots: string[], sampleCount: number, maxFileBytes: n
 
     while (stack.length > 0 && selected.length < sampleCount) {
       const current = stack.pop() as string;
-      let entries: fs.Dirent[] = [];
+      let entries: fs.Dirent[];
       try {
         entries = fs.readdirSync(current, { withFileTypes: true });
       } catch {
@@ -159,7 +159,7 @@ export async function runOfflineValueAudit(options?: {
   const samples: OfflineAuditSample[] = [];
   for (const filePath of files) {
     const ext = path.extname(filePath).toLowerCase() || "(none)";
-    let content = "";
+    let content: string;
     try {
       content = fs.readFileSync(filePath, "utf-8").slice(0, maxFileBytes);
     } catch (err) {

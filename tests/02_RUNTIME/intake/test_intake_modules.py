@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
 import subprocess
 import sys
 import uuid
@@ -215,7 +216,7 @@ def test_resolve_bd_argv_returns_list() -> None:
 
 def test_resolve_bd_argv_last_element() -> None:
     result = resolve_bd_argv()
-    assert result[-1].endswith("bd") or result[-1] == "bd"
+    assert re.search(r"bd(\.cmd|\.exe|\.bat)?$", result[-1]) is not None
 
 
 # ── intake.auto_intake ────────────────────────────────────────────────────────

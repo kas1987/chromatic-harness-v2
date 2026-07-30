@@ -41,27 +41,33 @@ vi.mock("../../src/context/delegate-queue.js", () => {
       this.maxDepth = maxDepth;
     }
   }
-  const DelegateQueue = vi.fn().mockImplementation(() => ({
-    enqueue: vi.fn().mockResolvedValue(undefined),
-  }));
+  const DelegateQueue = vi.fn(function () {
+    return {
+      enqueue: vi.fn().mockResolvedValue(undefined),
+    };
+  });
   return { DelegateQueue, QueueCapacityError };
 });
 
 vi.mock("../../src/context/provider-capacity.js", () => {
-  const ProviderCapacityTracker = vi.fn().mockImplementation(() => ({
-    acquire: vi.fn().mockReturnValue(true),
-    release: vi.fn(),
-    isAtCapacity: vi.fn().mockReturnValue(false),
-    getSnapshot: vi.fn().mockReturnValue({}),
-  }));
+  const ProviderCapacityTracker = vi.fn(function () {
+    return {
+      acquire: vi.fn().mockReturnValue(true),
+      release: vi.fn(),
+      isAtCapacity: vi.fn().mockReturnValue(false),
+      getSnapshot: vi.fn().mockReturnValue({}),
+    };
+  });
   return { ProviderCapacityTracker };
 });
 
 vi.mock("../../src/channels/channel-broadcaster.js", () => {
-  const ChannelBroadcaster = vi.fn().mockImplementation(() => ({
-    makeChannelEvent: vi.fn().mockReturnValue({}),
-    broadcast: vi.fn(),
-  }));
+  const ChannelBroadcaster = vi.fn(function () {
+    return {
+      makeChannelEvent: vi.fn().mockReturnValue({}),
+      broadcast: vi.fn(),
+    };
+  });
   return { ChannelBroadcaster };
 });
 

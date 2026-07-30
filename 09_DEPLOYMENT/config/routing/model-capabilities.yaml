@@ -94,7 +94,7 @@ models:
     weak_at: [speed, cost]
     observed_by: "Anthropic official"
     source: "Anthropic docs"
-    notes: "Deep reasoning specialist. Expensive. Reserve for truly novel/hard problems."
+    notes: "DEPRECATED — replaced by claude-opus-4-8. Deep reasoning specialist. Expensive. Reserve for truly novel/hard problems."
 
   gpt-4o-mini:
     best_at: [speed, instruction, cost]

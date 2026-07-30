@@ -5,7 +5,7 @@ import { ChannelBroadcaster } from "../../src/channels/channel-broadcaster";
 
 // Mock the ws module
 vi.mock("ws", () => {
-  const MockWS = vi.fn().mockImplementation(() => {
+  const MockWS = vi.fn(function () {
     const emitter = new EventEmitter();
     (emitter as any).removeAllListeners = emitter.removeAllListeners.bind(emitter);
     (emitter as any).close = vi.fn();
