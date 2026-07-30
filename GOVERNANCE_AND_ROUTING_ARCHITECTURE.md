@@ -4,6 +4,7 @@
 > **Secondary context:** Desktop (RTX 4070, 12GB VRAM, high local throughput)
 > **Last updated:** 2026-05-28
 > **Status:** Draft — awaiting validation before implementation
+> **See also:** [docs/routing/MODEL_REDUNDANCY_AND_TOKEN_EFFICIENCY.md](docs/routing/MODEL_REDUNDANCY_AND_TOKEN_EFFICIENCY.md) — current defaults, redundancy rules, and token-efficiency practices.
 
 ---
 

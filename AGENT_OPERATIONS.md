@@ -5,7 +5,9 @@
 
 This is the single entry point. Sub-docs go deeper; this page is the checklist nothing is allowed to skip.
 
-**Rules map (all layers):** [docs/RULES_INVENTORY.md](docs/RULES_INVENTORY.md) — project vs global vs User Rules.
+- **60-second launch version:** [03_AGENTS/AGENTS_QUICK_START.md](03_AGENTS/AGENTS_QUICK_START.md)
+- **Model redundancy + token efficiency:** [docs/routing/MODEL_REDUNDANCY_AND_TOKEN_EFFICIENCY.md](docs/routing/MODEL_REDUNDANCY_AND_TOKEN_EFFICIENCY.md)
+- **Rules map (all layers):** [docs/RULES_INVENTORY.md](docs/RULES_INVENTORY.md) — project vs global vs User Rules.
 
 ---
 

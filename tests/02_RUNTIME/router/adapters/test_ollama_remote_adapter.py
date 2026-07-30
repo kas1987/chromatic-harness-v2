@@ -41,6 +41,16 @@ def _make_remote_adapter(host: str = "localhost", port: int = 11434, model: str 
     return OllamaRemoteAdapter("ollama-remote", cfg)
 
 
+def _make_cloud_adapter(base_url: str = "https://ollama.com", model: str = "qwen3:235b") -> OllamaRemoteAdapter:
+    cfg = {
+        "enabled": True,
+        "base_url": base_url,
+        "env_key": "OLLAMA_API_KEY",
+        "model": model,
+    }
+    return OllamaRemoteAdapter("ollama-cloud", cfg)
+
+
 def _mock_response(status_code: int = 200, json_body: dict | None = None) -> MagicMock:
     resp = MagicMock(spec=httpx.Response)
     resp.status_code = status_code
@@ -68,6 +78,10 @@ class TestOllamaRemoteAdapterInit:
     def test_custom_host_port(self):
         adapter = _make_remote_adapter(host="desktop", port=9999)
         assert "desktop:9999" in adapter._url("/api/chat")
+
+    def test_base_url_construction(self):
+        adapter = _make_cloud_adapter(base_url="https://ollama.com/api")
+        assert adapter._url("/chat") == "https://ollama.com/api/chat"
 
 
 # ---------------------------------------------------------------------------
@@ -108,6 +122,31 @@ class TestOllamaRemoteHealth:
         health = await adapter.health()
         assert health.reachable is False
         assert health.error != ""
+
+    async def test_health_includes_auth_header_when_env_key_set(self, monkeypatch):
+        adapter = _make_cloud_adapter(base_url="https://ollama.com")
+        monkeypatch.setenv("OLLAMA_API_KEY", "tok-123")
+        mock_resp = _mock_response(200, {"models": []})
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_resp)
+        adapter._client = mock_client
+
+        await adapter.health()
+        call_kwargs = mock_client.get.call_args.kwargs
+        assert call_kwargs["headers"]["Authorization"] == "Bearer tok-123"
+
+    async def test_health_uses_ollama_pro_key_fallback(self, monkeypatch):
+        adapter = _make_cloud_adapter(base_url="https://ollama.com")
+        monkeypatch.delenv("OLLAMA_API_KEY", raising=False)
+        monkeypatch.setenv("OLLAMA_PRO_KEY", "pro-123")
+        mock_resp = _mock_response(200, {"models": []})
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(return_value=mock_resp)
+        adapter._client = mock_client
+
+        await adapter.health()
+        call_kwargs = mock_client.get.call_args.kwargs
+        assert call_kwargs["headers"]["Authorization"] == "Bearer pro-123"
 
 
 # ---------------------------------------------------------------------------
@@ -211,6 +250,20 @@ class TestOllamaRemoteComplete:
 
         resp = await adapter.complete(_make_request(request_id="oll-xyz"))
         assert resp.request_id == "oll-xyz"
+
+    async def test_complete_uses_base_url_and_auth_header(self, monkeypatch):
+        adapter = _make_cloud_adapter(base_url="https://ollama.com")
+        monkeypatch.setenv("OLLAMA_API_KEY", "tok-abc")
+        mock_resp = _mock_response(200, {"message": {"content": "cloud ok"}})
+        mock_client = MagicMock()
+        mock_client.post = AsyncMock(return_value=mock_resp)
+        adapter._client = mock_client
+
+        await adapter.complete(_make_request())
+        call_args = mock_client.post.call_args
+        call_kwargs = call_args.kwargs
+        assert call_args.args[0] == "https://ollama.com/api/chat"
+        assert call_kwargs["headers"]["Authorization"] == "Bearer tok-abc"
 
 
 # ---------------------------------------------------------------------------

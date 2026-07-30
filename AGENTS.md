@@ -1,6 +1,7 @@
 # Agent Instructions
 
-> **START HERE:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory checklist for Claude, Pi, Codex, and all harness agents.
+> **START HERE:** [AGENTS_QUICK_START.md](03_AGENTS/AGENTS_QUICK_START.md) — 60-second launch checklist.  
+> **Full checklist:** [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md) — mandatory for Claude, Pi, Codex, and all harness agents.
 
 Agents must not infer owner intent from chat context. Execute from explicit artifacts: beads, mission packets, PDRs, playbooks, governance policies, routing config, tests, and handoffs.
 

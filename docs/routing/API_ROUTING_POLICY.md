@@ -1,6 +1,7 @@
 # API Routing Policy
 
-> **Sonnet + Kimi governance:** see `docs/governance/MODEL_ROUTING_RULES.md` and `docs/governance/CONFIDENCE_GATE.md` for model-specific routing and confidence scoring. Governed by `docs/pdr/PDR-GOV-SONNET-KIMI-001.md`.
+> **Sonnet + Kimi governance:** see `docs/governance/MODEL_ROUTING_RULES.md` and `docs/governance/CONFIDENCE_GATE.md` for model-specific routing and confidence scoring. Governed by `docs/pdr/PDR-GOV-SONNET-KIMI-001.md`.  
+> **Default provider order, redundancy, and token-efficiency rules:** [MODEL_REDUNDANCY_AND_TOKEN_EFFICIENCY.md](MODEL_REDUNDANCY_AND_TOKEN_EFFICIENCY.md).
 
 ## Canonical Rule
 

@@ -12,6 +12,15 @@ providers:
     model: llama3.2:3b
     privacy_max: P2
 
+  ollama_cloud:
+    type: frontier
+    enabled: true
+    base_url: https://ollama.com
+    env_key: OLLAMA_API_KEY
+    model: qwen3:235b
+    privacy_max: P1
+    note: "Ollama.com frontier cloud API; default model refreshed to current Qwen3 235B MoE."
+
   lmstudio:
     type: local
     enabled: true
@@ -36,6 +45,14 @@ providers:
     enabled: true
     env_key: GOOGLE_API_KEY
     privacy_max: P2
+
+  agnes:
+    type: frontier
+    enabled: true
+    env_key: AGNES_API_KEY
+    base_url: https://apihub.agnes-ai.com/v1
+    model: agnes-2.5-flash
+    privacy_max: P1
 
   # Broker policy: docs/governance/OPENROUTER_BROKER_POLICY.md
   openrouter:

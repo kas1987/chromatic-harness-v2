@@ -1,7 +1,7 @@
 # LLM Fleet Reference
 
 > Canonical reference for all LLM providers, Ollama models, routing rules, and MiniMax setup.
-> Updated: 2026-04-03
+> Updated: 2026-07-30
 
 ---
 
@@ -13,6 +13,7 @@
 | **gpt** | Cloud (API key) | 128K | $0.00015/1k in | `budgetConstraint=low` + <10K tokens | Requires `OPENAI_API_KEY` |
 | **gemini** | Cloud (API key) | 1M | $0.0001/1k in | `requiresVision=true` | Requires `GEMINI_API_KEY` |
 | **minimax** | Cloud (229B MoE) | 198K | $0.0002/1k in | `estimatedInputTokens > 50_000` | See setup below |
+| **ollama_cloud** | Cloud (Ollama frontier API) | 128K+ | Varies | `ollama_cloud` provider in harness config | Requires `OLLAMA_API_KEY` |
 | **lm-studio** | Local (OpenAI-compat) | 128K | Free | Heavy local inference | Requires LM Studio running |
 | **ollama** | Local (lightweight) | 32K | Free | `requiresLocal=true`; NSFW vision; final fallback | Requires Ollama running |
 
@@ -31,16 +32,16 @@ MiniMax-M2.5 is a **229B MoE model** (mixture-of-experts). It is **cloud-only** 
 | Cloud via Ollama `:cloud` tag | 0 GB (cloud) | **Recommended** |
 | Direct MiniMax API | 0 GB (cloud) | Alternative |
 
-### Option A: Ollama Cloud (Recommended)
+### Option A: MiniMax via Ollama `:cloud` tag (Recommended)
 
-Ollama's `:cloud` tag routes to MiniMax's infrastructure — the model runs on their servers, not locally. The `ollama pull` downloads only a small routing manifest (~few KB), not model weights.
+Ollama's `:cloud` tag routes to MiniMax's infrastructure — the model runs on their servers, not locally. The `ollama pull` downloads only a small routing manifest (~few KB), not model weights. Check `ollama.com/library/minimax` for the current tag, then pull it:
 
 ```bash
 # Pull the cloud routing manifest (tiny — not the 229B weights)
-ollama pull minimax-m2.5:cloud
+ollama pull minimax-m2.7:cloud
 
-# Also available:
-ollama pull minimax-m2.7:cloud   # latest
+# Also available (verify current tags on ollama.com/library):
+ollama pull minimax-m2.5:cloud   # previous generation
 ollama pull minimax-m2.1:cloud   # stable
 ollama pull minimax-m2:cloud     # base
 ```
@@ -61,6 +62,24 @@ GEN_MINIMAX_URL=https://api.minimax.chat/v1
 GEN_MINIMAX_API_KEY=
 GEN_MINIMAX_MODEL=abab6.5-chat   # check platform.minimax.io for current model IDs
 ```
+
+### Option C: Ollama Cloud Frontier API
+
+The harness `ollama_cloud` provider calls Ollama's paid cloud API for frontier-class models (no local GPU required). This is **separate** from the MiniMax `:cloud` tag above.
+
+Current default model: `qwen3:235b` (Qwen3 235B MoE, 128K context, strong coding/reasoning).
+
+```bash
+# Required env var
+OLLAMA_API_KEY=
+
+# In harness config (config/routing/providers.yaml)
+#   ollama_cloud:
+#     base_url: https://ollama.com
+#     model: qwen3:235b
+```
+
+To use a different Ollama Cloud model, change `model` in `config/routing/providers.yaml` and verify it is available at `ollama.com/library`.
 
 ### Verify
 
@@ -85,7 +104,7 @@ Hardware: **RTX 4070, 12 GB VRAM** shared with ComfyUI (peaks at ~9 GB during ge
 |------|------|-----------|--------|
 | **light** | ≤5 GB | Always (even during ComfyUI generation) | qwen3:4b, qwen3-vl:4b, nsfw-tagger:latest |
 | **medium** | 5–10 GB | ComfyUI idle | mistral:latest, qwen2.5-coder:7b, deepseek-r1:7b, qwen3:8b, qwen3-vl:8b, llava:7b |
-| **heavy** | >10 GB | Idle only (time-sliced with ComfyUI) | phi4:latest, qwen2.5-coder:14b, qwen3:14b, gpt-oss:20b |
+| **heavy** | >10 GB | Idle only (time-sliced with ComfyUI) | phi4:latest, qwen2.5-coder:14b, qwen3:14b, gemma4:27b |
 | **vision-nsfw** | 3.3 GB | Always (light tier) | huihui_ai/qwen3-vl-abliterated:4b-instruct |
 
 ### Recommended Model Per Session Mode
