@@ -192,7 +192,7 @@ def test_select_context_c1_ollama_local(selector, classifier):
     assert result.ranked_choices[0].provider == "ollama_local"
 
 
-def test_select_context_c3_cloud(selector, classifier):
+def test_select_context_c3_speed(selector, classifier):
     ctx = _make_ctx(
         task_description="debug the failing request path",
         prompt="root cause the 500 error",
@@ -203,7 +203,14 @@ def test_select_context_c3_cloud(selector, classifier):
     result = selector.select_context(ctx, complexity)
     assert result.c_level == "C3"
     assert len(result.ranked_choices) > 0
-    assert result.ranked_choices[0].provider in ("gemini", "claude_api", "openrouter")
+    # Routing table now prefers native_claude/agnes first for speed C3.
+    assert result.ranked_choices[0].provider in (
+        "native_claude",
+        "agnes",
+        "gemini",
+        "claude_api",
+        "openrouter",
+    )
 
 
 def test_select_context_offline_forces_local(selector, classifier):

@@ -10,7 +10,6 @@ Run with: pytest tests/test_gate_billing_axis.py -v
 
 from __future__ import annotations
 
-import importlib
 import json
 from datetime import datetime, timezone
 
@@ -18,7 +17,6 @@ import router.gate as gate
 
 
 def test_billing_for_route_dollar_axis_nonnull_cost():
-    importlib.reload(gate)
     # anthropic is a frontier (Axis D) provider with non-zero $ rates.
     out = gate._billing_for_route("anthropic", tokens=1_000_000)
     assert out["billing_axis"] == "D"
@@ -29,21 +27,18 @@ def test_billing_for_route_dollar_axis_nonnull_cost():
 
 
 def test_billing_for_route_prepaid_axis_zero_marginal():
-    importlib.reload(gate)
     out = gate._billing_for_route("native_claude", tokens=500_000)
     assert out["billing_axis"] == "P"  # prepaid quota, not dollar-billed
     assert out["cost_estimate_usd"] == 0.0  # $0 marginal in-session
 
 
 def test_billing_for_route_local_axis_free():
-    importlib.reload(gate)
     out = gate._billing_for_route("ollama_remote_desktop", tokens=500_000)
     assert out["billing_axis"] == "F"
     assert out["cost_estimate_usd"] == 0.0
 
 
 def test_cost_estimate_failopen_unknown_provider():
-    importlib.reload(gate)
     # Unknown provider → no exception, 0.0 cost.
     assert gate._cost_estimate_usd("does_not_exist", 1000) == 0.0
 
@@ -51,7 +46,6 @@ def test_cost_estimate_failopen_unknown_provider():
 def test_route_log_carries_nonnull_cost_and_axis():
     """End-to-end: _audit_router_decision writes a route log line with the
     backfilled fields and the decision_id join key."""
-    importlib.reload(gate)
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "description": "billing-axis e2e probe",
