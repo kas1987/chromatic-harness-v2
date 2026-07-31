@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -89,6 +90,22 @@ def _detect_secrets_in_changes(repo: Path) -> bool:
     return any(_is_secret_path(n) for n in names.splitlines() if n.strip())
 
 
+def _governance_check_passes(repo: Path) -> bool:
+    """Run scripts/governance_git.py check --block; return True if clean."""
+    script = repo / "scripts" / "governance_git.py"
+    if not script.exists():
+        return True
+    proc = subprocess.run(
+        [sys.executable, str(script), "check", "--block"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        timeout=300,
+        check=False,
+    )
+    return proc.returncode == 0
+
+
 def _current_branch(repo: Path) -> str:
     proc = subprocess.run(
         git_argv("branch", "--show-current"),
@@ -170,6 +187,8 @@ def run_git_pipeline(
 
     ci_ok = _ci_passed_for_branch(repo, branch) if _gh_available() else tests_passed
 
+    governance_ok = _governance_check_passes(repo)
+
     decision = evaluate_git_pipeline(
         confidence=confidence,
         risk_level=risk_level,
@@ -184,11 +203,18 @@ def run_git_pipeline(
     steps: list[dict] = []
     msg = commit_message or f"feat: close {bead_id}" if bead_id else "chore: workflow ship"
 
-    if decision.commit:
+    if decision.commit and governance_ok:
         steps.append(_run(git_argv("add", "-A"), repo, dry_run=dry_run))
         steps.append(_run(git_argv("commit", "-m", msg), repo, dry_run=dry_run))
     else:
-        steps.append({"step": "commit", "status": "skipped", "reason": decision.reasons.get("commit")})
+        reason = decision.reasons.get("commit")
+        if not governance_ok:
+            reason = (
+                f"{reason}; governance check failed (see scripts/governance_git.py check)"
+                if reason
+                else "governance check failed"
+            )
+        steps.append({"step": "commit", "status": "skipped", "reason": reason})
 
     if decision.push:
         steps.append(_run(git_argv("pull", "--rebase"), repo, dry_run=dry_run))

@@ -1,5 +1,6 @@
 """pytest configuration for Chromatic Harness v2 tests."""
 
+import os
 import sys
 from pathlib import Path
 
@@ -14,6 +15,12 @@ sys.path.insert(0, str(_REPO))
 sys.path.insert(0, str(_SRC))
 sys.path.insert(0, str(_RUNTIME))
 sys.path.insert(0, str(_RUNTIME / "api"))
+
+
+@pytest.fixture(autouse=True)
+def _allow_mock_fallback(monkeypatch):
+    """Tests opt in to mock fallback unless a test explicitly disables it."""
+    monkeypatch.setenv("ROUTER_ALLOW_MOCK_FALLBACK", "true")
 
 
 @pytest.fixture(autouse=True)

@@ -11,6 +11,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
+from json import JSONDecoder
 from pathlib import Path
 from typing import Any
 
@@ -311,13 +312,24 @@ def audit(
         drift_result = run_cmd(root, ["python", str(drift_gate_script), "--json"], timeout=60)
         command_results.append(drift_result)
         try:
-            # drift_gate --json appends JSON after the human-readable summary;
-            # extract the last JSON object from stdout.
+            # drift_gate --json appends a full JSON object to human-readable text.
+            # Decode the last full JSON object from stdout instead of using a
+            # naive rfind("{") slice, which can land on nested braces.
             stdout_text = drift_result.get("stdout") or ""
-            json_start = stdout_text.rfind("{")
             drift_data: dict[str, Any] = {}
-            if json_start >= 0:
-                drift_data = json.loads(stdout_text[json_start:])
+            decoder = JSONDecoder()
+            for idx in range(len(stdout_text) - 1, -1, -1):
+                if stdout_text[idx] != "{":
+                    continue
+                try:
+                    candidate, end = decoder.raw_decode(stdout_text[idx:])
+                except json.JSONDecodeError:
+                    continue
+                if stdout_text[idx + end :].strip():
+                    continue
+                if isinstance(candidate, dict):
+                    drift_data = candidate
+                    break
             drift_passed = drift_data.get("passed", drift_result.get("ok", True))
             drift_score = drift_data.get("score")
             drift_trend = drift_data.get("trend", "unknown")
@@ -506,8 +518,7 @@ def audit(
                     "code": "branch_governance_gone_upstream",
                     "file": "07_LOGS_AND_AUDIT/ci/branch_governance_latest.json",
                     "message": (
-                        "local branches track gone upstream refs: "
-                        f"{branch_governance_summary['local_gone_upstream']}"
+                        f"local branches track gone upstream refs: {branch_governance_summary['local_gone_upstream']}"
                     ),
                 }
             )

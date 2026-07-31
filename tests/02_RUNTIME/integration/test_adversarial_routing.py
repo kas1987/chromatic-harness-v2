@@ -433,7 +433,8 @@ class TestFallbackChainExhaustion:
                 self.enabled = True
 
             async def health(self) -> AdapterHealth:
-                return AdapterHealth(reachable=False, latency_ms=0)
+                # Reachable but failing complete() ensures fallback order is exercised.
+                return AdapterHealth(reachable=True, latency_ms=1)
 
             async def complete(self, req):
                 call_order.append(self._label)
