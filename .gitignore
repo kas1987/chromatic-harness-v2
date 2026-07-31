@@ -128,3 +128,66 @@ server_stderr.txt
 # Isolated per-worker git worktrees (task_runner / claude_delegate_gate dispatch)
 .worktrees/
 .claude/worktrees/
+
+# === HARNESS V2 RUNTIME-STATE BOUNDARY ===
+# 07_LOGS_AND_AUDIT is for runtime telemetry, audit dumps, and local state.
+# Git holds only seed/canonical files. Everything else is generated.
+
+07_LOGS_AND_AUDIT/**
+!07_LOGS_AND_AUDIT/**/.gitkeep
+!07_LOGS_AND_AUDIT/seed_state/issue_to_bead.json
+
+
+# Audit-committee artifacts (archive externally or in separate repo)
+.artifacts/LOGHOUSE/*
+!.artifacts/LOGHOUSE/.gitkeep
+
+# Per-session handoff telemetry (latest.json is machine-local pointer)
+.agents/handoffs/*.json
+.agents/handoffs/*.jsonl
+.agents/handoffs/*.md
+!.agents/handoffs/README.md
+!12_HANDOFFS/sessions/.gitkeep
+
+# Harvest runtime state
+.agents/harvest/*.json
+
+# Codegraph runtime lock/state
+.codegraph/*.json
+.codegraph/*.sqlite3
+
+# Chromatic runtime snapshots
+.chromatic/*.json
+
+# Codex local state
+.codex/visualizations/**
+
+# Runtime-generated docs
+docs/workflows/WORKFLOW_RUN_LOG.jsonl
+
+
+# Additional runtime state discovered during HARNESS-CLEANUP-001
+
+# Context rebuild summaries and session prompts
+.agents/context/*.md
+.agents/handoffs/successor_prompt.md
+.agents/handoffs/delegations/
+
+# Beads interaction log (runtime Dolt mirror)
+.beads/interactions.jsonl
+
+# Codex plugin local cache + visualizations
+.codex/
+
+# 02_RUNTIME generated logs and local agent state
+02_RUNTIME/gen/logs/*.jsonl
+02_RUNTIME/.agents/
+
+# Reports telemetry
+05_REPORTS/telemetry.jsonl
+
+# Meta observability per-run reports
+00_META/observability/reports/*.md
+
+# Council post-mortem runtime notes
+.agents/council/*.md
