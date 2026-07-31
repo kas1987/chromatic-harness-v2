@@ -139,6 +139,7 @@ HARNESS_MCP_FAMILIES = [
     ("deploy.production", "Production deploy", "Critical"),
 ]
 
+
 def _load_settings() -> dict:
     for name in ("settings.local.yaml", "settings.example.yaml"):
         path = _REPO / "config" / "pre_session" / name
@@ -230,16 +231,12 @@ def build_snapshot(mcps_path: Path, tool_profile: str) -> dict:
         "subagents": subagents,
         "mcp_servers": servers,
         "crg_manifest": crg_manifest_rows(),
-        "harness_mcp_families": [
-            {"family": f, "purpose": p, "risk": r} for f, p, r in HARNESS_MCP_FAMILIES
-        ],
+        "harness_mcp_families": [{"family": f, "purpose": p, "risk": r} for f, p, r in HARNESS_MCP_FAMILIES],
         "surface_map": {
             "section_title": profile["surface_map_label"],
             "header": profile["surface_map_header"],
         },
-        "crg_to_surface_mapping": [
-            {"crg_id": a, "surface": b, "notes": c} for a, b, c in map_rows
-        ],
+        "crg_to_surface_mapping": [{"crg_id": a, "surface": b, "notes": c} for a, b, c in map_rows],
     }
 
 
@@ -256,9 +253,7 @@ def _md_table(headers: list[str], rows: list[list[str]]) -> str:
 def render_full_doc(snapshot: dict) -> str:
     s = snapshot["summary"]
     tool_surface = snapshot.get("tool_surface", "Cursor")
-    section_title = snapshot.get("surface_map", {}).get(
-        "section_title", "CRG -> Tool mapping (baseline)"
-    )
+    section_title = snapshot.get("surface_map", {}).get("section_title", "CRG -> Tool mapping (baseline)")
     section_header = snapshot.get("surface_map", {}).get("header", "Tool surface")
     lines = [
         "# Pre-Session Tools, Resources, and MCP Inventory",
@@ -321,9 +316,7 @@ def render_full_doc(snapshot: dict) -> str:
         lines.append(f"### `{server['id']}` ({server['display_name']}) — {server['tool_count']} tools")
         lines.append("")
         if status == "registered_no_descriptors":
-            lines.append(
-                "*Registered but no tool descriptors — likely needs authentication or plugin not connected.*"
-            )
+            lines.append("*Registered but no tool descriptors — likely needs authentication or plugin not connected.*")
             lines.append("")
         elif server["tools"]:
             # Group long tool lists
@@ -331,7 +324,7 @@ def render_full_doc(snapshot: dict) -> str:
             if len(tools) <= 15:
                 lines.append(", ".join(f"`{t}`" for t in tools))
             else:
-                lines.append(f"**Categories:** {', '.join(f'`{t}`' for t in tools[:8])}, … (+{len(tools)-8} more)")
+                lines.append(f"**Categories:** {', '.join(f'`{t}`' for t in tools[:8])}, … (+{len(tools) - 8} more)")
                 lines.append("")
                 lines.append("<details><summary>Full tool list</summary>")
                 lines.append("")
@@ -371,10 +364,7 @@ def render_full_doc(snapshot: dict) -> str:
             "",
             _md_table(
                 ["Family", "Purpose", "Risk"],
-                [
-                    [f["family"], f["purpose"], f["risk"]]
-                    for f in snapshot["harness_mcp_families"]
-                ],
+                [[f["family"], f["purpose"], f["risk"]] for f in snapshot["harness_mcp_families"]],
             ),
             "",
             "---",
@@ -383,10 +373,7 @@ def render_full_doc(snapshot: dict) -> str:
             "",
             _md_table(
                 ["CRG resource", section_header, "Notes"],
-                [
-                    [m["crg_id"], m["surface"], m["notes"]]
-                    for m in snapshot["crg_to_surface_mapping"]
-                ],
+                [[m["crg_id"], m["surface"], m["notes"]] for m in snapshot["crg_to_surface_mapping"]],
             ),
             "",
             "---",
@@ -397,6 +384,11 @@ def render_full_doc(snapshot: dict) -> str:
             "full content loads only when `Read` on a `SKILL.md` path.",
             "",
             "Categories include: RPI/beads, package-ingest, security, Grafana, SDK, email, etc.",
+            "",
+            "Local skill mirror: `.agents/skills/mattpocock/README.md` maps the",
+            "`mattpocock-*` skills by workflow and token tier. Prefer these for",
+            "generic engineering/productivity tasks; prefer harness-specific skills",
+            "(audit-solution, heal-skill, ship-idea, etc.) for repo-governance work.",
             "",
             "---",
             "",
@@ -430,16 +422,16 @@ def render_handoffs_index(snapshot: dict) -> str:
     return f"""# Pre-Session Inventory (Quick Reference)
 
 > Full doc: [docs/PRE_SESSION_AND_TOOLS.md](../docs/PRE_SESSION_AND_TOOLS.md)  
-> Generated: `{snapshot['generated_at']}`
+> Generated: `{snapshot["generated_at"]}`
 
 ## At a glance
 
 | Category | Count |
 |----------|------:|
-| Native {tool_surface} tools | {s['native_tool_count']} |
-| MCP servers | {s['mcp_server_count']} |
-| MCP tools | {s['mcp_tool_count']} |
-| CRG resources | {s['crg_resource_count']} |
+| Native {tool_surface} tools | {s["native_tool_count"]} |
+| MCP servers | {s["mcp_server_count"]} |
+| MCP tools | {s["mcp_tool_count"]} |
+| CRG resources | {s["crg_resource_count"]} |
 
 ## Before changing tools or MCP
 
@@ -478,8 +470,7 @@ def main() -> int:
     preferred_tool_profile = str(settings.get("tool_profile", "vscode")).strip() or "vscode"
     if preferred_tool_profile not in TOOL_PROFILES:
         print(
-            "ERROR: invalid tool_profile in settings. "
-            f"Expected one of: {', '.join(sorted(TOOL_PROFILES.keys()))}",
+            f"ERROR: invalid tool_profile in settings. Expected one of: {', '.join(sorted(TOOL_PROFILES.keys()))}",
             file=sys.stderr,
         )
         return 1
@@ -513,8 +504,7 @@ def main() -> int:
     print(f"Wrote {out_doc}")
     print(f"Wrote {out_handoffs}")
     print(
-        f"Summary: {snapshot['summary']['mcp_server_count']} servers, "
-        f"{snapshot['summary']['mcp_tool_count']} MCP tools"
+        f"Summary: {snapshot['summary']['mcp_server_count']} servers, {snapshot['summary']['mcp_tool_count']} MCP tools"
     )
     return 0
 

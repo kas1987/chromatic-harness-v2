@@ -103,6 +103,7 @@ Creates `.agents/handoffs/claude_delegate_packet.json` and `.agents/handoffs/cla
 | **Do not trust / do not do** | [docs/AGENT_ANTIPATTERNS.md](docs/AGENT_ANTIPATTERNS.md) |
 | **Implementation discipline** | [docs/governance/KARPATHY_DISCIPLINE.md](docs/governance/KARPATHY_DISCIPLINE.md) |
 | Tools / MCP / CRG baseline | [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) |
+| Agent skills catalog | [.agents/skills/mattpocock/README.md](.agents/skills/mattpocock/README.md) — mattpocock + harness skills, token tiers |
 | **Execution flow (canonical)** | [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md) |
 | **Context tiers (P0–P4)** | [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md) |
 | **Beads object model** | [docs/BEADS_OBJECT_MODEL.md](docs/BEADS_OBJECT_MODEL.md) |

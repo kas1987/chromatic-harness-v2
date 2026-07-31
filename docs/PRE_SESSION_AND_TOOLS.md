@@ -1,6 +1,6 @@
 # Pre-Session Tools, Resources, and MCP Inventory
 
-> **Generated:** `2026-07-30T15:32:12.085370+00:00`  
+> **Generated:** `2026-07-31T15:00:54.163242+00:00`  
 > **Regenerate:** `python scripts/generate_pre_session_inventory.py`  
 > **MCP path scanned:** `C:\Users\kas41\.cursor\projects\c-Users-kas41-chromatic-harness-v2\mcps`
 
@@ -159,6 +159,11 @@ Skills are **not** pre-loaded. The agent sees a catalog in instructions;
 full content loads only when `Read` on a `SKILL.md` path.
 
 Categories include: RPI/beads, package-ingest, security, Grafana, SDK, email, etc.
+
+Local skill mirror: `.agents/skills/mattpocock/README.md` maps the
+`mattpocock-*` skills by workflow and token tier. Prefer these for
+generic engineering/productivity tasks; prefer harness-specific skills
+(audit-solution, heal-skill, ship-idea, etc.) for repo-governance work.
 
 ---
 
