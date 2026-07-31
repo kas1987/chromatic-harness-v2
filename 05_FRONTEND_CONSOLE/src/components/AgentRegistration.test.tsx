@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@/lib/test-utils';
 import userEvent from '@testing-library/user-event';
 import AgentRegistration from './AgentRegistration';
 import * as api from '@/lib/api';

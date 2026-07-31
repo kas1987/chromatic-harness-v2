@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@/lib/test-utils';
 import AgentProfiles from './AgentProfiles';
 import type { AgentProfile } from '@/lib/api';
 

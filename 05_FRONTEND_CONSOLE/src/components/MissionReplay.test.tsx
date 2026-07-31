@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@/lib/test-utils';
 import MissionReplay from './MissionReplay';
 import * as api from '@/lib/api';
 import type { MissionAnalytics, MagnetEvent } from '@/lib/api';

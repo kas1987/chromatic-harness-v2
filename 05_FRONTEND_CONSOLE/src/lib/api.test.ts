@@ -26,7 +26,7 @@ import {
 function mockFetchOk(data: unknown) {
   global.fetch = jest.fn().mockResolvedValue({
     ok: true,
-    json: jest.fn().mockResolvedValue({ data }),
+    json: jest.fn().mockResolvedValue(data),
   } as unknown as Response);
 }
 
@@ -79,7 +79,13 @@ describe('apiCall — shared fetch wrapper', () => {
     const options = callArgs[1] as RequestInit;
     expect(options.method).toBe('POST');
     expect(options.headers).toEqual({ 'Content-Type': 'application/json' });
-    expect(JSON.parse(options.body as string)).toMatchObject({ packet: { objective: 'test' } });
+    expect(JSON.parse(options.body as string)).toMatchObject({
+      objective: 'test',
+      agent_role: 'agent_lead',
+      autonomy_level: 'L1',
+      confidence_score: 0.8,
+      stop_conditions: [],
+    });
   });
 });
 
