@@ -105,6 +105,9 @@ Creates `.agents/handoffs/claude_delegate_packet.json` and `.agents/handoffs/cla
 | Tools / MCP / CRG baseline | [docs/PRE_SESSION_AND_TOOLS.md](docs/PRE_SESSION_AND_TOOLS.md) |
 | Agent skills catalog | [.agents/skills/mattpocock/README.md](.agents/skills/mattpocock/README.md) — mattpocock + harness skills, token tiers |
 | **Execution flow (canonical)** | [00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md](00_SOURCE_OF_TRUTH/HARNESS_EXECUTION_FLOW.md) |
+| **Git purpose & boundary** | [docs/governance/REPO_BOUNDARY.md](docs/governance/REPO_BOUNDARY.md) — what belongs in Git vs runtime |
+| **Architecture maps** | [docs/governance/REPO_ARCHITECTURE.md](docs/governance/REPO_ARCHITECTURE.md) — Mermaid diagrams of layers and data flow |
+| **Obsidian index** | [docs/obsidian/HARNESS_INDEX.md](docs/obsidian/HARNESS_INDEX.md) — navigable graph index |
 | **Context tiers (P0–P4)** | [docs/governance/PRE_SESSION_CONTEXT_POLICY.md](docs/governance/PRE_SESSION_CONTEXT_POLICY.md) |
 | **Beads object model** | [docs/BEADS_OBJECT_MODEL.md](docs/BEADS_OBJECT_MODEL.md) |
 | **OpenRouter broker** | [docs/governance/OPENROUTER_BROKER_POLICY.md](docs/governance/OPENROUTER_BROKER_POLICY.md) |
