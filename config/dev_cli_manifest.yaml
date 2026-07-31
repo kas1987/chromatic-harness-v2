@@ -42,6 +42,12 @@ tools:
     beads_install: true
     note: "Beads CLI; includes embedded Dolt via `bd dolt`"
 
+  - name: pwsh
+    required: recommended
+    test: pwsh
+    winget: Microsoft.PowerShell
+    note: "PowerShell 7.6.4+ (cross-platform); harness scripts target PS 7+ semantics"
+
   - name: gk
     required: recommended
     test: gk
