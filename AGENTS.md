@@ -33,3 +33,18 @@ bd close <id>
 Full workflow, session completion, and `bd dolt push`: [AGENT_OPERATIONS.md](AGENT_OPERATIONS.md).
 
 **Git autonomy:** commit/push when [docs/governance/GIT_AUTONOMY_POLICY.md](docs/governance/GIT_AUTONOMY_POLICY.md) gates pass — run `python scripts/workflow_git.py plan` first; do not wait for a separate user “please commit” in this repo.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in **beads (`bd`)**, backed by Dolt, with a GitHub mirror at `kas1987/chromatic-harness-v2`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical triage roles map to harness v2 state vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context repo with subsystem documentation under `00_SOURCE_OF_TRUTH/` and `docs/`. See `docs/agents/domain.md`.
+
