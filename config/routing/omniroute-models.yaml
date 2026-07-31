@@ -1,0 +1,58 @@
+# OmniRoute model allowlist for Chromatic Harness v2.
+#
+# OmniRoute exposes hundreds of models across 290 providers, but the harness
+# only routes to known free-tier model IDs listed here. Unknown model IDs are
+# dropped by ProviderSelector to keep routing reproducible and privacy-safe.
+#
+# Upstream model prefixes:
+#   oc/...   OpenCode Free tier
+#   felo/... Felo free tier
+#   cc/...   Claude Code OAuth proxy (requires dashboard auth)
+#   auto/... OmniRoute smart router (use only when explicitly enabled)
+#
+# Source of truth for model availability: GET http://localhost:20128/v1/models
+
+version: "1.0"
+
+models:
+  - id: oc/deepseek-v4-flash-free
+    alias: deepseek-flash
+    allowed_complexity: [C1, C2]
+    max_privacy: P1
+    notes: "OpenCode Free DeepSeek V4 Flash; fast and cheap coding tasks."
+
+  - id: oc/qwen3-coder-free
+    alias: qwen3-coder
+    allowed_complexity: [C1, C2, C3]
+    max_privacy: P1
+    notes: "OpenCode Free Qwen 3 Coder; general coding and review."
+
+  - id: oc/deepseek-r1-free
+    alias: deepseek-r1
+    allowed_complexity: [C3, C4]
+    max_privacy: P1
+    notes: "OpenCode Free DeepSeek R1 reasoning model; slow, use for planning."
+
+  - id: oc/kimi-k2-thinking-free
+    alias: kimi-k2-thinking
+    allowed_complexity: [C3, C4]
+    max_privacy: P1
+    notes: "OpenCode Free Kimi K2 Thinking; reasoning and analysis."
+
+  - id: auto/coding
+    alias: auto-coding
+    allowed_complexity: [C1, C2, C3]
+    max_privacy: P1
+    notes: "OmniRoute coding-optimized auto-router; provider chosen by OmniRoute."
+
+  - id: auto/cheap
+    alias: auto-cheap
+    allowed_complexity: [C1, C2]
+    max_privacy: P1
+    notes: "OmniRoute cost-optimized auto-router; cheapest available."
+
+  - id: auto
+    alias: auto
+    allowed_complexity: [C1, C2, C3, C4]
+    max_privacy: P1
+    notes: "OmniRoute zero-config auto-router. Opt-in only; less deterministic."

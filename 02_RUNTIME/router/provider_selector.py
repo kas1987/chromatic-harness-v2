@@ -24,6 +24,7 @@ _ROUTING_TO_POLICY: dict[str, str] = {
     "openai": "openai",
     "agnes": "agnes",
     "openrouter": "openrouter",
+    "omniroute": "omniroute",
     "together_ai": "together_ai",
     "ollama_local": "ollama_local",
     "ollama_remote_desktop": "ollama_remote_desktop",
@@ -37,7 +38,7 @@ _LOCAL_ROUTING_PROVIDERS: frozenset[str] = frozenset(
 
 # Cloud/broker ids in routing-table.yaml (blocked for P3–P5 per broker policy)
 _CLOUD_ROUTING_PROVIDERS: frozenset[str] = frozenset(
-    {"gemini", "openai", "claude_api", "agnes", "openrouter", "together_ai"}
+    {"gemini", "openai", "claude_api", "agnes", "openrouter", "omniroute", "together_ai"}
 )
 
 _PRIVACY_ORDER: dict[str, int] = {
@@ -74,12 +75,14 @@ class ProviderSelector:
     DEFAULT_PREFS = Path.home() / ".claude" / "config" / "routing" / "user-preferences.yaml"
 
     DEFAULT_OPENROUTER_MODELS = Path("openrouter-models.yaml")
+    DEFAULT_OMNIROUTE_MODELS = Path("omniroute-models.yaml")
 
     def __init__(
         self,
         routing_table_path: Path | None = None,
         prefs_path: Path | None = None,
         openrouter_models_path: Path | None = None,
+        omniroute_models_path: Path | None = None,
         policy_loader: PolicyLoader | None = None,
     ):
         self._policy_loader = policy_loader or PolicyLoader()
@@ -88,10 +91,14 @@ class ProviderSelector:
         self._openrouter_models_path = openrouter_models_path or (
             self._policy_loader.config_dir / self.DEFAULT_OPENROUTER_MODELS
         )
+        self._omniroute_models_path = omniroute_models_path or (
+            self._policy_loader.config_dir / self.DEFAULT_OMNIROUTE_MODELS
+        )
         self._table: dict[str, Any] = {}
         self._prefs: dict[str, Any] = {}
         self._providers_cfg: dict[str, Any] = {}
         self._openrouter_allowlist: set[str] = set()
+        self._omniroute_allowlist: set[str] = set()
         self._load()
 
     @staticmethod
@@ -143,6 +150,7 @@ class ProviderSelector:
 
         self._providers_cfg = self._policy_loader.providers()
         self._openrouter_allowlist = self._load_openrouter_allowlist()
+        self._omniroute_allowlist = self._load_omniroute_allowlist()
 
     def _load_openrouter_allowlist(self) -> set[str]:
         path = self._openrouter_models_path
@@ -151,6 +159,24 @@ class ProviderSelector:
             candidates = [
                 repo_root / "config" / "routing" / "openrouter-models.yaml",
                 repo_root / "09_DEPLOYMENT" / "config" / "routing" / "openrouter-models.yaml",
+            ]
+            for candidate in candidates:
+                if candidate.exists():
+                    path = candidate
+                    break
+        if not path.exists():
+            return set()
+        with open(path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        return {str(m["id"]) for m in data.get("models", []) if isinstance(m, dict) and m.get("id")}
+
+    def _load_omniroute_allowlist(self) -> set[str]:
+        path = self._omniroute_models_path
+        if not path.exists():
+            repo_root = Path(__file__).resolve().parent.parent.parent
+            candidates = [
+                repo_root / "config" / "routing" / "omniroute-models.yaml",
+                repo_root / "09_DEPLOYMENT" / "config" / "routing" / "omniroute-models.yaml",
             ]
             for candidate in candidates:
                 if candidate.exists():
@@ -352,6 +378,8 @@ class ProviderSelector:
             return self._privacy_level("P5")
         if routing_provider == "openrouter":
             return self._privacy_level("P1")
+        if routing_provider == "omniroute":
+            return self._privacy_level("P1")
         return self._privacy_level("P2")
 
     def _filter_by_privacy(self, choices: list[ProviderChoice], privacy_class: str) -> list[ProviderChoice]:
@@ -376,6 +404,14 @@ class ProviderSelector:
                     if choice.model not in self._openrouter_allowlist:
                         continue
                 elif choice.model and not self._openrouter_allowlist:
+                    continue
+            if choice.provider == "omniroute":
+                if task_level > self._privacy_level("P1"):
+                    continue
+                if choice.model and self._omniroute_allowlist:
+                    if choice.model not in self._omniroute_allowlist:
+                        continue
+                elif choice.model and not self._omniroute_allowlist:
                     continue
             filtered.append(choice)
         return filtered

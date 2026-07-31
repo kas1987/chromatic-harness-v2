@@ -13,12 +13,15 @@ This policy defines when OpenRouter may be used, which privacy classes it may ha
 Preferred route order:
 
 ```text
-1. Local Ollama / LM Studio when sufficient
+1. Local Ollama / LM Studio / native_claude when sufficient
 2. Remote Ollama desktop over LAN when available
 3. Direct provider API when configured and policy-approved
-4. OpenRouter broker fallback
-5. Premium/RunPod when justified
+4. OmniRoute local free gateway (P0/P1 only)
+5. OpenRouter broker fallback
+6. Premium/RunPod when justified
 ```
+
+See `docs/governance/OMNIROUTE_BROKER_POLICY.md` for OmniRoute governance.
 
 OpenRouter is useful when:
 
@@ -71,7 +74,7 @@ OpenRouter must not receive secrets, credentials, tokens, private keys, or raw h
 Maintain an explicit allowlist in:
 
 ```text
-09_DEPLOYMENT/config/routing/openrouter-models.yaml
+config/routing/openrouter-models.yaml
 ```
 
 Suggested fields:
@@ -191,7 +194,7 @@ If OpenRouter fails:
 |---------|----------|-------|
 | Provider registry | `config/routing/providers.yaml` | `openrouter` entry: `privacy_max: P1`, `cost_tier: low` |
 | Selection logic | `02_RUNTIME/router/provider_selector.py` | `privacy_class` on `select()`; tests in `tests/test_openrouter_broker_policy.py` |
-| OpenRouter allowlist | `09_DEPLOYMENT/config/routing/openrouter-models.yaml` | Non-listed models dropped at selection time |
+| OpenRouter allowlist | `config/routing/openrouter-models.yaml` | Non-listed models dropped at selection time |
 | Privacy classes | `config/routing/privacy-policy.yaml` | P4/P5 cloud block in `provider_selector._filter_by_privacy` |
 | Context / pre-session | `scripts/session_context_report.py`, `scripts/audit_mcp_context.py` | Not OpenRouter-specific |
 
@@ -205,7 +208,7 @@ If OpenRouter fails:
 ## Implementation Targets (planned)
 
 ```text
-09_DEPLOYMENT/config/routing/openrouter-models.yaml
+config/routing/openrouter-models.yaml
 02_RUNTIME/router/adapters/openrouter.py
 02_RUNTIME/router/policies/privacy_gate.py
 02_RUNTIME/router/policies/cost_gate.py

@@ -248,6 +248,20 @@
       "command": "python scripts/swot_autonomy_loop.py --cleanup-duplicates --cleanup-apply --write",
       "group": "none",
       "problemMatcher": []
+    },
+    {
+      "label": "Router: Smoke Providers + Route",
+      "type": "shell",
+      "command": "$env:PYTHONPATH='02_RUNTIME'; .\\.venv\\Scripts\\python.exe scripts\\smoke_router_providers.py --with-route",
+      "group": "none",
+      "problemMatcher": []
+    },
+    {
+      "label": "Router: Smoke Providers + Route (CI-safe, no native_claude)",
+      "type": "shell",
+      "command": "$env:PYTHONPATH='02_RUNTIME'; .\\.venv\\Scripts\\python.exe scripts\\smoke_router_providers.py --providers agnes,ollama_cloud --with-route",
+      "group": "none",
+      "problemMatcher": []
     }
   ]
 }

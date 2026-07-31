@@ -9,6 +9,9 @@
 version: "1.0"
 
 adapters:
+  omniroute:
+    module: "router.adapters.omniroute_adapter"
+    class: "OmniRouteAdapter"
   openhuman:
     module: "router.adapters.openhuman_adapter"
     class: "OpenHumanAdapter"

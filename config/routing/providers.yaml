@@ -77,6 +77,19 @@ providers:
     model: agnes-2.5-flash
     privacy_max: P1
 
+  # Local free-tier gateway. Billing axis: F (free local). Privacy posture:
+  # broker/cloud (P4/P5 block; P3 human gate) because it still egresses to
+  # third-party free providers. See docs/governance/OMNIROUTE_BROKER_POLICY.md.
+  omniroute:
+    type: local
+    enabled: true
+    base_url: http://localhost:20128/v1
+    env_key: OMNIROUTE_API_KEY
+    model: oc/deepseek-v4-flash-free
+    privacy_max: P1
+    cost_tier: free
+    note: "Local OpenAI-compatible gateway to pooled free providers."
+
   # Broker policy: docs/governance/OPENROUTER_BROKER_POLICY.md
   openrouter:
     type: broker

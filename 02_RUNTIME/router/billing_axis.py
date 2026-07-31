@@ -34,7 +34,17 @@ BillingAxis = Literal["P", "D", "F"]
 _PREPAID_PROVIDERS: frozenset[str] = frozenset({"native_claude"})
 
 # Axis F — free local models (quota-neutral, tracked for offload value only).
-_LOCAL_PROVIDERS: frozenset[str] = frozenset({"ollama", "ollama_local", "ollama_remote_desktop", "lmstudio"})
+# OmniRoute is a local gateway to free tiers; it is free from CHV2's budget
+# perspective even though it egresses to third-party clouds.
+_LOCAL_PROVIDERS: frozenset[str] = frozenset(
+    {
+        "ollama",
+        "ollama_local",
+        "ollama_remote_desktop",
+        "lmstudio",
+        "omniroute",
+    }
+)
 
 # Axis D — dollar-billed API providers (hard $ ceiling per agent_budget.yaml).
 _CLOUD_PROVIDERS: frozenset[str] = frozenset(
