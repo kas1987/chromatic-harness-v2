@@ -60,6 +60,11 @@ from auth import (  # noqa: E402
     verify_password,
     create_access_token,
     get_current_user,
+    require_current_user,
+    require_executor,
+    require_reviewer,
+    CurrentUser,
+    Role,
 )
 
 import importlib.util as _ilu  # noqa: E402
@@ -102,7 +107,7 @@ async def health():
 
 
 @app.post("/route")
-async def route_request(payload: dict):
+async def route_request(payload: dict, current_user: CurrentUser = Depends(require_executor)):
     """
     Execute a provider-neutral route through ChromaticRouter.
     Expected JSON mirrors the RouteRequest contract.
@@ -220,7 +225,11 @@ async def auth_me(
 
 
 @app.post("/missions", response_model=MissionResponse)
-async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def create_mission(
+    req: CreateMissionRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
+):
     orch = Orchestrator()
     packet = orch.create_mission(req.objective)
     packet.mission_id = f"CHR-{str(uuid.uuid4())[:8].upper()}"
@@ -252,14 +261,20 @@ async def create_mission(req: CreateMissionRequest, db: aiosqlite.Connection = D
 
 
 @app.get("/missions", response_model=list[MissionResponse])
-async def list_missions(db: aiosqlite.Connection = Depends(get_db)):
+async def list_missions(
+    db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)
+):
     async with db.execute("SELECT data FROM missions ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [MissionResponse(**json.loads(r[0])) for r in rows]
 
 
 @app.get("/missions/{mission_id}", response_model=MissionResponse)
-async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_mission(
+    mission_id: str,
+    db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
+):
     async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
         row = await cur.fetchone()
     if not row:
@@ -268,7 +283,12 @@ async def get_mission(mission_id: str, db: aiosqlite.Connection = Depends(get_db
 
 
 @app.post("/missions/{mission_id}/events", response_model=MagnetEventResponse)
-async def create_event(mission_id: str, req: CreateEventRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def create_event(
+    mission_id: str,
+    req: CreateEventRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
+):
     event_id = str(uuid.uuid4())
     ts = NOW()
     data = {
@@ -297,6 +317,7 @@ async def list_events(
     from_ts: Optional[str] = Query(default=None, description="ISO timestamp lower bound"),
     to_ts: Optional[str] = Query(default=None, description="ISO timestamp upper bound"),
     db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
 ):
     sql = "SELECT data FROM magnet_events WHERE mission_id = ?"
     params: list = [mission_id]
@@ -313,7 +334,11 @@ async def list_events(
 
 
 @app.get("/missions/{mission_id}/analytics", response_model=MissionAnalyticsResponse)
-async def get_mission_analytics(mission_id: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_mission_analytics(
+    mission_id: str,
+    db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
+):
     async with db.execute(
         "SELECT data, created_at FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
         (mission_id,),
@@ -400,6 +425,7 @@ async def synthesize_mission(
     mission_id: str,
     auto_create_bead: bool = Query(default=False, alias="create_bead"),
     db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
 ):
     """Run MagnetOrchestrator + Agent Lead synthesis on mission magnet events."""
     async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
@@ -456,7 +482,11 @@ async def synthesize_mission(
 
 
 @app.post("/beads", response_model=BeadResponse)
-async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def create_bead(
+    req: CreateBeadRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_current_user),
+):
     bead_id = f"BEAD-{str(uuid.uuid4())[:8].upper()}"
     ts = NOW()
     data = {
@@ -478,7 +508,7 @@ async def create_bead(req: CreateBeadRequest, db: aiosqlite.Connection = Depends
 
 
 @app.get("/beads", response_model=list[BeadResponse])
-async def list_beads(db: aiosqlite.Connection = Depends(get_db)):
+async def list_beads(db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)):
     async with db.execute("SELECT data FROM beads ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [BeadResponse(**json.loads(r[0])) for r in rows]
@@ -504,7 +534,11 @@ def _agent_data_to_response(data: dict) -> AgentProfileResponse:
 
 
 @app.post("/agents", response_model=AgentProfileResponse, status_code=201)
-async def register_agent(req: RegisterAgentRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def register_agent(
+    req: RegisterAgentRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
+):
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (req.agent_id,)) as cur:
         existing = await cur.fetchone()
     if existing:
@@ -536,14 +570,18 @@ async def register_agent(req: RegisterAgentRequest, db: aiosqlite.Connection = D
 
 
 @app.get("/agents", response_model=list[AgentProfileResponse])
-async def list_agents(db: aiosqlite.Connection = Depends(get_db)):
+async def list_agents(
+    db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)
+):
     async with db.execute("SELECT data FROM agent_profiles ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [_agent_data_to_response(json.loads(r[0])) for r in rows]
 
 
 @app.get("/agents/{agent_id}", response_model=AgentProfileResponse)
-async def get_agent(agent_id: str, db: aiosqlite.Connection = Depends(get_db)):
+async def get_agent(
+    agent_id: str, db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)
+):
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
@@ -556,6 +594,7 @@ async def record_execution(
     agent_id: str,
     req: RecordExecutionRequest,
     db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_executor),
 ):
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
@@ -588,6 +627,7 @@ async def promote_agent(
     agent_id: str,
     req: PromoteAgentRequest,
     db: aiosqlite.Connection = Depends(get_db),
+    current_user: CurrentUser = Depends(require_reviewer),
 ):
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()

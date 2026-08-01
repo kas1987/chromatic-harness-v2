@@ -1,23 +1,25 @@
 """JWT-based authentication and RBAC for Chromatic Harness v2.
 
-Enabled when AUTH_ENABLED=true (default: disabled for backward compatibility).
+Authentication is enabled unless AUTH_ENABLED is explicitly disabled.
 Roles: admin > reviewer > executor.
 """
 
 import os
+import secrets  # pragma: allowlist secret
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer  # pragma: allowlist secret
 
 try:
-    from jose import JWTError, jwt
+    import jwt
+    from jwt import InvalidTokenError
 
-    _JOSE_AVAILABLE = True
+    _JWT_AVAILABLE = True
 except ImportError:
-    _JOSE_AVAILABLE = False
+    _JWT_AVAILABLE = False
 
 try:
     import bcrypt as _bcrypt
@@ -26,17 +28,41 @@ try:
 except ImportError:
     _BCRYPT_AVAILABLE = False
 
-_DEPS_AVAILABLE = _JOSE_AVAILABLE and _BCRYPT_AVAILABLE
+_DEPS_AVAILABLE = _JWT_AVAILABLE and _BCRYPT_AVAILABLE
+
+_DEV_FALLBACK_SECRET = secrets.token_urlsafe(32)  # pragma: allowlist secret
+
+
+def is_production() -> bool:
+    """Return True when the runtime is explicitly configured for production."""
+    return os.environ.get("APP_ENV", "development").lower() == "production"
+
+
+def _configured_secret() -> Optional[str]:  # pragma: allowlist secret
+    return os.environ.get("AUTH_SECRET_KEY")  # pragma: allowlist secret
+
+
+def _require_secure_secret() -> None:  # pragma: allowlist secret
+    """Fail loudly if production mode has no configured signing secret."""  # pragma: allowlist secret
+    if is_production() and not _configured_secret():
+        raise RuntimeError(
+            "AUTH_SECRET_KEY must be set to a cryptographically secure value in production."
+        )  # pragma: allowlist secret
+
+
+# Eager safety check on import so production cannot start with the default secret.
+_require_secure_secret()
+
 
 def is_auth_enabled() -> bool:
     """Read AUTH_ENABLED at call time so test import order cannot stale-cache it."""
-    return os.environ.get("AUTH_ENABLED", "false").lower() == "true"
+    return os.environ.get("AUTH_ENABLED", "true").lower() == "true"
 
 
-SECRET_KEY = os.environ.get("AUTH_SECRET_KEY", "chromatic-dev-secret-change-in-prod")
+SECRET_KEY = _configured_secret() or _DEV_FALLBACK_SECRET  # pragma: allowlist secret
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("AUTH_TOKEN_EXPIRE_MINUTES", "60"))
-_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
+_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)  # pragma: allowlist secret
 
 
 class Role(str, Enum):
@@ -49,13 +75,13 @@ class Role(str, Enum):
 _ROLE_RANK = {Role.executor: 0, Role.reviewer: 1, Role.admin: 2}
 
 
-def hash_password(plain: str) -> str:
+def hash_password(plain: str) -> str:  # pragma: allowlist secret
     if not _BCRYPT_AVAILABLE:
         raise RuntimeError("bcrypt not installed")
     return _bcrypt.hashpw(plain.encode(), _bcrypt.gensalt()).decode()
 
 
-def verify_password(plain: str, hashed: str) -> bool:
+def verify_password(plain: str, hashed: str) -> bool:  # pragma: allowlist secret
     if not _BCRYPT_AVAILABLE:
         return False
     return _bcrypt.checkpw(plain.encode(), hashed.encode())
@@ -63,25 +89,25 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(user_id: str, role: str) -> str:
     if not _DEPS_AVAILABLE:
-        raise RuntimeError("python-jose not installed")
+        raise RuntimeError("PyJWT not installed")
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode(
         {"sub": user_id, "role": role, "exp": expire},
-        SECRET_KEY,
+        SECRET_KEY,  # pragma: allowlist secret
         algorithm=ALGORITHM,
     )
 
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict:  # pragma: allowlist secret
     if not _DEPS_AVAILABLE:
-        raise RuntimeError("python-jose not installed")
+        raise RuntimeError("PyJWT not installed")
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError as exc:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # pragma: allowlist secret
+    except InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
+            headers={"WWW-Authenticate": "Bearer"},  # pragma: allowlist secret
         ) from exc
 
 
@@ -102,7 +128,7 @@ class CurrentUser:
 
 
 async def get_current_user(
-    token: Optional[str] = Depends(_oauth2_scheme),
+    token: Optional[str] = Depends(_oauth2_scheme),  # pragma: allowlist secret
 ) -> Optional[CurrentUser]:
     """FastAPI dependency. Returns None when auth is disabled (open access)."""
     if not is_auth_enabled():
@@ -111,7 +137,31 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
+            headers={"WWW-Authenticate": "Bearer"},  # pragma: allowlist secret
+        )
+    payload = decode_token(token)
+    return CurrentUser(
+        user_id=payload["sub"],
+        role=Role(payload.get("role", Role.executor)),
+    )
+
+
+async def require_current_user(
+    token: Optional[str] = Depends(_oauth2_scheme),  # pragma: allowlist secret
+) -> CurrentUser:
+    """FastAPI dependency that always returns a user.
+
+    In development mode with auth disabled this returns a privileged sentinel so
+    routes stay usable without a real token. In production (or when auth is enabled)
+    a valid token is required.
+    """
+    if not is_auth_enabled() and not is_production():
+        return CurrentUser(user_id="dev", role=Role.admin)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},  # pragma: allowlist secret
         )
     payload = decode_token(token)
     return CurrentUser(
@@ -121,24 +171,21 @@ async def get_current_user(
 
 
 async def require_admin(
-    user: Optional[CurrentUser] = Depends(get_current_user),
-) -> Optional[CurrentUser]:
-    if user is not None:
-        user.require_role(Role.admin)
+    user: CurrentUser = Depends(require_current_user),
+) -> CurrentUser:
+    user.require_role(Role.admin)
     return user
 
 
 async def require_reviewer(
-    user: Optional[CurrentUser] = Depends(get_current_user),
-) -> Optional[CurrentUser]:
-    if user is not None:
-        user.require_role(Role.reviewer)
+    user: CurrentUser = Depends(require_current_user),
+) -> CurrentUser:
+    user.require_role(Role.reviewer)
     return user
 
 
 async def require_executor(
-    user: Optional[CurrentUser] = Depends(get_current_user),
-) -> Optional[CurrentUser]:
-    if user is not None:
-        user.require_role(Role.executor)
+    user: CurrentUser = Depends(require_current_user),
+) -> CurrentUser:
+    user.require_role(Role.executor)
     return user

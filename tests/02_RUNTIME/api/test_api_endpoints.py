@@ -3,81 +3,19 @@
 All tests use FastAPI's TestClient with an in-memory SQLite override so they
 are hermetic and never touch the production database.
 
-jose / bcrypt are mocked at module level because their C-extension backends are
-unavailable in this environment; auth logic itself is unit-tested in the auth
-module's own suite.
+This suite exercises the broader API contract with authentication explicitly
+disabled so route coverage does not need per-request bearer setup. Auth logic
+itself is covered by the dedicated auth suites.
 """
 
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
-import unittest.mock as mock
 from typing import Any, Generator
 
 import pytest
-
-# ---------------------------------------------------------------------------
-# Shim broken C-extension deps BEFORE importing anything from 02_RUNTIME/api
-# ---------------------------------------------------------------------------
-for _mod in [
-    "jose",
-    "jose.jwt",
-    "jose.jws",
-    "jose.jwk",
-    "jose.backends",
-    "jose.backends.cryptography_backend",
-    "jose.backends.base",
-]:
-    if _mod not in sys.modules:
-        sys.modules[_mod] = mock.MagicMock()
-# JWTError must be a real exception class so `except JWTError` works
-sys.modules["jose"].JWTError = Exception
-
-# bcrypt mock: hashpw must return bytes-like object with a .decode() → str
-# and checkpw must accept two byte strings and return bool.
-# We use a simple plain-text scheme: hashed = "plain:<password>"
-_bcrypt_mock = mock.MagicMock()
-
-
-def _hashpw(plain_bytes: bytes, salt: bytes) -> bytes:
-    return b"plain:" + plain_bytes
-
-
-def _checkpw(plain_bytes: bytes, hashed_bytes: bytes) -> bool:
-    return hashed_bytes == b"plain:" + plain_bytes
-
-
-_bcrypt_mock.hashpw = _hashpw
-_bcrypt_mock.gensalt = lambda: b"fakesalt"
-_bcrypt_mock.checkpw = _checkpw
-sys.modules["bcrypt"] = _bcrypt_mock
-
-# jose token mock: create_access_token should return a deterministic string
-# so that login tests can verify response structure without real JWT signing.
-import base64 as _base64  # noqa: E402
-
-_jose_jwt_mock = mock.MagicMock()
-
-
-def _jwt_encode(payload: dict, key: str, algorithm: str = "HS256") -> str:
-    data = f"{payload.get('sub', '')}:{payload.get('role', '')}".encode()
-    return "mock." + _base64.b64encode(data).decode()
-
-
-def _jwt_decode(token: str, key: str, algorithms: list) -> dict:  # pragma: allowlist secret
-    if not token.startswith("mock."):
-        raise Exception("Invalid token")
-    data = _base64.b64decode(token[5:]).decode()
-    sub, role = data.split(":", 1)
-    return {"sub": sub, "role": role}
-
-
-_jose_jwt_mock.encode = _jwt_encode
-_jose_jwt_mock.decode = _jwt_decode
-sys.modules["jose"].jwt = _jose_jwt_mock
-# Also inject under full dotted name so `from jose import jwt` resolves correctly
-sys.modules["jose.jwt"] = _jose_jwt_mock
 
 # ---------------------------------------------------------------------------
 # Now safe to import from the api package (conftest already put api on path)
@@ -128,6 +66,11 @@ _CREATE_TABLES = [
 _db_conn: aiosqlite.Connection | None = None
 
 
+@pytest.fixture(autouse=True)
+def _disable_auth(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("AUTH_ENABLED", "false")
+
+
 async def _make_db() -> aiosqlite.Connection:
     conn = await aiosqlite.connect(":memory:")
     conn.row_factory = aiosqlite.Row
@@ -152,12 +95,16 @@ async def _override_get_db():  # async generator used as FastAPI dependency
 def client() -> Generator[TestClient, None, None]:
     """TestClient backed by a fresh in-memory SQLite DB for each test."""
     global _db_conn
-    _db_conn = asyncio.get_event_loop().run_until_complete(_make_db())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    _db_conn = loop.run_until_complete(_make_db())
     app.dependency_overrides[get_db] = _override_get_db
     with TestClient(app, raise_server_exceptions=True) as c:
         yield c
     app.dependency_overrides.clear()
-    asyncio.get_event_loop().run_until_complete(_db_conn.close())
+    loop.run_until_complete(_db_conn.close())
+    loop.close()
+    asyncio.set_event_loop(None)
     _db_conn = None
 
 
@@ -181,11 +128,11 @@ class TestHealth:
 
 
 class TestAuthStatus:
-    def test_auth_disabled_by_default(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_auth_enabled_by_default(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("AUTH_ENABLED", raising=False)
         resp = client.get("/auth/status")
         assert resp.status_code == 200
-        assert resp.json()["auth_enabled"] is False
+        assert resp.json()["auth_enabled"] is True
 
 
 # ---------------------------------------------------------------------------

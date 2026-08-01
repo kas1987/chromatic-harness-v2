@@ -1,25 +1,58 @@
-"""Host-side relay: wraps `claude -p` so Docker containers can use the subscription CLI."""
+"""Host-side relay: wraps `claude -p` so Docker containers can use the subscription CLI.
+
+Security defaults:
+  * Binds to 127.0.0.1 unless CLAUDE_RELAY_BIND is set explicitly.
+  * Requires a bearer token via CLAUDE_RELAY_TOKEN; set CLAUDE_RELAY_DEV_MODE=true
+    to allow unauthenticated use only during local development.
+  * Enforces a configurable max request body size.
+  * Restricts accepted models to an allowlist.
+  * Does not expose debug/system information without authentication.
+"""
 
 import json
+import os
+import shutil
 import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
 MODEL_DEFAULT = "claude-haiku-4-5-20251001"
 
-# Resolve claude CLI — check env override first, then common Windows npm path, then PATH
-import os
-import shutil as _shutil
+BIND_HOST = os.environ.get("CLAUDE_RELAY_BIND", "127.0.0.1")
+RELAY_TOKEN = os.environ.get("CLAUDE_RELAY_TOKEN", "")  # pragma: allowlist secret
+DEV_MODE = os.environ.get("CLAUDE_RELAY_DEV_MODE", "false").lower() == "true"
+MAX_BODY_SIZE = int(os.environ.get("CLAUDE_RELAY_MAX_BODY_SIZE", "65536"))
 
-_CLAUDE_CMD = (
-    os.environ.get("CLAUDE_BIN")
-    or _shutil.which("claude")
-    or os.path.expandvars(r"%APPDATA%\npm\claude.cmd")
-)
+_allowlist_raw = os.environ.get("CLAUDE_RELAY_MODEL_ALLOWLIST", "").strip()
+MODEL_ALLOWLIST = set(_allowlist_raw.split(",")) if _allowlist_raw else {MODEL_DEFAULT}
+
+# Resolve claude CLI — check env override first, then common Windows npm path, then PATH
+_CLAUDE_CMD = os.environ.get("CLAUDE_BIN") or shutil.which("claude") or os.path.expandvars(r"%APPDATA%\npm\claude.cmd")
+
+
+def _unauthorized(handler: BaseHTTPRequestHandler, detail: str = "unauthorized") -> None:
+    handler._send_json(401, {"error": detail})
+
+
+def _forbidden(handler: BaseHTTPRequestHandler, detail: str = "forbidden") -> None:
+    handler._send_json(403, {"error": detail})
+
+
+def _authenticate(handler: BaseHTTPRequestHandler) -> bool:
+    """Return True if the request is authenticated (or dev mode is enabled)."""
+    if DEV_MODE:
+        return True
+    if not RELAY_TOKEN:
+        return False
+    auth_header = handler.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return False
+    return auth_header[len("Bearer ") :].strip() == RELAY_TOKEN
 
 
 class Handler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def log_message(self, fmt, *args):  # suppress default access log noise
         pass
 
@@ -34,18 +67,6 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/health":
             self._send_json(200, {"ok": True})
-        elif self.path == "/debug":
-            import os as _os
-
-            self._send_json(
-                200,
-                {
-                    "claude_cmd": _CLAUDE_CMD,
-                    "platform": sys.platform,
-                    "appdata": _os.environ.get("APPDATA", ""),
-                    "exists": bool(_CLAUDE_CMD and _os.path.exists(_CLAUDE_CMD)),
-                },
-            )
         else:
             self._send_json(404, {"error": "not found"})
 
@@ -53,14 +74,44 @@ class Handler(BaseHTTPRequestHandler):
         if self.path != "/complete":
             self._send_json(404, {"error": "not found"})
             return
-        length = int(self.headers.get("Content-Length", 0))
-        body = json.loads(self.rfile.read(length))
+
+        if not _authenticate(self):
+            return _unauthorized(self)
+
+        content_length_str = self.headers.get("Content-Length", "0")
+        try:
+            content_length = int(content_length_str)
+        except ValueError:
+            self._send_json(400, {"error": "invalid Content-Length"})
+            return
+
+        if content_length > MAX_BODY_SIZE:
+            self._send_json(413, {"error": f"request body exceeds {MAX_BODY_SIZE} bytes"})
+            return
+
+        try:
+            body = json.loads(self.rfile.read(content_length))
+        except json.JSONDecodeError as exc:
+            self._send_json(400, {"error": f"invalid JSON: {exc}"})
+            return
+
         prompt = body.get("prompt", "")
         model = body.get("model", MODEL_DEFAULT)
         system = body.get("system", "")
 
+        if model not in MODEL_ALLOWLIST:
+            self._send_json(403, {"error": f"model {model!r} is not in the relay allowlist"})
+            return
+
+        if not isinstance(prompt, str):
+            self._send_json(400, {"error": "prompt must be a string"})
+            return
+
         cmd = [_CLAUDE_CMD, "-p", prompt, "--output-format", "json", "--model", model]
         if system:
+            if not isinstance(system, str):
+                self._send_json(400, {"error": "system must be a string"})
+                return
             cmd += ["--system-prompt", system]
 
         try:
@@ -71,9 +122,7 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 run_cmd = cmd
                 run_shell = False
-            result = subprocess.run(
-                run_cmd, capture_output=True, text=True, timeout=120, shell=run_shell
-            )
+            result = subprocess.run(run_cmd, capture_output=True, text=True, timeout=120, shell=run_shell)
             if result.returncode != 0:
                 self._send_json(500, {"error": result.stderr[:500]})
                 return
@@ -95,7 +144,22 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(500, {"error": str(e)})
 
 
+def _main():
+    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
+    if not _CLAUDE_CMD or not os.path.exists(_CLAUDE_CMD):
+        print("WARNING: claude CLI not found; relay will fail requests.", file=sys.stderr)
+    if not DEV_MODE and not RELAY_TOKEN:
+        print(
+            "ERROR: CLAUDE_RELAY_TOKEN is required. Set CLAUDE_RELAY_DEV_MODE=true only for local development.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    server = HTTPServer((BIND_HOST, port), Handler)
+    print(f"Claude relay listening on {server.server_address[0]}:{server.server_address[1]}", file=sys.stderr)
+    sys.stderr.flush()
+    server.serve_forever()
+
+
 if __name__ == "__main__":
-    # Bind to 0.0.0.0 so Docker containers can reach via host.docker.internal
-    print(f"Claude relay listening on 0.0.0.0:{PORT}")
-    HTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
+    _main()
