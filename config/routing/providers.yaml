@@ -44,6 +44,15 @@ providers:
     privacy_max: P1
     note: "Ollama.com frontier cloud API; default model plus fallback models reduce breakage from model catalog churn."
 
+  ollama_kimi_cloud:
+    type: cloud
+    enabled: true
+    host: localhost
+    port: 11434
+    model: kimi-k2.7-code:cloud
+    privacy_max: P1
+    note: Cloud-backed Kimi K2.7 via local Ollama daemon; execution egresses to Ollama cloud.
+
   lmstudio:
     type: local
     enabled: true

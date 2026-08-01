@@ -211,6 +211,19 @@ providers:
         best_for: [C1, C2]
         note: "60-100 tok/s, high speed"
 
+  ollama_kimi_cloud:
+    name: Ollama Kimi K2.7 Cloud
+    endpoint: http://localhost:11434
+    type: cloud
+    cost_per_1m_tokens: 0.00
+    latency_ms_estimate: 800
+    authentication: none
+    models:
+      - name: kimi-k2.7-code:cloud
+        context: 262144
+        best_for: [C2, C3]
+        note: Cloud-backed through Ollama; requires local Ollama daemon.
+
   # ── Native / no marginal cost ─────────────────────────────────────────────
 
   native_claude:

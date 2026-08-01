@@ -311,3 +311,98 @@ class TestFallbackPreference:
 
         sel = selector.select(complexity, ctx, speed_mode="balance", privacy_class="P0")
         assert sel.ranked_choices == [], f"expected empty fallback, got {sel.ranked_choices}"
+
+
+# ── Ollama Kimi K2.7 cloud registration (Kimi.md handoff Phase 2) ────────────
+
+
+class TestOllamaKimiCloud:
+    """Prove cloud-backed Kimi is routed only where intended."""
+
+    def test_kimi_cloud_present_for_c2_and_c3_laptop(self, selector, classifier):
+        for c_level in ("C2", "C3"):
+            complexity = _classify(classifier, c_level)
+            sel = selector.select(
+                complexity,
+                _laptop_online(),
+                speed_mode="speed",
+                privacy_class="P1",
+            )
+            providers = _providers(sel)
+            assert "ollama_kimi_cloud" in providers, f"{c_level}: expected ollama_kimi_cloud in {providers}"
+
+    def test_kimi_cloud_absent_for_c1_and_c4_laptop(self, selector, classifier):
+        for c_level in ("C1", "C4"):
+            complexity = _classify(classifier, c_level)
+            sel = selector.select(
+                complexity,
+                _laptop_online(),
+                speed_mode="speed",
+                privacy_class="P1",
+            )
+            providers = _providers(sel)
+            assert "ollama_kimi_cloud" not in providers, f"{c_level}: did not expect ollama_kimi_cloud in {providers}"
+
+    def test_kimi_cloud_not_selected_when_ollama_unreachable(self, selector, classifier):
+        """Cloud-backed Kimi still needs the local Ollama daemon as its on-ramp."""
+        complexity = _classify(classifier, "C3")
+        sel = selector.select(
+            complexity,
+            _laptop_online(ollama_local_reachable=False),
+            speed_mode="speed",
+            privacy_class="P1",
+        )
+        assert "ollama_kimi_cloud" not in _providers(sel)
+
+    def test_kimi_cloud_blocked_for_local_only_privacy(self, selector, classifier):
+        """P2 requires local-only execution; cloud-backed Kimi is privacy_max P1."""
+        complexity = _classify(classifier, "C3")
+        sel = selector.select(
+            complexity,
+            _laptop_online(),
+            speed_mode="speed",
+            privacy_class="P2",
+        )
+        assert "ollama_kimi_cloud" not in _providers(sel)
+
+    def test_kimi_cloud_blocked_when_offline(self, selector, classifier):
+        complexity = _classify(classifier, "C3")
+        sel = selector.select(
+            complexity,
+            _laptop_online(internet_reachable=False, connectivity="offline"),
+            privacy_class="P0",
+        )
+        assert "ollama_kimi_cloud" not in _providers(sel)
+        assert sel.speed_mode == "low"
+
+    def test_qwen_route_unchanged(self, selector, classifier):
+        """Existing Ollama qwen C2 route must stay first."""
+        complexity = _classify(classifier, "C2")
+        sel = selector.select(
+            complexity,
+            _laptop_online(),
+            speed_mode="balance",
+            privacy_class="P1",
+        )
+        assert sel.ranked_choices[0].provider == "ollama_local"
+        assert sel.ranked_choices[0].model == "qwen2.5-coder:14b"
+
+    def test_no_hardcoded_credentials_in_committed_config(self):
+        import pathlib
+        import yaml
+
+        cfg = yaml.safe_load(pathlib.Path("config/routing/providers.yaml").read_text())
+        entry = cfg["providers"]["ollama_kimi_cloud"]
+        assert "api_key" not in str(entry).lower()
+        assert entry.get("env_key", "") != "MOONSHOT_API_KEY" or bool(
+            pathlib.Path.home().joinpath(".env").exists()
+        )  # no literal secret in committed config
+
+    def test_kimi_cloud_adapter_is_built(self):
+        from router.router import ChromaticRouter
+
+        router = ChromaticRouter()
+        assert "ollama_kimi_cloud" in router.adapters
+        adapter = router.adapters["ollama_kimi_cloud"]
+        assert adapter.model == "kimi-k2.7-code:cloud"
+        assert not adapter.cfg.get("api_key")

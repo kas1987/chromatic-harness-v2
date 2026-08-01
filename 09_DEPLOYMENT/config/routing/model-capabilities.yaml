@@ -112,6 +112,14 @@ models:
     source: "Moonshot official + LiveCodeBench + SWE-bench"
     notes: "1T MoE (32B active). Beats Claude Sonnet 4 on coding benchmarks. 256K context. Thinking enabled by default. Strong agentic capabilities."
 
+  'kimi-k2.7-code:cloud':
+    best_at: [coding, reasoning, instruction]
+    good_at: [context, agentic]
+    weak_at: [speed, creativity]
+    observed_by: local
+    source: Moonshot official + Ollama cloud catalog
+    notes: Cloud-backed K2.7 coding model reached through the local Ollama daemon. 256K context. Use for C2/C3 coding tasks; privacy max P1.
+
   kimi-k2-turbo:
     best_at: [speed, coding]
     good_at: [reasoning]

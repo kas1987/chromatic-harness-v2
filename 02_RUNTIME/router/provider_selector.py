@@ -28,6 +28,7 @@ _ROUTING_TO_POLICY: dict[str, str] = {
     "together_ai": "together_ai",
     "ollama_local": "ollama_local",
     "ollama_remote_desktop": "ollama_remote_desktop",
+    "ollama_kimi_cloud": "ollama_kimi_cloud",
     "lmstudio": "lmstudio",
     "native_claude": "native_claude",
 }
@@ -38,7 +39,7 @@ _LOCAL_ROUTING_PROVIDERS: frozenset[str] = frozenset(
 
 # Cloud/broker ids in routing-table.yaml (blocked for P3–P5 per broker policy)
 _CLOUD_ROUTING_PROVIDERS: frozenset[str] = frozenset(
-    {"gemini", "openai", "claude_api", "agnes", "openrouter", "omniroute", "together_ai"}
+    {"gemini", "openai", "claude_api", "agnes", "openrouter", "omniroute", "together_ai", "ollama_kimi_cloud"}
 )
 
 _PRIVACY_ORDER: dict[str, int] = {
@@ -299,6 +300,8 @@ class ProviderSelector:
             if c.provider == "ollama_local" and not context.ollama_local_reachable:
                 continue
             if not context.internet_reachable and c.provider in _CLOUD_ROUTING_PROVIDERS:
+                continue
+            if c.provider == "ollama_kimi_cloud" and not context.ollama_local_reachable:
                 continue
             if c.provider == "ollama_remote_desktop":
                 # Simplified: probe first endpoint
