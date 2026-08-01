@@ -9,7 +9,9 @@ import http.client
 import importlib.util
 import json
 import os
+import socket
 import threading
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
@@ -59,7 +61,7 @@ def _request(server, method: str, path: str, body: dict | None = None, headers: 
     merged_headers = {"Content-Type": "application/json"}
     if headers:
         merged_headers.update(headers)
-    if data:
+    if data and "Content-Length" not in merged_headers:
         merged_headers["Content-Length"] = str(len(data))
     conn.request(method, path, body=data, headers=merged_headers)
     resp = conn.getresponse()
@@ -140,6 +142,61 @@ def test_relay_rejects_oversized_body():
     try:
         status, body = _request(server, "POST", "/complete", body={"prompt": "this is too long"})
         assert status == 413
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_relay_rejects_negative_content_length():
+    mod = _fresh_relay({"CLAUDE_RELAY_DEV_MODE": "true"})
+    server = mod.HTTPServer(("127.0.0.1", 0), mod.Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        host, port = server.server_address
+        with socket.create_connection((host, port), timeout=5) as sock:
+            sock.sendall(
+                b"POST /complete HTTP/1.1\r\n"
+                b"Host: localhost\r\n"
+                b"Content-Type: application/json\r\n"
+                b"Content-Length: -1\r\n"
+                b"Connection: close\r\n\r\n"
+                b'{"prompt":"hi"}'
+            )
+            sock.shutdown(socket.SHUT_WR)
+            response = sock.recv(4096)
+        assert b"400 Bad Request" in response
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+
+
+def test_relay_does_not_use_shell_for_windows_prompt(monkeypatch):
+    mod = _fresh_relay({"CLAUDE_RELAY_DEV_MODE": "true"})
+    server = mod.HTTPServer(("127.0.0.1", 0), mod.Handler)
+    captured = {}
+
+    def fake_run(command, **kwargs):
+        captured["command"] = command
+        captured["kwargs"] = kwargs
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"result": "ok"}), stderr="")
+
+    monkeypatch.setattr(mod.subprocess, "run", fake_run)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        status, body = _request(
+            server,
+            "POST",
+            "/complete",
+            body={"prompt": "hello & whoami", "system": "safe | whoami"},
+        )
+        assert status == 200
+        assert body["result"] == "ok"
+        assert captured["kwargs"]["shell"] is False
+        assert isinstance(captured["command"], list)
+        assert "hello & whoami" in captured["command"]
+        assert "safe | whoami" in captured["command"]
     finally:
         server.shutdown()
         thread.join(timeout=5)

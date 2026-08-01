@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "02_RUNTIME"))
 
 from main import app  # noqa: E402
 from db import init_db  # noqa: E402
+import auth as auth_module  # noqa: E402
 
 
 @pytest_asyncio.fixture
@@ -40,17 +41,12 @@ async def test_auth_status_enabled(client):
 
 
 @pytest.mark.asyncio
-async def test_register_user(client):
+async def test_register_rejects_elevated_role(client):
     resp = await client.post(
         "/auth/register",
         json={"username": "alice", "password": "secret", "role": "reviewer"},
     )
-    assert resp.status_code == 201
-    body = resp.json()
-    assert body["username"] == "alice"
-    assert body["role"] == "reviewer"
-    assert "user_id" in body
-    assert "created_at" in body
+    assert resp.status_code == 403
 
 
 @pytest.mark.asyncio
@@ -86,14 +82,14 @@ async def test_login_unknown_user(client):
 
 @pytest.mark.asyncio
 async def test_auth_me_with_valid_token(client):
-    await client.post("/auth/register", json={"username": "eve", "password": "pw", "role": "admin"})
+    await client.post("/auth/register", json={"username": "eve", "password": "pw"})
     token_resp = await client.post("/auth/token", json={"username": "eve", "password": "pw"})
-    token = token_resp.json()["access_token"]
+    token = token_resp.json()["access_token"]  # pragma: allowlist secret
 
     resp = await client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     assert resp.json()["username"] == "eve"
-    assert resp.json()["role"] == "admin"
+    assert resp.json()["role"] == "executor"
 
 
 @pytest.mark.asyncio
@@ -109,7 +105,25 @@ async def test_auth_me_invalid_token(client):
 
 
 @pytest.mark.asyncio
+async def test_auth_me_rejects_invalid_signed_claims(client):
+    await client.post("/auth/register", json={"username": "claims", "password": "pw"})
+    token = auth_module.create_access_token("claims", "invalid-role")  # pragma: allowlist secret
+    resp = await client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
 async def test_register_default_role_is_executor(client):
     resp = await client.post("/auth/register", json={"username": "frank", "password": "pw"})
     assert resp.status_code == 201
     assert resp.json()["role"] == "executor"
+
+
+def test_production_requires_strong_secret(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("AUTH_SECRET_KEY", "too-short")
+    with pytest.raises(RuntimeError, match="32 bytes"):
+        auth_module._require_secure_secret()
+
+    monkeypatch.setenv("AUTH_SECRET_KEY", "x" * 32)
+    auth_module._require_secure_secret()

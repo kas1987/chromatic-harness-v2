@@ -29,6 +29,7 @@ except ImportError:
     _BCRYPT_AVAILABLE = False
 
 _DEPS_AVAILABLE = _JWT_AVAILABLE and _BCRYPT_AVAILABLE
+_MIN_SECRET_BYTES = 32
 
 _DEV_FALLBACK_SECRET = secrets.token_urlsafe(32)  # pragma: allowlist secret
 
@@ -44,9 +45,10 @@ def _configured_secret() -> Optional[str]:  # pragma: allowlist secret
 
 def _require_secure_secret() -> None:  # pragma: allowlist secret
     """Fail loudly if production mode has no configured signing secret."""  # pragma: allowlist secret
-    if is_production() and not _configured_secret():
+    configured = _configured_secret()
+    if is_production() and (not configured or len(configured.encode("utf-8")) < _MIN_SECRET_BYTES):
         raise RuntimeError(
-            "AUTH_SECRET_KEY must be set to a cryptographically secure value in production."
+            "AUTH_SECRET_KEY must be set to a cryptographically secure value of at least 32 bytes in production."
         )  # pragma: allowlist secret
 
 
@@ -111,6 +113,21 @@ def decode_token(token: str) -> dict:  # pragma: allowlist secret
         ) from exc
 
 
+def _user_from_payload(payload: dict) -> "CurrentUser":
+    try:
+        user_id = payload["sub"]
+        role = Role(payload.get("role", Role.executor))
+        if not isinstance(user_id, str) or not user_id:
+            raise ValueError("missing subject")
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token claims",
+            headers={"WWW-Authenticate": "Bearer"},  # pragma: allowlist secret
+        ) from exc
+    return CurrentUser(user_id=user_id, role=role)
+
+
 class CurrentUser:
     def __init__(self, user_id: str, role: Role):
         self.user_id = user_id
@@ -139,11 +156,7 @@ async def get_current_user(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},  # pragma: allowlist secret
         )
-    payload = decode_token(token)
-    return CurrentUser(
-        user_id=payload["sub"],
-        role=Role(payload.get("role", Role.executor)),
-    )
+    return _user_from_payload(decode_token(token))
 
 
 async def require_current_user(
@@ -163,11 +176,7 @@ async def require_current_user(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},  # pragma: allowlist secret
         )
-    payload = decode_token(token)
-    return CurrentUser(
-        user_id=payload["sub"],
-        role=Role(payload.get("role", Role.executor)),
-    )
+    return _user_from_payload(decode_token(token))
 
 
 async def require_admin(

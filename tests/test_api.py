@@ -32,25 +32,13 @@ def client():
 @pytest.fixture(scope="session")
 def auth_headers(client):
     """Bearer token for a test admin user."""  # pragma: allowlist secret
-    client.post(
-        "/auth/register",
-        json={"username": "testapi", "password": "pw", "role": "admin"},  # pragma: allowlist secret
-    )  # pragma: allowlist secret
-    r = client.post("/auth/token", json={"username": "testapi", "password": "pw"})  # pragma: allowlist secret
-    assert r.status_code == 200, r.text
-    token = r.json()["access_token"]  # pragma: allowlist secret
+    token = auth_module.create_access_token("test-admin", "admin")  # pragma: allowlist secret
     return {"Authorization": f"Bearer {token}"}  # pragma: allowlist secret
 
 
 @pytest.fixture(scope="session")
 def executor_headers(client):
-    client.post(
-        "/auth/register",
-        json={"username": "testexec", "password": "pw", "role": "executor"},  # pragma: allowlist secret
-    )  # pragma: allowlist secret
-    r = client.post("/auth/token", json={"username": "testexec", "password": "pw"})  # pragma: allowlist secret
-    assert r.status_code == 200, r.text
-    token = r.json()["access_token"]  # pragma: allowlist secret
+    token = auth_module.create_access_token("test-executor", "executor")  # pragma: allowlist secret
     return {"Authorization": f"Bearer {token}"}  # pragma: allowlist secret
 
 

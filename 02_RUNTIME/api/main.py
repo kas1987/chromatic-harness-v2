@@ -180,6 +180,11 @@ async def auth_status():
 
 @app.post("/auth/register", response_model=UserResponse, status_code=201)
 async def register_user(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)):
+    if req.role != Role.executor.value:
+        raise HTTPException(
+            status_code=403,
+            detail="Public registration can only create executor users",
+        )
     async with db.execute("SELECT user_id FROM users WHERE username = ?", (req.username,)) as cur:
         if await cur.fetchone():
             raise HTTPException(status_code=409, detail="Username already taken")

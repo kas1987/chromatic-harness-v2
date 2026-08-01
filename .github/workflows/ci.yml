@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Install dependency scanner
+        run: python -m pip install pip-audit
+
       # Several governance/intake checks shell out to `bd` (beads). Install it so the
       # checks run for real on the runner instead of FileNotFound-ing.
       - name: Install beads (bd)
@@ -85,7 +88,7 @@ jobs:
         run: python scripts/validate_repo_role_registry.py
 
       - name: Governance gate — secret scan (blocking)
-        run: python scripts/security_scan.py --no-deps
+        run: python scripts/security_scan.py
 
       - name: Governance gates — advisory reports (non-blocking)
         env:

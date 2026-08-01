@@ -27,8 +27,25 @@ from router.context_detector import RuntimeContext
 
 
 @pytest.fixture
-def router():
-    return ChromaticRouter()
+def router(monkeypatch):
+    async def skip_health_probe(_self, _provider_names=None):
+        return None
+
+    monkeypatch.setattr(ChromaticRouter, "_probe_provider_health", skip_health_probe)
+    instance = ChromaticRouter(allow_mock_fallback=True)
+    for name, adapter in instance.adapters.items():
+        if name != "mock":
+            adapter.enabled = False
+    return instance
+
+
+@pytest.fixture(autouse=True)
+def isolate_direct_router_instances(monkeypatch):
+    async def skip_health_probe(_self, _provider_names=None):
+        return None
+
+    monkeypatch.setattr(ChromaticRouter, "_probe_provider_health", skip_health_probe)
+    monkeypatch.setenv("ROUTER_ALLOW_MOCK_FALLBACK", "true")
 
 
 def make_req(

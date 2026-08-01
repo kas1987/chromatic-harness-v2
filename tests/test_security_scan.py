@@ -45,6 +45,13 @@ def test_clean_text_has_no_false_positive():
         assert not re.search(pat, benign)
 
 
+def test_ci_runs_dependency_scan():
+    workflow = (REPO / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    assert "pip install pip-audit" in workflow or "python -m pip install pip-audit" in workflow
+    assert "python scripts/security_scan.py --no-deps" not in workflow
+    assert "python scripts/security_scan.py" in workflow
+
+
 def test_high_severity_secret_fails_gate(monkeypatch):
     mod = _load()
     # Stub scanners: one high-severity secret, deps clean.

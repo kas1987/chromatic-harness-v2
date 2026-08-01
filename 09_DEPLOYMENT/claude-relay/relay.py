@@ -10,6 +10,7 @@ Security defaults:
 """
 
 import json
+import hmac
 import os
 import shutil
 import subprocess
@@ -47,7 +48,7 @@ def _authenticate(handler: BaseHTTPRequestHandler) -> bool:
     auth_header = handler.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         return False
-    return auth_header[len("Bearer ") :].strip() == RELAY_TOKEN
+    return hmac.compare_digest(auth_header[len("Bearer ") :].strip(), RELAY_TOKEN)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -88,11 +89,17 @@ class Handler(BaseHTTPRequestHandler):
         if content_length > MAX_BODY_SIZE:
             self._send_json(413, {"error": f"request body exceeds {MAX_BODY_SIZE} bytes"})
             return
+        if content_length < 0:
+            self._send_json(400, {"error": "Content-Length must be non-negative"})
+            return
 
         try:
             body = json.loads(self.rfile.read(content_length))
         except json.JSONDecodeError as exc:
             self._send_json(400, {"error": f"invalid JSON: {exc}"})
+            return
+        if not isinstance(body, dict):
+            self._send_json(400, {"error": "request body must be a JSON object"})
             return
 
         prompt = body.get("prompt", "")
@@ -115,14 +122,9 @@ class Handler(BaseHTTPRequestHandler):
             cmd += ["--system-prompt", system]
 
         try:
-            # Windows requires shell=True for .cmd files; also needs a string not a list
-            if sys.platform == "win32":
-                run_cmd = subprocess.list2cmdline(cmd)
-                run_shell = True
-            else:
-                run_cmd = cmd
-                run_shell = False
-            result = subprocess.run(run_cmd, capture_output=True, text=True, timeout=120, shell=run_shell)
+            # Keep prompt and system text as argument boundaries on every platform.
+            # Windows can launch .cmd files without handing user input to cmd.exe.
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, shell=False)
             if result.returncode != 0:
                 self._send_json(500, {"error": result.stderr[:500]})
                 return

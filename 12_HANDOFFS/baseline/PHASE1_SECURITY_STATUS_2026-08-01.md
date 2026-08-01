@@ -14,15 +14,19 @@ Base baseline: 12_HANDOFFS/baseline/BASELINE_CLAIM_LEDGER_2026-08-01.md
 - `02_RUNTIME/api/auth.py`
   - Authentication now defaults to enabled unless explicitly disabled.
   - Predictable fallback secret removed; production now requires `AUTH_SECRET_KEY` to be configured.
+  - Production signing secrets must be at least 32 bytes; malformed signed claims return 401.
   - Role helpers now depend on `require_current_user`, making role-gated dependencies explicit and non-optional.
 - `02_RUNTIME/api/main.py`
   - Sensitive API routes now declare explicit `require_executor` or `require_reviewer` dependencies.
   - Agent promotion now requires reviewer-or-higher access.
+  - Public registration rejects reviewer/admin role requests and creates executor users only.
 - `09_DEPLOYMENT/claude-relay/relay.py`
   - Relay now defaults to localhost binding, requires a bearer token outside dev mode, enforces a request-body size cap, and restricts accepted models to an allowlist.
+  - Relay rejects negative content lengths and invokes the CLI with `shell=False` so prompt/system text remains data.
 - `.github/workflows/ci.yml`
   - Added top-level least-privilege `permissions`.
   - Added `persist-credentials: false` to checkout steps.
+  - Installs `pip-audit` and runs the complete dependency-aware security scan.
 - `tests/test_api.py`
   - Added reviewer-enforcement regression coverage for agent promotion.
 - `tests/test_relay_security.py`
@@ -35,6 +39,8 @@ Base baseline: 12_HANDOFFS/baseline/BASELINE_CLAIM_LEDGER_2026-08-01.md
   - Replaced `python-jose` with `PyJWT` to remove the vulnerable `ecdsa` dependency chain.
 - `tests/02_RUNTIME/api/test_api_endpoints.py`
   - Removed the old jose-specific shim, made the suite explicitly auth-disabled, and fixed its event-loop fixture so it can run against the real JWT stack.
+- `tests/test_auth.py` and `tests/test_router_gates.py`
+  - Added regression coverage for elevated-role self-registration, malformed JWT claims, strong production secrets, and hermetic router-gate execution.
 
 ## Verification run
 1. Focused security suite after first remediation:
@@ -77,6 +83,10 @@ Base baseline: 12_HANDOFFS/baseline/BASELINE_CLAIM_LEDGER_2026-08-01.md
 8. Phase 1 closeout diff hygiene:
   - `git diff --check`
   - Result: clean after removing the two trailing spaces from `docs/PRE_SESSION_AND_TOOLS.md:3`
+9. Post-review blocker regression proof:
+  - `python -m pytest tests/test_api.py tests/test_auth.py tests/test_relay_security.py tests/test_security_scan.py tests/02_RUNTIME/api/test_api_endpoints.py tests/02_RUNTIME/router/test_privacy.py tests/test_provider_matrix.py -q`
+  - Result: 194 passed in 14.78s
+  - `python -m ruff check` on all touched Python files: passed
 
 ## Closeout note outside Phase 1 scope
 - `docs/PRE_SESSION_AND_TOOLS.md:3` no longer blocks `git diff --check`.
