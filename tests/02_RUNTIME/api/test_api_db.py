@@ -49,13 +49,13 @@ class TestInitDb:
         db_path = str(tmp_path / "test.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = db_path
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
 
             async def _check():
                 async with aiosqlite.connect(db_path) as conn:
                     return await _list_tables(conn)
 
-            tables = asyncio.get_event_loop().run_until_complete(_check())
+            tables = asyncio.run(_check())
             assert _EXPECTED_TABLES.issubset(tables)
         finally:
             del os.environ["CHROMATIC_DB_PATH"]
@@ -64,9 +64,9 @@ class TestInitDb:
         db_path = str(tmp_path / "test2.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = db_path
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
             # Second init must not raise
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
         finally:
             del os.environ["CHROMATIC_DB_PATH"]
 
@@ -74,7 +74,7 @@ class TestInitDb:
         nested = str(tmp_path / "subdir" / "deeper" / "db.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = nested
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
             assert Path(nested).exists()
         finally:
             del os.environ["CHROMATIC_DB_PATH"]
@@ -123,7 +123,7 @@ class TestGetDb:
                 pass
 
         try:
-            asyncio.get_event_loop().run_until_complete(_run())
+            asyncio.run(_run())
         finally:
             del os.environ["CHROMATIC_DB_PATH"]
 
@@ -141,7 +141,7 @@ class TestGetDb:
                 break  # only need one iteration
 
         try:
-            asyncio.get_event_loop().run_until_complete(_run())
+            asyncio.run(_run())
         finally:
             del os.environ["CHROMATIC_DB_PATH"]
 
@@ -159,13 +159,13 @@ class TestTableSchemas:
                     rows = await cur.fetchall()
             return [r[1] for r in rows]  # column names at index 1
 
-        return asyncio.get_event_loop().run_until_complete(_run())
+        return asyncio.run(_run())
 
     def test_missions_table_schema(self, tmp_path: Path) -> None:
         db_path = str(tmp_path / "schema.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = db_path
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
             cols = self._get_columns(db_path, "missions")
             assert "mission_id" in cols
             assert "data" in cols
@@ -177,7 +177,7 @@ class TestTableSchemas:
         db_path = str(tmp_path / "schema2.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = db_path
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
             cols = self._get_columns(db_path, "magnet_events")
             assert "event_id" in cols
             assert "mission_id" in cols
@@ -189,7 +189,7 @@ class TestTableSchemas:
         db_path = str(tmp_path / "schema3.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = db_path
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
             cols = self._get_columns(db_path, "users")
             assert "user_id" in cols
             assert "username" in cols
@@ -202,7 +202,7 @@ class TestTableSchemas:
         db_path = str(tmp_path / "schema4.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = db_path
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
             cols = self._get_columns(db_path, "agent_profiles")
             assert "agent_id" in cols
             assert "data" in cols
@@ -214,7 +214,7 @@ class TestTableSchemas:
         db_path = str(tmp_path / "schema5.sqlite")
         os.environ["CHROMATIC_DB_PATH"] = db_path
         try:
-            asyncio.get_event_loop().run_until_complete(db_module.init_db())
+            asyncio.run(db_module.init_db())
             cols = self._get_columns(db_path, "beads")
             assert "bead_id" in cols
             assert "mission_id" in cols

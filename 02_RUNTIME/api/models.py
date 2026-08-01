@@ -1,5 +1,5 @@
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
-from typing import Optional
+from typing import Any, Optional
 
 # Canonical mission-packet field names are confidence_score / required_output.
 # These models also accept the pre-migration names (confidence_required /
@@ -39,7 +39,7 @@ class MissionResponse(BaseModel):
 class CreateEventRequest(BaseModel):
     magnet_name: str
     inflection_point: str
-    observed_signal: dict
+    observed_signal: dict[str, Any]
     risk_delta: float = 0.0
     confidence_delta: float = 0.0
     evidence: list[str] = Field(default_factory=list)
@@ -51,7 +51,7 @@ class MagnetEventResponse(BaseModel):
     mission_id: str
     magnet_name: str
     inflection_point: str
-    observed_signal: dict
+    observed_signal: dict[str, Any]
     risk_delta: float
     confidence_delta: float
     evidence: list[str]
@@ -154,12 +154,12 @@ class AgentLeadResponse(BaseModel):
     mission_id: str
     decision: str
     composite_score: float
-    final_report: dict
-    pr_package: dict
-    next_steps: dict
-    audit_log: dict
-    handoff_prep: dict
-    suggested_bead: Optional[dict] = None
+    final_report: dict[str, Any]
+    pr_package: dict[str, Any]
+    next_steps: dict[str, Any]
+    audit_log: dict[str, Any]
+    handoff_prep: dict[str, Any]
+    suggested_bead: Optional[dict[str, Any]] = None
     bead_created: Optional[BeadResponse] = None
 
 

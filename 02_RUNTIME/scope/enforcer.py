@@ -28,9 +28,7 @@ class ScopeBaseline:
     expected_scope: str
     baseline_files: set[str] = field(default_factory=set)
     baseline_count: int = 0
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 @dataclass
@@ -141,7 +139,7 @@ class ScopeEnforcer:
             await self._store.record_violation(violation)
         return result
 
-    def build_scope_header(self, scope: str, rules: list[dict] | None = None) -> str:
+    def build_scope_header(self, scope: str, rules: list[dict[str, Any]] | None = None) -> str:
         """Generate the FILE SCOPE governance header for worker prompts."""
         header = f"""
 ═══════════════════════════════════════════════════════════════

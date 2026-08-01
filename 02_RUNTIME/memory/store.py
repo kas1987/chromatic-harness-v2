@@ -22,9 +22,7 @@ _SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
 _DB_PATH = Path(
     os.environ.get(
         "CHROMATIC_MEMORY_DB",
-        Path(__file__).resolve().parent.parent.parent
-        / "06_DATA"
-        / "system_memory.sqlite",
+        Path(__file__).resolve().parent.parent.parent / "06_DATA" / "system_memory.sqlite",
     )
 )
 
@@ -97,7 +95,7 @@ class SystemMemoryStore:
         await self._ensure_schema(conn)
         return conn
 
-    async def _execute(self, sql: str, params: tuple = ()) -> list[sqlite3.Row]:
+    async def _execute(self, sql: str, params: tuple[Any, ...] = ()) -> list[sqlite3.Row]:
         conn = await self._conn()
         try:
             cursor = await conn.execute(sql, params)
@@ -111,7 +109,7 @@ class SystemMemoryStore:
         finally:
             await conn.close()
 
-    async def _fetchall(self, sql: str, params: tuple = ()) -> list[sqlite3.Row]:
+    async def _fetchall(self, sql: str, params: tuple[Any, ...] = ()) -> list[sqlite3.Row]:
         conn = await self._conn()
         try:
             cursor = await conn.execute(sql, params)
@@ -121,7 +119,7 @@ class SystemMemoryStore:
         finally:
             await conn.close()
 
-    async def _executemany(self, sql: str, params: list[tuple]) -> None:
+    async def _executemany(self, sql: str, params: list[tuple[Any, ...]]) -> None:
         conn = await self._conn()
         try:
             await conn.executemany(sql, params)
@@ -205,9 +203,7 @@ class SystemMemoryStore:
         return [GovernanceRule(**dict(r)) for r in rows]
 
     async def get_rule_by_name(self, name: str) -> GovernanceRule | None:
-        rows = await self._execute(
-            "SELECT * FROM governance_rules WHERE rule_name = ? LIMIT 1", (name,)
-        )
+        rows = await self._execute("SELECT * FROM governance_rules WHERE rule_name = ? LIMIT 1", (name,))
         if rows:
             return GovernanceRule(**dict(rows[0]))
         return None
@@ -259,7 +255,7 @@ class SystemMemoryStore:
 
     # ── Session Continuity ─────────────────────────────────────────────────
 
-    async def start_session(self, agent_id: str, project_context: dict) -> str:
+    async def start_session(self, agent_id: str, project_context: dict[str, Any]) -> str:
         sid = str(uuid.uuid4())
         await self._execute(
             "INSERT INTO agent_sessions (id, agent_id, session_start, project_context) VALUES (?, ?, ?, ?)",
@@ -267,9 +263,7 @@ class SystemMemoryStore:
         )
         return sid
 
-    async def end_session(
-        self, session_id: str, outcome: str, injected_memory: list[str]
-    ) -> None:
+    async def end_session(self, session_id: str, outcome: str, injected_memory: list[str]) -> None:
         await self._execute(
             "UPDATE agent_sessions SET session_end = ?, outcome = ?, injected_memory = ? WHERE id = ?",
             (_now(), outcome, json.dumps(injected_memory), session_id),
@@ -290,11 +284,7 @@ class SystemMemoryStore:
             severity="critical" if privacy_class in ("P3", "P4") else None,
         )
         if include_rules:
-            rules = [
-                r
-                for r in rules
-                if r.rule_name in include_rules or r.category in include_rules
-            ]
+            rules = [r for r in rules if r.rule_name in include_rules or r.category in include_rules]
 
         recent_learnings = await self.get_learnings(
             scope="cross-cutting",
@@ -315,8 +305,7 @@ class SystemMemoryStore:
                 for r in rules
             ],
             "recent_learnings": [
-                {"title": l.title, "category": l.category, "content": l.content}
-                for l in recent_learnings
+                {"title": l.title, "category": l.category, "content": l.content} for l in recent_learnings
             ],
             "recent_scope_violations": [
                 {

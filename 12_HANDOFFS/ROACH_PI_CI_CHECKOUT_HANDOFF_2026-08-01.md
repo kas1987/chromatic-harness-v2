@@ -2,9 +2,12 @@
 
 ## Executive status
 
-The Security branch's application fixes are already committed and pushed as
-`7aba1d3` on `codex/kimi-security`. The next CI run fails before any test runs:
-all three CI jobs cannot fetch the `roach-pi` submodule.
+The unreachable submodule pin is fixed and pushed as
+`172dccb32ce5be7fdb09298565918419c38eac63` on `codex/kimi-security`. The next
+CI run fetched the submodule successfully in Linux and both Windows jobs. It
+then exposed a separate Linux mypy failure, which has been fixed locally along
+with two Python-version portability failures; the follow-up commit and Actions
+confirmation are the remaining closeout gates.
 
 This handoff is intended to be pasted into another LLM session if needed.
 
@@ -17,6 +20,8 @@ This handoff is intended to be pasted into another LLM session if needed.
   and triage.
 - Actions App authentication: generated successfully in run `30713121326`; it
   is not the cause of the failure.
+- Follow-up checkout validation: run `30714398680` passed the submodule checkout
+  in all three jobs; run `30714398688` passed.
 - Upstream submodule repository: `tmdgusya/roach-pi`; current account has
   pull-only permission there.
 
@@ -67,6 +72,21 @@ gh run list --repo kas1987/chromatic-harness-v2 --branch codex/kimi-security --l
 gh run watch <run-id> --exit-status
 ```
 
+## Follow-up validation completed locally
+
+```powershell
+python -m mypy src/ --config-file mypy.ini
+python -m mypy 02_RUNTIME/router/ 02_RUNTIME/memory/ 02_RUNTIME/api/ --config-file mypy.ini
+python -m ruff check 02_RUNTIME/api 02_RUNTIME/memory 02_RUNTIME/scope/enforcer.py 02_RUNTIME/router/context_detector.py src/chromatic_router/adapters tests/02_RUNTIME/api/test_api_db.py
+python -m ruff format --check 02_RUNTIME/api 02_RUNTIME/memory 02_RUNTIME/scope/enforcer.py 02_RUNTIME/router/context_detector.py src/chromatic_router/adapters tests/02_RUNTIME/api/test_api_db.py
+python -m pytest tests/test_api.py tests/test_auth.py tests/test_context_detector.py tests/test_memory_gate.py tests/test_system_memory.py tests/test_adapter_factory.py tests/test_router_gates.py tests/02_RUNTIME/api/test_api_endpoints.py tests/02_RUNTIME/api/test_api_db.py tests/02_RUNTIME/api/test_api_models.py tests/02_RUNTIME/memory/test_memory_modules.py -q
+```
+
+Results: both mypy commands passed, Ruff passed, and `275 passed` in the
+targeted suite. The follow-up changes add explicit generic API/memory typing,
+portable `ctypes.windll` access, `asyncio.run` in database tests, and remote
+Ollama C3 priority in both routing-table copies.
+
 ## Proof gates
 
 1. Root tree points to `a2da093...`.
@@ -75,6 +95,13 @@ gh run watch <run-id> --exit-status
 4. Actions gets past checkout on Linux and both Windows matrix jobs.
 5. Any subsequent failure is evaluated as a real test failure, not a checkout
    or credential failure.
+
+## Current tracked work
+
+- Closed bead `chromatic-harness-v2-7bku`: unreachable submodule recovery.
+- Closed bead `chromatic-harness-v2-bjjj`: mypy/type-check blockers.
+- In-progress bead `chromatic-harness-v2-70qi`: cross-platform routing and
+  asyncio test blockers; close it after the follow-up Actions run is green.
 
 ## Do not touch
 

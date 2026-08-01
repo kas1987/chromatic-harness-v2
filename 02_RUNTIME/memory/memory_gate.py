@@ -52,17 +52,18 @@ def _load_store(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+        return loaded if isinstance(loaded, dict) else {}
     except (json.JSONDecodeError, OSError):
         return {}
 
 
-def _save_store(path: Path, data: dict) -> None:
+def _save_store(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-def _append_provenance(record: dict) -> None:
+def _append_provenance(record: dict[str, Any]) -> None:
     GATE_AUDIT_DIR.mkdir(parents=True, exist_ok=True)
     with PROVENANCE_LOG.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(record) + "\n")
@@ -150,8 +151,8 @@ def detect_contradiction(
     key: str,
     new_value: Any,
     new_confidence: float,
-    store: dict,
-) -> dict | None:
+    store: dict[str, Any],
+) -> dict[str, Any] | None:
     """
     Check if new_value contradicts an existing memory entry for key.
 
@@ -192,7 +193,7 @@ def gate_memory_write(
     confidence: float,
     author: str,
     dry_run: bool = False,
-) -> dict:
+) -> dict[str, Any]:
     """
     Gated memory write with validation, contradiction check, and provenance.
 
@@ -308,13 +309,13 @@ def gate_memory_write(
 # ── Read helper ──────────────────────────────────────────────────────────────
 
 
-def read_memory(key: str) -> dict | None:
+def read_memory(key: str) -> dict[str, Any] | None:
     """Return the stored record for key, or None if absent."""
     store = _load_store(GATED_STORE)
     return store.get(key)
 
 
-def list_memories(prefix: str = "") -> list[dict]:
+def list_memories(prefix: str = "") -> list[dict[str, Any]]:
     """Return all memory entries, optionally filtered by key prefix."""
     store = _load_store(GATED_STORE)
     result = []

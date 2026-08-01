@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import uuid
 
 from collections import Counter
+from collections.abc import AsyncIterator
 from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, Depends, Query
@@ -70,7 +71,7 @@ from auth import (  # noqa: E402
 import importlib.util as _ilu  # noqa: E402
 
 
-def _load_module(name: str, path: str):
+def _load_module(name: str, path: str) -> Any:
     spec = _ilu.spec_from_file_location(name, path)
     mod = _ilu.module_from_spec(spec)  # type: ignore[arg-type]
     spec.loader.exec_module(mod)  # type: ignore[union-attr]
@@ -89,11 +90,13 @@ MagnetEvent = _mag_mod.MagnetEvent
 
 _conf_mod = _load_module("confidence_engine", os.path.join(_RUNTIME, "orchestrator", "confidence_engine.py"))
 
-NOW = lambda: datetime.now(timezone.utc).isoformat()  # noqa: E731
+
+def NOW() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await init_db()
     yield
 
@@ -102,12 +105,14 @@ app = FastAPI(title="Chromatic Harness v2 API", version="2.0.0", lifespan=lifesp
 
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     return {"status": "ok", "version": "2.0.0"}
 
 
 @app.post("/route")
-async def route_request(payload: dict, current_user: CurrentUser = Depends(require_executor)):
+async def route_request(
+    payload: dict[str, Any], current_user: CurrentUser = Depends(require_executor)
+) -> dict[str, Any]:
     """
     Execute a provider-neutral route through ChromaticRouter.
     Expected JSON mirrors the RouteRequest contract.
@@ -174,12 +179,12 @@ async def route_request(payload: dict, current_user: CurrentUser = Depends(requi
 
 
 @app.get("/auth/status")
-async def auth_status():
+async def auth_status() -> dict[str, bool]:
     return {"auth_enabled": is_auth_enabled()}
 
 
 @app.post("/auth/register", response_model=UserResponse, status_code=201)
-async def register_user(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def register_user(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)) -> UserResponse:
     if req.role != Role.executor.value:
         raise HTTPException(
             status_code=403,
@@ -200,7 +205,7 @@ async def register_user(req: UserRegisterRequest, db: aiosqlite.Connection = Dep
 
 
 @app.post("/auth/token", response_model=TokenResponse)
-async def login(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)):
+async def login(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get_db)) -> TokenResponse:
     async with db.execute(
         "SELECT user_id, hashed_password, role FROM users WHERE username = ?",
         (req.username,),
@@ -214,9 +219,9 @@ async def login(req: UserRegisterRequest, db: aiosqlite.Connection = Depends(get
 
 @app.get("/auth/me", response_model=UserResponse)
 async def auth_me(
-    current_user=Depends(get_current_user),
+    current_user: CurrentUser | None = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
-):
+) -> UserResponse:
     if current_user is None:
         raise HTTPException(status_code=401, detail="Auth disabled or not authenticated")
     async with db.execute(
@@ -234,7 +239,7 @@ async def create_mission(
     req: CreateMissionRequest,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> MissionResponse:
     orch = Orchestrator()
     packet = orch.create_mission(req.objective)
     packet.mission_id = f"CHR-{str(uuid.uuid4())[:8].upper()}"
@@ -268,7 +273,7 @@ async def create_mission(
 @app.get("/missions", response_model=list[MissionResponse])
 async def list_missions(
     db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)
-):
+) -> list[MissionResponse]:
     async with db.execute("SELECT data FROM missions ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [MissionResponse(**json.loads(r[0])) for r in rows]
@@ -279,7 +284,7 @@ async def get_mission(
     mission_id: str,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> MissionResponse:
     async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
         row = await cur.fetchone()
     if not row:
@@ -293,7 +298,7 @@ async def create_event(
     req: CreateEventRequest,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> MagnetEventResponse:
     event_id = str(uuid.uuid4())
     ts = NOW()
     data = {
@@ -323,9 +328,9 @@ async def list_events(
     to_ts: Optional[str] = Query(default=None, description="ISO timestamp upper bound"),
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> list[MagnetEventResponse]:
     sql = "SELECT data FROM magnet_events WHERE mission_id = ?"
-    params: list = [mission_id]
+    params: list[Any] = [mission_id]
     if from_ts:
         sql += " AND created_at >= ?"
         params.append(from_ts)
@@ -343,7 +348,7 @@ async def get_mission_analytics(
     mission_id: str,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> MissionAnalyticsResponse:
     async with db.execute(
         "SELECT data, created_at FROM magnet_events WHERE mission_id = ? ORDER BY created_at",
         (mission_id,),
@@ -386,7 +391,7 @@ async def get_mission_analytics(
         risk_trend.append(TrendPoint(timestamp=ts, value=round(cum_risk, 3)))
 
     # Magnet breakdown
-    magnet_stats: dict[str, dict] = {}
+    magnet_stats: dict[str, dict[str, float]] = {}
     for ev in events:
         name = ev.get("magnet_name", "unknown")
         if name not in magnet_stats:
@@ -431,7 +436,7 @@ async def synthesize_mission(
     auto_create_bead: bool = Query(default=False, alias="create_bead"),
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> AgentLeadResponse:
     """Run MagnetOrchestrator + Agent Lead synthesis on mission magnet events."""
     async with db.execute("SELECT data FROM missions WHERE mission_id = ?", (mission_id,)) as cur:
         mission_row = await cur.fetchone()
@@ -491,7 +496,7 @@ async def create_bead(
     req: CreateBeadRequest,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_current_user),
-):
+) -> BeadResponse:
     bead_id = f"BEAD-{str(uuid.uuid4())[:8].upper()}"
     ts = NOW()
     data = {
@@ -513,7 +518,9 @@ async def create_bead(
 
 
 @app.get("/beads", response_model=list[BeadResponse])
-async def list_beads(db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)):
+async def list_beads(
+    db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)
+) -> list[BeadResponse]:
     async with db.execute("SELECT data FROM beads ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [BeadResponse(**json.loads(r[0])) for r in rows]
@@ -531,7 +538,7 @@ _LEVEL_THRESHOLDS = {
 }
 
 
-def _agent_data_to_response(data: dict) -> AgentProfileResponse:
+def _agent_data_to_response(data: dict[str, Any]) -> AgentProfileResponse:
     total = data.get("total_executions", 0)
     success = data.get("successful_executions", 0)
     data["success_rate"] = (success / total) if total > 0 else 0.0
@@ -543,7 +550,7 @@ async def register_agent(
     req: RegisterAgentRequest,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> AgentProfileResponse:
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (req.agent_id,)) as cur:
         existing = await cur.fetchone()
     if existing:
@@ -577,7 +584,7 @@ async def register_agent(
 @app.get("/agents", response_model=list[AgentProfileResponse])
 async def list_agents(
     db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)
-):
+) -> list[AgentProfileResponse]:
     async with db.execute("SELECT data FROM agent_profiles ORDER BY created_at DESC") as cur:
         rows = await cur.fetchall()
     return [_agent_data_to_response(json.loads(r[0])) for r in rows]
@@ -586,7 +593,7 @@ async def list_agents(
 @app.get("/agents/{agent_id}", response_model=AgentProfileResponse)
 async def get_agent(
     agent_id: str, db: aiosqlite.Connection = Depends(get_db), current_user: CurrentUser = Depends(require_executor)
-):
+) -> AgentProfileResponse:
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
@@ -600,7 +607,7 @@ async def record_execution(
     req: RecordExecutionRequest,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_executor),
-):
+) -> AgentProfileResponse:
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
@@ -633,7 +640,7 @@ async def promote_agent(
     req: PromoteAgentRequest,
     db: aiosqlite.Connection = Depends(get_db),
     current_user: CurrentUser = Depends(require_reviewer),
-):
+) -> AgentProfileResponse:
     async with db.execute("SELECT data FROM agent_profiles WHERE agent_id = ?", (agent_id,)) as cur:
         row = await cur.fetchone()
     if not row:
@@ -653,11 +660,11 @@ async def promote_agent(
 
 
 @app.get("/agents/meta/level-thresholds")
-async def level_thresholds():
+async def level_thresholds() -> dict[str, Any]:
     return {"data": _LEVEL_THRESHOLDS}
 
 
-async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict:
+async def _route_for_mission(mission: Any, task_type: str = "planning") -> dict[str, Any]:
     """Route a MissionPacket through ChromaticRouter and return a summary dict."""
     router = ChromaticRouter()
     req = RouteRequest(

@@ -69,13 +69,13 @@ context_matrix:
     speed:
       C1: [ollama_local:llama3.2:3b, gemini:gemini-2.5-flash, omniroute:oc/deepseek-v4-flash-free]
       C2: [ollama_remote_desktop:qwen2.5-coder:14b, gemini:gemini-2.5-flash, omniroute:oc/qwen3-coder-free, openrouter:moonshotai/kimi-k2-6, ollama_kimi_cloud:kimi-k2.7-code:cloud]
-      C3: [native_claude, agnes:agnes-2.5-flash, ollama_remote_desktop:qwen2.5-coder:14b, omniroute:oc/deepseek-r1-free, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro, ollama_kimi_cloud:kimi-k2.7-code:cloud]
+      C3: [ollama_remote_desktop:qwen2.5-coder:14b, native_claude, agnes:agnes-2.5-flash, omniroute:oc/deepseek-r1-free, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro, ollama_kimi_cloud:kimi-k2.7-code:cloud]
       C4: [native_claude, agnes:agnes-2.5-flash, openrouter:anthropic/claude-sonnet-4-6, omniroute:oc/kimi-k2-thinking-free, gemini:gemini-2.5-pro, claude_api:sonnet]
 
     balance:
       C1: [ollama_local:llama3.2:3b, omniroute:oc/deepseek-v4-flash-free]
       C2: [ollama_remote_desktop:llama3.1:8b, ollama_local:qwen2.5-coder:14b, omniroute:oc/qwen3-coder-free, ollama_kimi_cloud:kimi-k2.7-code:cloud]
-      C3: [native_claude, agnes:agnes-2.5-flash, ollama_remote_desktop:qwen2.5-coder:14b, omniroute:oc/deepseek-r1-free, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro, ollama_kimi_cloud:kimi-k2.7-code:cloud]
+      C3: [ollama_remote_desktop:qwen2.5-coder:14b, native_claude, agnes:agnes-2.5-flash, omniroute:oc/deepseek-r1-free, openrouter:moonshotai/kimi-k2-6, gemini:gemini-2.5-pro, ollama_kimi_cloud:kimi-k2.7-code:cloud]
       C4: [native_claude, agnes:agnes-2.5-flash, gemini:gemini-2.5-pro, claude_api:sonnet, omniroute:oc/kimi-k2-thinking-free, openrouter:anthropic/claude-sonnet-4-6]
 
     low:

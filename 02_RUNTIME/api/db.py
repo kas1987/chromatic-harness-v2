@@ -1,5 +1,6 @@
 import aiosqlite
 import os
+from collections.abc import AsyncIterator
 
 _DEFAULT_DB_PATH = "06_DATA/chromatic.sqlite"
 
@@ -12,7 +13,7 @@ def _db_path() -> str:
 DB_PATH = _DEFAULT_DB_PATH
 
 
-async def init_db():
+async def init_db() -> None:
     path = _db_path()
     os.makedirs(os.path.dirname(path) if os.path.dirname(path) else ".", exist_ok=True)
     async with aiosqlite.connect(path) as db:
@@ -49,7 +50,7 @@ async def init_db():
         await db.commit()
 
 
-async def get_db():
+async def get_db() -> AsyncIterator[aiosqlite.Connection]:
     async with aiosqlite.connect(_db_path()) as db:
         db.row_factory = aiosqlite.Row
         yield db

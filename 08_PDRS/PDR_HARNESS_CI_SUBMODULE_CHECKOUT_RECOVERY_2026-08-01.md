@@ -1,7 +1,7 @@
 # PDR: Harness CI Submodule Checkout Recovery
 
 **Date:** 2026-08-01
-**Status:** Approved for implementation by the requesting owner
+**Status:** Implemented; validation follow-ups in progress
 **Owner:** Codex
 **Repository:** `kas1987/chromatic-harness-v2`
 **Branch:** `codex/kimi-security`
@@ -49,13 +49,32 @@ may be introduced.
 - Add this PDR, its execution plan, and the shareable handoff.
 - Verify the exact referenced commit is reachable and rerun GitHub Actions.
 
-### Out of scope
+### Out of scope for the checkout-recovery slice
 
 - Changing `actions/checkout`, permissions, secrets, or GitHub App credentials.
 - Pushing to or rewriting `tmdgusya/roach-pi` (the current account has pull-only
   permission there).
 - Updating the unrelated pre-existing working-tree edits.
-- Changing application code or test behavior.
+- Changing GitHub App credentials or checkout behavior.
+
+## Validation follow-ups discovered after checkout recovery
+
+The first post-fix Actions run proved that all three jobs could fetch the
+submodule, then exposed a separate Linux type-check failure. A second local
+validation slice addressed those deterministic failures without changing the
+credential or checkout design:
+
+- Added explicit generic annotations at adapter, memory, scope, and API
+  boundaries so both repository mypy commands pass under mypy 2.3.0.
+- Accessed Windows-only `ctypes.windll` APIs portably so Linux type checking
+  does not reject the module import path.
+- Made API database tests use `asyncio.run`, which is portable across Python
+  3.11 and 3.12 after pytest closes the default event loop.
+- Aligned the remote Ollama C3 routing priority in both routing-table copies
+  with the test contract used by CI.
+
+These follow-ups are limited to type safety and test portability; they do not
+alter authentication, secrets, checkout actions, or the upstream submodule.
 
 ## Acceptance criteria
 
@@ -66,8 +85,19 @@ may be introduced.
 3. A fresh recursive checkout can initialize the submodule without
    `not our ref` or exit-code-128 errors.
 4. GitHub Actions runs the test and Windows concurrency jobs past checkout.
-5. The branch contains no changes outside the gitlink and the explicitly
-   added PDR/plan/handoff artifacts.
+5. The branch contains only the gitlink, the explicitly added PDR/plan/handoff
+   artifacts, and the validation follow-up files described above; unrelated
+   pre-existing working-tree edits remain uncommitted.
+
+## Current implementation evidence
+
+- Checkout-recovery commit: `172dccb32ce5be7fdb09298565918419c38eac63`.
+- Run `30714398680` passed checkout on Linux and both Windows jobs, then
+  failed only at the Linux mypy step; run `30714398688` passed.
+- Local targeted validation after the follow-ups: `275 passed`.
+- Local mypy validation: both repository mypy commands report no issues.
+- The follow-up commit is being prepared and will be validated by a fresh
+  Actions run before this PDR is marked complete.
 
 ## Rollback
 

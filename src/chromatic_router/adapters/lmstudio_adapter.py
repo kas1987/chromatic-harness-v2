@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
@@ -28,7 +29,7 @@ from router.contracts import (
 class LMStudioAdapter(BaseAdapter):
     """Local LM Studio adapter."""
 
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = cfg or {
             "enabled": os.environ.get("LMSTUDIO_ENABLED", "true").lower() == "true",
             "base_url": os.environ.get("LMSTUDIO_BASE_URL", "http://localhost:1234/v1"),

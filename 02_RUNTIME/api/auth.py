@@ -8,7 +8,7 @@ import os
 import secrets  # pragma: allowlist secret
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer  # pragma: allowlist secret
@@ -100,7 +100,7 @@ def create_access_token(user_id: str, role: str) -> str:
     )
 
 
-def decode_token(token: str) -> dict:  # pragma: allowlist secret
+def decode_token(token: str) -> dict[str, Any]:  # pragma: allowlist secret
     if not _DEPS_AVAILABLE:
         raise RuntimeError("PyJWT not installed")
     try:
@@ -113,7 +113,7 @@ def decode_token(token: str) -> dict:  # pragma: allowlist secret
         ) from exc
 
 
-def _user_from_payload(payload: dict) -> "CurrentUser":
+def _user_from_payload(payload: dict[str, Any]) -> "CurrentUser":
     try:
         user_id = payload["sub"]
         role = Role(payload.get("role", Role.executor))

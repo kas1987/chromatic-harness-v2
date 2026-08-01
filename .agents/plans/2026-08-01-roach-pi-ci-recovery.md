@@ -42,6 +42,25 @@ unchanged and no test is skipped.
 - **Expected proof:** checkout jobs pass or any remaining failure is a new,
   post-checkout test failure with logs.
 
+### SLICE-04 — Clear the post-checkout type-check failure
+
+- **Dependencies:** SLICE-03
+- **Allowed paths:** typed Python modules under `02_RUNTIME/` and
+  `src/chromatic_router/adapters/`
+- **Forbidden paths:** credentials, workflows, unrelated user edits
+- **Gate:** both repository mypy commands plus Ruff check/format validation.
+- **Expected proof:** no mypy errors under mypy 2.3.0 and no Ruff findings.
+
+### SLICE-05 — Clear Python-version test portability failures
+
+- **Dependencies:** SLICE-04
+- **Allowed paths:** the two routing-table copies and
+  `tests/02_RUNTIME/api/test_api_db.py`
+- **Forbidden paths:** credentials, workflows, unrelated user edits
+- **Gate:** targeted API/router/memory suite.
+- **Expected proof:** all targeted tests pass on the local Python 3.12
+  environment; Actions must re-run the Windows 3.11/3.12 matrix.
+
 ## Commands
 
 ```powershell
@@ -59,5 +78,8 @@ gh run list --branch codex/kimi-security --limit 5
 
 - SLICE-01: complete; the old gitlink is missing and the `v1.38.0` commit is
   reachable.
-- SLICE-02: in progress.
-- SLICE-03: pending the implementation proof and Actions rerun.
+- SLICE-02: complete; root gitlink is `a2da093fd7cd00d1204b6c7eabc50245f71cde98`.
+- SLICE-03: complete for checkout recovery; run `30714398680` proved all
+  checkout steps pass and exposed the next validation issue.
+- SLICE-04: complete locally; commit and Actions confirmation pending.
+- SLICE-05: complete locally; commit and Actions confirmation pending.

@@ -6,6 +6,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
@@ -22,7 +23,7 @@ from router.contracts import (
 
 
 class GoogleAdapter(BaseAdapter):
-    def __init__(self, cfg: dict | None = None):
+    def __init__(self, cfg: dict[str, Any] | None = None):
         cfg = cfg or {
             "enabled": bool(os.environ.get("GOOGLE_API_KEY")),
             "env_key": "GOOGLE_API_KEY",
