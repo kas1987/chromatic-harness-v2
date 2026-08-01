@@ -67,6 +67,7 @@ async def test_router_selects_provider_from_policy(router):
     resp = await router.route(req)
     assert resp.request_id == req.request_id
     assert resp.selected_provider in [
+        "agnes",
         "ollama",
         "ollama_local",
         "ollama_remote_desktop",
@@ -108,9 +109,11 @@ async def test_confidence_gate_allows_at_60(router):
 async def test_budget_gate_blocks_excessive_cost(router):
     req = make_req(max_cost_usd=0.001, confidence_score=90.0)
     resp = await router.route(req)
-    # native_claude / local providers have $0 cost so pass the budget gate;
-    # adapter_error is acceptable when the free provider fails in test env
+    # Zero-cost providers (for example native_claude or agnes) can pass the
+    # budget gate with an empty route_reason; adapter_error is acceptable when
+    # a free provider fails in the test environment.
     assert resp.route_reason in [
+        "",
         "budget_gate_blocked",
         "mock_fallback",
         "openhuman_disabled",
