@@ -74,7 +74,9 @@ def main() -> int:
         if name == "context_trim" and ok:
             combined = proc.stdout + proc.stderr
             ok = _context_trim_ok(combined)
-            if "Risk level: green" not in combined:
+            # Only fall back to the audit JSON when stdout gave no definitive green
+            # signal AND _context_trim_ok found no red/orange marker.
+            if ok and "Risk level: green" not in combined:
                 audit_json = REPO / ".agents" / "context" / "context_trim_audit.json"
                 if audit_json.is_file():
                     try:

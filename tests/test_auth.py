@@ -2,34 +2,107 @@
 
 Run with AUTH_ENABLED=true to exercise the full auth path.
 Without it, endpoints still respond but token validation is skipped.
+
+Isolation strategy: each test gets a fresh in-memory SQLite DB via a
+dependency override on get_db, identical to the pattern used in
+tests/02_RUNTIME/api/test_api_endpoints.py. This avoids any cross-test
+or cross-file DB state contamination in the full suite.
 """
 
+from __future__ import annotations
+
+import asyncio
 import os
-import tempfile
+import sys
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 
 os.environ["AUTH_ENABLED"] = "true"
 
-_tmp_db = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
-_tmp_db.close()
-os.environ["CHROMATIC_DB_PATH"] = _tmp_db.name
-
-import sys  # noqa: E402
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "02_RUNTIME", "api"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "02_RUNTIME"))
 
-from main import app  # noqa: E402
-from db import init_db  # noqa: E402
+import aiosqlite  # noqa: E402
+from main import app, get_db  # noqa: E402
+
+# ---------------------------------------------------------------------------
+# In-memory DB helper (mirrors test_api_endpoints.py pattern)
+# ---------------------------------------------------------------------------
+
+_CREATE_TABLES = [
+    """CREATE TABLE IF NOT EXISTS missions (
+        mission_id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS magnet_events (
+        event_id TEXT PRIMARY KEY,
+        mission_id TEXT NOT NULL,
+        data TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS beads (
+        bead_id TEXT PRIMARY KEY,
+        mission_id TEXT,
+        data TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS agent_profiles (
+        agent_id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS users (
+        user_id TEXT PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        hashed_password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'executor',
+        created_at TEXT NOT NULL
+    )""",
+]
+
+_db_conn: aiosqlite.Connection | None = None
+
+
+async def _make_db() -> aiosqlite.Connection:
+    conn = await aiosqlite.connect(":memory:")
+    conn.row_factory = aiosqlite.Row
+    for stmt in _CREATE_TABLES:
+        await conn.execute(stmt)
+    await conn.commit()
+    return conn
+
+
+async def _override_get_db():
+    global _db_conn
+    assert _db_conn is not None, "_db_conn not initialised by fixture"
+    yield _db_conn
+
+
+# ---------------------------------------------------------------------------
+# Fixture
+# ---------------------------------------------------------------------------
 
 
 @pytest_asyncio.fixture
 async def client():
-    await init_db()
+    """AsyncClient backed by a fresh in-memory SQLite DB for each test."""
+    global _db_conn
+    _db_conn = await _make_db()
+    app.dependency_overrides[get_db] = _override_get_db
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
+    app.dependency_overrides.pop(get_db, None)
+    await _db_conn.close()
+    _db_conn = None
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio

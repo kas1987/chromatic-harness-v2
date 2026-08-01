@@ -58,6 +58,15 @@ providers:
     privacy_max: P2
     default_mode: read_only
 
+  # Chromatic Atomic Tower integration adapter
+  atomic-tower:
+    type: cross_project
+    enabled: true
+    base_url: http://127.0.0.1:8900
+    env_key: PRISM_ORCHESTRATOR_ENABLED
+    privacy_max: P2
+    note: HTTP adapter to Chromatic Atomic Tower; enabled by PRISM_ORCHESTRATOR_ENABLED.
+
   native_claude:
     type: native
     enabled: true

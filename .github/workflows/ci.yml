@@ -167,6 +167,9 @@ jobs:
             --mcps-path tests/fixtures/mcp_minimal \
             --profile harness_dev
 
+      - name: Validate script syntax
+        run: |
+          find scripts/ -name "*.py" -exec python -m py_compile {} \;
       - name: Lint
         run: |
           pip install ruff==0.15.15

@@ -21,6 +21,22 @@ VALID_PRIORITIES = frozenset({"P0", "P1", "P2", "P3"})
 VALID_TYPES = frozenset({"task", "bug", "epic", "chore"})
 VALID_LANES = frozenset({"agent", "human", "review"})
 
+# Map string tier codes (e.g. "T1", "T2") that appear in legacy queue entries
+_TIER_STR_MAP: dict[str, int] = {"T0": 0, "T1": 1, "T2": 2, "T3": 3, "T4": 4, "T5": 5}
+
+
+def _parse_tier(value: Any) -> int:
+    """Convert tier to int, handling legacy string forms like 'T1'."""
+    if isinstance(value, int):
+        return value
+    s = str(value).strip()
+    if s in _TIER_STR_MAP:
+        return _TIER_STR_MAP[s]
+    try:
+        return int(s)
+    except (ValueError, TypeError):
+        return 3  # default tier
+
 
 @dataclass
 class IntakeEntry:
@@ -78,7 +94,7 @@ class IntakeEntry:
             goal=data.get("goal", ""),
             priority=data.get("priority", "P2"),
             type=data.get("type", "task"),
-            tier=int(data.get("tier", 3)),
+            tier=_parse_tier(data.get("tier", 3)),
             bead_id=data.get("bead_id", ""),
             lane=data.get("lane", "") or str(data.get("context", {}).get("lane", "")),
             context=dict(data.get("context", {})),

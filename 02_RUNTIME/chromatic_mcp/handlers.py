@@ -151,6 +151,14 @@ def session_guard(
     return _run_script("session_unified_guard.py", *args, timeout=900)
 
 
+def cat_sync_intake(*, dry_run: bool = False) -> dict[str, Any]:
+    """Sync queued Harness intake entries into CAT BEADs."""
+    args: list[str] = []
+    if dry_run:
+        args.append("--dry-run")
+    return _run_script("cat_intake_bridge.py", *args, timeout=120)
+
+
 HANDLERS: dict[str, Any] = {
     "workflow_go": lambda args: workflow_go(args.get("mode", "GO")),
     "workflow_git_ship": lambda args: workflow_git_ship(
@@ -177,6 +185,9 @@ HANDLERS: dict[str, Any] = {
         invoked_by=str(args.get("invoked_by", "automation")),
         force=bool(args.get("force", False)),
         full=bool(args.get("full", False)),
+        dry_run=bool(args.get("dry_run", False)),
+    ),
+    "cat_sync_intake": lambda args: cat_sync_intake(
         dry_run=bool(args.get("dry_run", False)),
     ),
 }
@@ -277,6 +288,16 @@ def list_tool_specs() -> list[dict[str, Any]]:
                     "invoked_by": {"type": "string", "default": "automation"},
                     "force": {"type": "boolean", "default": False},
                     "full": {"type": "boolean", "default": False},
+                    "dry_run": {"type": "boolean", "default": False},
+                },
+            },
+        },
+        {
+            "name": "cat_sync_intake",
+            "description": "Sync queued Harness intake entries into CAT BEADs",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
                     "dry_run": {"type": "boolean", "default": False},
                 },
             },
