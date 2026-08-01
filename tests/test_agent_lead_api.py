@@ -23,6 +23,12 @@ def client():
         yield c
 
 
+@pytest.fixture(autouse=True)
+def _disable_auth_for_legacy_contract(monkeypatch):
+    """Keep this legacy contract suite independent of test_api import order."""
+    monkeypatch.setenv("AUTH_ENABLED", "false")
+
+
 class TestSynthesizeEndpoint:
     def test_synthesize_mission_with_events(self, client):
         r = client.post("/missions", json={"objective": "synthesis test mission"})

@@ -61,6 +61,20 @@ unchanged and no test is skipped.
 - **Expected proof:** all targeted tests pass on the local Python 3.12
   environment; Actions must re-run the Windows 3.11/3.12 matrix.
 
+### SLICE-06 — Clear remaining Linux full-suite contract failures
+
+- **Dependencies:** SLICE-05
+- **Allowed paths:** CI runtime seeding, affected test fixtures, and
+  `tools/portfolio_token_telemetry.py` plus its contract test.
+- **Forbidden paths:** production auth defaults, credentials, unrelated user
+  edits, and submodule overlay state.
+- **Gate:** focused regressions followed by the exact CI command
+  `pytest tests/ -v --tb=short --cov=02_RUNTIME --cov-report=term
+  --cov-fail-under=60`.
+- **Expected proof:** auth suites are isolated from import order, ignored
+  observability state is seeded on clean CI checkouts, and telemetry unknowns
+  remain visible without weakening tier semantics.
+
 ## Commands
 
 ```powershell
@@ -83,3 +97,5 @@ gh run list --branch codex/kimi-security --limit 5
   checkout steps pass and exposed the next validation issue.
 - SLICE-04: complete locally; commit and Actions confirmation pending.
 - SLICE-05: complete locally; commit and Actions confirmation pending.
+- SLICE-06: in progress under bead `chromatic-harness-v2-59el`; focused
+  regressions pass, commit and replacement Actions confirmation pending.

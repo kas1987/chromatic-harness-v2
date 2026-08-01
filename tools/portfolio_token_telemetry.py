@@ -55,6 +55,7 @@ from router.billing_axis import classify as classify_axis  # noqa: E402
 # lru_cache: ~10 model names in practice; inference rules are static constants.
 import functools
 
+
 @functools.lru_cache(maxsize=64)
 def _infer_levels(model: str | None):
     """Return (c_level, t_level) from model name, or (None, None) on miss."""
@@ -63,10 +64,12 @@ def _infer_levels(model: str | None):
         if str(_scripts) not in sys.path:
             sys.path.insert(0, str(_scripts))
         from token_level_inference import infer_levels
+
         c, t, _ = infer_levels(model)
         return c, t
     except Exception:
         return None, None
+
 
 # ── Default paths (all overridable, for tests / alternate roots) ────────────
 _DEFAULT_TODAY = Path.home() / ".claude" / "powerline" / "usage" / "today.json"
@@ -204,21 +207,21 @@ def today_rows(today: dict, pricing: dict[str, dict]) -> list[LedgerRow]:
         est = estimate_usd_from_usage(model, usage, pricing)
         # Prefer ccusage's own costUSD; fall back to our estimate.
         usd = float(reported) if reported is not None else (est or 0.0)
-        # Axis P is always prepaid — cost classification is known by definition
-        # even when the model isn't in pricing.json (cost is $0, not unknown).
+        # Axis P is prepaid, but an unpriced model still has unknown cost
+        # provenance. Preserve that uncertainty instead of silently treating
+        # synthetic or otherwise unpriced usage as known.
         c_level, t_level = _infer_levels(model)
         rows.append(
             LedgerRow(
                 decision_id=_decision_id("today", ts, model, usd),
                 ts=ts,
                 axis="P",
-                cost_center=CostCenter(model=model, agent="native_claude", repo="",
-                                       c_level=c_level, t_level=t_level),
+                cost_center=CostCenter(model=model, agent="native_claude", repo="", c_level=c_level, t_level=t_level),
                 tokens=_usage_tokens(usage),
                 usd=usd,
                 quota_delta_pct=None,  # filled by forecast layer from quota_state
                 source="today",
-                confidence="known",  # Axis P cost is always known ($0 prepaid)
+                confidence="known" if reported is not None or est is not None else "unknown",
             )
         )
     return rows

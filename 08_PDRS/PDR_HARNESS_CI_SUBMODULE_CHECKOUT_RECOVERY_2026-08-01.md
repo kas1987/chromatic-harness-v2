@@ -72,6 +72,14 @@ credential or checkout design:
   3.11 and 3.12 after pytest closes the default event loop.
 - Aligned the remote Ollama C3 routing priority in both routing-table copies
   with the test contract used by CI.
+- Isolated legacy API contract suites from import-order leakage of
+  `AUTH_ENABLED=true`, while leaving production authentication enabled by
+  default.
+- Seeded the ignored `.chromatic/active_writers.json` runtime scaffold in the
+  CI test job so clean checkouts satisfy the observability contract.
+- Preserved unknown confidence for unpriced `today.json` telemetry and updated
+  the stale telemetry test to index rows by model while `t_level` remains the
+  inferred `T0`–`T4` tier.
 
 These follow-ups are limited to type safety and test portability; they do not
 alter authentication, secrets, checkout actions, or the upstream submodule.
@@ -96,8 +104,12 @@ alter authentication, secrets, checkout actions, or the upstream submodule.
   failed only at the Linux mypy step; run `30714398688` passed.
 - Local targeted validation after the follow-ups: `275 passed`.
 - Local mypy validation: both repository mypy commands report no issues.
-- The follow-up commit is being prepared and will be validated by a fresh
-  Actions run before this PDR is marked complete.
+- Follow-up commit `d540c178f9eca00049bb6b443377ee9c538bab1b` passes all local
+  type, lint, format, and focused regression gates. The fresh Actions run
+  `30715198094` validated checkout, typing, lint, format, and Windows
+  concurrency, then exposed the Linux full-suite contract failures tracked in
+  bead `chromatic-harness-v2-59el`; a final follow-up commit and replacement
+  Actions run remain before this PDR is marked complete.
 
 ## Rollback
 

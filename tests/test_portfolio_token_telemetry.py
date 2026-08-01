@@ -161,11 +161,11 @@ def test_route_rows_axis_stamping(routes_file, providers_file, pricing_file):
     registry = ptt.load_provider_registry(providers_file)
     pricing = ptt.load_pricing(pricing_file)
     rows = ptt.route_rows(ptt._iter_jsonl(routes_file), registry, pricing)
-    by_provider = {r.cost_center.t_level: r for r in rows}
-    assert by_provider["native_claude"].axis == "P"
-    assert by_provider["openai"].axis == "D"
-    assert by_provider["openai"].usd == 0.42
-    assert by_provider["ollama"].axis == "F"
+    by_model = {r.cost_center.model: r for r in rows}
+    assert by_model["claude-opus-4-8"].axis == "P"
+    assert by_model["gpt-x"].axis == "D"
+    assert by_model["gpt-x"].usd == 0.42
+    assert by_model["llama3.2:3b"].axis == "F"
     # mock / null cost -> unknown confidence, conservative D ceiling.
     mock = next(r for r in rows if r.source == "routes" and r.confidence == "unknown")
     assert mock.axis == "D"

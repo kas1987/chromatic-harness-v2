@@ -25,6 +25,12 @@ def client():
         yield c
 
 
+@pytest.fixture(autouse=True)
+def _disable_auth_for_legacy_contract(monkeypatch):
+    """Keep this legacy contract suite independent of test_api import order."""
+    monkeypatch.setenv("AUTH_ENABLED", "false")
+
+
 def test_runtime_spine(client):
     """
     Full end-to-end smoke test for the Chromatic Harness v2 core loop:

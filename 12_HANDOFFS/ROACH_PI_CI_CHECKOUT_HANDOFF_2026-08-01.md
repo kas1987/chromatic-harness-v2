@@ -87,6 +87,24 @@ targeted suite. The follow-up changes add explicit generic API/memory typing,
 portable `ctypes.windll` access, `asyncio.run` in database tests, and remote
 Ollama C3 priority in both routing-table copies.
 
+## Third validation slice
+
+Actions run `30715198094` passed checkout, type checking, lint, format, and
+both Windows concurrency jobs. Its Linux full suite reached `4138 passed`,
+`19 failed`, `1 skipped`, and `16 errors`; the failures were then reproduced
+  in focused tests and fixed locally:
+
+- API contract modules now isolate `AUTH_ENABLED=false` from the import-order
+  side effect of the auth-enabled `test_api` module; production defaults are
+  unchanged.
+- CI seeds the ignored `.chromatic/active_writers.json` scaffold before the
+  test job.
+- Unpriced native-Claude usage remains `unknown` confidence, and telemetry
+  tests key rows by model while preserving inferred `t_level` values.
+
+The focused regression command now reports `40 passed`. Track the final
+commit and replacement Actions run under bead `chromatic-harness-v2-59el`.
+
 ## Proof gates
 
 1. Root tree points to `a2da093...`.
@@ -100,8 +118,10 @@ Ollama C3 priority in both routing-table copies.
 
 - Closed bead `chromatic-harness-v2-7bku`: unreachable submodule recovery.
 - Closed bead `chromatic-harness-v2-bjjj`: mypy/type-check blockers.
-- In-progress bead `chromatic-harness-v2-70qi`: cross-platform routing and
-  asyncio test blockers; close it after the follow-up Actions run is green.
+- Closed bead `chromatic-harness-v2-70qi`: cross-platform routing and asyncio
+  test blockers.
+- In-progress bead `chromatic-harness-v2-59el`: remaining Linux full-suite
+  contract failures; close it only after replacement CI is green.
 
 ## Do not touch
 

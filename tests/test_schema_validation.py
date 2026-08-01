@@ -18,6 +18,18 @@ importlib.reload(api_module)
 from fastapi.testclient import TestClient  # noqa: E402
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _disable_auth_for_legacy_contract():
+    """Keep this legacy contract suite independent of test_api import order."""
+    previous = os.environ.get("AUTH_ENABLED")
+    os.environ["AUTH_ENABLED"] = "false"
+    yield
+    if previous is None:
+        os.environ.pop("AUTH_ENABLED", None)
+    else:
+        os.environ["AUTH_ENABLED"] = previous
+
+
 @pytest.fixture(scope="session")
 def client():
     """Session-scoped client that enters lifespan (runs init_db) once."""

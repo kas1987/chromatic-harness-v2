@@ -70,6 +70,8 @@ jobs:
         run: |
           mkdir -p 07_LOGS_AND_AUDIT/execution 07_LOGS_AND_AUDIT/traces 07_LOGS_AND_AUDIT/decisions \
                    07_LOGS_AND_AUDIT/workflows 07_LOGS_AND_AUDIT/recovery 07_LOGS_AND_AUDIT/queue
+          mkdir -p .chromatic
+          printf '{"updated_at":"ci","claims":{}}\n' > .chromatic/active_writers.json
           touch 07_LOGS_AND_AUDIT/execution/execution.jsonl \
                 07_LOGS_AND_AUDIT/traces/traces.jsonl \
                 07_LOGS_AND_AUDIT/decisions/decision_log.jsonl \
