@@ -12,6 +12,8 @@ from .base import BaseAdapter, AdapterHealth
 from ..contracts import (
     RouteRequest,
     RouteResponse,
+    RouteInput,
+    RouteConstraints,
     OutputType,
     RouteOutput,
     RouteUsage,
@@ -25,13 +27,9 @@ class CATAdapter(BaseAdapter):
     def __init__(self, cfg: dict | None = None):
         cfg = dict(cfg) if cfg else {}
         if "enabled" not in cfg:
-            cfg["enabled"] = (
-                os.environ.get("PRISM_ORCHESTRATOR_ENABLED", "false").lower() == "true"
-            )
+            cfg["enabled"] = os.environ.get("PRISM_ORCHESTRATOR_ENABLED", "false").lower() == "true"
         if "base_url" not in cfg:
-            cfg["base_url"] = os.environ.get(
-                "PRISM_ORCHESTRATOR_URL", "http://127.0.0.1:8900"
-            )
+            cfg["base_url"] = os.environ.get("PRISM_ORCHESTRATOR_URL", "http://127.0.0.1:8900")
         cfg.setdefault("timeout", 60)
         super().__init__("atomic-tower", cfg)
         self._client: httpx.AsyncClient | None = None
@@ -54,9 +52,7 @@ class CATAdapter(BaseAdapter):
             url = f"{self.cfg.get('base_url')}/health"
             resp = await client.get(url)
             latency_ms = int((time.time() - start) * 1000)
-            return AdapterHealth(
-                reachable=resp.status_code == 200, latency_ms=latency_ms
-            )
+            return AdapterHealth(reachable=resp.status_code == 200, latency_ms=latency_ms)
         except Exception as e:
             return AdapterHealth(reachable=False, latency_ms=0, error=str(e)[:200])
 
@@ -64,18 +60,16 @@ class CATAdapter(BaseAdapter):
         logs = RouteLogs()
         try:
             if not self.enabled:
-                return self.normalize_error(
-                    req.request_id, "CAT adapter not enabled"
-                )
+                return self.normalize_error(req.request_id, "CAT adapter not enabled")
 
             client = self._get_client()
             start = time.time()
 
-            messages = (
-                req.input.messages
-                if req.input.messages
-                else [{"role": "user", "content": req.objective}]
-            )
+            # Defensive: treat missing/null input/constraints as their defaults.
+            route_input = req.input or RouteInput()
+            route_constraints = req.constraints or RouteConstraints()
+
+            messages = route_input.messages if route_input.messages else [{"role": "user", "content": req.objective}]
             prompt = "\n".join([m.get("content", "") for m in messages])
 
             payload = {
@@ -85,7 +79,7 @@ class CATAdapter(BaseAdapter):
                     "priority": "normal",
                     "task_type": req.task_type.value,
                     "request_id": req.request_id,
-                    "max_tokens": req.constraints.max_tokens,
+                    "max_tokens": route_constraints.max_tokens,
                 },
             }
 
@@ -101,9 +95,7 @@ class CATAdapter(BaseAdapter):
 
             data = response.json()
             if not data.get("ok", True) and not data.get("output"):
-                error_msg = (
-                    data.get("error") or data.get("reason") or "CAT returned ok=false"
-                )
+                error_msg = data.get("error") or data.get("reason") or "CAT returned ok=false"
                 return self.normalize_error(req.request_id, f"CAT: {error_msg[:300]}")
 
             content = data.get("output") or ""

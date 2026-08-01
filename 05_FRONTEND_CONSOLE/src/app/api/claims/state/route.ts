@@ -11,6 +11,7 @@ interface LeaseRecord {
   created_at: string;
   expires_at: string;
   heartbeat_at: string;
+  released_at?: string;
   metadata?: Record<string, any>;
 }
 
@@ -42,7 +43,15 @@ function loadLeases(): LeaseRecord[] {
     return content
       .split('\n')
       .filter((line) => line.trim())
-      .map((line) => JSON.parse(line) as LeaseRecord);
+      .map((line) => {
+        try {
+          return JSON.parse(line) as LeaseRecord;
+        } catch {
+          console.warn('Skipping malformed lease row:', line.slice(0, 200));
+          return null;
+        }
+      })
+      .filter((lease): lease is LeaseRecord => lease !== null);
   } catch {
     return [];
   }
@@ -98,6 +107,9 @@ function buildConflictGraph(
         writeLocks[j].resources
       );
       for (const resource of overlaps) {
+        if (writeLocks[i].owner_agent === writeLocks[j].owner_agent) {
+          continue;
+        }
         conflicts.push({
           lease_a: writeLocks[i].lease_id,
           lease_b: writeLocks[j].lease_id,
@@ -197,6 +209,7 @@ export async function GET() {
         created_at: l.created_at,
         expires_at: l.expires_at,
         heartbeat_at: l.heartbeat_at,
+        released_at: l.released_at,
         status: l.status,
       })),
       stale_claims: staleLeasesIds,

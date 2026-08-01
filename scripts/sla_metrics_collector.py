@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 import time
@@ -43,6 +44,7 @@ DEFAULT_SLA_CONFIG = {
     "window_size_minutes": 5,
     "snapshot_interval_seconds": 60,
     "escalation_delay_minutes": 5,
+    "min_samples_for_latency_alert": 10,
 }
 
 
@@ -90,6 +92,9 @@ class Alert:
     runbook_url: str | None = None
 
 
+MIN_SAMPLES_FOR_LATENCY_ALERT = 10
+
+
 class LatencyHistogram:
     """Sliding window latency tracker (ring buffer)."""
 
@@ -101,20 +106,24 @@ class LatencyHistogram:
     def add(self, latency_ms: int) -> None:
         self.samples.append(latency_ms)
 
-    def p50(self) -> int:
+    def _percentile(self, p: float) -> int:
         if not self.samples:
             return 0
-        return sorted(self.samples)[len(self.samples) // 2]
+        n = len(self.samples)
+        if n < 1:
+            return 0
+        # Nearest-rank percentile, clamped to valid index range.
+        idx = max(0, min(n - 1, math.ceil(n * p) - 1))
+        return sorted(self.samples)[idx]
+
+    def p50(self) -> int:
+        return self._percentile(0.50)
 
     def p95(self) -> int:
-        if not self.samples:
-            return 0
-        return sorted(self.samples)[int(len(self.samples) * 0.95)]
+        return self._percentile(0.95)
 
     def p99(self) -> int:
-        if not self.samples:
-            return 0
-        return sorted(self.samples)[int(len(self.samples) * 0.99)]
+        return self._percentile(0.99)
 
     def count(self) -> int:
         return len(self.samples)
@@ -124,10 +133,10 @@ class SLAMetricsCollector:
     """Main collector: observes missions, aggregates metrics, emits alerts."""
 
     def __init__(self, config: dict[str, Any] | None = None):
-        self.config = config or DEFAULT_SLA_CONFIG
-        self.latency_histogram = LatencyHistogram(
-            window_size_minutes=self.config.get("window_size_minutes", 5)
-        )
+        self.config = DEFAULT_SLA_CONFIG.copy()
+        if config:
+            self.config.update(config)
+        self.latency_histogram = LatencyHistogram(window_size_minutes=self.config.get("window_size_minutes", 5))
         self.alerts_queue: list[Alert] = []
         self.last_page_ts: dict[str, float] = {}  # Track escalation cooldown
         self._ensure_dirs()
@@ -168,7 +177,7 @@ class SLAMetricsCollector:
         memory_gb = 0.0
 
         # Compute overall status
-        overall_status = self._compute_overall_status(p95, queue_depth, token_burn_multiplier)
+        overall_status = self._compute_overall_status(p95, queue_depth, token_burn_multiplier, mission_count)
         readiness_score = self._compute_readiness_score(p95, queue_depth, token_burn_multiplier)
 
         metrics = Metrics(
@@ -188,7 +197,7 @@ class SLAMetricsCollector:
         )
 
         # Check SLA thresholds and emit alerts
-        self._check_sla_thresholds(metrics)
+        self._check_sla_thresholds(metrics, mission_count)
 
         return metrics
 
@@ -204,16 +213,20 @@ class SLAMetricsCollector:
         # For now, stub with baseline
         return self.config.get("token_burn_baseline_per_min", 500_000)
 
-    def _compute_overall_status(self, p95_ms: float, queue_depth: int, token_multiplier: float) -> str:
+    def _compute_overall_status(
+        self, p95_ms: float, queue_depth: int, token_multiplier: float, sample_count: int = 0
+    ) -> str:
         """Compute traffic-light status."""
+        # Do not raise latency status on insufficient samples; prevents low-load false alarms.
+        latency_ready = sample_count >= self.config.get("min_samples_for_latency_alert", MIN_SAMPLES_FOR_LATENCY_ALERT)
         if (
-            p95_ms > self.config.get("latency_p95_threshold_page_ms", 500)
+            (latency_ready and p95_ms > self.config.get("latency_p95_threshold_page_ms", 500))
             or queue_depth >= self.config.get("queue_depth_red_threshold", 30)
             or token_multiplier > self.config.get("token_burn_threshold_page_multiplier", 3.0)
         ):
             return "red"
         elif (
-            p95_ms > self.config.get("latency_p95_threshold_warn_ms", 200)
+            (latency_ready and p95_ms > self.config.get("latency_p95_threshold_warn_ms", 200))
             or queue_depth >= self.config.get("queue_depth_yellow_threshold", 15)
             or token_multiplier > self.config.get("token_burn_threshold_warn_multiplier", 2.0)
         ):
@@ -240,12 +253,13 @@ class SLAMetricsCollector:
             score -= 10
         return max(0, score)
 
-    def _check_sla_thresholds(self, metrics: Metrics) -> None:
+    def _check_sla_thresholds(self, metrics: Metrics, sample_count: int = 0) -> None:
         """Emit alerts if SLA thresholds breached."""
         now_ts = time.time()
 
-        # Latency alerts
-        if metrics.p95_latency_ms > self.config.get("latency_p95_threshold_page_ms", 500):
+        # Latency alerts (suppressed until enough samples are observed).
+        latency_ready = sample_count >= self.config.get("min_samples_for_latency_alert", MIN_SAMPLES_FOR_LATENCY_ALERT)
+        if latency_ready and metrics.p95_latency_ms > self.config.get("latency_p95_threshold_page_ms", 500):
             self._emit_page_with_cooldown(
                 key="latency_page",
                 delay_minutes=self.config.get("escalation_delay_minutes", 5),
@@ -259,7 +273,7 @@ class SLAMetricsCollector:
                     threshold_value=self.config.get("latency_p95_threshold_page_ms"),
                 ),
             )
-        elif metrics.p95_latency_ms > self.config.get("latency_p95_threshold_warn_ms", 200):
+        elif latency_ready and metrics.p95_latency_ms > self.config.get("latency_p95_threshold_warn_ms", 200):
             alert = Alert(
                 timestamp_utc=metrics.timestamp_utc,
                 severity="warn",
@@ -328,9 +342,7 @@ class SLAMetricsCollector:
             )
             self._log_alert(alert)
 
-    def _emit_page_with_cooldown(
-        self, key: str, delay_minutes: int, now_ts: float, alert: Alert
-    ) -> None:
+    def _emit_page_with_cooldown(self, key: str, delay_minutes: int, now_ts: float, alert: Alert) -> None:
         """Emit a PAGE alert only if cooldown expired."""
         last_page = self.last_page_ts.get(key, 0)
         cooldown_sec = delay_minutes * 60

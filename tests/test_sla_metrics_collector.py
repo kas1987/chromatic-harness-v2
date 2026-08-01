@@ -281,3 +281,42 @@ class TestIntegration:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestPercentileAndConfigFixes:
+    """Regression tests for PR #277 percentile + config merge findings."""
+
+    def test_percentile_uses_nearest_rank(self):
+        hist = LatencyHistogram()
+        for i in range(1, 101):
+            hist.add(i * 10)
+        # Nearest-rank percentiles for 100 samples:
+        # p50 -> ceil(100*0.50)=50 -> sorted[49] = 500
+        # p95 -> ceil(100*0.95)=95 -> sorted[94] = 950
+        # p99 -> ceil(100*0.99)=99 -> sorted[98] = 990
+        assert hist.p50() == 500
+        assert hist.p95() == 950
+        assert hist.p99() == 990
+
+    def test_low_load_does_not_trigger_latency_alert(self):
+        """High latency with fewer than min_samples_for_latency_alert must stay green."""
+        collector = SLAMetricsCollector(
+            config={
+                "latency_p95_threshold_page_ms": 100,
+                "min_samples_for_latency_alert": 10,
+            }
+        )
+        for _ in range(5):
+            collector.observe_mission_latency("m", "p", 1000)
+        metrics = collector.measure_current_metrics()
+        assert metrics.overall_status == "green"
+        assert not any(a.category == "latency" for a in collector.alerts_queue)
+
+    def test_config_merges_with_defaults_and_does_not_mutate_default(self):
+        custom = {"latency_p95_threshold_warn_ms": 12345}
+        collector = SLAMetricsCollector(config=custom)
+        assert collector.config["latency_p95_threshold_warn_ms"] == 12345
+        assert collector.config["latency_p95_threshold_page_ms"] == 500
+        assert collector.config["min_samples_for_latency_alert"] == 10
+        # The shared DEFAULT_SLA_CONFIG dict must remain unchanged.
+        assert DEFAULT_SLA_CONFIG["latency_p95_threshold_warn_ms"] == 200

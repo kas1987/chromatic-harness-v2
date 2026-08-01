@@ -242,4 +242,73 @@ describe('GET /api/claims/state', () => {
     // Parent and child paths should conflict
     expect(body.conflicts).toHaveLength(1);
   });
+
+  test('skips malformed JSONL rows without crashing', async () => {
+    (fs.readFileSync as jest.Mock).mockReturnValue(
+      '{"lease_id":"l1","owner_agent":"a","resources":[],"mode":"exclusive","status":"active","created_at":"2026-01-01T00:00:00Z","expires_at":"2099-01-01T00:00:00Z","heartbeat_at":"2026-01-01T00:00:00Z"}\n' +
+      'this is not valid json\n'
+    );
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.active_claims).toHaveLength(1);
+    expect(body.active_claims[0].lease_id).toBe('l1');
+  });
+
+  test('passes released_at through to active claims', async () => {
+    const lease = {
+      lease_id: 'lease-released',
+      owner_agent: 'agent-r',
+      resources: ['queue:bead-r'],
+      mode: 'exclusive',
+      status: 'active',
+      created_at: new Date(Date.now() - 300000).toISOString(),
+      expires_at: new Date(Date.now() + 3600000).toISOString(),
+      heartbeat_at: new Date().toISOString(),
+      released_at: '2026-06-21T12:00:00Z',
+    };
+
+    (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(lease));
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(body.active_claims[0].released_at).toBe('2026-06-21T12:00:00Z');
+  });
+
+  test('ignores conflicts between leases owned by the same agent', async () => {
+    const sameOwnerData = [
+      {
+        lease_id: 'lease-same-1',
+        owner_agent: 'agent-shared',
+        resources: ['queue:bead-shared'],
+        mode: 'exclusive',
+        status: 'active',
+        created_at: new Date(Date.now() - 300000).toISOString(),
+        expires_at: new Date(Date.now() + 3600000).toISOString(),
+        heartbeat_at: new Date().toISOString(),
+      },
+      {
+        lease_id: 'lease-same-2',
+        owner_agent: 'agent-shared',
+        resources: ['queue:bead-shared'],
+        mode: 'exclusive',
+        status: 'active',
+        created_at: new Date(Date.now() - 200000).toISOString(),
+        expires_at: new Date(Date.now() + 3600000).toISOString(),
+        heartbeat_at: new Date().toISOString(),
+      },
+    ];
+
+    (fs.readFileSync as jest.Mock).mockReturnValue(
+      sameOwnerData.map((l) => JSON.stringify(l)).join('\n')
+    );
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(body.conflicts).toHaveLength(0);
+  });
 });

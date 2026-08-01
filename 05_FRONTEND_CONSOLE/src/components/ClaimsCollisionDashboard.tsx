@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useTheme } from "@/lib/theme";
 
 interface ClaimRecord {
@@ -10,6 +10,7 @@ interface ClaimRecord {
   created_at: string;
   expires_at: string;
   heartbeat_at: string;
+  released_at?: string;
   status: "active" | "released" | "expired";
 }
 
@@ -42,26 +43,33 @@ interface UseWebSocketEventsOptions {
 function useWebSocketClaimsEvents(options?: UseWebSocketEventsOptions) {
   const [state, setState] = useState<ClaimsState | null>(null);
   const [connected, setConnected] = useState(false);
+  // Stabilise the callback so changing it does not recreate the EventSource.
+  const callbackRef = useRef(options?.onClaimStateChange);
+  callbackRef.current = options?.onClaimStateChange;
 
   useEffect(() => {
     let eventSource: EventSource | null = null;
+    let cancelled = false;
 
     try {
       // Try SSE (Server-Sent Events) for live updates
       eventSource = new EventSource("/api/ws/claims?sse=true");
 
-      eventSource.onopen = () => setConnected(true);
+      eventSource.onopen = () => {
+        if (!cancelled) setConnected(true);
+      };
       eventSource.onmessage = (event) => {
+        if (cancelled) return;
         try {
           const data = JSON.parse(event.data) as ClaimsState;
           setState(data);
-          options?.onClaimStateChange?.(data);
+          callbackRef.current?.(data);
         } catch {
-          // ignore
+          // ignore malformed SSE payloads
         }
       };
       eventSource.onerror = () => {
-        setConnected(false);
+        if (!cancelled) setConnected(false);
         eventSource?.close();
       };
     } catch {
@@ -69,11 +77,12 @@ function useWebSocketClaimsEvents(options?: UseWebSocketEventsOptions) {
     }
 
     return () => {
+      cancelled = true;
       if (eventSource) {
         eventSource.close();
       }
     };
-  }, [options]);
+  }, []);
 
   return { state, connected };
 }

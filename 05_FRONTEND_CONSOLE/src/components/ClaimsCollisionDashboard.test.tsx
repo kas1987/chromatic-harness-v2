@@ -414,4 +414,42 @@ describe("ClaimsCollisionDashboard", () => {
       ).toBeInTheDocument();
     });
   });
+
+  test('does not recreate EventSource when component rerenders', async () => {
+    const createdSources: MockEventSource[] = [];
+    const OriginalMockEventSource = MockEventSource;
+
+    class CountingEventSource extends MockEventSource {
+      constructor(url: string) {
+        super(url);
+        createdSources.push(this);
+      }
+    }
+
+    Object.defineProperty(window, 'EventSource', {
+      writable: true,
+      value: CountingEventSource,
+    });
+
+    const { rerender } = render(
+      <ThemeProvider>
+        <ClaimsCollisionDashboard />
+      </ThemeProvider>
+    );
+
+    expect(createdSources.length).toBe(1);
+
+    rerender(
+      <ThemeProvider>
+        <ClaimsCollisionDashboard />
+      </ThemeProvider>
+    );
+
+    expect(createdSources.length).toBe(1);
+
+    Object.defineProperty(window, 'EventSource', {
+      writable: true,
+      value: OriginalMockEventSource,
+    });
+  });
 });

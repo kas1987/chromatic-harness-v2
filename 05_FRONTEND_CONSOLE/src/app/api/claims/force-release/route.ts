@@ -29,7 +29,15 @@ function loadLeases(): LeaseRecord[] {
     return content
       .split('\n')
       .filter((line) => line.trim())
-      .map((line) => JSON.parse(line) as LeaseRecord);
+      .map((line) => {
+        try {
+          return JSON.parse(line) as LeaseRecord;
+        } catch {
+          console.warn('Skipping malformed lease row:', line.slice(0, 200));
+          return null;
+        }
+      })
+      .filter((lease): lease is LeaseRecord => lease !== null);
   } catch {
     return [];
   }
@@ -49,9 +57,7 @@ function writeLeases(leases: LeaseRecord[]): void {
   const content = leases
     .map((lease) => JSON.stringify(lease, null, 0))
     .join('\n');
-  if (leases.length > 0) {
-    fs.writeFileSync(leasePath, content + '\n', 'utf8');
-  }
+  fs.writeFileSync(leasePath, (leases.length > 0 ? content + '\n' : ''), 'utf8');
 }
 
 export async function POST(request: NextRequest) {
