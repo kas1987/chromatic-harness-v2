@@ -6,8 +6,9 @@ The unreachable submodule pin is fixed and pushed as
 `172dccb32ce5be7fdb09298565918419c38eac63` on `codex/kimi-security`. The next
 CI run fetched the submodule successfully in Linux and both Windows jobs. It
 then exposed a separate Linux mypy failure, which has been fixed locally along
-with two Python-version portability failures; the follow-up commit and Actions
-confirmation are the remaining closeout gates.
+with two Python-version portability failures. The final repair is pushed as
+`b0005a8d73c4807f6757fb4b9609639d40b5b386`; replacement CI and observability
+runs are green.
 
 This handoff is intended to be pasted into another LLM session if needed.
 
@@ -102,8 +103,10 @@ both Windows concurrency jobs. Its Linux full suite reached `4138 passed`,
 - Unpriced native-Claude usage remains `unknown` confidence, and telemetry
   tests key rows by model while preserving inferred `t_level` values.
 
-The focused regression command now reports `40 passed`. Track the final
-commit and replacement Actions run under bead `chromatic-harness-v2-59el`.
+The focused regression command reports `40 passed` (and `63 passed` when the
+auth-enabled API/auth suites are included). Final CI run
+`30715887955` is green for Linux, Windows Python 3.11, and Windows Python
+3.12. Observability run `30715887996` is also green.
 
 ## Proof gates
 
@@ -120,8 +123,15 @@ commit and replacement Actions run under bead `chromatic-harness-v2-59el`.
 - Closed bead `chromatic-harness-v2-bjjj`: mypy/type-check blockers.
 - Closed bead `chromatic-harness-v2-70qi`: cross-platform routing and asyncio
   test blockers.
-- In-progress bead `chromatic-harness-v2-59el`: remaining Linux full-suite
-  contract failures; close it only after replacement CI is green.
+- Closed bead `chromatic-harness-v2-59el`: remaining Linux full-suite contract
+  failures; replacement CI is green.
+
+## Handoff completion
+
+No further action is required for this repair. If unpublished `7eecdb3` behavior
+is later needed, the upstream `roach-pi` owner must publish it; do not restore
+the missing gitlink. The five unrelated local root edits and the submodule
+overlay remain intentionally outside this repair.
 
 ## Do not touch
 

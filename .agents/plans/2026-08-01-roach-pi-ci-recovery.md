@@ -97,5 +97,13 @@ gh run list --branch codex/kimi-security --limit 5
   checkout steps pass and exposed the next validation issue.
 - SLICE-04: complete locally; commit and Actions confirmation pending.
 - SLICE-05: complete locally; commit and Actions confirmation pending.
-- SLICE-06: in progress under bead `chromatic-harness-v2-59el`; focused
-  regressions pass, commit and replacement Actions confirmation pending.
+- SLICE-06: complete under bead `chromatic-harness-v2-59el`; focused
+  regressions pass and replacement CI run `30715887955` is green across
+  Linux and both Windows matrix jobs.
+
+## Final outcome
+
+All dependency-ordered slices are complete. The root gitlink is pinned to the
+reachable immutable `roach-pi` release commit, the CI type and portability
+follow-ups are fixed, the clean checkout scaffold is seeded, and the final
+Actions plus observability runs are successful.

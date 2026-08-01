@@ -1,7 +1,7 @@
 # PDR: Harness CI Submodule Checkout Recovery
 
 **Date:** 2026-08-01
-**Status:** Implemented; validation follow-ups in progress
+**Status:** Complete
 **Owner:** Codex
 **Repository:** `kas1987/chromatic-harness-v2`
 **Branch:** `codex/kimi-security`
@@ -104,12 +104,16 @@ alter authentication, secrets, checkout actions, or the upstream submodule.
   failed only at the Linux mypy step; run `30714398688` passed.
 - Local targeted validation after the follow-ups: `275 passed`.
 - Local mypy validation: both repository mypy commands report no issues.
-- Follow-up commit `d540c178f9eca00049bb6b443377ee9c538bab1b` passes all local
-  type, lint, format, and focused regression gates. The fresh Actions run
-  `30715198094` validated checkout, typing, lint, format, and Windows
-  concurrency, then exposed the Linux full-suite contract failures tracked in
-  bead `chromatic-harness-v2-59el`; a final follow-up commit and replacement
-  Actions run remain before this PDR is marked complete.
+- Follow-up commit `d540c178f9eca00049bb6b443377ee9c538bab1b` passed local type,
+  lint, format, and focused regression gates. Its run `30715198094` validated
+  checkout, typing, lint, format, and Windows concurrency, then exposed the
+  Linux full-suite contract failures tracked in bead
+  `chromatic-harness-v2-59el`.
+- Final commit `b0005a8d73c4807f6757fb4b9609639d40b5b386` passed replacement CI
+  run `30715887955` across Linux and both Windows matrix jobs. Observability
+  run `30715887996` also passed.
+- The final repository validation state is green; beads for the submodule,
+  type-check, routing/event-loop, and full-suite contract repairs are closed.
 
 ## Rollback
 
